@@ -1,0 +1,150 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import ImageCompressor from '../../../components/ImageCompressor';
+
+export function getStaticPaths() {
+  const variants = [
+    {
+      slug: 'compress-png',
+      format: 'PNG',
+      title: 'Compress PNG Images Online Free',
+      description: 'Compress PNG images to reduce file size. No quality loss for lossless compression. Batch support. 100% free, no upload needed.',
+      faq: [
+        { question: 'How to compress a PNG file?', answer: 'Upload your PNG file, adjust the quality and max width settings, and click Compress. Since PNG is lossless, quality adjustment mainly affects dimensions. Setting a max width is the most effective way to reduce PNG file size.' },
+        { question: 'Can I compress PNG without losing quality?', answer: 'PNG is a lossless format, so the quality slider has no effect on PNG files. To reduce PNG size without quality loss, you can only reduce the image dimensions. For better compression with quality control, consider converting to WebP.' },
+        { question: 'How much can I reduce PNG file size?', answer: 'By reducing dimensions, you can typically achieve 30-70% size reduction. For example, scaling a 4000px wide image to 1920px can reduce file size by 75% or more.' },
+        { question: 'What is the best way to compress PNG for web?', answer: 'For web use, resize your PNG to the maximum display size needed. A 1920px wide image is usually sufficient. Alternatively, convert to WebP for 25-34% better compression.' },
+      ],
+    },
+    {
+      slug: 'compress-jpg',
+      format: 'JPG',
+      title: 'Compress JPG Images Online Free',
+      description: 'Compress JPG images to reduce file size. Adjustable quality from 10-100%. Batch support. Free, no upload needed.',
+      faq: [
+        { question: 'How to compress a JPG file?', answer: 'Upload your JPG file, set the quality level (80% is a good default), optionally set a max width, and click Compress.' },
+        { question: 'What quality should I use for JPG compression?', answer: 'For web use: 75-85%. For email: 60-75%. For archiving: 90-95%. At 80% quality, most people cannot tell the difference from the original.' },
+        { question: 'How much can I reduce JPG file size?', answer: 'At 80% quality, JPG files typically reduce by 40-60%. Combined with dimension reduction, you can achieve 70-90% smaller files.' },
+        { question: 'Does JPG compression reduce image quality?', answer: 'Yes, JPG is a lossy format. Lower quality = smaller file but more visible artifacts. However, at 80%+ quality, the difference is imperceptible for most images.' },
+      ],
+    },
+    {
+      slug: 'compress-for-email',
+      format: 'Any',
+      title: 'Compress Images for Email Attachment',
+      description: 'Compress images to fit email attachment limits. Most email providers limit attachments to 25MB. Free online image compressor.',
+      faq: [
+        { question: 'What size should images be for email?', answer: 'Most email providers limit attachments to 25MB total. For a single image, aim for under 5MB. At 80% quality with 1920px max width, most photos will be 200KB-1MB.' },
+        { question: 'How to make a photo smaller for email?', answer: 'Upload your photo, set quality to 75-80%, set max width to 1280-1920px, and click Compress. This typically reduces photos to under 500KB.' },
+        { question: 'Can I compress multiple photos for email at once?', answer: 'Yes, batch compression is supported. Upload all your photos at once and compress them together. Then download individually or all at once.' },
+      ],
+    },
+    {
+      slug: 'compress-for-web',
+      format: 'Any',
+      title: 'Compress Images for Web - Optimize for Fast Loading',
+      description: 'Compress and optimize images for websites. Faster page load times. Better SEO. Free online image optimizer.',
+      faq: [
+        { question: 'What is the ideal image size for websites?', answer: 'For hero images: 1920px wide, under 200KB. For content images: 800-1200px wide, under 100KB. For thumbnails: 300-400px wide, under 30KB.' },
+        { question: 'How does image compression affect SEO?', answer: 'Google uses page speed as a ranking factor. Smaller images load faster, improving Core Web Vitals (LCP). This directly helps your search rankings.' },
+        { question: 'Should I use JPG or WebP for my website?', answer: 'WebP is better — 25-34% smaller than JPG at the same quality. However, for maximum compatibility, you can use JPG with a WebP fallback using the <picture> element.' },
+      ],
+    },
+  ];
+
+  return variants.map((v) => ({
+    params: { variant: v.slug },
+    props: v,
+  }));
+}
+
+const { format, title, description, faq } = Astro.props;
+
+const pageUrl = `https://shareeverything.com/tools/image-compressor/${Astro.params.variant}`;
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": title,
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0" },
+};
+
+const faqStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faq.map((item: { question: string; answer: string }) => ({
+    "@type": "Question", "name": item.question,
+    "acceptedAnswer": { "@type": "Answer", "text": item.answer },
+  })),
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical={pageUrl}
+  structuredData={[structuredData, faqStructuredData]}
+>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>{title}</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
+        {description}
+      </p>
+
+      <ImageCompressor client:load />
+
+      <section class="features-section">
+        <h2>Features</h2>
+        <ul class="features-list">
+          <li>Adjustable compression quality</li>
+          <li>Max width scaling option</li>
+          <li>Batch compression support</li>
+          <li>Before/after size comparison</li>
+          <li>100% client-side processing</li>
+          <li>Free with no limits</li>
+        </ul>
+      </section>
+
+      <div style="margin: 2rem 0;">
+        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
+      </div>
+
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {faq.map((item: { question: string; answer: string }) => (
+          <div class="faq-item">
+            <details>
+              <summary class="faq-question">{item.question}</summary>
+              <div class="faq-answer">{item.answer}</div>
+            </details>
+          </div>
+        ))}
+      </section>
+
+      <section class="related-tools">
+        <h2>Related Tools</h2>
+        <div class="related-tools-grid">
+          <a href="/tools/image-converter" class="tool-card"><h3>Image Converter</h3><p>Convert formats</p></a>
+          <a href="/tools/image-resizer" class="tool-card"><h3>Image Resizer</h3><p>Resize dimensions</p></a>
+          <a href="/tools/background-remover" class="tool-card"><h3>Background Remover</h3><p>Remove backgrounds</p></a>
+        </div>
+      </section>
+    </div>
+
+    <aside class="tool-sidebar">
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
+      <div style="margin-top: 2rem;">
+        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">More Tools</h3>
+        <ul style="font-size: 0.875rem; list-style: none;">
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-converter">Image Converter</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-compressor">Image Compressor</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer">Image Resizer</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/background-remover">Background Remover</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</Layout>

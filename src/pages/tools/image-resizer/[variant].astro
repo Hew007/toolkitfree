@@ -1,0 +1,142 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import ImageResizer from '../../../components/ImageResizer';
+
+export function getStaticPaths() {
+  const variants = [
+    {
+      slug: 'resize-for-instagram',
+      title: 'Resize Image for Instagram - Post, Story, Reel Sizes',
+      description: 'Resize images for Instagram posts (1080x1080), stories (1080x1920), and reels. Free online tool. No upload needed.',
+      faq: [
+        { question: 'What size should Instagram photos be?', answer: 'Instagram posts are best at 1080x1080 pixels (square) or 1080x1350 (portrait). Stories and Reels should be 1080x1920 pixels (9:16 aspect ratio).' },
+        { question: 'What happens if my photo is the wrong size?', answer: 'Instagram will crop or letterbox your photo. To avoid this, resize your image to the correct dimensions before uploading using our tool.' },
+        { question: 'What is the best aspect ratio for Instagram?', answer: 'Square (1:1) for posts, Portrait (4:5) for taller posts, and 9:16 for Stories and Reels.' },
+      ],
+    },
+    {
+      slug: 'resize-for-facebook',
+      title: 'Resize Image for Facebook - Cover, Profile, Post Sizes',
+      description: 'Resize images for Facebook cover photos (820x312), profile pictures, and posts. Free online image resizer.',
+      faq: [
+        { question: 'What size should a Facebook cover photo be?', answer: 'Facebook cover photos should be 820x312 pixels on desktop. On mobile, they display at 640x360. The safe area that shows on both is approximately 820x312.' },
+        { question: 'What size should Facebook post images be?', answer: 'For the best display, use 1200x630 pixels for Facebook post images. This is the recommended size for link previews and shared posts.' },
+        { question: 'What size should a Facebook profile picture be?', answer: 'Upload at least 180x180 pixels. Facebook displays profile pictures at 176x176 on desktop and 196x196 on smartphones.' },
+      ],
+    },
+    {
+      slug: 'resize-for-twitter',
+      title: 'Resize Image for Twitter/X - Header, Profile, Post Sizes',
+      description: 'Resize images for Twitter/X header (1500x500), profile picture, and tweet images. Free online tool.',
+      faq: [
+        { question: 'What size should a Twitter header be?', answer: 'Twitter/X header images should be 1500x500 pixels. Keep important content in the center as it may be cropped on different screen sizes.' },
+        { question: 'What size should tweet images be?', answer: 'For in-stream photos, use 1600x900 pixels (16:9 ratio). Twitter supports up to 4096x4096 but will compress larger images.' },
+      ],
+    },
+    {
+      slug: 'resize-for-youtube',
+      title: 'Resize Image for YouTube - Thumbnail, Banner, Profile Sizes',
+      description: 'Resize images for YouTube thumbnails (1280x720), channel banners (2560x1440), and profile pictures. Free tool.',
+      faq: [
+        { question: 'What size should a YouTube thumbnail be?', answer: 'YouTube thumbnails should be 1280x720 pixels (16:9 aspect ratio), with a minimum width of 640 pixels. Maximum file size is 2MB.' },
+        { question: 'What size should a YouTube channel banner be?', answer: 'The recommended YouTube banner size is 2560x1440 pixels. The safe area visible on all devices is 1546x423 pixels in the center.' },
+      ],
+    },
+  ];
+
+  return variants.map((v) => ({
+    params: { variant: v.slug },
+    props: v,
+  }));
+}
+
+const { title, description, faq } = Astro.props;
+
+const pageUrl = `https://shareeverything.com/tools/image-resizer/${Astro.params.variant}`;
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": title,
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0" },
+};
+
+const faqStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faq.map((item: { question: string; answer: string }) => ({
+    "@type": "Question", "name": item.question,
+    "acceptedAnswer": { "@type": "Answer", "text": item.answer },
+  })),
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical={pageUrl}
+  structuredData={[structuredData, faqStructuredData]}
+>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>{title}</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
+        {description}
+      </p>
+
+      <ImageResizer client:load />
+
+      <section class="features-section">
+        <h2>Features</h2>
+        <ul class="features-list">
+          <li>Platform-specific size presets</li>
+          <li>Custom width and height</li>
+          <li>Maintain aspect ratio</li>
+          <li>Batch resize support</li>
+          <li>Multiple output formats</li>
+          <li>100% client-side</li>
+        </ul>
+      </section>
+
+      <div style="margin: 2rem 0;">
+        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
+      </div>
+
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {faq.map((item: { question: string; answer: string }) => (
+          <div class="faq-item">
+            <details>
+              <summary class="faq-question">{item.question}</summary>
+              <div class="faq-answer">{item.answer}</div>
+            </details>
+          </div>
+        ))}
+      </section>
+
+      <section class="related-tools">
+        <h2>More Resize Tools</h2>
+        <div class="related-tools-grid">
+          <a href="/tools/image-resizer/resize-for-instagram" class="tool-card"><h3>Resize for Instagram</h3></a>
+          <a href="/tools/image-resizer/resize-for-facebook" class="tool-card"><h3>Resize for Facebook</h3></a>
+          <a href="/tools/image-resizer/resize-for-twitter" class="tool-card"><h3>Resize for Twitter/X</h3></a>
+          <a href="/tools/image-resizer/resize-for-youtube" class="tool-card"><h3>Resize for YouTube</h3></a>
+        </div>
+      </section>
+    </div>
+
+    <aside class="tool-sidebar">
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
+      <div style="margin-top: 2rem;">
+        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">More Tools</h3>
+        <ul style="font-size: 0.875rem; list-style: none;">
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-converter">Image Converter</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-compressor">Image Compressor</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/background-remover">Background Remover</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</Layout>
