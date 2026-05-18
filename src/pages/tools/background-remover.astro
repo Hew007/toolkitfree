@@ -1,0 +1,127 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import BackgroundRemover from '../../components/BackgroundRemover';
+
+const faqItems = [
+  {
+    question: 'How does background removal work?',
+    answer: 'We use an AI model that runs entirely in your browser via WebAssembly. The model detects the subject (person, product, animal, etc.) and removes everything else. No data is sent to any server.',
+  },
+  {
+    question: 'What types of images work best?',
+    answer: 'The tool works best with clear subjects — portraits, product photos, and objects with defined edges. Images with complex backgrounds or multiple subjects may need manual cleanup.',
+  },
+  {
+    question: 'Is the background removal free?',
+    answer: 'Yes, completely free. The AI model runs in your browser, so there are no server costs for us to pass on.',
+  },
+  {
+    question: 'How long does it take?',
+    answer: 'The first use takes 10-30 seconds to download the AI model (~40MB). Subsequent uses are faster as the model is cached. Processing itself typically takes 2-10 seconds depending on image size.',
+  },
+  {
+    question: 'Can I add a colored background after removal?',
+    answer: 'Yes, you can choose from preset background colors (white, red, blue, green) or keep the background transparent (default).',
+  },
+  {
+    question: 'What output format will I get?',
+    answer: 'The result is always a PNG file to preserve transparency. If you choose a colored background, the PNG will include that background color.',
+  },
+  {
+    question: 'Is my image uploaded to a server?',
+    answer: 'No. All processing happens locally in your browser using WebAssembly. Your image never leaves your device.',
+  },
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Free Background Remover",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0" },
+};
+---
+
+<Layout
+  title="Free Background Remover - Remove Image Backgrounds with AI"
+  description="Remove image backgrounds instantly using AI. Free, runs in your browser. No upload needed. Perfect for product photos, portraits, and more."
+  structuredData={[structuredData, {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqItems.map((item) => ({
+      "@type": "Question", "name": item.question,
+      "acceptedAnswer": { "@type": "Answer", "text": item.answer },
+    })),
+  }]}
+>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>Free AI Background Remover</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
+        Remove image backgrounds instantly using AI. Choose transparent or colored backgrounds.
+        100% client-side — your photos never leave your device.
+      </p>
+
+      <BackgroundRemover client:load />
+
+      <section class="howto-section">
+        <h2>How to Remove Backgrounds</h2>
+        <ol class="howto-steps">
+          <li>Upload a photo (works best with clear subjects)</li>
+          <li>Choose your preferred background: transparent, white, or a color</li>
+          <li>Click "Remove Background" and wait for AI processing</li>
+          <li>Download your image with the background removed</li>
+        </ol>
+      </section>
+
+      <section class="features-section">
+        <h2>Features</h2>
+        <ul class="features-list">
+          <li>AI-powered background detection</li>
+          <li>Transparent or colored backgrounds</li>
+          <li>Works with portraits, products, and objects</li>
+          <li>100% client-side — no uploads</li>
+          <li>Free with no limits</li>
+          <li>High-quality PNG output</li>
+        </ul>
+      </section>
+
+      <div style="margin: 2rem 0;">
+        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
+      </div>
+
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {faqItems.map((item) => (
+          <div class="faq-item">
+            <details>
+              <summary class="faq-question">{item.question}</summary>
+              <div class="faq-answer">{item.answer}</div>
+            </details>
+          </div>
+        ))}
+      </section>
+
+      <section class="related-tools">
+        <h2>Related Tools</h2>
+        <div class="related-tools-grid">
+          <a href="/tools/image-converter" class="tool-card"><h3>Image Converter</h3><p>Convert between JPG, PNG, and WebP</p></a>
+          <a href="/tools/image-compressor" class="tool-card"><h3>Image Compressor</h3><p>Reduce image file size</p></a>
+          <a href="/tools/image-resizer" class="tool-card"><h3>Image Resizer</h3><p>Resize images to any dimension</p></a>
+        </div>
+      </section>
+    </div>
+    <aside class="tool-sidebar">
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
+      <div style="margin-top: 2rem;">
+        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">More Tools</h3>
+        <ul style="font-size: 0.875rem; list-style: none;">
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-converter">Image Converter</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-compressor">Image Compressor</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer">Image Resizer</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</Layout>

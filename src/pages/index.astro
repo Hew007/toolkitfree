@@ -1,0 +1,83 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const tools = [
+  {
+    name: 'Image Converter',
+    description: 'Convert images between JPG, PNG, WebP, and more. Batch support. 100% client-side.',
+    href: '/tools/image-converter',
+    icon: ' ',
+  },
+  {
+    name: 'Image Compressor',
+    description: 'Compress images to reduce file size while maintaining quality. Target specific file sizes.',
+    href: '/tools/image-compressor',
+    icon: '⚡',
+  },
+  {
+    name: 'Image Resizer',
+    description: 'Resize and crop images to exact dimensions. Presets for Instagram, Facebook, Twitter and more.',
+    href: '/tools/image-resizer',
+    icon: '✂️',
+  },
+  {
+    name: 'Background Remover',
+    description: 'Remove image backgrounds instantly using AI. Perfect for product photos and portraits.',
+    href: '/tools/background-remover',
+    icon: '✨',
+  },
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "ToolBox Pro",
+  "description": "Free online image tools. Convert, compress, resize, and edit images in your browser. No uploads needed.",
+  "url": "https://toolboxpro.com",
+};
+---
+
+<Layout
+  title="Free Online Image Tools - Convert, Compress, Resize Images"
+  description="Free online image tools. Convert formats, compress file size, resize dimensions, and remove backgrounds. All processing happens in your browser - your files never leave your device."
+  structuredData={structuredData}
+>
+  <section class="hero">
+    <h1>Free Online Image Tools</h1>
+    <p>
+      Convert, compress, resize, and edit images directly in your browser.
+      No uploads needed — your files never leave your device.
+    </p>
+    <div class="privacy-badge">
+      100% Client-Side Processing
+    </div>
+  </section>
+
+  <section class="tools-grid">
+    {tools.map((tool) => (
+      <a href={tool.href} class="tool-card">
+        <h3>{tool.icon} {tool.name}</h3>
+        <p>{tool.description}</p>
+      </a>
+    ))}
+  </section>
+
+  <!-- Ad Placeholder: In-content -->
+  <div style="margin: 3rem 0;">
+    <div class="ad-placeholder ad-banner">
+      Ad Space (728x90)
+    </div>
+  </div>
+
+  <section class="features-section">
+    <h2>Why ToolBox Pro?</h2>
+    <ul class="features-list">
+      <li>100% free, no sign-up required</li>
+      <li>Your files never leave your device</li>
+      <li>No file size limits</li>
+      <li>Works on any device with a browser</li>
+      <li>Batch processing support</li>
+      <li>No watermarks on output</li>
+    </ul>
+  </section>
+</Layout>

@@ -1,0 +1,176 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ImageConverter from '../../components/ImageConverter';
+
+const faqItems = [
+  {
+    question: 'How does the image converter work?',
+    answer: 'Our image converter runs entirely in your browser using the Canvas API. When you upload an image, it is loaded into a hidden canvas element, then re-exported in your chosen format. Your files never leave your device.',
+  },
+  {
+    question: 'What image formats are supported?',
+    answer: 'We support JPG/JPEG, PNG, and WebP formats for both input and output. You can convert between any of these formats. More formats like AVIF and HEIC may be added in future updates.',
+  },
+  {
+    question: 'Is there a file size limit?',
+    answer: 'There is no hard file size limit. However, very large images (over 100MP) may be slow to process because all conversion happens in your browser. For most use cases, images under 50MB convert instantly.',
+  },
+  {
+    question: 'Can I convert multiple images at once?',
+    answer: 'Yes! You can upload and convert multiple images simultaneously. All conversions happen in parallel for maximum speed.',
+  },
+  {
+    question: 'Will I lose image quality when converting?',
+    answer: 'PNG conversion is lossless — no quality loss. For JPG and WebP, you can adjust the quality slider. At 92% (default), the quality difference is virtually imperceptible while significantly reducing file size.',
+  },
+  {
+    question: 'Is this tool free?',
+    answer: 'Yes, this tool is completely free to use with no limits. We support the site through non-intrusive ads.',
+  },
+  {
+    question: 'Do you keep a copy of my images?',
+    answer: 'No. All processing happens in your browser. Your images are never uploaded to any server. When you close the page, all data is gone.',
+  },
+  {
+    question: 'Can I use this on my phone?',
+    answer: 'Yes! Our image converter works on any device with a modern browser, including smartphones and tablets.',
+  },
+  {
+    question: 'What is WebP and why should I use it?',
+    answer: 'WebP is a modern image format developed by Google that provides superior lossless and lossy compression for images on the web. WebP images are typically 25-34% smaller than comparable JPEG or PNG images.',
+  },
+  {
+    question: 'How do I convert JPG to PNG?',
+    answer: 'Upload your JPG file, select PNG as the output format, and click Convert. The tool will instantly convert your image and provide a download link. PNG conversion is lossless, preserving full quality.',
+  },
+  {
+    question: 'How do I convert PNG to JPG?',
+    answer: 'Upload your PNG file, select JPG as the output format, and click Convert. Note that JPG does not support transparency — transparent areas will be filled with white. You can also adjust the quality slider.',
+  },
+  {
+    question: 'How do I convert images to WebP?',
+    answer: 'Upload any image file (JPG, PNG, etc.), select WebP as the output format, choose your quality level, and click Convert. WebP offers excellent compression while maintaining visual quality.',
+  },
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Free Image Converter",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0" },
+  "description": "Convert images between JPG, PNG, and WebP formats instantly in your browser. Free, no upload needed.",
+};
+
+const faqStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqItems.map((item) => ({
+    "@type": "Question",
+    "name": item.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": item.answer,
+    },
+  })),
+};
+---
+
+<Layout
+  title="Free Image Converter - Convert JPG, PNG, WebP Online"
+  description="Convert images between JPG, PNG, and WebP formats instantly in your browser. No upload needed. Batch support. 100% free and private."
+  structuredData={[structuredData, faqStructuredData]}
+>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>Free Online Image Converter</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
+        Convert images between JPG, PNG, and WebP formats instantly.
+        Batch support. No upload needed — your files stay on your device.
+      </p>
+
+      <ImageConverter client:load />
+
+      <section class="howto-section">
+        <h2>How to Convert Images</h2>
+        <ol class="howto-steps">
+          <li>Upload one or more images by dragging & dropping or clicking to browse</li>
+          <li>Select your desired output format (JPG, PNG, or WebP)</li>
+          <li>Adjust the quality slider if using JPG or WebP output</li>
+          <li>Click "Convert" and download your converted images</li>
+        </ol>
+      </section>
+
+      <section class="features-section">
+        <h2>Features</h2>
+        <ul class="features-list">
+          <li>Convert between JPG, PNG, and WebP</li>
+          <li>Batch convert multiple images at once</li>
+          <li>Adjustable quality for JPG and WebP</li>
+          <li>100% client-side — no uploads required</li>
+          <li>No file size limits</li>
+          <li>Free with no watermarks</li>
+        </ul>
+      </section>
+
+      <!-- Ad Placeholder -->
+      <div style="margin: 2rem 0;">
+        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
+      </div>
+
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {faqItems.map((item) => (
+          <div class="faq-item">
+            <details>
+              <summary class="faq-question">{item.question}</summary>
+              <div class="faq-answer">{item.answer}</div>
+            </details>
+          </div>
+        ))}
+      </section>
+
+      <section class="related-tools">
+        <h2>Related Tools</h2>
+        <div class="related-tools-grid">
+          <a href="/tools/image-compressor" class="tool-card">
+            <h3>Image Compressor</h3>
+            <p>Reduce image file size while maintaining quality</p>
+          </a>
+          <a href="/tools/image-resizer" class="tool-card">
+            <h3>Image Resizer</h3>
+            <p>Resize and crop images to exact dimensions</p>
+          </a>
+          <a href="/tools/background-remover" class="tool-card">
+            <h3>Background Remover</h3>
+            <p>Remove image backgrounds using AI</p>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <aside class="tool-sidebar">
+      <!-- Ad Placeholder: Sidebar -->
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
+
+      <div style="margin-top: 2rem;">
+        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">Supported Formats</h3>
+        <ul style="font-size: 0.875rem; color: var(--color-text-light); list-style: none;">
+          <li style="padding: 0.25rem 0;">JPG / JPEG</li>
+          <li style="padding: 0.25rem 0;">PNG</li>
+          <li style="padding: 0.25rem 0;">WebP</li>
+        </ul>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">More Tools</h3>
+        <ul style="font-size: 0.875rem; list-style: none;">
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-compressor">Image Compressor</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer">Image Resizer</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/background-remover">Background Remover</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</Layout>

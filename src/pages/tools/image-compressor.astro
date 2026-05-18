@@ -1,0 +1,136 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ImageCompressor from '../../components/ImageCompressor';
+
+const faqItems = [
+  {
+    question: 'How does image compression work?',
+    answer: 'Our compressor re-encodes your image at a lower quality setting using the browser\'s built-in Canvas API. For JPEG images, this reduces file size by adjusting the compression level. For PNG, it uses PNG encoding. Your images never leave your device.',
+  },
+  {
+    question: 'What\'s the difference between quality levels?',
+    answer: 'At 100% quality, there is virtually no visible difference from the original. At 80% (our default), most people cannot tell the difference, but file sizes drop significantly. Below 60%, you may start to see compression artifacts in photos.',
+  },
+  {
+    question: 'Can I compress PNG images?',
+    answer: 'Yes, but PNG is a lossless format, so quality adjustment has no effect on PNG. You can reduce PNG file size by limiting the maximum width, which scales down the image dimensions.',
+  },
+  {
+    question: 'How much can I reduce file size?',
+    answer: 'Typically 30-70% reduction for JPEG photos at 80% quality. Results vary depending on the original image content — photos with lots of detail compress less than simpler images.',
+  },
+  {
+    question: 'Is there a batch compression limit?',
+    answer: 'No, you can compress as many images as you want. However, processing very large batches (100+ images) may be slow since all processing happens in your browser.',
+  },
+  {
+    question: 'Will compression affect image dimensions?',
+    answer: 'No, unless you set a Max Width limit. By default, compression only affects file quality, not dimensions. If you set a Max Width, images wider than that limit will be scaled down proportionally.',
+  },
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Free Image Compressor",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0" },
+};
+
+const faqStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqItems.map((item) => ({
+    "@type": "Question",
+    "name": item.question,
+    "acceptedAnswer": { "@type": "Answer", "text": item.answer },
+  })),
+};
+---
+
+<Layout
+  title="Free Image Compressor - Reduce Image File Size Online"
+  description="Compress images online to reduce file size while maintaining quality. Batch support. Adjustable quality. 100% free, no upload needed."
+  structuredData={[structuredData, faqStructuredData]}
+>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>Free Online Image Compressor</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
+        Reduce image file size while maintaining quality. Adjustable compression level and batch support.
+        All processing in your browser — your files never leave your device.
+      </p>
+
+      <ImageCompressor client:load />
+
+      <section class="howto-section">
+        <h2>How to Compress Images</h2>
+        <ol class="howto-steps">
+          <li>Upload one or more images (JPG, PNG, WebP)</li>
+          <li>Adjust the quality slider — 80% is a good starting point</li>
+          <li>Optionally set a maximum width to reduce dimensions</li>
+          <li>Click "Compress" and download your optimized images</li>
+        </ol>
+      </section>
+
+      <section class="features-section">
+        <h2>Features</h2>
+        <ul class="features-list">
+          <li>Adjustable quality from 10% to 100%</li>
+          <li>Optional max width scaling</li>
+          <li>Batch compress multiple images</li>
+          <li>Shows before/after file sizes</li>
+          <li>100% client-side processing</li>
+          <li>No file size limits</li>
+        </ul>
+      </section>
+
+      <div style="margin: 2rem 0;">
+        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
+      </div>
+
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {faqItems.map((item) => (
+          <div class="faq-item">
+            <details>
+              <summary class="faq-question">{item.question}</summary>
+              <div class="faq-answer">{item.answer}</div>
+            </details>
+          </div>
+        ))}
+      </section>
+
+      <section class="related-tools">
+        <h2>Related Tools</h2>
+        <div class="related-tools-grid">
+          <a href="/tools/image-converter" class="tool-card">
+            <h3>Image Converter</h3>
+            <p>Convert between JPG, PNG, and WebP formats</p>
+          </a>
+          <a href="/tools/image-resizer" class="tool-card">
+            <h3>Image Resizer</h3>
+            <p>Resize and crop images to exact dimensions</p>
+          </a>
+          <a href="/tools/background-remover" class="tool-card">
+            <h3>Background Remover</h3>
+            <p>Remove image backgrounds using AI</p>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <aside class="tool-sidebar">
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
+      <div style="margin-top: 2rem;">
+        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">More Tools</h3>
+        <ul style="font-size: 0.875rem; list-style: none;">
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-converter">Image Converter</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer">Image Resizer</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/background-remover">Background Remover</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</Layout>
