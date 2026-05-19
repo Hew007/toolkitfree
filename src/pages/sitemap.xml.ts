@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 
 // TODO: Replace with your actual domain after registration
-const SITE = 'https://shareeverything.com';
+const SITE = 'https://toolkitfree.net';
 
 const pages = [
   // Main pages
