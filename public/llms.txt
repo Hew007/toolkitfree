@@ -1,0 +1,37 @@
+# ToolkitFree
+
+> Free online image processing tools. Convert, compress, resize, and remove backgrounds from images — all processed in your browser, 100% client-side and private.
+
+## Main Tools
+
+- [Image Converter](https://toolkitfree.net/tools/image-converter): Convert images between JPG, PNG, WebP, and more formats. Batch support.
+- [Image Compressor](https://toolkitfree.net/tools/image-compressor): Compress images for web, email, and social media. Reduce file size without visible quality loss.
+- [Image Resizer](https://toolkitfree.net/tools/image-resizer): Resize images to specific dimensions for Instagram, Facebook, Twitter, YouTube and more.
+- [Background Remover](https://toolkitfree.net/tools/background-remover): Automatically remove image backgrounds using AI. No signup required.
+
+## Converter Variants
+
+- [JPG to PNG](https://toolkitfree.net/tools/image-converter/jpg-to-png)
+- [PNG to JPG](https://toolkitfree.net/tools/image-converter/png-to-jpg)
+- [WebP to JPG](https://toolkitfree.net/tools/image-converter/webp-to-jpg)
+- [JPG to WebP](https://toolkitfree.net/tools/image-converter/jpg-to-webp)
+- [PNG to WebP](https://toolkitfree.net/tools/image-converter/png-to-webp)
+- [WebP to PNG](https://toolkitfree.net/tools/image-converter/webp-to-png)
+
+## Compressor Variants
+
+- [Compress PNG](https://toolkitfree.net/tools/image-compressor/compress-png)
+- [Compress JPG](https://toolkitfree.net/tools/image-compressor/compress-jpg)
+- [Compress for Email](https://toolkitfree.net/tools/image-compressor/compress-for-email)
+- [Compress for Web](https://toolkitfree.net/tools/image-compressor/compress-for-web)
+
+## Resizer Variants
+
+- [Resize for Instagram](https://toolkitfree.net/tools/image-resizer/resize-for-instagram)
+- [Resize for Facebook](https://toolkitfree.net/tools/image-resizer/resize-for-facebook)
+- [Resize for Twitter](https://toolkitfree.net/tools/image-resizer/resize-for-twitter)
+- [Resize for YouTube](https://toolkitfree.net/tools/image-resizer/resize-for-youtube)
+
+## About
+
+All tools run entirely in the browser. No images are uploaded to any server. Free to use, no signup required.
