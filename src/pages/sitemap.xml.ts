@@ -6,6 +6,7 @@ const SITE = 'https://toolkitfree.net';
 const pages = [
   // Main pages
   { url: '/', changefreq: 'weekly', priority: '1.0' },
+  { url: '/privacy-policy', changefreq: 'yearly', priority: '0.3' },
 
   // Tool pages
   { url: '/tools/image-converter', changefreq: 'weekly', priority: '0.9' },
