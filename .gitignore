@@ -22,6 +22,9 @@ Thumbs.db
 .astro/
 .claude/
 
+# Internal docs (not for public repo)
+docs/
+项目探索初始说明文档.md
 # wrangler files
 .wrangler
 .dev.vars*
