@@ -30,9 +30,21 @@ function formatSize(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-export default function ImageConverter() {
+const LABEL_TO_MIME: Record<string, OutputFormat> = {
+  'JPG': 'image/jpeg',
+  'PNG': 'image/png',
+  'WebP': 'image/webp',
+};
+
+interface Props {
+  defaultFrom?: string;
+  defaultTo?: string;
+}
+
+export default function ImageConverter({ defaultTo }: Props) {
+  const initialFormat = (defaultTo && LABEL_TO_MIME[defaultTo]) || 'image/png';
   const [files, setFiles] = useState<File[]>([]);
-  const [outputFormat, setOutputFormat] = useState<OutputFormat>('image/png');
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>(initialFormat);
   const [quality, setQuality] = useState(92);
   const [converting, setConverting] = useState(false);
   const [results, setResults] = useState<ConvertedFile[]>([]);

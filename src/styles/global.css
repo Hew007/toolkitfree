@@ -128,9 +128,6 @@ button {
   .tool-layout {
     grid-template-columns: 1fr;
   }
-  .tool-sidebar {
-    order: -1;
-  }
 }
 
 /* Hero section */
