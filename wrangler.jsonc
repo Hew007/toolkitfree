@@ -1,17 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "toolkitfree",
-  "compatibility_date": "2026-05-19",
-  "observability": {
-    "enabled": true
-  },
-  "main": "dist/_worker.js/index.js",
-  "compatibility_flags": [
-    "global_fetch_strictly_public",
-    "nodejs_compat"
-  ],
+  "compatibility_date": "2026-05-20",
   "assets": {
-    "binding": "ASSETS",
     "directory": "dist"
   }
 }
