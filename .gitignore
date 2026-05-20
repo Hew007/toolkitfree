@@ -25,3 +25,8 @@ Thumbs.db
 # Internal docs (not for public repo)
 docs/
 项目探索初始说明文档.md
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
