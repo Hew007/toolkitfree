@@ -5,6 +5,12 @@ export const allVariants = [
   { slug: 'jpg-to-webp', from: 'JPG', to: 'WebP' },
   { slug: 'png-to-webp', from: 'PNG', to: 'WebP' },
   { slug: 'webp-to-png', from: 'WebP', to: 'PNG' },
+  { slug: 'heic-to-jpg', from: 'HEIC', to: 'JPG' },
+  { slug: 'gif-to-png', from: 'GIF', to: 'PNG' },
+  { slug: 'bmp-to-png', from: 'BMP', to: 'PNG' },
+  { slug: 'tiff-to-jpg', from: 'TIFF', to: 'JPG' },
+  { slug: 'svg-to-png', from: 'SVG', to: 'PNG' },
+  { slug: 'png-to-gif', from: 'PNG', to: 'GIF' },
 ];
 
 export const faqData: Record<string, { question: string; answer: string }[]> = {
@@ -41,6 +47,37 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
     { question: 'Why convert WebP to PNG?', answer: 'PNG is universally supported by all image editors and applications. Converting WebP to PNG ensures compatibility with older software that doesn\'t support WebP.' },
     { question: 'Will the file size change?', answer: 'Yes, PNG files are typically larger than WebP files because PNG uses less efficient compression. The quality will be the same or better.' },
   ],
+  'heic-to-jpg': [
+    { question: 'How to convert HEIC to JPG?', answer: 'Upload your HEIC file from your iPhone, select JPG as the output format, and click Convert. Your JPG is ready to download and share instantly.' },
+    { question: 'Why convert HEIC to JPG?', answer: 'HEIC is Apple\'s image format used by iPhones. Many websites, apps, and Windows computers don\'t support HEIC. Converting to JPG ensures universal compatibility.' },
+    { question: 'Will I lose quality converting HEIC to JPG?', answer: 'HEIC already uses lossy compression. Converting to JPG at 92% quality preserves virtually all visible quality while creating a universally compatible file.' },
+    { question: 'Can I convert multiple HEIC photos at once?', answer: 'Yes! Upload multiple HEIC files from your iPhone and convert them all to JPG in one batch. Perfect for transferring photo libraries.' },
+  ],
+  'gif-to-png': [
+    { question: 'How to convert GIF to PNG?', answer: 'Upload your GIF file, select PNG as the output format, and click Convert. The first frame of the GIF will be converted to a static PNG image.' },
+    { question: 'Why convert GIF to PNG?', answer: 'PNG offers better quality and compression for static images. If you have a GIF that doesn\'t need animation, converting to PNG reduces file size and improves quality.' },
+    { question: 'Will the animation be preserved?', answer: 'No. PNG is a static image format. The conversion captures one frame from the GIF. If you need the animation, keep it as GIF.' },
+  ],
+  'bmp-to-png': [
+    { question: 'How to convert BMP to PNG?', answer: 'Upload your BMP file, select PNG as the output format, and click Convert. BMP to PNG conversion is lossless — quality is fully preserved.' },
+    { question: 'Why convert BMP to PNG?', answer: 'BMP files are uncompressed and very large. PNG provides the same lossless quality with much better compression, typically reducing file size by 50-90%.' },
+    { question: 'Is BMP to PNG conversion lossless?', answer: 'Yes. Both BMP and PNG are lossless formats. Converting from BMP to PNG preserves every pixel while dramatically reducing file size.' },
+  ],
+  'tiff-to-jpg': [
+    { question: 'How to convert TIFF to JPG?', answer: 'Upload your TIFF file, select JPG as the output format, adjust quality if needed, and click Convert. Your JPG is ready to download.' },
+    { question: 'Why convert TIFF to JPG?', answer: 'TIFF files are very large because they use lossless compression. JPG files are 10-50x smaller, making them practical for web use, email, and everyday sharing.' },
+    { question: 'Will I lose quality converting TIFF to JPG?', answer: 'JPG uses lossy compression, so some quality is lost. However, at 92%+ quality, the difference is imperceptible for most images while achieving massive file size reduction.' },
+  ],
+  'svg-to-png': [
+    { question: 'How to convert SVG to PNG?', answer: 'Upload your SVG file, select PNG as the output format, and click Convert. The SVG is rendered at its natural size and exported as a PNG image.' },
+    { question: 'Why convert SVG to PNG?', answer: 'SVG is a vector format that not all applications support. Converting to PNG creates a raster image that works everywhere — emails, social media, presentations, and more.' },
+    { question: 'What resolution will the PNG be?', answer: 'The SVG is rendered at its natural dimensions. For higher resolution output, you can resize the PNG after conversion using our Image Resizer tool.' },
+  ],
+  'png-to-gif': [
+    { question: 'How to convert PNG to GIF?', answer: 'Upload your PNG file, select GIF as the output format, and click Convert. GIF supports up to 256 colors, so some color reduction may occur.' },
+    { question: 'Why convert PNG to GIF?', answer: 'GIF is useful for simple graphics, icons, and images with limited colors. GIF files can be smaller than PNG for images with flat colors and simple patterns.' },
+    { question: 'Will transparency be preserved?', answer: 'GIF supports binary transparency (fully transparent or fully opaque). Semi-transparent pixels from PNG will be converted to either fully transparent or fully opaque.' },
+  ],
 };
 
 export const descriptions: Record<string, string> = {
@@ -50,4 +87,10 @@ export const descriptions: Record<string, string> = {
   'jpg-to-webp': 'Convert JPG images to WebP format for smaller file sizes. WebP is 25-34% smaller than JPG. Free, no upload needed.',
   'png-to-webp': 'Convert PNG images to WebP format for much smaller file sizes. Keep transparency. Free, no upload needed.',
   'webp-to-png': 'Convert WebP images to PNG format instantly. Lossless conversion preserving transparency. Free, no upload needed.',
+  'heic-to-jpg': 'Convert HEIC iPhone photos to JPG format instantly. Universal compatibility. Batch convert multiple photos. Free, no upload needed.',
+  'gif-to-png': 'Convert GIF images to PNG format. Lossless conversion for static GIFs. Better compression than GIF. Free, no upload needed.',
+  'bmp-to-png': 'Convert BMP bitmap images to PNG format. Lossless conversion with 50-90% smaller file sizes. Free, no upload needed.',
+  'tiff-to-jpg': 'Convert TIFF images to JPG format. 10-50x smaller files with adjustable quality. Free, no upload needed.',
+  'svg-to-png': 'Convert SVG vector graphics to PNG raster images. Works in any application. Free, no upload needed.',
+  'png-to-gif': 'Convert PNG images to GIF format. Smaller files for simple graphics and icons. Free, no upload needed.',
 };

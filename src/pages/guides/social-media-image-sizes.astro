@@ -1,0 +1,150 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Best Image Sizes for Social Media (2026)",
+  "description": "Complete guide to image dimensions for Instagram, Facebook, Twitter, YouTube, LinkedIn, and TikTok. Updated for 2026.",
+  "url": "https://toolkitfree.net/guides/social-media-image-sizes",
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://toolkitfree.net" },
+    { "@type": "ListItem", "position": 2, "name": "Social Media Image Sizes", "item": "https://toolkitfree.net/guides/social-media-image-sizes" },
+  ]
+};
+
+const faqItems = [
+  { question: 'What is the best image size for Instagram posts?', answer: '1080x1080 pixels for square posts, 1080x1350 for portrait, and 1080x608 for landscape. Instagram compresses images, so uploading at 1080px wide ensures the best quality after compression.' },
+  { question: 'What size should Facebook cover photos be?', answer: '820x312 pixels for desktop. On mobile, the cover displays at 640x360. Keep important content in the center to work on both devices.' },
+  { question: 'What is the ideal image size for Twitter/X?', answer: '1600x900 pixels for in-stream photos (16:9 ratio). Header images should be 1500x500 pixels. Profile pictures should be 400x400 pixels.' },
+  { question: 'What size should YouTube thumbnails be?', answer: '1280x720 pixels (16:9 aspect ratio), with a minimum width of 640 pixels. Maximum file size is 2MB.' },
+];
+
+const faqStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqItems.map((item) => ({
+    "@type": "Question", "name": item.question,
+    "acceptedAnswer": { "@type": "Answer", "text": item.answer },
+  })),
+};
+---
+
+<Layout
+  title="Best Image Sizes for Social Media (2026) - All Platforms"
+  description="Complete guide to image sizes for Instagram, Facebook, Twitter, YouTube, LinkedIn, TikTok. Cover photos, profile pictures, posts, stories, and thumbnails."
+  structuredData={[structuredData, breadcrumbSchema, faqStructuredData]}
+>
+  <article class="tool-layout">
+    <div class="tool-content">
+      <h1>Best Image Sizes for Social Media (2026)</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
+        Using the right image dimensions ensures your posts look sharp and professional on every platform.
+        Here's a complete reference for all major social networks.
+      </p>
+
+      <section class="features-section">
+        <h2>Instagram</h2>
+        <ul class="features-list">
+          <li>Square Post: 1080 x 1080 px (1:1)</li>
+          <li>Portrait Post: 1080 x 1350 px (4:5)</li>
+          <li>Landscape Post: 1080 x 608 px (1.91:1)</li>
+          <li>Story / Reel: 1080 x 1920 px (9:16)</li>
+          <li>Profile Picture: 320 x 320 px</li>
+        </ul>
+        <p style="margin-top: 0.5rem;"><a href="/tools/image-resizer/resize-for-instagram">Resize for Instagram</a></p>
+      </section>
+
+      <section class="features-section">
+        <h2>Facebook</h2>
+        <ul class="features-list">
+          <li>Cover Photo: 820 x 312 px</li>
+          <li>Profile Picture: 170 x 170 px</li>
+          <li>Post Image: 1200 x 630 px</li>
+          <li>Event Cover: 1920 x 1005 px</li>
+          <li>Story: 1080 x 1920 px</li>
+        </ul>
+        <p style="margin-top: 0.5rem;"><a href="/tools/image-resizer/resize-for-facebook">Resize for Facebook</a></p>
+      </section>
+
+      <section class="features-section">
+        <h2>Twitter / X</h2>
+        <ul class="features-list">
+          <li>Header: 1500 x 500 px</li>
+          <li>Profile Picture: 400 x 400 px</li>
+          <li>In-Stream Photo: 1600 x 900 px (16:9)</li>
+          <li>Shared Link Image: 1200 x 628 px</li>
+        </ul>
+        <p style="margin-top: 0.5rem;"><a href="/tools/image-resizer/resize-for-twitter">Resize for Twitter/X</a></p>
+      </section>
+
+      <section class="features-section">
+        <h2>YouTube</h2>
+        <ul class="features-list">
+          <li>Thumbnail: 1280 x 720 px (16:9)</li>
+          <li>Channel Banner: 2560 x 1440 px</li>
+          <li>Profile Picture: 800 x 800 px</li>
+          <li>End Screen: 1280 x 720 px</li>
+        </ul>
+        <p style="margin-top: 0.5rem;"><a href="/tools/image-resizer/resize-for-youtube">Resize for YouTube</a></p>
+      </section>
+
+      <section class="features-section">
+        <h2>LinkedIn</h2>
+        <ul class="features-list">
+          <li>Profile Photo: 400 x 400 px</li>
+          <li>Background Banner: 1584 x 396 px</li>
+          <li>Post Image: 1200 x 627 px</li>
+          <li>Company Logo: 300 x 300 px</li>
+        </ul>
+        <p style="margin-top: 0.5rem;"><a href="/tools/image-resizer/resize-for-linkedin">Resize for LinkedIn</a></p>
+      </section>
+
+      <section class="features-section">
+        <h2>TikTok</h2>
+        <ul class="features-list">
+          <li>Profile Picture: 200 x 200 px</li>
+          <li>Video Cover: 1080 x 1920 px (9:16)</li>
+          <li>Aspect Ratio: 9:16 (vertical)</li>
+        </ul>
+        <p style="margin-top: 0.5rem;"><a href="/tools/image-resizer/resize-for-tiktok">Resize for TikTok</a></p>
+      </section>
+
+      <div style="margin: 2rem 0;">
+        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
+      </div>
+
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {faqItems.map((item) => (
+          <div class="faq-item">
+            <details>
+              <summary class="faq-question">{item.question}</summary>
+              <div class="faq-answer">{item.answer}</div>
+            </details>
+          </div>
+        ))}
+      </section>
+    </div>
+
+    <aside class="tool-sidebar">
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
+      <div style="margin-top: 2rem;">
+        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">Resize Tools</h3>
+        <ul style="font-size: 0.875rem; list-style: none;">
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer/resize-for-instagram">For Instagram</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer/resize-for-facebook">For Facebook</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer/resize-for-twitter">For Twitter/X</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer/resize-for-youtube">For YouTube</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer/resize-for-linkedin">For LinkedIn</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer/resize-for-tiktok">For TikTok</a></li>
+        </ul>
+      </div>
+    </aside>
+  </article>
+</Layout>

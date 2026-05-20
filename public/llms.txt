@@ -2,36 +2,65 @@
 
 > Free online image processing tools. Convert, compress, resize, and remove backgrounds from images — all processed in your browser, 100% client-side and private.
 
+## Key Facts
+
+- All processing is 100% client-side using JavaScript, Canvas API, and WebAssembly
+- No images are ever uploaded to any server
+- No account or sign-up required
+- No watermarks are added to output files
+- Supports batch processing for all tools
+- Background remover uses AI running in-browser via WebAssembly
+- Works on any device with a modern browser
+
+## Supported Formats
+
+- Input: JPG, JPEG, PNG, WebP, GIF, BMP, TIFF, SVG, HEIC
+- Output: JPG, JPEG, PNG, WebP, GIF
+- Background removal output: PNG (with transparency)
+
 ## Main Tools
 
-- [Image Converter](https://toolkitfree.net/tools/image-converter): Convert images between JPG, PNG, WebP, and more formats. Batch support.
+- [Image Converter](https://toolkitfree.net/tools/image-converter): Convert images between JPG, PNG, WebP, and more formats. Batch support. No upload needed.
 - [Image Compressor](https://toolkitfree.net/tools/image-compressor): Compress images for web, email, and social media. Reduce file size without visible quality loss.
 - [Image Resizer](https://toolkitfree.net/tools/image-resizer): Resize images to specific dimensions for Instagram, Facebook, Twitter, YouTube and more.
 - [Background Remover](https://toolkitfree.net/tools/background-remover): Automatically remove image backgrounds using AI. No signup required.
 
 ## Converter Variants
 
-- [JPG to PNG](https://toolkitfree.net/tools/image-converter/jpg-to-png)
-- [PNG to JPG](https://toolkitfree.net/tools/image-converter/png-to-jpg)
-- [WebP to JPG](https://toolkitfree.net/tools/image-converter/webp-to-jpg)
-- [JPG to WebP](https://toolkitfree.net/tools/image-converter/jpg-to-webp)
-- [PNG to WebP](https://toolkitfree.net/tools/image-converter/png-to-webp)
-- [WebP to PNG](https://toolkitfree.net/tools/image-converter/webp-to-png)
+- [JPG to PNG](https://toolkitfree.net/tools/image-converter/jpg-to-png): Convert JPG images to PNG format. Lossless conversion preserving full quality.
+- [PNG to JPG](https://toolkitfree.net/tools/image-converter/png-to-jpg): Convert PNG images to JPG format. Smaller file sizes for photos. Transparent areas filled with white.
+- [WebP to JPG](https://toolkitfree.net/tools/image-converter/webp-to-jpg): Convert WebP images to JPG format for maximum compatibility.
+- [JPG to WebP](https://toolkitfree.net/tools/image-converter/jpg-to-webp): Convert JPG to WebP for 25-34% smaller file sizes.
+- [PNG to WebP](https://toolkitfree.net/tools/image-converter/png-to-webp): Convert PNG to WebP while preserving transparency.
+- [WebP to PNG](https://toolkitfree.net/tools/image-converter/webp-to-png): Convert WebP to PNG for universal compatibility.
+- [PNG to GIF](https://toolkitfree.net/tools/image-converter/png-to-gif): Convert PNG images to GIF format.
+- [GIF to PNG](https://toolkitfree.net/tools/image-converter/gif-to-png): Convert GIF images to PNG format preserving quality.
+- [HEIC to JPG](https://toolkitfree.net/tools/image-converter/heic-to-jpg): Convert iPhone HEIC photos to JPG for universal compatibility.
+- [BMP to PNG](https://toolkitfree.net/tools/image-converter/bmp-to-png): Convert BMP bitmap images to modern PNG format.
+- [TIFF to JPG](https://toolkitfree.net/tools/image-converter/tiff-to-jpg): Convert TIFF images to JPG for smaller file sizes.
+- [SVG to PNG](https://toolkitfree.net/tools/image-converter/svg-to-png): Convert SVG vector graphics to PNG raster images.
 
 ## Compressor Variants
 
-- [Compress PNG](https://toolkitfree.net/tools/image-compressor/compress-png)
-- [Compress JPG](https://toolkitfree.net/tools/image-compressor/compress-jpg)
-- [Compress for Email](https://toolkitfree.net/tools/image-compressor/compress-for-email)
-- [Compress for Web](https://toolkitfree.net/tools/image-compressor/compress-for-web)
+- [Compress PNG](https://toolkitfree.net/tools/image-compressor/compress-png): Compress PNG images. Reduce dimensions for smaller file sizes.
+- [Compress JPG](https://toolkitfree.net/tools/image-compressor/compress-jpg): Compress JPG images with adjustable quality control.
+- [Compress for Email](https://toolkitfree.net/tools/image-compressor/compress-for-email): Compress images to fit email attachment limits.
+- [Compress for Web](https://toolkitfree.net/tools/image-compressor/compress-for-web): Optimize images for fast website loading and better SEO.
+- [Compress for WhatsApp](https://toolkitfree.net/tools/image-compressor/compress-for-whatsapp): Compress images to share on WhatsApp without quality loss.
+- [Compress to 100KB](https://toolkitfree.net/tools/image-compressor/compress-to-100kb): Reduce image file size to under 100KB.
 
 ## Resizer Variants
 
-- [Resize for Instagram](https://toolkitfree.net/tools/image-resizer/resize-for-instagram)
-- [Resize for Facebook](https://toolkitfree.net/tools/image-resizer/resize-for-facebook)
-- [Resize for Twitter](https://toolkitfree.net/tools/image-resizer/resize-for-twitter)
-- [Resize for YouTube](https://toolkitfree.net/tools/image-resizer/resize-for-youtube)
+- [Resize for Instagram](https://toolkitfree.net/tools/image-resizer/resize-for-instagram): Resize images for Instagram posts, stories, and reels.
+- [Resize for Facebook](https://toolkitfree.net/tools/image-resizer/resize-for-facebook): Resize images for Facebook cover photos, profile pictures, and posts.
+- [Resize for Twitter](https://toolkitfree.net/tools/image-resizer/resize-for-twitter): Resize images for Twitter/X headers and tweet images.
+- [Resize for YouTube](https://toolkitfree.net/tools/image-resizer/resize-for-youtube): Resize images for YouTube thumbnails, banners, and profiles.
+- [Resize for LinkedIn](https://toolkitfree.net/tools/image-resizer/resize-for-linkedin): Resize images for LinkedIn profile and post sizes.
+- [Resize for TikTok](https://toolkitfree.net/tools/image-resizer/resize-for-tiktok): Resize images for TikTok video thumbnails and profile pictures.
+- [Resize to 1920x1080](https://toolkitfree.net/tools/image-resizer/resize-to-1920x1080): Resize images to Full HD 1080p dimensions.
 
-## About
+## Guides
 
-All tools run entirely in the browser. No images are uploaded to any server. Free to use, no signup required.
+- [JPG vs PNG vs WebP](https://toolkitfree.net/guides/image-format-comparison): Which image format should you use? Comparison and recommendations.
+- [How to Reduce Image File Size](https://toolkitfree.net/guides/reduce-image-size): 5 ways to make images smaller without losing quality.
+- [Social Media Image Sizes](https://toolkitfree.net/guides/social-media-image-sizes): Complete guide to image dimensions for all social platforms.

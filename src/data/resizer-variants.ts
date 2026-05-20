@@ -3,6 +3,9 @@ export const allVariants = [
   { slug: 'resize-for-facebook', label: 'Resize for Facebook' },
   { slug: 'resize-for-twitter', label: 'Resize for Twitter/X' },
   { slug: 'resize-for-youtube', label: 'Resize for YouTube' },
+  { slug: 'resize-for-linkedin', label: 'Resize for LinkedIn' },
+  { slug: 'resize-for-tiktok', label: 'Resize for TikTok' },
+  { slug: 'resize-to-1920x1080', label: 'Resize to 1920x1080' },
 ];
 
 export const variantData: Record<string, { title: string; description: string; faq: { question: string; answer: string }[] }> = {
@@ -38,6 +41,33 @@ export const variantData: Record<string, { title: string; description: string; f
     faq: [
       { question: 'What size should a YouTube thumbnail be?', answer: 'YouTube thumbnails should be 1280x720 pixels (16:9 aspect ratio), with a minimum width of 640 pixels. Maximum file size is 2MB.' },
       { question: 'What size should a YouTube channel banner be?', answer: 'The recommended YouTube banner size is 2560x1440 pixels. The safe area visible on all devices is 1546x423 pixels in the center.' },
+    ],
+  },
+  'resize-for-linkedin': {
+    title: 'Resize Image for LinkedIn - Profile, Post, Banner Sizes',
+    description: 'Resize images for LinkedIn profile photos (400x400), post images (1200x627), and banners (1584x396). Free online tool.',
+    faq: [
+      { question: 'What size should a LinkedIn profile photo be?', answer: 'LinkedIn profile photos should be at least 400x400 pixels. LinkedIn displays them as a circle, so keep important content centered.' },
+      { question: 'What size should LinkedIn post images be?', answer: 'LinkedIn post images should be 1200x627 pixels for the best display in the feed. LinkedIn supports up to 7680x4320 but compresses larger images.' },
+      { question: 'What size should a LinkedIn banner be?', answer: 'LinkedIn personal profile banners should be 1584x396 pixels. Company page banners should be 1128x191 pixels.' },
+    ],
+  },
+  'resize-for-tiktok': {
+    title: 'Resize Image for TikTok - Profile, Thumbnail, Cover Sizes',
+    description: 'Resize images for TikTok profile pictures (200x200), video covers (1080x1920), and thumbnails. Free online tool.',
+    faq: [
+      { question: 'What size should a TikTok profile picture be?', answer: 'TikTok profile pictures should be at least 200x200 pixels. TikTok displays them as circles, so center your subject.' },
+      { question: 'What size should a TikTok video cover be?', answer: 'TikTok video covers should be 1080x1920 pixels (9:16 aspect ratio). This matches the full-screen vertical video format.' },
+      { question: 'What aspect ratio does TikTok use?', answer: 'TikTok uses 9:16 vertical aspect ratio. All videos and covers should be 1080x1920 pixels for the best quality.' },
+    ],
+  },
+  'resize-to-1920x1080': {
+    title: 'Resize Image to 1920x1080 - Full HD 1080p',
+    description: 'Resize images to 1920x1080 pixels (Full HD). Perfect for wallpapers, presentations, and video thumbnails. Free online tool.',
+    faq: [
+      { question: 'Why resize to 1920x1080?', answer: '1920x1080 is Full HD resolution, the standard for most monitors, presentations, and video content. It provides crisp quality while keeping file sizes manageable.' },
+      { question: 'Will the image be stretched?', answer: 'If you enable "Maintain aspect ratio," the image will fit within 1920x1080 without stretching. If disabled, the image will be stretched or squished to fill the exact dimensions.' },
+      { question: 'Is 1920x1080 good for wallpapers?', answer: 'Yes, 1920x1080 is the most common desktop monitor resolution. For higher-resolution displays (2K, 4K), consider larger dimensions.' },
     ],
   },
 };

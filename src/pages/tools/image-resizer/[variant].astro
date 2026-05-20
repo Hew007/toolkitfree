@@ -18,9 +18,20 @@ const structuredData = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": title,
+  "description": description,
   "applicationCategory": "UtilitiesApplication",
   "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0" },
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://toolkitfree.net" },
+    { "@type": "ListItem", "position": 2, "name": "Image Resizer", "item": "https://toolkitfree.net/tools/image-resizer" },
+    { "@type": "ListItem", "position": 3, "name": title, "item": pageUrl },
+  ]
 };
 
 const faqStructuredData = {
@@ -37,7 +48,7 @@ const faqStructuredData = {
   title={title}
   description={description}
   canonical={pageUrl}
-  structuredData={[structuredData, faqStructuredData]}
+  structuredData={[structuredData, faqStructuredData, breadcrumbSchema]}
 >
   <div class="tool-layout">
     <div class="tool-content">

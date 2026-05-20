@@ -51,6 +51,14 @@ const faqItems = [
     question: 'How do I convert images to WebP?',
     answer: 'Upload any image file (JPG, PNG, etc.), select WebP as the output format, choose your quality level, and click Convert. WebP offers excellent compression while maintaining visual quality.',
   },
+  {
+    question: 'How do I change a picture from JPG to PNG?',
+    answer: 'Simply drag your JPG file onto the converter, select PNG from the output format dropdown, and click Convert. Your PNG file will be ready to download instantly. The conversion preserves full quality since PNG is lossless.',
+  },
+  {
+    question: 'What is the best free image converter online?',
+    answer: 'ToolkitFree\'s image converter runs entirely in your browser — no uploads, no sign-ups, no watermarks. It supports JPG, PNG, and WebP with batch conversion and adjustable quality.',
+  },
 ];
 
 const structuredData = {
@@ -61,6 +69,15 @@ const structuredData = {
   "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0" },
   "description": "Convert images between JPG, PNG, and WebP formats instantly in your browser. Free, no upload needed.",
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://toolkitfree.net" },
+    { "@type": "ListItem", "position": 2, "name": "Image Converter", "item": "https://toolkitfree.net/tools/image-converter" },
+  ]
 };
 
 const faqStructuredData = {
@@ -78,9 +95,9 @@ const faqStructuredData = {
 ---
 
 <Layout
-  title="Free Image Converter - Convert JPG, PNG, WebP Online"
-  description="Convert images between JPG, PNG, and WebP formats instantly in your browser. No upload needed. Batch support. 100% free and private."
-  structuredData={[structuredData, faqStructuredData]}
+  title="Free Image Converter - Convert JPG, PNG, WebP Online | Batch, No Upload"
+  description="Convert images between JPG, PNG, and WebP formats instantly in your browser. Batch convert multiple files. No upload needed. 100% free and private."
+  structuredData={[structuredData, faqStructuredData, breadcrumbSchema]}
 >
   <div class="tool-layout">
     <div class="tool-content">
