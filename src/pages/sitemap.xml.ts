@@ -5,7 +5,10 @@ const SITE = 'https://toolkitfree.net';
 const pages = [
   // Main pages
   { url: '/', lastmod: '2026-05-20' },
+  { url: '/about', lastmod: '2026-05-22' },
+  { url: '/terms', lastmod: '2026-05-22' },
   { url: '/privacy-policy', lastmod: '2026-05-20' },
+  { url: '/contact', lastmod: '2026-05-22' },
 
   // Tool pages
   { url: '/tools/image-converter', lastmod: '2026-05-20' },
