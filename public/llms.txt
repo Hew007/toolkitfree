@@ -24,6 +24,9 @@
 - [Image Compressor](https://toolkitfree.net/tools/image-compressor): Compress images for web, email, and social media. Reduce file size without visible quality loss.
 - [Image Resizer](https://toolkitfree.net/tools/image-resizer): Resize images to specific dimensions for Instagram, Facebook, Twitter, YouTube and more.
 - [Background Remover](https://toolkitfree.net/tools/background-remover): Automatically remove image backgrounds using AI. No signup required.
+- [Image Cropper](https://toolkitfree.net/tools/image-cropper): Crop images with a visual drag-and-drop tool. Supports square, 16:9, 4:3, 3:2, and free aspect ratios.
+- [Image to PDF](https://toolkitfree.net/tools/image-to-pdf): Convert images to PDF. Combine multiple images into one PDF. A4, Letter, or fit-to-image page sizes.
+- [Favicon Generator](https://toolkitfree.net/tools/favicon-generator): Generate all favicon sizes from one image. Download ZIP with webmanifest and HTML code.
 
 ## Converter Variants
 
@@ -58,6 +61,30 @@
 - [Resize for LinkedIn](https://toolkitfree.net/tools/image-resizer/resize-for-linkedin): Resize images for LinkedIn profile and post sizes.
 - [Resize for TikTok](https://toolkitfree.net/tools/image-resizer/resize-for-tiktok): Resize images for TikTok video thumbnails and profile pictures.
 - [Resize to 1920x1080](https://toolkitfree.net/tools/image-resizer/resize-to-1920x1080): Resize images to Full HD 1080p dimensions.
+
+## Cropper Variants
+
+- [Crop to Square](https://toolkitfree.net/tools/image-cropper/crop-to-square): Crop images to a perfect 1:1 square for social media profiles and Instagram posts.
+- [Crop to 16:9](https://toolkitfree.net/tools/image-cropper/crop-to-16-9): Crop images to 16:9 widescreen ratio for YouTube thumbnails and presentations.
+- [Crop to 4:3](https://toolkitfree.net/tools/image-cropper/crop-to-4-3): Crop images to 4:3 ratio for presentations and standard displays.
+- [Crop to 3:2](https://toolkitfree.net/tools/image-cropper/crop-to-3-2): Crop images to 3:2 ratio matching DSLR camera native aspect ratio.
+- [Free Crop](https://toolkitfree.net/tools/image-cropper/free-crop): Crop images to any custom size with no aspect ratio constraint.
+
+## PDF Variants
+
+- [JPG to PDF](https://toolkitfree.net/tools/image-to-pdf/jpg-to-pdf): Convert JPG images to PDF format. Supports multiple JPGs combined into one PDF.
+- [PNG to PDF](https://toolkitfree.net/tools/image-to-pdf/png-to-pdf): Convert PNG images to PDF. Transparent areas filled with white.
+- [Image to A4 PDF](https://toolkitfree.net/tools/image-to-pdf/image-to-a4-pdf): Convert images to A4-sized PDF pages. Perfect for printing.
+- [Multiple Images to PDF](https://toolkitfree.net/tools/image-to-pdf/multiple-images-to-pdf): Combine multiple images into a single PDF file.
+- [Image to PDF without Margin](https://toolkitfree.net/tools/image-to-pdf/image-to-pdf-no-margin): Convert images to PDF with no margins, edge to edge.
+- [Photo to PDF](https://toolkitfree.net/tools/image-to-pdf/photo-to-pdf): Convert photos from phone or camera to PDF format.
+
+## Favicon Variants
+
+- [PNG to Favicon](https://toolkitfree.net/tools/favicon-generator/png-to-favicon): Convert PNG images to all standard favicon sizes.
+- [JPG to Favicon](https://toolkitfree.net/tools/favicon-generator/jpg-to-favicon): Convert JPG images to all standard favicon sizes.
+- [Logo to Favicon](https://toolkitfree.net/tools/favicon-generator/logo-to-favicon): Convert your logo to website favicon icons.
+- [Favicon for WordPress](https://toolkitfree.net/tools/favicon-generator/favicon-for-wordpress): Generate WordPress-compatible favicon and site icon.
 
 ## Guides
 

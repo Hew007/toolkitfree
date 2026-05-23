@@ -1,0 +1,162 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import FaviconGenerator from '../../components/FaviconGenerator';
+
+const faqItems = [
+  {
+    question: 'What is a favicon?',
+    answer: 'A favicon (favorite icon) is the small image shown in browser tabs, bookmarks, and mobile home screens. It helps users identify your website visually.',
+  },
+  {
+    question: 'What sizes does this tool generate?',
+    answer: 'We generate all standard sizes: 16x16, 32x32 (favicon), 180x180 (Apple touch icon), 192x192 and 512x512 (Android Chrome), plus a site.webmanifest file.',
+  },
+  {
+    question: 'Is this favicon generator free?',
+    answer: 'Yes, completely free. No sign-up, no watermarks, no limits. All processing happens in your browser.',
+  },
+  {
+    question: 'What image should I use for my favicon?',
+    answer: 'Use a simple, square image — ideally 512x512 or larger. Logos, icons, or letters work best. Avoid complex photos as favicons are displayed very small.',
+  },
+  {
+    question: 'How do I add the favicon to my website?',
+    answer: 'After downloading the ZIP, extract the files to your website\'s root directory and add the provided HTML code to your page\'s <head> section.',
+  },
+  {
+    question: 'Does this work for WordPress?',
+    answer: 'Yes. For WordPress, upload the 512x512 image as your Site Icon in Appearance > Customize > Site Identity. The other files work with custom themes.',
+  },
+  {
+    question: 'What is site.webmanifest?',
+    answer: 'It\'s a JSON file that tells browsers how to display your site when added to a mobile home screen. It\'s important for Progressive Web Apps (PWAs).',
+  },
+  {
+    question: 'Are my images uploaded to a server?',
+    answer: 'No. All processing happens entirely in your browser using the Canvas API and JSZip library. Your images never leave your device.',
+  },
+  {
+    question: 'Can I use any image format?',
+    answer: 'Any image your browser can open: PNG, JPG, WebP, GIF, SVG, BMP, and more. For best results, use a PNG with transparency.',
+  },
+  {
+    question: 'What is the recommended favicon size?',
+    answer: 'The minimum recommended size is 512x512 pixels. Larger is fine. Square images produce the best results across all generated sizes.',
+  },
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Free Favicon Generator",
+  "description": "Generate all favicon sizes from one image. Creates 16x16, 32x32, 180x180, 192x192, 512x512 PNG icons plus webmanifest. 100% client-side.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0" },
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://toolkitfree.net" },
+    { "@type": "ListItem", "position": 2, "name": "Favicon Generator", "item": "https://toolkitfree.net/tools/favicon-generator" },
+  ]
+};
+---
+
+<Layout
+  title="Free Favicon Generator — Create All Sizes from One Image"
+  description="Generate all favicon sizes from one image: 16x16, 32x32, Apple touch icon, Android Chrome. Download ZIP with webmanifest. HTML code included. Free, no upload needed."
+  structuredData={[structuredData, {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqItems.map((item) => ({
+      "@type": "Question", "name": item.question,
+      "acceptedAnswer": { "@type": "Answer", "text": item.answer },
+    })),
+  }, breadcrumbSchema]}
+>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>Free Online Favicon Generator</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
+        Generate all favicon sizes from one image. Download as ZIP with webmanifest and HTML code.
+        All processing in your browser.
+      </p>
+
+      <div class="privacy-badge">
+        <span style="color: #10b981; font-weight: 600;">Your files never leave your device</span>
+      </div>
+
+      <FaviconGenerator client:load />
+
+      <section class="howto-section">
+        <h2>How to Generate Favicons</h2>
+        <ol class="howto-steps">
+          <li>Upload a square image (PNG recommended, 512x512 or larger)</li>
+          <li>Click "Generate Favicons"</li>
+          <li>Preview all generated sizes</li>
+          <li>Download the ZIP file</li>
+          <li>Copy the HTML code and add it to your website</li>
+        </ol>
+      </section>
+
+      <section class="features-section">
+        <h2>Features</h2>
+        <ul class="features-list">
+          <li>Generates all standard favicon sizes</li>
+          <li>Includes site.webmanifest file</li>
+          <li>Ready-to-use HTML code snippet</li>
+          <li>High-quality image scaling</li>
+          <li>Supports PNG, JPG, WebP, and more</li>
+          <li>100% client-side — your images never leave your device</li>
+        </ul>
+      </section>
+
+      <div style="margin: 2rem 0;">
+        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
+      </div>
+
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {faqItems.map((item) => (
+          <div class="faq-item">
+            <details>
+              <summary class="faq-question">{item.question}</summary>
+              <div class="faq-answer">{item.answer}</div>
+            </details>
+          </div>
+        ))}
+      </section>
+
+      <section class="related-tools">
+        <h2>Related Tools</h2>
+        <div class="related-tools-grid">
+          <a href="/tools/image-converter" class="tool-card"><h3>Image Converter</h3><p>Convert between JPG, PNG, and WebP</p></a>
+          <a href="/tools/image-resizer" class="tool-card"><h3>Image Resizer</h3><p>Resize images to any dimension</p></a>
+          <a href="/tools/image-cropper" class="tool-card"><h3>Image Cropper</h3><p>Crop images with visual drag-and-drop</p></a>
+          <a href="/tools/image-compressor" class="tool-card"><h3>Image Compressor</h3><p>Reduce image file size</p></a>
+          <a href="/tools/image-to-pdf" class="tool-card"><h3>Image to PDF</h3><p>Convert images to PDF documents</p></a>
+          <a href="/tools/background-remover" class="tool-card"><h3>Background Remover</h3><p>Remove image backgrounds with AI</p></a>
+          <a href="/tools/qr-generator" class="tool-card"><h3>QR Code Generator</h3><p>Create QR codes for URLs, WiFi, vCards, and more</p></a>
+        </div>
+      </section>
+    </div>
+    <aside class="tool-sidebar">
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
+      <div style="margin-top: 2rem;">
+        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">More Tools</h3>
+        <ul style="font-size: 0.875rem; list-style: none;">
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-converter">Image Converter</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-compressor">Image Compressor</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer">Image Resizer</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-cropper">Image Cropper</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-to-pdf">Image to PDF</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/background-remover">Background Remover</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/qr-generator">QR Code Generator</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</Layout>
