@@ -12,6 +12,9 @@
     "@astrojs/react": "^4.2.7",
     "@imgly/background-removal": "^1.7.0",
     "astro": "^5.7.10",
+    "jspdf": "^4.2.1",
+    "jszip": "^3.10.1",
+    "qr-code-styling": "^1.9.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

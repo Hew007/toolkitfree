@@ -1,27 +1,27 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import ImageConverter from '../../../components/ImageConverter';
-import { allVariants, faqData, descriptions } from '../../../data/converter-variants';
+import FaviconGenerator from '../../../components/FaviconGenerator';
+import { allVariants, variantData } from '../../../data/favicon-variants';
 
 export function getStaticPaths() {
   return allVariants.map((v) => ({
     params: { variant: v.slug },
-    props: { ...v, faq: faqData[v.slug], description: descriptions[v.slug], title: `Convert ${v.from} to ${v.to} Online Free` },
+    props: { slug: v.slug, ...variantData[v.slug] },
   }));
 }
 
-const { from, to, title, description, faq, slug } = Astro.props;
+const { title, description, faq, slug } = Astro.props;
 
-const pageUrl = `https://toolkitfree.net/tools/image-converter/${Astro.params.variant}`;
+const pageUrl = `https://toolkitfree.net/tools/favicon-generator/${Astro.params.variant}`;
 
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": title,
+  "description": description,
   "applicationCategory": "UtilitiesApplication",
   "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0" },
-  "url": pageUrl,
 };
 
 const breadcrumbSchema = {
@@ -29,8 +29,8 @@ const breadcrumbSchema = {
   "@type": "BreadcrumbList",
   "itemListElement": [
     { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://toolkitfree.net" },
-    { "@type": "ListItem", "position": 2, "name": "Image Converter", "item": "https://toolkitfree.net/tools/image-converter" },
-    { "@type": "ListItem", "position": 3, "name": `${from} to ${to}`, "item": pageUrl },
+    { "@type": "ListItem", "position": 2, "name": "Favicon Generator", "item": "https://toolkitfree.net/tools/favicon-generator" },
+    { "@type": "ListItem", "position": 3, "name": title, "item": pageUrl },
   ]
 };
 
@@ -38,8 +38,7 @@ const faqStructuredData = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": faq.map((item: { question: string; answer: string }) => ({
-    "@type": "Question",
-    "name": item.question,
+    "@type": "Question", "name": item.question,
     "acceptedAnswer": { "@type": "Answer", "text": item.answer },
   })),
 };
@@ -54,35 +53,24 @@ const faqStructuredData = {
   <div class="tool-layout">
     <div class="tool-content">
       <h1>{title}</h1>
-      <p style="color: var(--color-text-light); margin-bottom: 0.5rem;">
-        Convert {from} images to {to} format instantly in your browser.
-        No upload needed — your files never leave your device.
+      <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
+        {description}
       </p>
-      <div class="privacy-badge">100% Client-Side Processing</div>
 
-      <div style="margin-top: 1.5rem;">
-        <ImageConverter client:load defaultFrom={from} defaultTo={to} />
+      <div class="privacy-badge">
+        <span style="color: #10b981; font-weight: 600;">Your files never leave your device</span>
       </div>
 
-      <section class="howto-section">
-        <h2>How to Convert {from} to {to}</h2>
-        <ol class="howto-steps">
-          <li>Upload your {from} file by dragging & dropping or clicking to browse</li>
-          <li>Select {to} as the output format</li>
-          {to !== 'PNG' && <li>Adjust the quality slider if needed</li>}
-          <li>Click "Convert" and download your {to} file</li>
-        </ol>
-      </section>
+      <FaviconGenerator client:load />
 
       <section class="features-section">
         <h2>Features</h2>
         <ul class="features-list">
-          <li>Fast {from} to {to} conversion</li>
-          <li>Batch convert multiple files</li>
-          <li>100% client-side — no uploads</li>
-          <li>No file size limits</li>
-          <li>Free with no watermarks</li>
-          <li>Works on any device</li>
+          <li>All standard favicon sizes included</li>
+          <li>site.webmanifest file generated</li>
+          <li>HTML code snippet for easy integration</li>
+          <li>High-quality image scaling</li>
+          <li>100% client-side processing</li>
         </ul>
       </section>
 
@@ -103,10 +91,10 @@ const faqStructuredData = {
       </section>
 
       <section class="related-tools">
-        <h2>More Conversion Tools</h2>
+        <h2>More Favicon Tools</h2>
         <div class="related-tools-grid">
           {allVariants.filter(v => v.slug !== slug).map(v => (
-            <a href={`/tools/image-converter/${v.slug}`} class="tool-card"><h3>{v.from} to {v.to}</h3></a>
+            <a href={`/tools/favicon-generator/${v.slug}`} class="tool-card"><h3>{v.label}</h3></a>
           ))}
         </div>
       </section>
@@ -115,21 +103,13 @@ const faqStructuredData = {
     <aside class="tool-sidebar">
       <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
       <div style="margin-top: 2rem;">
-        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">All Conversions</h3>
-        <ul style="font-size: 0.875rem; list-style: none;">
-          {allVariants.map(v => (
-            <li style="padding: 0.25rem 0;"><a href={`/tools/image-converter/${v.slug}`}>{v.from} → {v.to}</a></li>
-          ))}
-        </ul>
-      </div>
-      <div style="margin-top: 1.5rem;">
         <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">More Tools</h3>
         <ul style="font-size: 0.875rem; list-style: none;">
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-converter">Image Converter</a></li>
           <li style="padding: 0.25rem 0;"><a href="/tools/image-compressor">Image Compressor</a></li>
           <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer">Image Resizer</a></li>
           <li style="padding: 0.25rem 0;"><a href="/tools/image-cropper">Image Cropper</a></li>
           <li style="padding: 0.25rem 0;"><a href="/tools/image-to-pdf">Image to PDF</a></li>
-          <li style="padding: 0.25rem 0;"><a href="/tools/favicon-generator">Favicon Generator</a></li>
           <li style="padding: 0.25rem 0;"><a href="/tools/background-remover">Background Remover</a></li>
         </ul>
       </div>

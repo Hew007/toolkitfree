@@ -15,6 +15,9 @@ const pages = [
   { url: '/tools/image-compressor', lastmod: '2026-05-20' },
   { url: '/tools/image-resizer', lastmod: '2026-05-20' },
   { url: '/tools/background-remover', lastmod: '2026-05-20' },
+  { url: '/tools/image-cropper', lastmod: '2026-05-23' },
+  { url: '/tools/image-to-pdf', lastmod: '2026-05-23' },
+  { url: '/tools/favicon-generator', lastmod: '2026-05-23' },
 
   // Converter variants
   { url: '/tools/image-converter/jpg-to-png', lastmod: '2026-05-20' },
@@ -46,6 +49,27 @@ const pages = [
   { url: '/tools/image-resizer/resize-for-linkedin', lastmod: '2026-05-20' },
   { url: '/tools/image-resizer/resize-for-tiktok', lastmod: '2026-05-20' },
   { url: '/tools/image-resizer/resize-to-1920x1080', lastmod: '2026-05-20' },
+
+  // Cropper variants
+  { url: '/tools/image-cropper/crop-to-square', lastmod: '2026-05-23' },
+  { url: '/tools/image-cropper/crop-to-16-9', lastmod: '2026-05-23' },
+  { url: '/tools/image-cropper/crop-to-4-3', lastmod: '2026-05-23' },
+  { url: '/tools/image-cropper/crop-to-3-2', lastmod: '2026-05-23' },
+  { url: '/tools/image-cropper/free-crop', lastmod: '2026-05-23' },
+
+  // PDF variants
+  { url: '/tools/image-to-pdf/jpg-to-pdf', lastmod: '2026-05-23' },
+  { url: '/tools/image-to-pdf/png-to-pdf', lastmod: '2026-05-23' },
+  { url: '/tools/image-to-pdf/image-to-a4-pdf', lastmod: '2026-05-23' },
+  { url: '/tools/image-to-pdf/multiple-images-to-pdf', lastmod: '2026-05-23' },
+  { url: '/tools/image-to-pdf/image-to-pdf-no-margin', lastmod: '2026-05-23' },
+  { url: '/tools/image-to-pdf/photo-to-pdf', lastmod: '2026-05-23' },
+
+  // Favicon variants
+  { url: '/tools/favicon-generator/png-to-favicon', lastmod: '2026-05-23' },
+  { url: '/tools/favicon-generator/jpg-to-favicon', lastmod: '2026-05-23' },
+  { url: '/tools/favicon-generator/logo-to-favicon', lastmod: '2026-05-23' },
+  { url: '/tools/favicon-generator/favicon-for-wordpress', lastmod: '2026-05-23' },
 
   // Guides
   { url: '/guides/image-format-comparison', lastmod: '2026-05-20' },
