@@ -15,6 +15,7 @@ const pages = [
   { url: '/tools/image-compressor', lastmod: '2026-05-20' },
   { url: '/tools/image-resizer', lastmod: '2026-05-20' },
   { url: '/tools/background-remover', lastmod: '2026-05-20' },
+  { url: '/tools/qr-generator', lastmod: '2026-05-23' },
 
   // Converter variants
   { url: '/tools/image-converter/jpg-to-png', lastmod: '2026-05-20' },
