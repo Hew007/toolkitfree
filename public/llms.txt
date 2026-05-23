@@ -27,6 +27,7 @@
 - [Image Cropper](https://toolkitfree.net/tools/image-cropper): Crop images with a visual drag-and-drop tool. Supports square, 16:9, 4:3, 3:2, and free aspect ratios.
 - [Image to PDF](https://toolkitfree.net/tools/image-to-pdf): Convert images to PDF. Combine multiple images into one PDF. A4, Letter, or fit-to-image page sizes.
 - [Favicon Generator](https://toolkitfree.net/tools/favicon-generator): Generate all favicon sizes from one image. Download ZIP with webmanifest and HTML code.
+- [QR Code Generator](https://toolkitfree.net/tools/qr-generator): Create QR codes for URLs, WiFi networks, vCards, email, phone, and SMS. Custom colors and logo support.
 
 ## Converter Variants
 

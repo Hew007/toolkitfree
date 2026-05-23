@@ -18,7 +18,11 @@ All ToolkitFree tools run entirely in your browser using modern web technologies
 - Image Converter: Convert images between JPG, PNG, WebP, and more formats. Batch support.
 - Image Compressor: Compress images for web, email, and social media. Reduce file size without visible quality loss.
 - Image Resizer: Resize images to specific dimensions for Instagram, Facebook, Twitter, YouTube and more.
+- Image Cropper: Crop images with a visual drag-and-drop tool. Supports square, 16:9, 4:3, 3:2, and free aspect ratios.
+- Image to PDF: Convert images to PDF. Combine multiple images into one PDF. A4, Letter, or fit-to-image page sizes.
+- Favicon Generator: Generate all favicon sizes from one image. Download ZIP with webmanifest and HTML code.
 - Background Remover: Automatically remove image backgrounds using AI. No signup required.
+- QR Code Generator: Create QR codes for URLs, WiFi networks, vCards, email, phone, and SMS. Custom colors and logo support.
 
 ---
 
@@ -263,3 +267,145 @@ A: The first use takes 10-30 seconds to download the AI model (~40MB). Subsequen
 
 Q: Can I add a colored background after removal?
 A: Yes, you can choose from preset background colors (white, red, blue, green) or keep the background transparent (default).
+
+---
+
+## Image Cropper
+
+Free Online Image Cropper
+Crop images with a visual drag-and-drop tool. Supports square, 16:9, 4:3, 3:2, and free aspect ratios. Rule-of-thirds grid overlay. 100% client-side.
+
+### How to Crop Images
+1. Upload an image
+2. Select an aspect ratio preset or use Free Crop
+3. Drag the crop area to position and resize
+4. Select output format and quality
+5. Click "Crop" and download your image
+
+### Features
+- Visual drag-and-drop crop area with 8 resize handles
+- Aspect ratio presets: Free, 1:1, 16:9, 4:3, 3:2, 9:16
+- Rule-of-thirds grid overlay
+- Output as JPG, PNG, or WebP
+- Adjustable quality for JPG/WebP
+- 100% client-side processing
+
+### FAQ
+Q: How do I crop an image?
+A: Upload your image, select an aspect ratio (or use Free Crop), drag the crop area to your desired position, and click Crop. The cropped image downloads instantly.
+
+Q: What aspect ratios are supported?
+A: Free (no constraint), 1:1 (square), 16:9 (widescreen), 4:3 (standard), 3:2 (DSLR), and 9:16 (portrait/stories).
+
+Q: How do I crop a photo to a perfect square?
+A: Upload your photo and select the 1:1 aspect ratio preset. The crop area will be locked to a square. Drag to position and resize, then click Crop.
+
+Q: Can I crop multiple images at once?
+A: Currently the cropper processes one image at a time for precise visual control. For batch resizing, use the Image Resizer tool.
+
+---
+
+## Image to PDF
+
+Free Image to PDF Converter
+Convert images to PDF documents. Combine multiple images into one PDF. A4, Letter, or fit-to-image page sizes. Adjustable margins and orientation.
+
+### How to Convert Images to PDF
+1. Upload one or more images
+2. Choose page size (A4, Letter, or Fit to Image)
+3. Select orientation (Portrait or Landscape)
+4. Adjust margins if needed
+5. Click "Generate PDF" and download
+
+### Features
+- Multiple page sizes: A4, Letter, Fit to Image
+- Portrait and landscape orientation
+- Adjustable margins (0-30mm)
+- Combine multiple images into one PDF
+- Thumbnail preview of uploaded images
+- 100% client-side — uses jsPDF
+
+### FAQ
+Q: How do I convert JPG to PDF?
+A: Upload your JPG file, select your preferred page size and orientation, and click "Generate PDF." Your PDF will download instantly.
+
+Q: Can I combine multiple images into one PDF?
+A: Yes! Upload multiple images and they will be combined into a single PDF file, with each image on its own page.
+
+Q: What page sizes are available?
+A: A4 (210x297mm), Letter (8.5x11in), and Fit to Image (the PDF page matches the image dimensions exactly).
+
+Q: Can I remove margins?
+A: Yes, set the margin slider to 0mm for edge-to-edge printing, or adjust up to 30mm for standard document margins.
+
+---
+
+## Favicon Generator
+
+Free Favicon Generator
+Generate all standard favicon sizes from one image. Includes site.webmanifest and copyable HTML code. Download as ZIP.
+
+### How to Generate Favicons
+1. Upload a square image (PNG or JPG recommended, at least 512x512px)
+2. Preview all generated sizes
+3. Copy the HTML code snippet
+4. Download the ZIP file with all favicons and webmanifest
+
+### Features
+- Generates 5 standard sizes: 16x16, 32x32, 180x180, 192x192, 512x512
+- Includes site.webmanifest file
+- Copyable HTML <head> snippet
+- Download as ZIP package
+- Works with any image format
+- 100% client-side — uses JSZip
+
+### FAQ
+Q: What image should I use for my favicon?
+A: Use a square image, ideally 512x512 pixels or larger. PNG with transparency works best. Simple logos and icons look better than complex photos at small sizes.
+
+Q: What sizes are generated?
+A: 16x16 (favicon.ico), 32x32 (favicon.png), 180x180 (Apple touch icon), 192x192 (Android chrome), and 512x512 (Android chrome large).
+
+Q: What is a site.webmanifest?
+A: A JSON file that tells browsers how to display your web app when installed as a shortcut. It includes the app name, icons, and theme color.
+
+Q: How do I add the favicon to my website?
+A: Download the ZIP, extract the files to your website's root directory, and add the provided HTML code to the <head> section of your pages.
+
+---
+
+## QR Code Generator
+
+Free QR Code Generator
+Create QR codes for URLs, WiFi networks, vCards, email, phone, and SMS. Custom colors, logo support, and PNG/SVG export. 100% client-side.
+
+### How to Create QR Codes
+1. Select the content type (Text/URL, WiFi, vCard, Email, Phone, SMS)
+2. Enter your content details
+3. Customize colors and optionally add a logo
+4. Choose PNG or SVG format
+5. Download your QR code
+
+### Features
+- 6 content types: Text/URL, WiFi, vCard, Email, Phone, SMS
+- Custom foreground and background colors
+- Logo overlay support
+- PNG and SVG export
+- Adjustable error correction levels
+- 100% client-side — no data sent to any server
+
+### FAQ
+Q: What is a QR code?
+A: A QR code (Quick Response code) is a two-dimensional barcode that can store text, URLs, contact information, WiFi credentials, and more. You can scan it with any smartphone camera.
+
+Q: Can I add my logo to the QR code?
+A: Yes! Upload any image as a logo and it will be placed in the center of the QR code. The error correction level is automatically set to High to ensure scannability.
+
+Q: How do I create a WiFi QR code?
+A: Select the "WiFi" tab, enter your network name (SSID), security type, and password. When someone scans the code, their device will automatically connect.
+
+Q: Are QR codes generated here sent to a server?
+A: No. All QR code generation happens entirely in your browser. No data is ever sent to any server.
+
+Q: Do QR codes expire?
+A: No, static QR codes do not expire. They will work forever as long as the encoded content (like a URL) is still valid.
