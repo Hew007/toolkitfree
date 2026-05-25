@@ -11,6 +11,7 @@
 - Supports batch processing for all tools
 - Background remover uses AI running in-browser via WebAssembly
 - Works on any device with a modern browser
+- Contact: hnhw182@gmail.com
 
 ## Supported Formats
 

@@ -24,6 +24,9 @@ All ToolkitFree tools run entirely in your browser using modern web technologies
 - Background Remover: Automatically remove image backgrounds using AI. No signup required.
 - QR Code Generator: Create QR codes for URLs, WiFi networks, vCards, email, phone, and SMS. Custom colors and logo support.
 
+### Contact
+Email: hnhw182@gmail.com
+
 ---
 
 ## Image Converter
@@ -50,7 +53,7 @@ Q: How does the image converter work?
 A: Our image converter runs entirely in your browser using the Canvas API. When you upload an image, it is loaded into a hidden canvas element, then re-exported in your chosen format. Your files never leave your device.
 
 Q: What image formats are supported?
-A: We support JPG/JPEG, PNG, and WebP formats for both input and output. You can convert between any of these formats.
+A: We support JPG/JPEG, PNG, WebP, GIF, BMP, TIFF, SVG, and HEIC formats for input. Output formats include JPG, PNG, WebP, and GIF.
 
 Q: Is there a file size limit?
 A: There is no hard file size limit. However, very large images (over 100MP) may be slow to process because all conversion happens in your browser.
@@ -171,6 +174,105 @@ A: Yes, PNG files are typically larger than WebP files because PNG uses less eff
 
 ---
 
+## Image Converter: PNG to GIF
+
+Convert PNG images to GIF format. Smaller files for simple graphics. Free, no upload needed.
+
+### FAQ
+Q: How to convert PNG to GIF?
+A: Upload your PNG file, select GIF as the output format, and click Convert. GIF supports up to 256 colors, so some color reduction may occur.
+
+Q: Why convert PNG to GIF?
+A: GIF is useful for simple graphics, icons, and images with limited colors. GIF files can be smaller than PNG for images with flat colors and simple patterns.
+
+Q: Will transparency be preserved?
+A: GIF supports binary transparency (fully transparent or fully opaque). Semi-transparent pixels from PNG will be converted to either fully transparent or fully opaque.
+
+---
+
+## Image Converter: GIF to PNG
+
+Convert GIF images to PNG format. Lossless conversion for static GIFs. Better compression. Free, no upload needed.
+
+### FAQ
+Q: How to convert GIF to PNG?
+A: Upload your GIF file, select PNG as the output format, and click Convert. The first frame of the GIF will be converted to a static PNG image.
+
+Q: Why convert GIF to PNG?
+A: PNG offers better quality and compression for static images. If you have a GIF that doesn't need animation, converting to PNG reduces file size and improves quality.
+
+Q: Will the animation be preserved?
+A: No. PNG is a static image format. The conversion captures one frame from the GIF. If you need the animation, keep it as GIF.
+
+---
+
+## Image Converter: HEIC to JPG
+
+Convert HEIC iPhone photos to JPG format. Universal compatibility. Batch convert multiple photos. Free, no upload needed.
+
+### FAQ
+Q: How to convert HEIC to JPG?
+A: Upload your HEIC file from your iPhone, select JPG as the output format, and click Convert. Your JPG is ready to download and share instantly.
+
+Q: Why convert HEIC to JPG?
+A: HEIC is Apple's image format used by iPhones. Many websites, apps, and Windows computers don't support HEIC. Converting to JPG ensures universal compatibility.
+
+Q: Will I lose quality converting HEIC to JPG?
+A: HEIC already uses lossy compression. Converting to JPG at 92% quality preserves virtually all visible quality while creating a universally compatible file.
+
+Q: Can I convert multiple HEIC photos at once?
+A: Yes! Upload multiple HEIC files from your iPhone and convert them all to JPG in one batch. Perfect for transferring photo libraries.
+
+---
+
+## Image Converter: BMP to PNG
+
+Convert BMP bitmap images to PNG format. Lossless conversion with 50-90% smaller file sizes. Free, no upload needed.
+
+### FAQ
+Q: How to convert BMP to PNG?
+A: Upload your BMP file, select PNG as the output format, and click Convert. BMP to PNG conversion is lossless — quality is fully preserved.
+
+Q: Why convert BMP to PNG?
+A: BMP files are uncompressed and very large. PNG provides the same lossless quality with much better compression, typically reducing file size by 50-90%.
+
+Q: Is BMP to PNG conversion lossless?
+A: Yes. Both BMP and PNG are lossless formats. Converting from BMP to PNG preserves every pixel while dramatically reducing file size.
+
+---
+
+## Image Converter: TIFF to JPG
+
+Convert TIFF images to JPG format. 10-50x smaller files with adjustable quality. Free, no upload needed.
+
+### FAQ
+Q: How to convert TIFF to JPG?
+A: Upload your TIFF file, select JPG as the output format, adjust quality if needed, and click Convert. Your JPG is ready to download.
+
+Q: Why convert TIFF to JPG?
+A: TIFF files are very large because they use lossless compression. JPG files are 10-50x smaller, making them practical for web use, email, and everyday sharing.
+
+Q: Will I lose quality converting TIFF to JPG?
+A: JPG uses lossy compression, so some quality is lost. However, at 92%+ quality, the difference is imperceptible for most images while achieving massive file size reduction.
+
+---
+
+## Image Converter: SVG to PNG
+
+Convert SVG vector graphics to PNG raster images. Works in any application. Free, no upload needed.
+
+### FAQ
+Q: How to convert SVG to PNG?
+A: Upload your SVG file, select PNG as the output format, and click Convert. The SVG is rendered at its natural size and exported as a PNG image.
+
+Q: Why convert SVG to PNG?
+A: SVG is a vector format that not all applications support. Converting to PNG creates a raster image that works everywhere — emails, social media, presentations, and more.
+
+Q: What resolution will the PNG be?
+A: The SVG is rendered at its natural dimensions. For higher resolution output, you can resize the PNG after conversion using our Image Resizer tool.
+
+---
+
 ## Image Compressor
 
 Free Online Image Compressor
@@ -205,6 +307,111 @@ A: No, you can compress as many images as you want.
 
 ---
 
+## Image Compressor: Compress PNG
+
+Compress PNG images to reduce file size. No quality loss for lossless compression. Batch support. 100% free, no upload needed.
+
+### FAQ
+Q: How to compress a PNG file?
+A: Upload your PNG file, adjust the quality and max width settings, and click Compress. Since PNG is lossless, quality adjustment mainly affects dimensions. Setting a max width is the most effective way to reduce PNG file size.
+
+Q: Can I compress PNG without losing quality?
+A: PNG is a lossless format, so the quality slider has no effect on PNG files. To reduce PNG size without quality loss, you can only reduce the image dimensions. For better compression with quality control, consider converting to WebP.
+
+Q: How much can I reduce PNG file size?
+A: By reducing dimensions, you can typically achieve 30-70% size reduction. For example, scaling a 4000px wide image to 1920px can reduce file size by 75% or more.
+
+Q: What is the best way to compress PNG for web?
+A: For web use, resize your PNG to the maximum display size needed. A 1920px wide image is usually sufficient. Alternatively, convert to WebP for 25-34% better compression.
+
+---
+
+## Image Compressor: Compress JPG
+
+Compress JPG images to reduce file size. Adjustable quality from 10-100%. Batch support. Free, no upload needed.
+
+### FAQ
+Q: How to compress a JPG file?
+A: Upload your JPG file, set the quality level (80% is a good default), optionally set a max width, and click Compress.
+
+Q: What quality should I use for JPG compression?
+A: For web use: 75-85%. For email: 60-75%. For archiving: 90-95%. At 80% quality, most people cannot tell the difference from the original.
+
+Q: How much can I reduce JPG file size?
+A: At 80% quality, JPG files typically reduce by 40-60%. Combined with dimension reduction, you can achieve 70-90% smaller files.
+
+Q: Does JPG compression reduce image quality?
+A: Yes, JPG is a lossy format. Lower quality = smaller file but more visible artifacts. However, at 80%+ quality, the difference is imperceptible for most images.
+
+---
+
+## Image Compressor: Compress for Email
+
+Compress images to fit email attachment limits. Most email providers limit attachments to 25MB. Free online image compressor.
+
+### FAQ
+Q: What size should images be for email?
+A: Most email providers limit attachments to 25MB total. For a single image, aim for under 5MB. At 80% quality with 1920px max width, most photos will be 200KB-1MB.
+
+Q: How to make a photo smaller for email?
+A: Upload your photo, set quality to 75-80%, set max width to 1280-1920px, and click Compress. This typically reduces photos to under 500KB.
+
+Q: Can I compress multiple photos for email at once?
+A: Yes, batch compression is supported. Upload all your photos at once and compress them together. Then download individually or all at once.
+
+---
+
+## Image Compressor: Compress for Web
+
+Compress and optimize images for websites. Faster page load times. Better SEO. Free online image optimizer.
+
+### FAQ
+Q: What is the ideal image size for websites?
+A: For hero images: 1920px wide, under 200KB. For content images: 800-1200px wide, under 100KB. For thumbnails: 300-400px wide, under 30KB.
+
+Q: How does image compression affect SEO?
+A: Google uses page speed as a ranking factor. Smaller images load faster, improving Core Web Vitals (LCP). This directly helps your search rankings.
+
+Q: Should I use JPG or WebP for my website?
+A: WebP is better — 25-34% smaller than JPG at the same quality. However, for maximum compatibility, you can use JPG with a WebP fallback using the <picture> element.
+
+---
+
+## Image Compressor: Compress for WhatsApp
+
+Compress images to share on WhatsApp without losing quality. WhatsApp compresses photos automatically — pre-compress to control the result.
+
+### FAQ
+Q: Why do my photos lose quality on WhatsApp?
+A: WhatsApp automatically compresses images to save bandwidth. Photos are resized to 1600px and compressed to JPEG at ~70% quality. By pre-compressing with our tool, you control the result.
+
+Q: What is the best size for WhatsApp photos?
+A: Set max width to 1600px and quality to 80-85%. This matches WhatsApp's compression but gives you control. Most photos will be 100-300KB.
+
+Q: How do I send large photos on WhatsApp without compression?
+A: Use our tool to compress to under 100KB at 1600px width, then send as a document (not image) in WhatsApp to avoid re-compression.
+
+---
+
+## Image Compressor: Compress to 100KB
+
+Compress images to under 100KB online. Perfect for forms, applications, and websites with file size limits. Free, no upload needed.
+
+### FAQ
+Q: How to reduce photo size to 100KB?
+A: Upload your photo, set quality to 60-70%, set max width to 1280px, and click Compress. Most photos will compress to under 100KB at these settings.
+
+Q: Will 100KB look bad?
+A: At 1280px wide and 70% quality, most photos look perfectly fine at 100KB. The quality difference is only visible when zooming in. For web display and forms, 100KB is more than sufficient.
+
+Q: What if my image is still over 100KB?
+A: Lower the quality to 50-60% or reduce the max width to 800-1024px. Simple images (documents, screenshots) compress better than complex photos.
+
+Q: Why do forms require images under 100KB?
+A: Many government and job application forms limit image uploads to 100KB or 200KB to save server storage and ensure fast upload times. Our tool makes it easy to meet these limits.
+
+---
+
 ## Image Resizer
 
 Free Online Image Resizer
@@ -233,6 +440,112 @@ A: When enabled, the tool automatically adjusts one dimension to match the origi
 
 Q: Can I resize multiple images at once?
 A: Yes, you can upload and resize multiple images simultaneously. All images will be resized to the same dimensions.
+
+---
+
+## Image Resizer: Resize for Instagram
+
+Resize images for Instagram posts (1080x1080), stories (1080x1920), and reels. Free online tool. No upload needed.
+
+### FAQ
+Q: What size should Instagram photos be?
+A: Instagram posts are best at 1080x1080 pixels (square) or 1080x1350 (portrait). Stories and Reels should be 1080x1920 pixels (9:16 aspect ratio).
+
+Q: What happens if my photo is the wrong size?
+A: Instagram will crop or letterbox your photo. To avoid this, resize your image to the correct dimensions before uploading using our tool.
+
+Q: What is the best aspect ratio for Instagram?
+A: Square (1:1) for posts, Portrait (4:5) for taller posts, and 9:16 for Stories and Reels.
+
+---
+
+## Image Resizer: Resize for Facebook
+
+Resize images for Facebook cover photos (820x312), profile pictures, and posts. Free online image resizer.
+
+### FAQ
+Q: What size should a Facebook cover photo be?
+A: Facebook cover photos should be 820x312 pixels on desktop. On mobile, they display at 640x360. The safe area that shows on both is approximately 820x312.
+
+Q: What size should Facebook post images be?
+A: For the best display, use 1200x630 pixels for Facebook post images. This is the recommended size for link previews and shared posts.
+
+Q: What size should a Facebook profile picture be?
+A: Upload at least 180x180 pixels. Facebook displays profile pictures at 176x176 on desktop and 196x196 on smartphones.
+
+---
+
+## Image Resizer: Resize for Twitter
+
+Resize images for Twitter/X header (1500x500), profile picture, and tweet images. Free online tool.
+
+### FAQ
+Q: What size should a Twitter header be?
+A: Twitter/X header images should be 1500x500 pixels. Keep important content in the center as it may be cropped on different screen sizes.
+
+Q: What size should tweet images be?
+A: For in-stream photos, use 1600x900 pixels (16:9 ratio). Twitter supports up to 4096x4096 but will compress larger images.
+
+---
+
+## Image Resizer: Resize for YouTube
+
+Resize images for YouTube thumbnails (1280x720), channel banners (2560x1440), and profile pictures. Free tool.
+
+### FAQ
+Q: What size should a YouTube thumbnail be?
+A: YouTube thumbnails should be 1280x720 pixels (16:9 aspect ratio), with a minimum width of 640 pixels. Maximum file size is 2MB.
+
+Q: What size should a YouTube channel banner be?
+A: The recommended YouTube banner size is 2560x1440 pixels. The safe area visible on all devices is 1546x423 pixels in the center.
+
+---
+
+## Image Resizer: Resize for LinkedIn
+
+Resize images for LinkedIn profile photos (400x400), post images (1200x627), and banners (1584x396). Free online tool.
+
+### FAQ
+Q: What size should a LinkedIn profile photo be?
+A: LinkedIn profile photos should be at least 400x400 pixels. LinkedIn displays them as a circle, so keep important content centered.
+
+Q: What size should LinkedIn post images be?
+A: LinkedIn post images should be 1200x627 pixels for the best display in the feed. LinkedIn supports up to 7680x4320 but compresses larger images.
+
+Q: What size should a LinkedIn banner be?
+A: LinkedIn personal profile banners should be 1584x396 pixels. Company page banners should be 1128x191 pixels.
+
+---
+
+## Image Resizer: Resize for TikTok
+
+Resize images for TikTok profile pictures (200x200), video covers (1080x1920), and thumbnails. Free online tool.
+
+### FAQ
+Q: What size should a TikTok profile picture be?
+A: TikTok profile pictures should be at least 200x200 pixels. TikTok displays them as circles, so center your subject.
+
+Q: What size should a TikTok video cover be?
+A: TikTok video covers should be 1080x1920 pixels (9:16 aspect ratio). This matches the full-screen vertical video format.
+
+Q: What aspect ratio does TikTok use?
+A: TikTok uses 9:16 vertical aspect ratio. All videos and covers should be 1080x1920 pixels for the best quality.
+
+---
+
+## Image Resizer: Resize to 1920x1080
+
+Resize images to 1920x1080 pixels (Full HD). Perfect for wallpapers, presentations, and video thumbnails. Free online tool.
+
+### FAQ
+Q: Why resize to 1920x1080?
+A: 1920x1080 is Full HD resolution, the standard for most monitors, presentations, and video content. It provides crisp quality while keeping file sizes manageable.
+
+Q: Will the image be stretched?
+A: If you enable "Maintain aspect ratio," the image will fit within 1920x1080 without stretching. If disabled, the image will be stretched or squished to fill the exact dimensions.
+
+Q: Is 1920x1080 good for wallpapers?
+A: Yes, 1920x1080 is the most common desktop monitor resolution. For higher-resolution displays (2K, 4K), consider larger dimensions.
 
 ---
 
@@ -305,6 +618,92 @@ A: Currently the cropper processes one image at a time for precise visual contro
 
 ---
 
+## Image Cropper: Crop to Square
+
+Crop images to a perfect square (1:1) for social media profiles, Instagram posts, and thumbnails. Free, no upload needed.
+
+### FAQ
+Q: How to crop an image to a square?
+A: Upload your image, select the 1:1 aspect ratio, adjust the crop area by dragging, and click Crop. Download your perfectly squared image.
+
+Q: What size is a square image?
+A: A square image has equal width and height (1:1 ratio). Common sizes include 1080x1080 (Instagram), 500x500 (Facebook), and 400x400 (LinkedIn).
+
+Q: Why crop to a square?
+A: Square images work perfectly as social media profile pictures, Instagram posts, and thumbnails. They display consistently across all platforms without cropping.
+
+Q: Can I choose the output size of the square?
+A: The crop tool lets you select the area to keep. The output size depends on how large you make the crop area. For specific pixel dimensions, use our Image Resizer after cropping.
+
+---
+
+## Image Cropper: Crop to 16:9
+
+Crop images to 16:9 widescreen ratio for YouTube thumbnails, presentations, and desktop wallpapers. Free, no upload needed.
+
+### FAQ
+Q: How to crop an image to 16:9?
+A: Upload your image, select the 16:9 aspect ratio, position the crop area, and click Crop. Your widescreen image is ready to download.
+
+Q: What is 16:9 used for?
+A: 16:9 is the standard widescreen ratio used for YouTube thumbnails (1280x720), HD video, presentations, and most modern displays.
+
+Q: Will the image quality change after cropping?
+A: C cropping only removes parts of the image — it does not compress or alter the remaining pixels. The quality of the cropped area stays the same as the original.
+
+---
+
+## Image Cropper: Crop to 4:3
+
+Crop images to 4:3 ratio for presentations, standard photos, and older displays. Free, no upload needed.
+
+### FAQ
+Q: How to crop an image to 4:3?
+A: Upload your image, select the 4:3 aspect ratio, adjust the crop area, and click Crop. Download your cropped image instantly.
+
+Q: What is 4:3 used for?
+A: 4:3 is the traditional screen ratio used in presentations (PowerPoint defaults), older monitors, iPads, and many digital cameras.
+
+Q: Can I crop multiple images to 4:3?
+A: Currently the tool processes one image at a time. Upload and crop each image individually for the best results.
+
+---
+
+## Image Cropper: Crop to 3:2
+
+Crop images to 3:2 ratio, the standard for photography prints and DSLR cameras. Free, no upload needed.
+
+### FAQ
+Q: How to crop an image to 3:2?
+A: Upload your image, select the 3:2 ratio, drag to position the crop area, and click Crop. Your photo is ready to download.
+
+Q: What is the 3:2 aspect ratio?
+A: 3:2 is the native ratio of most DSLR and mirrorless cameras. It is also standard for 4x6 inch photo prints.
+
+Q: Why use 3:2?
+A: 3:2 matches the native sensor ratio of most cameras, so cropping to this ratio preserves the original composition intent. It is also the ratio for standard photo prints.
+
+---
+
+## Image Cropper: Free Crop
+
+Crop images to any custom size. Drag to select the area you want to keep. Free, private, runs entirely in your browser.
+
+### FAQ
+Q: How does free crop work?
+A: Upload your image, select "Free" for aspect ratio, drag the crop handles to select any area, and click Crop. You can resize the selection freely without any ratio constraint.
+
+Q: Can I enter exact pixel dimensions?
+A: The crop tool shows you the current selection size in pixels. Drag the handles to get your desired dimensions. For exact pixel control, use our Image Resizer after cropping.
+
+Q: Does cropping reduce image quality?
+A: No. Cropping removes pixels outside the selection but does not compress or alter the remaining pixels. The cropped area retains the full quality of the original.
+
+Q: What image formats can I crop?
+A: You can crop any image your browser can open — JPG, PNG, WebP, GIF, BMP, and more. The output can be saved as PNG, JPG, or WebP.
+
+---
+
 ## Image to PDF
 
 Free Image to PDF Converter
@@ -340,6 +739,117 @@ A: Yes, set the margin slider to 0mm for edge-to-edge printing, or adjust up to 
 
 ---
 
+## Image to PDF: JPG to PDF
+
+Convert JPG images to PDF format instantly. Supports multiple JPGs, A4/Letter page sizes, adjustable margins. Free, no upload needed.
+
+### FAQ
+Q: How to convert JPG to PDF?
+A: Upload your JPG file(s), choose page size and orientation, and click "Convert to PDF." Your PDF is ready to download in seconds.
+
+Q: Can I convert multiple JPGs to one PDF?
+A: Yes! Upload multiple JPG files and they will be combined into a single multi-page PDF, with each JPG on its own page.
+
+Q: Will the image quality be preserved?
+A: Yes. The conversion uses high-quality JPEG encoding at 92% quality. Your images will look great in the PDF.
+
+Q: Is JPG to PDF free?
+A: Yes, completely free. No sign-up, no watermarks, no file size limits. All processing happens in your browser.
+
+---
+
+## Image to PDF: PNG to PDF
+
+Convert PNG images to PDF format. Transparent areas are filled with white. Supports multiple files. Free, no upload needed.
+
+### FAQ
+Q: How to convert PNG to PDF?
+A: Upload your PNG file(s), set your preferred page size and orientation, and click "Convert to PDF." Download your PDF instantly.
+
+Q: What happens to transparent PNGs?
+A: PDF does not support transparency. Transparent areas in your PNG will be filled with white in the PDF output.
+
+Q: Can I batch convert PNGs to PDF?
+A: Yes. Upload multiple PNG files at once. Each PNG will become a page in the PDF, in the order you uploaded them.
+
+Q: Why convert PNG to PDF?
+A: PDF is ideal for sharing, printing, and archiving. It preserves layout and works consistently across all devices and platforms.
+
+---
+
+## Image to PDF: Image to A4 PDF
+
+Convert images to A4-sized PDF pages. Perfect for printing documents and photos. Adjustable margins. Free, no upload needed.
+
+### FAQ
+Q: What is A4 size?
+A: A4 is the standard international paper size: 210x297mm (8.27x11.69 inches). It is the default size for most printers worldwide.
+
+Q: How to convert an image to A4 PDF?
+A: Upload your image, select "A4" as the page size, adjust orientation and margins if needed, and click Convert. Your A4 PDF is ready.
+
+Q: Can I fit multiple images on one A4 page?
+A: Currently each image gets its own A4 page. For multiple images per page, you can use our Image Resizer to create a collage first.
+
+Q: Will the image fill the entire A4 page?
+A: The image is scaled to fit the page while maintaining its aspect ratio. You can adjust margins to control how much of the page the image fills.
+
+---
+
+## Image to PDF: Multiple Images to PDF
+
+Combine multiple images into one PDF file. Each image becomes a page. Supports JPG, PNG, WebP. Free, no upload needed.
+
+### FAQ
+Q: How to combine multiple images into one PDF?
+A: Upload all your images at once. They will be arranged in the order you uploaded them, with each image on its own page. Click "Convert to PDF" and download.
+
+Q: How many images can I combine?
+A: There is no hard limit. You can combine as many images as your browser can handle. For very large batches (100+), processing may take longer.
+
+Q: Can I reorder the images?
+A: Currently images are arranged in upload order. Remove and re-upload images in your preferred order if needed.
+
+Q: What image formats are supported?
+A: Any image format your browser supports: JPG, PNG, WebP, GIF, BMP, and more. All formats are converted to JPEG pages in the PDF.
+
+---
+
+## Image to PDF: Image to PDF without Margin
+
+Convert images to PDF with no margins. Images fill the entire page edge to edge. Free, no upload needed.
+
+### FAQ
+Q: How to convert images to PDF without margins?
+A: Upload your image, select "Fit to Image" page size, or set margin to 0mm with A4/Letter size. The image will fill the page edge to edge.
+
+Q: When should I use no-margin PDF?
+A: No-margin PDFs are ideal for photo prints, full-page graphics, flyers, and when you want the image to bleed to the edge of the page.
+
+Q: Will the image be cropped?
+A: The image is scaled to fit the page while maintaining aspect ratio. With no margins, it fills the maximum area possible without distortion.
+
+---
+
+## Image to PDF: Photo to PDF
+
+Convert photos to PDF format for sharing and printing. Supports iPhone and Android photos. Batch conversion. Free, no upload needed.
+
+### FAQ
+Q: How to convert a photo to PDF?
+A: Upload your photo(s) from your phone or computer, choose page settings, and click Convert. Your PDF is ready to download and share.
+
+Q: Can I convert iPhone photos to PDF?
+A: Yes. Upload photos directly from your iPhone. HEIC, JPG, and PNG formats are all supported.
+
+Q: Why convert photos to PDF?
+A: PDF is universally compatible, easy to share via email, great for printing, and perfect for archiving. Unlike photos, PDFs preserve layout on any device.
+
+Q: Can I combine photos from my phone into one PDF?
+A: Yes. Select multiple photos when uploading. They will be combined into a single PDF with one photo per page.
+
+---
+
 ## Favicon Generator
 
 Free Favicon Generator
@@ -371,6 +881,76 @@ A: A JSON file that tells browsers how to display your web app when installed as
 
 Q: How do I add the favicon to my website?
 A: Download the ZIP, extract the files to your website's root directory, and add the provided HTML code to the <head> section of your pages.
+
+---
+
+## Favicon Generator: PNG to Favicon
+
+Convert a PNG image to all favicon sizes (16x16 to 512x512). Download as ZIP with webmanifest. Free, no upload needed.
+
+### FAQ
+Q: How to convert PNG to favicon?
+A: Upload your PNG image, click "Generate Favicons," and download the ZIP file containing all standard favicon sizes plus a webmanifest file.
+
+Q: What size should my PNG be?
+A: For best results, use a PNG that is at least 512x512 pixels. Square images work best. The tool will resize it to all required favicon dimensions.
+
+Q: Does PNG transparency work for favicons?
+A: Yes. PNG transparency is preserved in the generated favicon files. However, favicon.ico (16x16) typically uses a solid background.
+
+Q: What files are included in the download?
+A: The ZIP includes favicon-16x16.png, favicon-32x32.png, apple-touch-icon.png (180x180), android-chrome-192x192.png, android-chrome-512x512.png, and site.webmanifest.
+
+---
+
+## Favicon Generator: JPG to Favicon
+
+Convert a JPG image to all favicon sizes. White background for transparent areas. Download as ZIP. Free, no upload needed.
+
+### FAQ
+Q: How to convert JPG to favicon?
+A: Upload your JPG image and click "Generate Favicons." The tool creates all standard favicon sizes from your image and packages them in a downloadable ZIP.
+
+Q: Can I use a photo as a favicon?
+A: You can, but favicons are displayed very small (16x16 pixels). Simple logos, icons, or letters work best. Photos may not be recognizable at small sizes.
+
+Q: What happens to the JPG background?
+A: JPG does not support transparency. If your image has a background, it will be included as-is in the favicon. For transparent favicons, start with a PNG.
+
+---
+
+## Favicon Generator: Logo to Favicon
+
+Convert your logo to all favicon sizes needed for a modern website. Includes webmanifest. Free, no upload needed.
+
+### FAQ
+Q: How to turn a logo into a favicon?
+A: Upload your logo image (PNG or JPG), click "Generate Favicons," and download the ZIP with all required icon sizes plus the HTML code to add to your site.
+
+Q: What makes a good favicon from a logo?
+A: Use a simple, recognizable part of your logo — typically the icon or mark, not the full wordmark. Square or nearly-square logos work best.
+
+Q: What files do I need for a website favicon?
+A: A modern website needs: favicon-32x32.png, favicon-16x16.png, apple-touch-icon.png (180x180), android-chrome-192x192.png, android-chrome-512x512.png, and site.webmanifest. Our tool generates all of these.
+
+---
+
+## Favicon Generator: Favicon for WordPress
+
+Generate WordPress-compatible favicon and site icon. All required sizes for WordPress. Free, no upload needed.
+
+### FAQ
+Q: What favicon sizes does WordPress need?
+A: WordPress needs a site icon of at least 512x512 pixels. It automatically generates all smaller sizes from this. Our tool creates the 512x512 version plus all other standard sizes.
+
+Q: How to add a favicon to WordPress?
+A: Go to Appearance > Customize > Site Identity > Site Icon in your WordPress dashboard. Upload the 512x512 PNG from our download. WordPress handles the rest automatically.
+
+Q: Can I use the ZIP download for WordPress?
+A: For WordPress, you only need the 512x512 android-chrome-512x512.png file. Upload it as the Site Icon in WordPress. The other files in the ZIP are useful if you have a custom theme.
+
+Q: What is site.webmanifest?
+A: The webmanifest file tells browsers how to display your site when added to a home screen. It is mainly for Progressive Web Apps (PWA). WordPress does not use it by default.
 
 ---
 
@@ -409,3 +989,9 @@ A: No. All QR code generation happens entirely in your browser. No data is ever 
 
 Q: Do QR codes expire?
 A: No, static QR codes do not expire. They will work forever as long as the encoded content (like a URL) is still valid.
+
+---
+
+## Contact
+
+For questions, feedback, or suggestions, email: hnhw182@gmail.com
