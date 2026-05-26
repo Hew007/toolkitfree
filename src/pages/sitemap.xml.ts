@@ -11,14 +11,14 @@ const pages = [
   { url: '/contact', lastmod: '2026-05-22' },
 
   // Tool pages
-  { url: '/tools/image-converter', lastmod: '2026-05-20' },
-  { url: '/tools/image-compressor', lastmod: '2026-05-20' },
-  { url: '/tools/image-resizer', lastmod: '2026-05-20' },
-  { url: '/tools/background-remover', lastmod: '2026-05-20' },
-  { url: '/tools/qr-generator', lastmod: '2026-05-23' },
-  { url: '/tools/image-cropper', lastmod: '2026-05-23' },
-  { url: '/tools/image-to-pdf', lastmod: '2026-05-23' },
-  { url: '/tools/favicon-generator', lastmod: '2026-05-23' },
+  { url: '/tools/image-converter/', lastmod: '2026-05-20' },
+  { url: '/tools/image-compressor/', lastmod: '2026-05-20' },
+  { url: '/tools/image-resizer/', lastmod: '2026-05-20' },
+  { url: '/tools/background-remover/', lastmod: '2026-05-20' },
+  { url: '/tools/qr-generator/', lastmod: '2026-05-23' },
+  { url: '/tools/image-cropper/', lastmod: '2026-05-23' },
+  { url: '/tools/image-to-pdf/', lastmod: '2026-05-23' },
+  { url: '/tools/favicon-generator/', lastmod: '2026-05-23' },
 
   // Converter variants
   { url: '/tools/image-converter/jpg-to-png', lastmod: '2026-05-20' },
