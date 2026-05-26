@@ -19,7 +19,9 @@ const {
 
 const siteName = 'ToolkitFree';
 const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
-const canonicalUrl = canonical || `https://toolkitfree.net${Astro.url.pathname}`;
+const rawPath = Astro.url.pathname;
+const normalizedPath = rawPath === '/' ? '/' : rawPath.endsWith('/') ? rawPath : rawPath + '/';
+const canonicalUrl = canonical || `https://toolkitfree.net${normalizedPath}`;
 
 const orgSchema = {
   "@context": "https://schema.org",
