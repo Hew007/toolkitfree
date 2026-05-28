@@ -19,6 +19,7 @@ const pages = [
   { url: '/tools/image-cropper/', lastmod: '2026-05-23' },
   { url: '/tools/image-to-pdf/', lastmod: '2026-05-23' },
   { url: '/tools/favicon-generator/', lastmod: '2026-05-23' },
+  { url: '/tools/image-enhancer/', lastmod: '2026-05-28' },
 
   // Converter variants
   { url: '/tools/image-converter/jpg-to-png/', lastmod: '2026-05-20' },

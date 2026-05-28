@@ -22,6 +22,7 @@ All ToolkitFree tools run entirely in your browser using modern web technologies
 - Image to PDF: Convert images to PDF. Combine multiple images into one PDF. A4, Letter, or fit-to-image page sizes.
 - Favicon Generator: Generate all favicon sizes from one image. Download ZIP with webmanifest and HTML code.
 - Background Remover: Automatically remove image backgrounds using AI. No signup required.
+- Image Enhancer: Adjust brightness, contrast, saturation, sharpness, blur, and grayscale with live preview.
 - QR Code Generator: Create QR codes for URLs, WiFi networks, vCards, email, phone, and SMS. Custom colors and logo support.
 
 ### Contact
@@ -580,6 +581,46 @@ A: The first use takes 10-30 seconds to download the AI model (~40MB). Subsequen
 
 Q: Can I add a colored background after removal?
 A: Yes, you can choose from preset background colors (white, red, blue, green) or keep the background transparent (default).
+
+---
+
+## Image Enhancer
+
+Free Online Image Enhancer
+Adjust brightness, contrast, saturation, sharpness, blur, and grayscale with live preview. All processing in your browser — your files never leave your device.
+
+### How to Enhance Images
+1. Upload an image (JPG, PNG, WebP, and more)
+2. Adjust the sliders to enhance your image — see changes in real time
+3. Toggle grayscale or add blur and sharpness as needed
+4. Choose your output format and click "Download" to save
+
+### Features
+- Brightness, contrast, and saturation adjustments
+- Sharpness enhancement with unsharp mask
+- Gaussian blur and grayscale effects
+- Live preview — see changes instantly
+- Download as PNG, JPG, or WebP with quality control
+- 100% client-side processing — your images never leave your device
+
+### FAQ
+Q: How does the image enhancer work?
+A: Our image enhancer uses the browser's Canvas API to apply adjustments like brightness, contrast, saturation, sharpness, blur, and grayscale directly to your image. All processing happens locally in your browser.
+
+Q: Is my image uploaded to a server?
+A: No. All image processing happens entirely in your browser using the Canvas API. Your images never leave your device, ensuring complete privacy.
+
+Q: What file formats are supported?
+A: You can upload any common image format including JPG, PNG, WebP, GIF, and BMP. For download, you can choose between PNG (lossless), JPG, or WebP output.
+
+Q: What does the sharpness slider do?
+A: The sharpness slider applies an unsharp mask effect that enhances edge contrast, making your image appear crisper and more detailed.
+
+Q: Can I apply multiple adjustments at once?
+A: Yes! You can combine any or all adjustments simultaneously. Use "Reset All" to return to the original.
+
+Q: Will the enhanced image lose quality?
+A: If you download as PNG, there is no quality loss. JPG and WebP use lossy compression, but you can control the quality level (default 92%) to minimize visible difference.
 
 ---
 

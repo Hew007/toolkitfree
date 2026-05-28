@@ -1,0 +1,167 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ImageEnhancer from '../../components/ImageEnhancer';
+
+const faqItems = [
+  {
+    question: 'How does the image enhancer work?',
+    answer: 'Our image enhancer uses the browser\'s Canvas API to apply adjustments like brightness, contrast, saturation, sharpness, blur, and grayscale directly to your image. All processing happens locally in your browser — no data is sent to any server.',
+  },
+  {
+    question: 'Is my image uploaded to a server?',
+    answer: 'No. All image processing happens entirely in your browser using the Canvas API. Your images never leave your device, ensuring complete privacy.',
+  },
+  {
+    question: 'What file formats are supported?',
+    answer: 'You can upload any common image format including JPG, PNG, WebP, GIF, and BMP. For download, you can choose between PNG (lossless), JPG, or WebP output.',
+  },
+  {
+    question: 'What does the sharpness slider do?',
+    answer: 'The sharpness slider applies an unsharp mask effect that enhances edge contrast, making your image appear crisper and more detailed. It works well for slightly blurry or soft photos.',
+  },
+  {
+    question: 'What is the difference between brightness and contrast?',
+    answer: 'Brightness shifts all pixel values up or down, making the entire image lighter or darker. Contrast adjusts the difference between light and dark areas — higher contrast makes darks darker and lights lighter.',
+  },
+  {
+    question: 'Can I apply multiple adjustments at once?',
+    answer: 'Yes! You can combine any or all adjustments simultaneously. For example, you can increase brightness, boost saturation, and add sharpness all at the same time. Use "Reset All" to return to the original.',
+  },
+  {
+    question: 'Will the enhanced image lose quality?',
+    answer: 'If you download as PNG, there is no quality loss — it\'s a lossless format. JPG and WebP use lossy compression, but you can control the quality level (default 92%) to minimize any visible difference.',
+  },
+  {
+    question: 'How do I make an old photo look better?',
+    answer: 'Try increasing brightness slightly (+10 to +20), boosting contrast (+15 to +25), adding saturation (+10 to +20), and applying some sharpness (20 to 40). These adjustments can significantly improve faded or dull-looking photos.',
+  },
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Free Image Enhancer",
+  "description": "Enhance photos online with brightness, contrast, saturation, sharpness, blur, and grayscale adjustments. Live preview. 100% client-side.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0" },
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://toolkitfree.net" },
+    { "@type": "ListItem", "position": 2, "name": "Image Enhancer", "item": "https://toolkitfree.net/tools/image-enhancer" },
+  ]
+};
+
+const faqStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqItems.map((item) => ({
+    "@type": "Question",
+    "name": item.question,
+    "acceptedAnswer": { "@type": "Answer", "text": item.answer },
+  })),
+};
+---
+
+<Layout
+  title="Free Image Enhancer - Adjust Brightness, Contrast & More"
+  description="Enhance photos online with brightness, contrast, saturation, sharpness, blur, and grayscale. Live preview. 100% free, private, no upload needed."
+  structuredData={[structuredData, faqStructuredData, breadcrumbSchema]}
+>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>Free Online Image Enhancer</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
+        Adjust brightness, contrast, saturation, sharpness, blur, and grayscale with live preview.
+        All processing in your browser — your files never leave your device.
+      </p>
+
+      <ImageEnhancer client:load />
+
+      <section class="howto-section">
+        <h2>How to Enhance Images</h2>
+        <ol class="howto-steps">
+          <li>Upload an image (JPG, PNG, WebP, and more)</li>
+          <li>Adjust the sliders to enhance your image — see changes in real time</li>
+          <li>Toggle grayscale or add blur and sharpness as needed</li>
+          <li>Choose your output format and click "Download" to save</li>
+        </ol>
+      </section>
+
+      <section class="features-section">
+        <h2>Features</h2>
+        <ul class="features-list">
+          <li>Brightness, contrast, and saturation adjustments</li>
+          <li>Sharpness enhancement with unsharp mask</li>
+          <li>Gaussian blur and grayscale effects</li>
+          <li>Live preview — see changes instantly</li>
+          <li>Download as PNG, JPG, or WebP with quality control</li>
+          <li>100% client-side processing — your images never leave your device</li>
+        </ul>
+      </section>
+
+      <div style="margin: 2rem 0;">
+        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
+      </div>
+
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {faqItems.map((item) => (
+          <div class="faq-item">
+            <details>
+              <summary class="faq-question">{item.question}</summary>
+              <div class="faq-answer">{item.answer}</div>
+            </details>
+          </div>
+        ))}
+      </section>
+
+      <section class="related-tools">
+        <h2>Related Tools</h2>
+        <div class="related-tools-grid">
+          <a href="/tools/image-converter/" class="tool-card">
+            <h3>Image Converter</h3>
+            <p>Convert between JPG, PNG, and WebP formats</p>
+          </a>
+          <a href="/tools/image-compressor/" class="tool-card">
+            <h3>Image Compressor</h3>
+            <p>Compress images to reduce file size</p>
+          </a>
+          <a href="/tools/image-resizer/" class="tool-card">
+            <h3>Image Resizer</h3>
+            <p>Resize images to exact dimensions</p>
+          </a>
+          <a href="/tools/background-remover/" class="tool-card">
+            <h3>Background Remover</h3>
+            <p>Remove image backgrounds using AI</p>
+          </a>
+          <a href="/tools/image-cropper/" class="tool-card">
+            <h3>Image Cropper</h3>
+            <p>Crop images with visual drag-and-drop</p>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <aside class="tool-sidebar">
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
+      <div style="margin-top: 2rem;">
+        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">More Tools</h3>
+        <ul style="font-size: 0.875rem; list-style: none;">
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-converter/">Image Converter</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-compressor/">Image Compressor</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer/">Image Resizer</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-cropper/">Image Cropper</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/image-to-pdf/">Image to PDF</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/favicon-generator/">Favicon Generator</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/background-remover/">Background Remover</a></li>
+          <li style="padding: 0.25rem 0;"><a href="/tools/qr-generator/">QR Code Generator</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</Layout>

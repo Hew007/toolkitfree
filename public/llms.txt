@@ -25,6 +25,7 @@
 - [Image Compressor](https://toolkitfree.net/tools/image-compressor/): Compress images for web, email, and social media. Reduce file size without visible quality loss.
 - [Image Resizer](https://toolkitfree.net/tools/image-resizer/): Resize images to specific dimensions for Instagram, Facebook, Twitter, YouTube and more.
 - [Background Remover](https://toolkitfree.net/tools/background-remover/): Automatically remove image backgrounds using AI. No signup required.
+- [Image Enhancer](https://toolkitfree.net/tools/image-enhancer/): Adjust brightness, contrast, saturation, sharpness, blur, and grayscale with live preview. 100% client-side.
 - [Image Cropper](https://toolkitfree.net/tools/image-cropper/): Crop images with a visual drag-and-drop tool. Supports square, 16:9, 4:3, 3:2, and free aspect ratios.
 - [Image to PDF](https://toolkitfree.net/tools/image-to-pdf/): Convert images to PDF. Combine multiple images into one PDF. A4, Letter, or fit-to-image page sizes.
 - [Favicon Generator](https://toolkitfree.net/tools/favicon-generator/): Generate all favicon sizes from one image. Download ZIP with webmanifest and HTML code.
