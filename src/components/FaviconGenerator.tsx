@@ -1,5 +1,15 @@
 import { useState, useCallback } from 'react';
 import FileUploader from './FileUploader';
+import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
+import {
+  downloadUrl,
+  exportCanvas,
+  formatSize,
+  getCanvas2dContext,
+  getImageProcessingErrorMessage,
+  loadImage,
+  validateImageFile,
+} from '../lib/image-processing';
 
 interface GeneratedIcon {
   name: string;
@@ -15,12 +25,6 @@ const ICON_SIZES = [
   { name: 'android-chrome-512x512.png', size: 512 },
 ];
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-}
-
 export default function FaviconGenerator() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -29,24 +33,40 @@ export default function FaviconGenerator() {
   const [icons, setIcons] = useState<GeneratedIcon[]>([]);
   const [zipUrl, setZipUrl] = useState<string | null>(null);
   const [zipSize, setZipSize] = useState(0);
+  const objectUrls = useObjectUrlRegistry();
+
+  const clearGeneratedUrls = useCallback(() => {
+    objectUrls.revokePrefix('icon:');
+    objectUrls.revoke('zip');
+  }, [objectUrls]);
 
   const handleFiles = useCallback((newFiles: File[]) => {
     const f = newFiles[0];
-    setFile(f);
-    setIcons([]);
-    setZipUrl(null);
-    setError(null);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(URL.createObjectURL(f));
-  }, [previewUrl]);
+    if (!f) return;
+
+    try {
+      validateImageFile(f);
+      clearGeneratedUrls();
+      setFile(f);
+      setIcons([]);
+      setZipUrl(null);
+      setZipSize(0);
+      setError(null);
+      setPreviewUrl(objectUrls.replace('preview', f));
+    } catch (err) {
+      setError(getImageProcessingErrorMessage(err));
+    }
+  }, [clearGeneratedUrls, objectUrls]);
 
   const handleRemove = useCallback(() => {
+    objectUrls.revokeAll();
     setFile(null);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setIcons([]);
     setZipUrl(null);
-  }, [previewUrl]);
+    setZipSize(0);
+    setError(null);
+  }, [objectUrls]);
 
   const generateFavicons = async () => {
     if (!file) return;
@@ -55,15 +75,11 @@ export default function FaviconGenerator() {
     setError(null);
     setIcons([]);
     setZipUrl(null);
+    setZipSize(0);
+    clearGeneratedUrls();
 
     try {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => { URL.revokeObjectURL(url); resolve(); };
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Failed to load image')); };
-        img.src = url;
-      });
+      const img = await loadImage(file);
 
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
@@ -73,20 +89,18 @@ export default function FaviconGenerator() {
         const canvas = document.createElement('canvas');
         canvas.width = icon.size;
         canvas.height = icon.size;
-        const ctx = canvas.getContext('2d')!;
+        const ctx = getCanvas2dContext(canvas);
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, icon.size, icon.size);
 
-        const blob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Failed to generate'))), 'image/png');
-        });
+        const blob = await exportCanvas(canvas, 'image/png');
 
         zip.file(icon.name, blob);
         generated.push({
           name: icon.name,
           size: icon.size,
-          url: URL.createObjectURL(blob),
+          url: objectUrls.replace(`icon:${icon.name}`, blob),
         });
       }
 
@@ -104,13 +118,23 @@ export default function FaviconGenerator() {
       zip.file('site.webmanifest', JSON.stringify(manifest, null, 2));
 
       const zipBlob = await zip.generateAsync({ type: 'blob' });
-      setZipUrl(URL.createObjectURL(zipBlob));
+      setZipUrl(objectUrls.replace('zip', zipBlob));
       setZipSize(zipBlob.size);
       setIcons(generated);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Generation failed');
+      clearGeneratedUrls();
+      setError(getImageProcessingErrorMessage(err));
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handleDownloadZip = () => {
+    if (!zipUrl) return;
+    try {
+      downloadUrl(zipUrl, 'favicons.zip');
+    } catch (err) {
+      setError(getImageProcessingErrorMessage(err));
     }
   };
 
@@ -180,7 +204,9 @@ export default function FaviconGenerator() {
                   <div className="file-item-size">{formatSize(zipSize)} — {icons.length} icons + webmanifest</div>
                 </div>
               </div>
-              <a href={zipUrl} download="favicons.zip" className="btn btn-primary">Download ZIP</a>
+              <button type="button" className="btn btn-primary" onClick={handleDownloadZip}>
+                Download ZIP
+              </button>
             </div>
           )}
 

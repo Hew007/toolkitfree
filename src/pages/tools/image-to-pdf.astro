@@ -9,7 +9,7 @@ const faqItems = [
   },
   {
     question: 'Is this image to PDF converter free?',
-    answer: 'Yes, completely free. No sign-up, no watermarks, no file size limits. All processing happens in your browser.',
+    answer: 'Yes, it is free with no sign-up or watermark. Browser memory and PDF generation limits still apply to large images and batches.',
   },
   {
     question: 'Are my images uploaded to a server?',
@@ -25,7 +25,7 @@ const faqItems = [
   },
   {
     question: 'What image formats can I convert?',
-    answer: 'Any format your browser can open: JPG, PNG, WebP, GIF, BMP, TIFF, and more. All images are converted to high-quality JPEG pages in the PDF.',
+    answer: 'JPG, PNG, and WebP are the supported inputs. Other formats depend on browser decoding and are not guaranteed; HEIC and TIFF are not supported.',
   },
   {
     question: 'Can I adjust margins?',
@@ -33,7 +33,7 @@ const faqItems = [
   },
   {
     question: 'How is this different from other online converters?',
-    answer: 'ToolkitFree processes everything locally in your browser. No uploads, no waiting for server processing, no privacy concerns. It works offline once loaded.',
+    answer: 'ToolkitFree generates the PDF locally without uploading image files. The page must first load its site resources, and browser memory limits still apply.',
   },
 ];
 
@@ -103,7 +103,7 @@ const breadcrumbSchema = {
           <li>Fit-to-image mode for exact dimensions</li>
           <li>Portrait and landscape orientation</li>
           <li>Adjustable margins (0-30mm)</li>
-          <li>Supports JPG, PNG, WebP, GIF, BMP, and more</li>
+          <li>Supports JPG, PNG, and WebP; other inputs are browser-dependent</li>
           <li>100% client-side — your images never leave your device</li>
         </ul>
       </section>

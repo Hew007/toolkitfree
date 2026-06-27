@@ -4,13 +4,13 @@ import Layout from '../layouts/Layout.astro';
 const tools = [
   {
     name: 'Image Converter',
-    description: 'Convert images between JPG, PNG, WebP, and more. Batch support. 100% client-side.',
+    description: 'Convert images between JPG, PNG, and WebP. Browser-dependent inputs are labeled clearly.',
     href: '/tools/image-converter',
     icon: ' ',
   },
   {
     name: 'Image Compressor',
-    description: 'Compress images to reduce file size while maintaining quality. Target specific file sizes.',
+    description: 'Re-encode or resize images and compare the result. Smaller output is not guaranteed.',
     href: '/tools/image-compressor',
     icon: '⚡',
   },
@@ -98,9 +98,9 @@ const structuredData = {
     <ul class="features-list">
       <li>100% free, no sign-up required</li>
       <li>Your files never leave your device</li>
-      <li>No file size limits</li>
+      <li>No server upload limit; browser memory limits still apply</li>
       <li>Works on any device with a browser</li>
-      <li>Batch processing support</li>
+      <li>Batch support in converter, compressor, resizer, and image-to-PDF</li>
       <li>No watermarks on output</li>
     </ul>
   </section>
@@ -110,7 +110,7 @@ const structuredData = {
     <p style="color: var(--color-text-light);">
       All ToolkitFree tools run entirely in your browser using modern web technologies including the Canvas API and WebAssembly.
       Your images are processed locally on your device — they are never uploaded to any server.
-      This means complete privacy, no file size limits, and instant processing without waiting for server uploads.
+      File contents stay local, but capacity depends on device memory and browser Canvas limits. The page still downloads site assets, advertising code, and, for background removal, model files.
     </p>
   </section>
 

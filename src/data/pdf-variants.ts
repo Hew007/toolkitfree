@@ -15,7 +15,7 @@ export const variantData: Record<string, { title: string; description: string; f
       { question: 'How to convert JPG to PDF?', answer: 'Upload your JPG file(s), choose page size and orientation, and click "Convert to PDF." Your PDF is ready to download in seconds.' },
       { question: 'Can I convert multiple JPGs to one PDF?', answer: 'Yes! Upload multiple JPG files and they will be combined into a single multi-page PDF, with each JPG on its own page.' },
       { question: 'Will the image quality be preserved?', answer: 'Yes. The conversion uses high-quality JPEG encoding at 92% quality. Your images will look great in the PDF.' },
-      { question: 'Is JPG to PDF free?', answer: 'Yes, completely free. No sign-up, no watermarks, no file size limits. All processing happens in your browser.' },
+      { question: 'Is JPG to PDF free?', answer: 'Yes, it is free with no sign-up or watermark. Browser memory and PDF generation limits still apply.' },
     ],
   },
   'png-to-pdf': {
@@ -43,9 +43,9 @@ export const variantData: Record<string, { title: string; description: string; f
     description: 'Combine multiple images into one PDF file. Each image becomes a page. Supports JPG, PNG, WebP. Free, no upload needed.',
     faq: [
       { question: 'How to combine multiple images into one PDF?', answer: 'Upload all your images at once. They will be arranged in the order you uploaded them, with each image on its own page. Click "Convert to PDF" and download.' },
-      { question: 'How many images can I combine?', answer: 'There is no hard limit. You can combine as many images as your browser can handle. For very large batches (100+), processing may take longer.' },
+      { question: 'How many images can I combine?', answer: 'There is no server quota. The practical limit depends on browser memory, image dimensions, and device performance; large batches can fail.' },
       { question: 'Can I reorder the images?', answer: 'Currently images are arranged in upload order. Remove and re-upload images in your preferred order if needed.' },
-      { question: 'What image formats are supported?', answer: 'Any image format your browser supports: JPG, PNG, WebP, GIF, BMP, and more. All formats are converted to JPEG pages in the PDF.' },
+      { question: 'What image formats are supported?', answer: 'JPG, PNG, and WebP are supported. Other formats depend on the browser decoder and are not guaranteed.' },
     ],
   },
   'image-to-pdf-no-margin': {
@@ -62,7 +62,7 @@ export const variantData: Record<string, { title: string; description: string; f
     description: 'Convert photos to PDF format for sharing and printing. Supports iPhone and Android photos. Batch conversion. Free, no upload needed.',
     faq: [
       { question: 'How to convert a photo to PDF?', answer: 'Upload your photo(s) from your phone or computer, choose page settings, and click Convert. Your PDF is ready to download and share.' },
-      { question: 'Can I convert iPhone photos to PDF?', answer: 'Yes. Upload photos directly from your iPhone. HEIC, JPG, and PNG formats are all supported.' },
+      { question: 'Can I convert iPhone photos to PDF?', answer: 'JPG, PNG, and WebP photos are supported. HEIC is not supported by the current browser-only decoder.' },
       { question: 'Why convert photos to PDF?', answer: 'PDF is universally compatible, easy to share via email, great for printing, and perfect for archiving. Unlike photos, PDFs preserve layout on any device.' },
       { question: 'Can I combine photos from my phone into one PDF?', answer: 'Yes. Select multiple photos when uploading. They will be combined into a single PDF with one photo per page.' },
     ],

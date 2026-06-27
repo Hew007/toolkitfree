@@ -27,12 +27,6 @@ const pages = [
   { url: '/tools/image-converter/jpg-to-webp', lastmod: '2026-05-20' },
   { url: '/tools/image-converter/png-to-webp', lastmod: '2026-05-20' },
   { url: '/tools/image-converter/webp-to-png', lastmod: '2026-05-20' },
-  { url: '/tools/image-converter/heic-to-jpg', lastmod: '2026-05-20' },
-  { url: '/tools/image-converter/gif-to-png', lastmod: '2026-05-20' },
-  { url: '/tools/image-converter/bmp-to-png', lastmod: '2026-05-20' },
-  { url: '/tools/image-converter/tiff-to-jpg', lastmod: '2026-05-20' },
-  { url: '/tools/image-converter/svg-to-png', lastmod: '2026-05-20' },
-  { url: '/tools/image-converter/png-to-gif', lastmod: '2026-05-20' },
 
   // Compressor variants
   { url: '/tools/image-compressor/compress-png', lastmod: '2026-05-20' },
@@ -40,7 +34,6 @@ const pages = [
   { url: '/tools/image-compressor/compress-for-email', lastmod: '2026-05-20' },
   { url: '/tools/image-compressor/compress-for-web', lastmod: '2026-05-20' },
   { url: '/tools/image-compressor/compress-for-whatsapp', lastmod: '2026-05-20' },
-  { url: '/tools/image-compressor/compress-to-100kb', lastmod: '2026-05-20' },
 
   // Resizer variants
   { url: '/tools/image-resizer/resize-for-instagram', lastmod: '2026-05-20' },

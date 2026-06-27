@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "validate:processing": "node scripts/validate-image-processing.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.7",

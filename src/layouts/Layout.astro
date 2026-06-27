@@ -7,6 +7,7 @@ interface Props {
   canonical?: string;
   ogImage?: string;
   structuredData?: object;
+  noindex?: boolean;
 }
 
 const {
@@ -15,6 +16,7 @@ const {
   canonical,
   ogImage,
   structuredData,
+  noindex = false,
 } = Astro.props;
 
 const siteName = 'ToolkitFree';
@@ -37,6 +39,7 @@ const orgSchema = {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content={description} />
+  {noindex && <meta name="robots" content="noindex, follow" />}
   <title>{fullTitle}</title>
 
   <link rel="canonical" href={canonicalUrl} />

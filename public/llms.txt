@@ -1,94 +1,40 @@
 # ToolkitFree
 
-> Free online image processing tools. Convert, compress, resize, and remove backgrounds from images — all processed in your browser, 100% client-side and private.
+> Free browser-based image utilities. File contents are processed locally and are not uploaded for processing.
 
-## Key Facts
+## Capability notes
 
-- All processing is 100% client-side using JavaScript, Canvas API, and WebAssembly
-- No images are ever uploaded to any server
-- No account or sign-up required
-- No watermarks are added to output files
-- Supports batch processing for all tools
-- Background remover uses AI running in-browser via WebAssembly
-- Works on any device with a modern browser
+- Guaranteed converter inputs and outputs: JPG/JPEG, PNG, WebP.
+- Browser-dependent converter inputs: GIF, BMP, SVG. GIF conversion exports one static frame.
+- Not currently supported: HEIC input, TIFF input, GIF output.
+- Large files and batches are limited by device memory, browser decoders, and Canvas dimensions.
+- Compression re-encodes images; a smaller result or exact target size is not guaranteed.
+- Batch processing is available in Converter, Compressor, Resizer, and Image to PDF. Cropper, Favicon Generator, and Background Remover process one image at a time.
+- File contents stay on the device. The site still requests normal site assets and advertising resources. Background Remover also downloads model files.
 
-## Supported Formats
+## Main tools
 
-- Input: JPG, JPEG, PNG, WebP, GIF, BMP, TIFF, SVG, HEIC
-- Output: JPG, JPEG, PNG, WebP, GIF
-- Background removal output: PNG (with transparency)
+- [Image Converter](https://toolkitfree.net/tools/image-converter): Convert JPG, PNG, and WebP. Batch supported.
+- [Image Compressor](https://toolkitfree.net/tools/image-compressor): Re-encode or resize JPG, PNG, and WebP; compare output size.
+- [Image Resizer](https://toolkitfree.net/tools/image-resizer): Resize multiple images to shared dimensions.
+- [Image Cropper](https://toolkitfree.net/tools/image-cropper): Crop one image with visual controls.
+- [Image to PDF](https://toolkitfree.net/tools/image-to-pdf): Combine supported images into a multi-page PDF.
+- [Favicon Generator](https://toolkitfree.net/tools/favicon-generator): Generate favicon assets from one image.
+- [Background Remover](https://toolkitfree.net/tools/background-remover): Remove one image background with a downloaded browser model.
+- [QR Generator](https://toolkitfree.net/tools/qr-generator): Generate PNG or SVG QR codes.
 
-## Main Tools
+## Supported converter pages
 
-- [Image Converter](https://toolkitfree.net/tools/image-converter): Convert images between JPG, PNG, WebP, and more formats. Batch support. No upload needed.
-- [Image Compressor](https://toolkitfree.net/tools/image-compressor): Compress images for web, email, and social media. Reduce file size without visible quality loss.
-- [Image Resizer](https://toolkitfree.net/tools/image-resizer): Resize images to specific dimensions for Instagram, Facebook, Twitter, YouTube and more.
-- [Background Remover](https://toolkitfree.net/tools/background-remover): Automatically remove image backgrounds using AI. No signup required.
-- [Image Cropper](https://toolkitfree.net/tools/image-cropper): Crop images with a visual drag-and-drop tool. Supports square, 16:9, 4:3, 3:2, and free aspect ratios.
-- [Image to PDF](https://toolkitfree.net/tools/image-to-pdf): Convert images to PDF. Combine multiple images into one PDF. A4, Letter, or fit-to-image page sizes.
-- [Favicon Generator](https://toolkitfree.net/tools/favicon-generator): Generate all favicon sizes from one image. Download ZIP with webmanifest and HTML code.
-- [QR Code Generator](https://toolkitfree.net/tools/qr-generator): Create QR codes for URLs, WiFi networks, vCards, email, phone, and SMS. Custom colors and logo support.
+- [JPG to PNG](https://toolkitfree.net/tools/image-converter/jpg-to-png)
+- [PNG to JPG](https://toolkitfree.net/tools/image-converter/png-to-jpg)
+- [WebP to JPG](https://toolkitfree.net/tools/image-converter/webp-to-jpg)
+- [JPG to WebP](https://toolkitfree.net/tools/image-converter/jpg-to-webp)
+- [PNG to WebP](https://toolkitfree.net/tools/image-converter/png-to-webp)
+- [WebP to PNG](https://toolkitfree.net/tools/image-converter/webp-to-png)
 
-## Converter Variants
+## Guides and policies
 
-- [JPG to PNG](https://toolkitfree.net/tools/image-converter/jpg-to-png): Convert JPG images to PNG format. Lossless conversion preserving full quality.
-- [PNG to JPG](https://toolkitfree.net/tools/image-converter/png-to-jpg): Convert PNG images to JPG format. Smaller file sizes for photos. Transparent areas filled with white.
-- [WebP to JPG](https://toolkitfree.net/tools/image-converter/webp-to-jpg): Convert WebP images to JPG format for maximum compatibility.
-- [JPG to WebP](https://toolkitfree.net/tools/image-converter/jpg-to-webp): Convert JPG to WebP for 25-34% smaller file sizes.
-- [PNG to WebP](https://toolkitfree.net/tools/image-converter/png-to-webp): Convert PNG to WebP while preserving transparency.
-- [WebP to PNG](https://toolkitfree.net/tools/image-converter/webp-to-png): Convert WebP to PNG for universal compatibility.
-- [PNG to GIF](https://toolkitfree.net/tools/image-converter/png-to-gif): Convert PNG images to GIF format.
-- [GIF to PNG](https://toolkitfree.net/tools/image-converter/gif-to-png): Convert GIF images to PNG format preserving quality.
-- [HEIC to JPG](https://toolkitfree.net/tools/image-converter/heic-to-jpg): Convert iPhone HEIC photos to JPG for universal compatibility.
-- [BMP to PNG](https://toolkitfree.net/tools/image-converter/bmp-to-png): Convert BMP bitmap images to modern PNG format.
-- [TIFF to JPG](https://toolkitfree.net/tools/image-converter/tiff-to-jpg): Convert TIFF images to JPG for smaller file sizes.
-- [SVG to PNG](https://toolkitfree.net/tools/image-converter/svg-to-png): Convert SVG vector graphics to PNG raster images.
-
-## Compressor Variants
-
-- [Compress PNG](https://toolkitfree.net/tools/image-compressor/compress-png): Compress PNG images. Reduce dimensions for smaller file sizes.
-- [Compress JPG](https://toolkitfree.net/tools/image-compressor/compress-jpg): Compress JPG images with adjustable quality control.
-- [Compress for Email](https://toolkitfree.net/tools/image-compressor/compress-for-email): Compress images to fit email attachment limits.
-- [Compress for Web](https://toolkitfree.net/tools/image-compressor/compress-for-web): Optimize images for fast website loading and better SEO.
-- [Compress for WhatsApp](https://toolkitfree.net/tools/image-compressor/compress-for-whatsapp): Compress images to share on WhatsApp without quality loss.
-- [Compress to 100KB](https://toolkitfree.net/tools/image-compressor/compress-to-100kb): Reduce image file size to under 100KB.
-
-## Resizer Variants
-
-- [Resize for Instagram](https://toolkitfree.net/tools/image-resizer/resize-for-instagram): Resize images for Instagram posts, stories, and reels.
-- [Resize for Facebook](https://toolkitfree.net/tools/image-resizer/resize-for-facebook): Resize images for Facebook cover photos, profile pictures, and posts.
-- [Resize for Twitter](https://toolkitfree.net/tools/image-resizer/resize-for-twitter): Resize images for Twitter/X headers and tweet images.
-- [Resize for YouTube](https://toolkitfree.net/tools/image-resizer/resize-for-youtube): Resize images for YouTube thumbnails, banners, and profiles.
-- [Resize for LinkedIn](https://toolkitfree.net/tools/image-resizer/resize-for-linkedin): Resize images for LinkedIn profile and post sizes.
-- [Resize for TikTok](https://toolkitfree.net/tools/image-resizer/resize-for-tiktok): Resize images for TikTok video thumbnails and profile pictures.
-- [Resize to 1920x1080](https://toolkitfree.net/tools/image-resizer/resize-to-1920x1080): Resize images to Full HD 1080p dimensions.
-
-## Cropper Variants
-
-- [Crop to Square](https://toolkitfree.net/tools/image-cropper/crop-to-square): Crop images to a perfect 1:1 square for social media profiles and Instagram posts.
-- [Crop to 16:9](https://toolkitfree.net/tools/image-cropper/crop-to-16-9): Crop images to 16:9 widescreen ratio for YouTube thumbnails and presentations.
-- [Crop to 4:3](https://toolkitfree.net/tools/image-cropper/crop-to-4-3): Crop images to 4:3 ratio for presentations and standard displays.
-- [Crop to 3:2](https://toolkitfree.net/tools/image-cropper/crop-to-3-2): Crop images to 3:2 ratio matching DSLR camera native aspect ratio.
-- [Free Crop](https://toolkitfree.net/tools/image-cropper/free-crop): Crop images to any custom size with no aspect ratio constraint.
-
-## PDF Variants
-
-- [JPG to PDF](https://toolkitfree.net/tools/image-to-pdf/jpg-to-pdf): Convert JPG images to PDF format. Supports multiple JPGs combined into one PDF.
-- [PNG to PDF](https://toolkitfree.net/tools/image-to-pdf/png-to-pdf): Convert PNG images to PDF. Transparent areas filled with white.
-- [Image to A4 PDF](https://toolkitfree.net/tools/image-to-pdf/image-to-a4-pdf): Convert images to A4-sized PDF pages. Perfect for printing.
-- [Multiple Images to PDF](https://toolkitfree.net/tools/image-to-pdf/multiple-images-to-pdf): Combine multiple images into a single PDF file.
-- [Image to PDF without Margin](https://toolkitfree.net/tools/image-to-pdf/image-to-pdf-no-margin): Convert images to PDF with no margins, edge to edge.
-- [Photo to PDF](https://toolkitfree.net/tools/image-to-pdf/photo-to-pdf): Convert photos from phone or camera to PDF format.
-
-## Favicon Variants
-
-- [PNG to Favicon](https://toolkitfree.net/tools/favicon-generator/png-to-favicon): Convert PNG images to all standard favicon sizes.
-- [JPG to Favicon](https://toolkitfree.net/tools/favicon-generator/jpg-to-favicon): Convert JPG images to all standard favicon sizes.
-- [Logo to Favicon](https://toolkitfree.net/tools/favicon-generator/logo-to-favicon): Convert your logo to website favicon icons.
-- [Favicon for WordPress](https://toolkitfree.net/tools/favicon-generator/favicon-for-wordpress): Generate WordPress-compatible favicon and site icon.
-
-## Guides
-
-- [JPG vs PNG vs WebP](https://toolkitfree.net/guides/image-format-comparison): Which image format should you use? Comparison and recommendations.
-- [How to Reduce Image File Size](https://toolkitfree.net/guides/reduce-image-size): 5 ways to make images smaller without losing quality.
-- [Social Media Image Sizes](https://toolkitfree.net/guides/social-media-image-sizes): Complete guide to image dimensions for all social platforms.
+- [Image Format Comparison](https://toolkitfree.net/guides/image-format-comparison)
+- [Reduce Image Size](https://toolkitfree.net/guides/reduce-image-size)
+- [Privacy Policy](https://toolkitfree.net/privacy-policy)
+- [About](https://toolkitfree.net/about)

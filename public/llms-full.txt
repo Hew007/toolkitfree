@@ -1,411 +1,59 @@
-# ToolkitFree - Full Content Reference
+# ToolkitFree - Full Capability Reference
 
-## Homepage
+ToolkitFree is a static Astro site with React interactive tools. Image processing runs in the browser. The selected file content is not sent to ToolkitFree for processing.
 
-Free Online Image Tools
-Convert, compress, resize, and remove backgrounds from images. All tools run in your browser — your files never leave your device.
+The local-file statement does not mean the page makes no network requests. Pages load site assets and Google AdSense. Background Remover downloads WebAssembly and model resources before local inference.
 
-### How ToolkitFree Works
-All ToolkitFree tools run entirely in your browser using modern web technologies including the Canvas API and WebAssembly. Your images are processed locally on your device — they are never uploaded to any server. This means complete privacy, no file size limits, and instant processing without waiting for server uploads.
+## Shared limits
 
-### Who Is This For?
-- Bloggers and content creators optimizing images for the web
-- Social media managers resizing images for Instagram, Facebook, Twitter, YouTube
-- E-commerce sellers preparing product photos
-- Anyone who needs quick image edits without installing software
-
-### Tools
-- Image Converter: Convert images between JPG, PNG, WebP, and more formats. Batch support.
-- Image Compressor: Compress images for web, email, and social media. Reduce file size without visible quality loss.
-- Image Resizer: Resize images to specific dimensions for Instagram, Facebook, Twitter, YouTube and more.
-- Image Cropper: Crop images with a visual drag-and-drop tool. Supports square, 16:9, 4:3, 3:2, and free aspect ratios.
-- Image to PDF: Convert images to PDF. Combine multiple images into one PDF. A4, Letter, or fit-to-image page sizes.
-- Favicon Generator: Generate all favicon sizes from one image. Download ZIP with webmanifest and HTML code.
-- Background Remover: Automatically remove image backgrounds using AI. No signup required.
-- QR Code Generator: Create QR codes for URLs, WiFi networks, vCards, email, phone, and SMS. Custom colors and logo support.
-
----
+There is no server upload-size quota because files are not uploaded for processing. Practical limits still exist: available device memory, image dimensions, browser decoder support, Canvas limits, and PDF generation memory. Large images or batches may be slow or fail, especially on mobile devices.
 
 ## Image Converter
 
-Free Online Image Converter
-Convert images between JPG, PNG, and WebP formats instantly. Batch support. No upload needed — your files stay on your device.
+Explicitly supported inputs: JPG/JPEG, PNG, WebP.
+Explicitly supported outputs: JPG/JPEG, PNG, WebP.
+Batch input: yes.
 
-### How to Convert Images
-1. Upload one or more images by dragging & dropping or clicking to browse
-2. Select your desired output format (JPG, PNG, or WebP)
-3. Adjust the quality slider if using JPG or WebP output
-4. Click "Convert" and download your converted images
+GIF, BMP, and SVG inputs use the browser decoder and are not guaranteed across devices. GIF conversion creates a static output from one decoded frame; animation is not preserved. SVG external resources and some features may not render.
 
-### Features
-- Convert between JPG, PNG, and WebP
-- Batch convert multiple images at once
-- Adjustable quality for JPG and WebP
-- 100% client-side — no uploads required
-- No file size limits
-- Free with no watermarks
+HEIC and TIFF decoding are not implemented. GIF output is not implemented. Their explanatory URLs are marked noindex and are not listed in the sitemap until real support exists.
 
-### FAQ
-Q: How does the image converter work?
-A: Our image converter runs entirely in your browser using the Canvas API. When you upload an image, it is loaded into a hidden canvas element, then re-exported in your chosen format. Your files never leave your device.
-
-Q: What image formats are supported?
-A: We support JPG/JPEG, PNG, and WebP formats for both input and output. You can convert between any of these formats.
-
-Q: Is there a file size limit?
-A: There is no hard file size limit. However, very large images (over 100MP) may be slow to process because all conversion happens in your browser.
-
-Q: Can I convert multiple images at once?
-A: Yes! You can upload and convert multiple images simultaneously. All conversions happen in parallel for maximum speed.
-
-Q: Will I lose image quality when converting?
-A: PNG conversion is lossless — no quality loss. For JPG and WebP, you can adjust the quality slider. At 92% (default), the quality difference is virtually imperceptible while significantly reducing file size.
-
-Q: What is WebP and why should I use it?
-A: WebP is a modern image format developed by Google that provides superior lossless and lossy compression for images on the web. WebP images are typically 25-34% smaller than comparable JPEG or PNG images.
-
----
-
-## Image Converter: JPG to PNG
-
-Convert JPG images to PNG format instantly in your browser. Lossless conversion, no upload needed. Free and private.
-
-### FAQ
-Q: How to convert JPG to PNG?
-A: Upload your JPG file, select PNG as the output format, and click Convert. The conversion is lossless — you get a full-quality PNG file instantly.
-
-Q: Is JPG to PNG conversion lossless?
-A: Yes. PNG is a lossless format, so converting from JPG to PNG preserves the full quality of your JPG image. However, any existing JPG compression artifacts will remain.
-
-Q: Can I convert multiple JPGs to PNG at once?
-A: Yes, you can upload and convert multiple JPG files simultaneously. All conversions happen in parallel for maximum speed.
-
-Q: What is the difference between JPG and PNG?
-A: JPG uses lossy compression and is best for photos. PNG uses lossless compression and supports transparency. PNG files are typically larger but higher quality.
-
-Q: Will the file size increase when converting JPG to PNG?
-A: Usually yes. PNG files are typically larger than JPG files because PNG uses lossless compression. If you need a smaller file, consider staying with JPG or converting to WebP.
-
----
-
-## Image Converter: PNG to JPG
-
-Convert PNG images to JPG format instantly. Reduce file size for photos. Adjustable quality. Free, no upload needed.
-
-### FAQ
-Q: How to convert PNG to JPG?
-A: Upload your PNG file, select JPG as the output format, adjust the quality slider if needed, and click Convert. Transparent areas will be filled with white.
-
-Q: Will I lose transparency when converting PNG to JPG?
-A: Yes. JPG does not support transparency. Any transparent areas in your PNG will be filled with white in the JPG output.
-
-Q: Why convert PNG to JPG?
-A: JPG files are typically much smaller than PNG files, especially for photographs. This makes them ideal for web use, email attachments, and saving storage space.
-
-Q: Can I control the JPG quality?
-A: Yes, you can adjust the quality slider from 10% to 100%. Higher quality means larger files. 85-92% is usually the sweet spot for photos.
-
----
-
-## Image Converter: WebP to JPG
-
-Convert WebP images to JPG format instantly. Works in any browser. Batch support. Free and private.
-
-### FAQ
-Q: How to convert WebP to JPG?
-A: Upload your WebP file, select JPG as the output format, and click Convert. Your converted JPG is ready to download instantly.
-
-Q: Why convert WebP to JPG?
-A: Some older applications, websites, and devices don't support WebP. Converting to JPG ensures maximum compatibility across all platforms.
-
-Q: Is WebP to JPG conversion lossy?
-A: Converting from WebP to JPG involves re-encoding, which may introduce slight quality loss. At high quality settings (90%+), the difference is negligible.
-
----
-
-## Image Converter: JPG to WebP
-
-Convert JPG images to WebP format for smaller file sizes. WebP files are typically 25-34% smaller. Free, no upload needed.
-
-### FAQ
-Q: How to convert JPG to WebP?
-A: Upload your JPG file, select WebP as the output format, adjust quality if desired, and click Convert. WebP files are typically 25-34% smaller.
-
-Q: Why convert JPG to WebP?
-A: WebP offers better compression than JPG, producing 25-34% smaller files at equivalent quality. This means faster page loads and less bandwidth usage.
-
-Q: Does WebP work in all browsers?
-A: WebP is supported by all modern browsers including Chrome, Firefox, Safari, and Edge. It may not work in very old browsers like Internet Explorer.
-
----
-
-## Image Converter: PNG to WebP
-
-Convert PNG images to WebP format for much smaller file sizes. Keep transparency. Free, no upload needed.
-
-### FAQ
-Q: How to convert PNG to WebP?
-A: Upload your PNG file, select WebP as the output format, and click Convert. WebP supports transparency, so your transparent PNG will keep its transparency.
-
-Q: Does WebP support transparency like PNG?
-A: Yes! WebP supports both lossy and lossless compression with alpha transparency. This makes it a great replacement for PNG with much smaller file sizes.
-
-Q: How much smaller is WebP compared to PNG?
-A: WebP lossless images are 26% smaller than PNG. WebP lossy images at equivalent quality are 25-34% smaller than JPG and much smaller than PNG.
-
----
-
-## Image Converter: WebP to PNG
-
-Convert WebP images to PNG format instantly. Lossless conversion preserving transparency. Free, no upload needed.
-
-### FAQ
-Q: How to convert WebP to PNG?
-A: Upload your WebP file, select PNG as the output format, and click Convert. The conversion preserves transparency and image quality.
-
-Q: Why convert WebP to PNG?
-A: PNG is universally supported by all image editors and applications. Converting WebP to PNG ensures compatibility with older software that doesn't support WebP.
-
-Q: Will the file size change?
-A: Yes, PNG files are typically larger than WebP files because PNG uses less efficient compression. The quality will be the same or better.
-
----
+PNG output uses lossless encoding for decoded pixels, but converting from JPG cannot restore detail already lost in JPG compression. JPG and WebP outputs are re-encoded and may lose quality.
 
 ## Image Compressor
 
-Free Online Image Compressor
-Compress images online to reduce file size while maintaining quality. Batch support. Adjustable quality. 100% free, no upload needed.
+Supported inputs follow browser decoding, with JPG, PNG, and WebP as the documented baseline. Batch input is supported.
 
-### How to Compress Images
-1. Upload one or more images (JPG, PNG, WebP)
-2. Adjust the quality slider — 80% is a good starting point
-3. Optionally set a maximum width to reduce dimensions
-4. Click "Compress" and download your optimized images
+The tool re-encodes through Canvas and can optionally reduce dimensions. Output may be smaller, unchanged, or larger than the source. PNG quality controls do not create a guaranteed optimization. Reducing dimensions removes pixels and is not lossless.
 
-### Features
-- Adjustable quality from 10% to 100%
-- Optional max width scaling
-- Batch compress multiple images
-- Shows before/after file sizes
-- 100% client-side processing
-- No file size limits
-
-### FAQ
-Q: How does image compression work?
-A: Our compressor re-encodes your image at a lower quality setting using the browser's built-in Canvas API. For JPEG images, this reduces file size by adjusting the compression level. Your images never leave your device.
-
-Q: What's the difference between quality levels?
-A: At 100% quality, there is virtually no visible difference from the original. At 80% (our default), most people cannot tell the difference, but file sizes drop significantly. Below 60%, you may start to see compression artifacts.
-
-Q: How much can I reduce file size?
-A: Typically 30-70% reduction for JPEG photos at 80% quality. Results vary depending on the original image content.
-
-Q: Is there a batch compression limit?
-A: No, you can compress as many images as you want.
-
----
+The Compress to 100KB page is guidance only. The current implementation does not search for or guarantee an exact target size, so that page is marked noindex pending the dedicated target-size implementation.
 
 ## Image Resizer
 
-Free Online Image Resizer
-Resize images to any dimension. Presets for social media. Aspect ratio lock. Batch support. All processing in your browser.
-
-### How to Resize Images
-1. Upload one or more images
-2. Choose a preset or enter custom width and height
-3. Select output format and quality
-4. Click "Resize" and download your images
-
-### Features
-- Presets for Instagram, Facebook, Twitter, YouTube
-- Custom width and height
-- Maintain aspect ratio option
-- Output as JPG, PNG, or WebP
-- Batch resize support
-- 100% client-side processing
-
-### FAQ
-Q: How do I resize an image?
-A: Upload your image, select a preset size or enter custom dimensions, choose the output format, and click Resize. The resized image will be ready to download instantly.
-
-Q: What does "maintain aspect ratio" do?
-A: When enabled, the tool automatically adjusts one dimension to match the original image's proportions. This prevents your image from appearing stretched or squished.
-
-Q: Can I resize multiple images at once?
-A: Yes, you can upload and resize multiple images simultaneously. All images will be resized to the same dimensions.
-
----
-
-## Background Remover
-
-Free AI Background Remover
-Remove image backgrounds instantly using AI. Choose transparent or colored backgrounds. 100% client-side — your photos never leave your device.
-
-### How to Remove Backgrounds
-1. Upload a photo (works best with clear subjects)
-2. Choose your preferred background: transparent, white, or a color
-3. Click "Remove Background" and wait for AI processing
-4. Download your image with the background removed
-
-### Features
-- AI-powered background detection
-- Transparent or colored backgrounds
-- Works with portraits, products, and objects
-- 100% client-side — no uploads
-- Free with no limits
-- High-quality PNG output
-
-### FAQ
-Q: How does background removal work?
-A: We use an AI model that runs entirely in your browser via WebAssembly. The model detects the subject (person, product, animal, etc.) and removes everything else. No data is sent to any server.
-
-Q: What types of images work best?
-A: The tool works best with clear subjects — portraits, product photos, and objects with defined edges. Images with complex backgrounds or multiple subjects may need manual cleanup.
-
-Q: How long does it take?
-A: The first use takes 10-30 seconds to download the AI model (~40MB). Subsequent uses are faster as the model is cached. Processing itself typically takes 2-10 seconds depending on image size.
-
-Q: Can I add a colored background after removal?
-A: Yes, you can choose from preset background colors (white, red, blue, green) or keep the background transparent (default).
-
----
+Processes multiple images with shared dimension and format settings. Output uses Canvas. Browser memory and Canvas dimension limits apply.
 
 ## Image Cropper
 
-Free Online Image Cropper
-Crop images with a visual drag-and-drop tool. Supports square, 16:9, 4:3, 3:2, and free aspect ratios. Rule-of-thirds grid overlay. 100% client-side.
-
-### How to Crop Images
-1. Upload an image
-2. Select an aspect ratio preset or use Free Crop
-3. Drag the crop area to position and resize
-4. Select output format and quality
-5. Click "Crop" and download your image
-
-### Features
-- Visual drag-and-drop crop area with 8 resize handles
-- Aspect ratio presets: Free, 1:1, 16:9, 4:3, 3:2, 9:16
-- Rule-of-thirds grid overlay
-- Output as JPG, PNG, or WebP
-- Adjustable quality for JPG/WebP
-- 100% client-side processing
-
-### FAQ
-Q: How do I crop an image?
-A: Upload your image, select an aspect ratio (or use Free Crop), drag the crop area to your desired position, and click Crop. The cropped image downloads instantly.
-
-Q: What aspect ratios are supported?
-A: Free (no constraint), 1:1 (square), 16:9 (widescreen), 4:3 (standard), 3:2 (DSLR), and 9:16 (portrait/stories).
-
-Q: How do I crop a photo to a perfect square?
-A: Upload your photo and select the 1:1 aspect ratio preset. The crop area will be locked to a square. Drag to position and resize, then click Crop.
-
-Q: Can I crop multiple images at once?
-A: Currently the cropper processes one image at a time for precise visual control. For batch resizing, use the Image Resizer tool.
-
----
+Processes one image at a time. Outputs PNG, JPG, or WebP. PNG encoding is lossless for the cropped pixels; reducing the crop or converting to a lossy format changes data.
 
 ## Image to PDF
 
-Free Image to PDF Converter
-Convert images to PDF documents. Combine multiple images into one PDF. A4, Letter, or fit-to-image page sizes. Adjustable margins and orientation.
+Explicitly supported image inputs are JPG, PNG, and WebP. Other formats depend on browser decoding and are not guaranteed. HEIC and TIFF are not supported.
 
-### How to Convert Images to PDF
-1. Upload one or more images
-2. Choose page size (A4, Letter, or Fit to Image)
-3. Select orientation (Portrait or Landscape)
-4. Adjust margins if needed
-5. Click "Generate PDF" and download
-
-### Features
-- Multiple page sizes: A4, Letter, Fit to Image
-- Portrait and landscape orientation
-- Adjustable margins (0-30mm)
-- Combine multiple images into one PDF
-- Thumbnail preview of uploaded images
-- 100% client-side — uses jsPDF
-
-### FAQ
-Q: How do I convert JPG to PDF?
-A: Upload your JPG file, select your preferred page size and orientation, and click "Generate PDF." Your PDF will download instantly.
-
-Q: Can I combine multiple images into one PDF?
-A: Yes! Upload multiple images and they will be combined into a single PDF file, with each image on its own page.
-
-Q: What page sizes are available?
-A: A4 (210x297mm), Letter (8.5x11in), and Fit to Image (the PDF page matches the image dimensions exactly).
-
-Q: Can I remove margins?
-A: Yes, set the margin slider to 0mm for edge-to-edge printing, or adjust up to 30mm for standard document margins.
-
----
+Multiple images can be combined into one PDF with one image per page. Available memory and image dimensions limit practical batch size.
 
 ## Favicon Generator
 
-Free Favicon Generator
-Generate all standard favicon sizes from one image. Includes site.webmanifest and copyable HTML code. Download as ZIP.
+Processes one image at a time and creates PNG favicon sizes plus a web manifest in a ZIP archive.
 
-### How to Generate Favicons
-1. Upload a square image (PNG or JPG recommended, at least 512x512px)
-2. Preview all generated sizes
-3. Copy the HTML code snippet
-4. Download the ZIP file with all favicons and webmanifest
+## Background Remover
 
-### Features
-- Generates 5 standard sizes: 16x16, 32x32, 180x180, 192x192, 512x512
-- Includes site.webmanifest file
-- Copyable HTML <head> snippet
-- Download as ZIP package
-- Works with any image format
-- 100% client-side — uses JSZip
+Processes one image at a time. Model and runtime files are downloaded, then inference and image processing occur locally. Output quality depends on subject separation and image complexity.
 
-### FAQ
-Q: What image should I use for my favicon?
-A: Use a square image, ideally 512x512 pixels or larger. PNG with transparency works best. Simple logos and icons look better than complex photos at small sizes.
+## QR Generator
 
-Q: What sizes are generated?
-A: 16x16 (favicon.ico), 32x32 (favicon.png), 180x180 (Apple touch icon), 192x192 (Android chrome), and 512x512 (Android chrome large).
+Creates one QR code at a time and exports PNG or SVG. QR payload data is generated locally; the page still loads normal website resources.
 
-Q: What is a site.webmanifest?
-A: A JSON file that tells browsers how to display your web app when installed as a shortcut. It includes the app name, icons, and theme color.
+## Public wording policy
 
-Q: How do I add the favicon to my website?
-A: Download the ZIP, extract the files to your website's root directory, and add the provided HTML code to the <head> section of your pages.
-
----
-
-## QR Code Generator
-
-Free QR Code Generator
-Create QR codes for URLs, WiFi networks, vCards, email, phone, and SMS. Custom colors, logo support, and PNG/SVG export. 100% client-side.
-
-### How to Create QR Codes
-1. Select the content type (Text/URL, WiFi, vCard, Email, Phone, SMS)
-2. Enter your content details
-3. Customize colors and optionally add a logo
-4. Choose PNG or SVG format
-5. Download your QR code
-
-### Features
-- 6 content types: Text/URL, WiFi, vCard, Email, Phone, SMS
-- Custom foreground and background colors
-- Logo overlay support
-- PNG and SVG export
-- Adjustable error correction levels
-- 100% client-side — no data sent to any server
-
-### FAQ
-Q: What is a QR code?
-A: A QR code (Quick Response code) is a two-dimensional barcode that can store text, URLs, contact information, WiFi credentials, and more. You can scan it with any smartphone camera.
-
-Q: Can I add my logo to the QR code?
-A: Yes! Upload any image as a logo and it will be placed in the center of the QR code. The error correction level is automatically set to High to ensure scannability.
-
-Q: How do I create a WiFi QR code?
-A: Select the "WiFi" tab, enter your network name (SSID), security type, and password. When someone scans the code, their device will automatically connect.
-
-Q: Are QR codes generated here sent to a server?
-A: No. All QR code generation happens entirely in your browser. No data is ever sent to any server.
-
-Q: Do QR codes expire?
-A: No, static QR codes do not expire. They will work forever as long as the encoded content (like a URL) is still valid.
+Use local file processing or no file upload for the file-content guarantee. Do not claim complete privacy, no network requests, unlimited file size, guaranteed compression percentage, guaranteed exact target size, or support for formats not implemented and verified.

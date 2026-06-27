@@ -13,7 +13,7 @@ const faqItems = [
   },
   {
     question: 'Is there a file size limit?',
-    answer: 'There is no hard file size limit. However, very large images (over 100MP) may be slow to process because all conversion happens in your browser. For most use cases, images under 50MB convert instantly.',
+    answer: 'There is no server upload limit, but browser memory and Canvas dimension limits still apply. Large images or batches can be slow or fail, especially on mobile devices.',
   },
   {
     question: 'Can I convert multiple images at once?',
@@ -21,7 +21,7 @@ const faqItems = [
   },
   {
     question: 'Will I lose image quality when converting?',
-    answer: 'PNG conversion is lossless — no quality loss. For JPG and WebP, you can adjust the quality slider. At 92% (default), the quality difference is virtually imperceptible while significantly reducing file size.',
+    answer: 'PNG output uses lossless encoding for the decoded pixels, but conversion cannot restore detail already lost in the source. JPG and WebP are re-encoded and may lose quality; use the slider to control the tradeoff.',
   },
   {
     question: 'Is this tool free?',
@@ -41,7 +41,7 @@ const faqItems = [
   },
   {
     question: 'How do I convert JPG to PNG?',
-    answer: 'Upload your JPG file, select PNG as the output format, and click Convert. The tool will instantly convert your image and provide a download link. PNG conversion is lossless, preserving full quality.',
+    answer: 'Upload your JPG file, select PNG as the output format, and click Convert. The tool decodes the JPG and exports its pixels as PNG. PNG output avoids further lossy encoding, but it cannot restore detail already lost to JPG compression.',
   },
   {
     question: 'How do I convert PNG to JPG?',
@@ -53,7 +53,7 @@ const faqItems = [
   },
   {
     question: 'How do I change a picture from JPG to PNG?',
-    answer: 'Simply drag your JPG file onto the converter, select PNG from the output format dropdown, and click Convert. Your PNG file will be ready to download instantly. The conversion preserves full quality since PNG is lossless.',
+    answer: 'Simply drag your JPG file onto the converter, select PNG from the output format dropdown, and click Convert. Your PNG will use lossless encoding for the decoded pixels, while existing JPG artifacts remain.',
   },
   {
     question: 'What is the best free image converter online?',
@@ -126,7 +126,7 @@ const faqStructuredData = {
           <li>Batch convert multiple images at once</li>
           <li>Adjustable quality for JPG and WebP</li>
           <li>100% client-side — no uploads required</li>
-          <li>No file size limits</li>
+          <li>Capacity depends on browser memory and Canvas limits</li>
           <li>Free with no watermarks</li>
         </ul>
       </section>

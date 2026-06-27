@@ -21,7 +21,7 @@ const faqItems = [
   },
   {
     question: 'Is there a batch compression limit?',
-    answer: 'No, you can compress as many images as you want. However, processing very large batches (100+ images) may be slow since all processing happens in your browser.',
+    answer: 'There is no server-side batch quota, but the practical limit depends on available browser memory and image dimensions. Large batches can be slow or fail, especially on mobile devices.',
   },
   {
     question: 'Will compression affect image dimensions?',
@@ -33,7 +33,7 @@ const faqItems = [
   },
   {
     question: 'How do I reduce image file size to under 100KB?',
-    answer: 'Set quality to 60-70% and max width to 1024-1280px. Most images will compress to under 100KB at these settings. For even smaller sizes, try 50% quality at 800px width.',
+    answer: 'Lower quality or dimensions, compress, and check the displayed output size. The current tool does not automatically guarantee a 100KB target because results vary by image content and format.',
   },
 ];
 
@@ -100,7 +100,7 @@ const faqStructuredData = {
           <li>Batch compress multiple images</li>
           <li>Shows before/after file sizes</li>
           <li>100% client-side processing</li>
-          <li>No file size limits</li>
+          <li>Capacity depends on browser memory and Canvas limits</li>
         </ul>
       </section>
 
