@@ -34,6 +34,7 @@ const pages = [
   { url: '/tools/image-compressor/compress-for-email', lastmod: '2026-05-20' },
   { url: '/tools/image-compressor/compress-for-web', lastmod: '2026-05-20' },
   { url: '/tools/image-compressor/compress-for-whatsapp', lastmod: '2026-05-20' },
+  { url: '/tools/image-compressor/compress-to-100kb', lastmod: '2026-06-27' },
 
   // Resizer variants
   { url: '/tools/image-resizer/resize-for-instagram', lastmod: '2026-05-20' },

@@ -1,22 +1,68 @@
-export const allVariants = [
-  { slug: 'jpg-to-png', from: 'JPG', to: 'PNG' },
-  { slug: 'png-to-jpg', from: 'PNG', to: 'JPG' },
-  { slug: 'webp-to-jpg', from: 'WebP', to: 'JPG' },
-  { slug: 'jpg-to-webp', from: 'JPG', to: 'WebP' },
-  { slug: 'png-to-webp', from: 'PNG', to: 'WebP' },
-  { slug: 'webp-to-png', from: 'WebP', to: 'PNG' },
-  { slug: 'heic-to-jpg', from: 'HEIC', to: 'JPG' },
-  { slug: 'gif-to-png', from: 'GIF', to: 'PNG' },
-  { slug: 'bmp-to-png', from: 'BMP', to: 'PNG' },
-  { slug: 'tiff-to-jpg', from: 'TIFF', to: 'JPG' },
-  { slug: 'svg-to-png', from: 'SVG', to: 'PNG' },
-  { slug: 'png-to-gif', from: 'PNG', to: 'GIF' },
+export type ConverterVariantAvailability = 'supported' | 'browser-dependent' | 'unsupported';
+
+export interface ConverterVariant {
+  slug: string;
+  from: string;
+  to: string;
+  availability: ConverterVariantAvailability;
+  capabilityNote?: string;
+}
+
+export const allVariants: ConverterVariant[] = [
+  { slug: 'jpg-to-png', from: 'JPG', to: 'PNG', availability: 'supported' },
+  { slug: 'png-to-jpg', from: 'PNG', to: 'JPG', availability: 'supported' },
+  { slug: 'webp-to-jpg', from: 'WebP', to: 'JPG', availability: 'supported' },
+  { slug: 'jpg-to-webp', from: 'JPG', to: 'WebP', availability: 'supported' },
+  { slug: 'png-to-webp', from: 'PNG', to: 'WebP', availability: 'supported' },
+  { slug: 'webp-to-png', from: 'WebP', to: 'PNG', availability: 'supported' },
+  {
+    slug: 'heic-to-jpg',
+    from: 'HEIC',
+    to: 'JPG',
+    availability: 'unsupported',
+    capabilityNote: 'HEIC decoding is not implemented. The browser-only decoder used by this tool cannot reliably open HEIC files.',
+  },
+  {
+    slug: 'gif-to-png',
+    from: 'GIF',
+    to: 'PNG',
+    availability: 'browser-dependent',
+    capabilityNote: 'GIF decoding depends on the browser. A successful conversion exports one static frame; animation is not preserved.',
+  },
+  {
+    slug: 'bmp-to-png',
+    from: 'BMP',
+    to: 'PNG',
+    availability: 'browser-dependent',
+    capabilityNote: 'BMP decoding depends on the browser and may fail on some devices or BMP variants.',
+  },
+  {
+    slug: 'tiff-to-jpg',
+    from: 'TIFF',
+    to: 'JPG',
+    availability: 'unsupported',
+    capabilityNote: 'TIFF decoding is not implemented. The browser-only decoder used by this tool cannot reliably open TIFF files.',
+  },
+  {
+    slug: 'svg-to-png',
+    from: 'SVG',
+    to: 'PNG',
+    availability: 'browser-dependent',
+    capabilityNote: 'SVG decoding depends on the browser. External resources and some SVG features may not render.',
+  },
+  {
+    slug: 'png-to-gif',
+    from: 'PNG',
+    to: 'GIF',
+    availability: 'unsupported',
+    capabilityNote: 'GIF output is not implemented. The converter exports JPG, PNG, and WebP only.',
+  },
 ];
 
 export const faqData: Record<string, { question: string; answer: string }[]> = {
   'jpg-to-png': [
     { question: 'How to convert JPG to PNG?', answer: 'Upload your JPG file, select PNG as the output format, and click Convert. The conversion is lossless — you get a full-quality PNG file instantly.' },
-    { question: 'Is JPG to PNG conversion lossless?', answer: 'Yes. PNG is a lossless format, so converting from JPG to PNG preserves the full quality of your JPG image. However, any existing JPG compression artifacts will remain.' },
+    { question: 'Is JPG to PNG conversion lossless?', answer: 'PNG does not add lossy compression, but it cannot restore detail already lost in the JPG source.' },
     { question: 'Can I convert multiple JPGs to PNG at once?', answer: 'Yes, you can upload and convert multiple JPG files simultaneously. All conversions happen in parallel for maximum speed.' },
     { question: 'What is the difference between JPG and PNG?', answer: 'JPG uses lossy compression and is best for photos. PNG uses lossless compression and supports transparency. PNG files are typically larger but higher quality.' },
     { question: 'Will the file size increase when converting JPG to PNG?', answer: 'Usually yes. PNG files are typically larger than JPG files because PNG uses lossless compression. If you need a smaller file, consider staying with JPG or converting to WebP.' },
@@ -45,7 +91,7 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
   'webp-to-png': [
     { question: 'How to convert WebP to PNG?', answer: 'Upload your WebP file, select PNG as the output format, and click Convert. The conversion preserves transparency and image quality.' },
     { question: 'Why convert WebP to PNG?', answer: 'PNG is universally supported by all image editors and applications. Converting WebP to PNG ensures compatibility with older software that doesn\'t support WebP.' },
-    { question: 'Will the file size change?', answer: 'Yes, PNG files are typically larger than WebP files because PNG uses less efficient compression. The quality will be the same or better.' },
+    { question: 'Will the file size change?', answer: 'Yes, PNG files are typically larger than WebP files because PNG uses less efficient compression. PNG avoids another lossy encode, but it cannot improve detail already lost in the WebP source.' },
   ],
   'heic-to-jpg': [
     { question: 'Does this tool currently convert HEIC to JPG?', answer: 'No. HEIC decoding is not implemented in the current converter. Use a HEIC-capable converter until dedicated decoding is added here.' },

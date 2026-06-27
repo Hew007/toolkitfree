@@ -4,27 +4,22 @@ import ImageConverter from '../../../components/ImageConverter';
 import { allVariants, faqData, descriptions } from '../../../data/converter-variants';
 
 export function getStaticPaths() {
-  return allVariants.map((v) => ({
-    params: { variant: v.slug },
-    props: { ...v, faq: faqData[v.slug], description: descriptions[v.slug], title: ['heic-to-jpg', 'tiff-to-jpg', 'png-to-gif'].includes(v.slug) ? `${v.from} to ${v.to} - Current Support Status` : `Convert ${v.from} to ${v.to} Online Free` },
+  return allVariants.map((variant) => ({
+    params: { variant: variant.slug },
+    props: {
+      ...variant,
+      faq: faqData[variant.slug],
+      description: descriptions[variant.slug],
+      title: variant.availability === 'unsupported'
+        ? `${variant.from} to ${variant.to} - Current Support Status`
+        : `Convert ${variant.from} to ${variant.to} Online Free`,
+    },
   }));
 }
 
-const { from, to, title, description, faq, slug } = Astro.props;
-
-const unsupportedReasons: Record<string, string> = {
-  'heic-to-jpg': 'HEIC decoding is not implemented yet. The current converter relies on the browser built-in decoder, which does not reliably open HEIC files.',
-  'tiff-to-jpg': 'TIFF decoding is not implemented yet. The current converter cannot reliably open TIFF files in modern browsers.',
-  'png-to-gif': 'GIF output is not implemented yet. The current converter can export only JPG, PNG, and WebP files.',
-};
-const browserDependentNotes: Record<string, string> = {
-  'gif-to-png': 'GIF input depends on your browser. When it opens successfully, only one static frame is exported; animation is not preserved.',
-  'bmp-to-png': 'BMP input depends on your browser built-in decoder and is not guaranteed on every device.',
-  'svg-to-png': 'SVG input depends on your browser. External SVG resources may not render, and output uses the decoded dimensions.',
-};
-const unsupportedReason = unsupportedReasons[slug];
-const browserDependentNote = browserDependentNotes[slug];
-const isLimitedVariant = Boolean(unsupportedReason || browserDependentNote);
+const { from, to, title, description, faq, slug, availability, capabilityNote } = Astro.props;
+const isUnsupported = availability === 'unsupported';
+const isLimitedVariant = availability !== 'supported';
 
 const pageUrl = `https://toolkitfree.net/tools/image-converter/${Astro.params.variant}`;
 
@@ -63,31 +58,31 @@ const faqStructuredData = {
   title={title}
   description={description}
   canonical={pageUrl}
-  structuredData={unsupportedReason ? [faqStructuredData, breadcrumbSchema] : [structuredData, faqStructuredData, breadcrumbSchema]}
+  structuredData={isUnsupported ? [faqStructuredData, breadcrumbSchema] : [structuredData, faqStructuredData, breadcrumbSchema]}
   noindex={isLimitedVariant}
 >
   <div class="tool-layout">
     <div class="tool-content">
       <h1>{title}</h1>
       <p style="color: var(--color-text-light); margin-bottom: 0.5rem;">
-        {unsupportedReason ? from + ' to ' + to + ' conversion is not available in the current tool.' : 'Convert ' + from + ' images to ' + to + ' in your browser without uploading the image file.'}
+        {isUnsupported ? from + ' to ' + to + ' conversion is not available in the current tool.' : 'Convert ' + from + ' images to ' + to + ' in your browser without uploading the image file.'}
       </p>
       <div class="privacy-badge">Image processing stays on this device</div>
 
-      {(unsupportedReason || browserDependentNote) && (
-        <div class={'status ' + (unsupportedReason ? 'status-error' : '')} style="margin-top: 1rem;">
-          <strong>{unsupportedReason ? 'Not currently supported.' : 'Browser-dependent input.'}</strong>
-          {' '}{unsupportedReason || browserDependentNote}
+      {isLimitedVariant && (
+        <div class={'status ' + (isUnsupported ? 'status-error' : '')} style="margin-top: 1rem;">
+          <strong>{isUnsupported ? 'Not currently supported.' : 'Browser-dependent input.'}</strong>
+          {' '}{capabilityNote}
         </div>
       )}
 
-      {!unsupportedReason && (
+      {!isUnsupported && (
         <div style="margin-top: 1.5rem;">
           <ImageConverter client:load defaultFrom={from} defaultTo={to} />
         </div>
       )}
 
-      {!unsupportedReason && <section class="howto-section">
+      {!isUnsupported && <section class="howto-section">
         <h2>How to Convert {from} to {to}</h2>
         <ol class="howto-steps">
           <li>Upload your {from} file by dragging & dropping or clicking to browse</li>
@@ -100,10 +95,10 @@ const faqStructuredData = {
       <section class="features-section">
         <h2>Features</h2>
         <ul class="features-list">
-          <li>{unsupportedReason ? from + ' input or ' + to + ' output requires a future implementation' : from + ' to ' + to + ' conversion using the browser decoder'}</li>
-          {!unsupportedReason && <li>Batch convert multiple files</li>}
-          {!unsupportedReason && <li>Image pixels are processed locally - no file upload</li>}
-          {!unsupportedReason && <li>Capacity depends on browser memory and canvas limits</li>}
+          <li>{isUnsupported ? from + ' input or ' + to + ' output requires a future implementation' : from + ' to ' + to + ' conversion using the browser decoder'}</li>
+          {!isUnsupported && <li>Batch convert multiple files</li>}
+          {!isUnsupported && <li>Image pixels are processed locally - no file upload</li>}
+          {!isUnsupported && <li>Capacity depends on browser memory and canvas limits</li>}
           <li>Free with no watermarks</li>
           <li>Works on any device</li>
         </ul>

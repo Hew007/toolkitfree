@@ -33,7 +33,7 @@ const faqItems = [
   },
   {
     question: 'How do I reduce image file size to under 100KB?',
-    answer: 'Lower quality or dimensions, compress, and check the displayed output size. The current tool does not automatically guarantee a 100KB target because results vary by image content and format.',
+    answer: 'Choose Target file size mode and enter 100KB. The tool uses bounded quality and dimension search, then labels each result Target met only when its actual Blob is 100KB or less.',
   },
 ];
 
@@ -96,7 +96,8 @@ const faqStructuredData = {
         <h2>Features</h2>
         <ul class="features-list">
           <li>Adjustable quality from 10% to 100%</li>
-          <li>Optional max width scaling</li>
+          <li>Quality mode or verified target-size mode</li>
+          <li>Optional starting max width</li>
           <li>Batch compress multiple images</li>
           <li>Shows before/after file sizes</li>
           <li>100% client-side processing</li>

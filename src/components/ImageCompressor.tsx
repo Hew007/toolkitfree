@@ -1,159 +1,361 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import FileList from './FileList';
+import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
+import {
+  downloadUrl,
+  exportCanvas,
+  formatSize,
+  getCanvas2dContext,
+  getImageProcessingErrorMessage,
+  loadImage,
+  type ImageOutputMimeType,
+} from '../lib/image-processing';
+import {
+  compressToTargetSize,
+  dimensionsForMaxWidth,
+  type CompressionMode,
+} from '../lib/image-compressor';
+
+interface QueuedFile {
+  id: string;
+  file: File;
+}
+
+type CompressionStatus =
+  | 'optimized'
+  | 'target-met'
+  | 'target-not-met'
+  | 'kept-original'
+  | 'larger';
 
 interface CompressedFile {
+  sourceId: string;
   name: string;
   originalSize: number;
   compressedSize: number;
+  originalWidth: number;
+  originalHeight: number;
+  width: number;
+  height: number;
+  quality: number | null;
+  attempts: number;
+  status: CompressionStatus;
+  message: string;
   url: string;
   previewUrl: string;
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+interface FailedFile {
+  sourceId: string;
+  name: string;
+  message: string;
 }
 
-export default function ImageCompressor() {
-  const [files, setFiles] = useState<File[]>([]);
+type CompressionOutcome =
+  | { status: 'success'; value: CompressedFile }
+  | { status: 'failure'; value: FailedFile };
+
+interface Props {
+  defaultMode?: CompressionMode;
+  defaultTargetKB?: number;
+  defaultFormat?: string;
+}
+
+const INPUT_FORMATS: Record<string, { accept: string; allowedTypes: readonly string[]; hint: string }> = {
+  PNG: { accept: 'image/png', allowedTypes: ['image/png'], hint: 'PNG' },
+  JPG: { accept: 'image/jpeg', allowedTypes: ['image/jpeg'], hint: 'JPG or JPEG' },
+  Any: {
+    accept: 'image/jpeg,image/png,image/webp',
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    hint: 'JPG, PNG, or WebP',
+  },
+};
+
+function resultColor(status: CompressionStatus): string {
+  if (status === 'optimized' || status === 'target-met') return '#059669';
+  if (status === 'target-not-met' || status === 'larger') return '#b45309';
+  return '#6b7280';
+}
+
+export default function ImageCompressor({
+  defaultMode = 'quality',
+  defaultTargetKB = 100,
+  defaultFormat = 'Any',
+}: Props) {
+  const inputFormat = INPUT_FORMATS[defaultFormat] ?? INPUT_FORMATS.Any;
+  const [files, setFiles] = useState<QueuedFile[]>([]);
+  const [mode, setMode] = useState<CompressionMode>(defaultMode);
   const [quality, setQuality] = useState(80);
   const [maxWidth, setMaxWidth] = useState(0);
+  const [targetKB, setTargetKB] = useState(defaultTargetKB);
   const [compressing, setCompressing] = useState(false);
   const [results, setResults] = useState<CompressedFile[]>([]);
+  const [failures, setFailures] = useState<FailedFile[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const nextFileId = useRef(0);
+  const objectUrls = useObjectUrlRegistry();
+
+  const clearResults = useCallback(() => {
+    objectUrls.revokePrefix('result:');
+    setResults([]);
+    setFailures([]);
+    setError(null);
+  }, [objectUrls]);
 
   const handleFiles = useCallback((newFiles: File[]) => {
-    setFiles((prev) => [...prev, ...newFiles]);
-    setResults([]);
-    setError(null);
-  }, []);
+    if (newFiles.length === 0) return;
+    clearResults();
+    setFiles((previous) => [
+      ...previous,
+      ...newFiles.map((file) => ({ id: `file-${++nextFileId.current}`, file })),
+    ]);
+  }, [clearResults]);
 
   const handleRemove = useCallback((index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+    clearResults();
+    setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index));
+  }, [clearResults]);
 
-  const compressImage = (file: File): Promise<CompressedFile> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-
-      img.onload = () => {
-        let width = img.naturalWidth;
-        let height = img.naturalHeight;
-
-        if (maxWidth > 0 && width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Failed to get canvas context'));
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const isPng = file.type === 'image/png';
-        const format = isPng ? 'image/png' : 'image/jpeg';
-
-        canvas.toBlob(
-          (blob) => {
-            URL.revokeObjectURL(url);
-            if (!blob) {
-              reject(new Error('Compression failed'));
-              return;
-            }
-
-            const blobUrl = URL.createObjectURL(blob);
-            resolve({
-              name: file.name,
-              originalSize: file.size,
-              compressedSize: blob.size,
-              url: blobUrl,
-              previewUrl: blobUrl,
-            });
-          },
-          format,
-          isPng ? undefined : quality / 100
-        );
-      };
-
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error(`Failed to load image: ${file.name}`));
-      };
-
-      img.src = url;
+  const processFile = async (queuedFile: QueuedFile): Promise<CompressedFile> => {
+    const image = await loadImage(queuedFile.file, {
+      allowedTypes: inputFormat.allowedTypes,
     });
+    const outputType = queuedFile.file.type as ImageOutputMimeType;
+    const originalWidth = image.naturalWidth;
+    const originalHeight = image.naturalHeight;
+    const startDimensions = dimensionsForMaxWidth(originalWidth, originalHeight, maxWidth);
+
+    const encode = async (width: number, height: number, encodeQuality?: number) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = getCanvas2dContext(canvas);
+      context.drawImage(image, 0, 0, width, height);
+      return exportCanvas(canvas, outputType, outputType === 'image/png' ? undefined : encodeQuality);
+    };
+
+    let blob: Blob;
+    let width = startDimensions.width;
+    let height = startDimensions.height;
+    let outputQuality: number | null = outputType === 'image/png' ? null : quality / 100;
+    let attempts = 1;
+    let status: CompressionStatus;
+    let message: string;
+
+    if (mode === 'target') {
+      const targetBytes = Math.round(targetKB * 1024);
+      if (queuedFile.file.size <= targetBytes) {
+        blob = queuedFile.file;
+        width = originalWidth;
+        height = originalHeight;
+        outputQuality = null;
+        attempts = 0;
+        status = 'target-met';
+        message = `Already within the ${targetKB} KB target; original kept.`;
+      } else {
+        const targetResult = await compressToTargetSize({
+          sourceWidth: width,
+          sourceHeight: height,
+          outputType,
+          targetBytes,
+          encode,
+        });
+        blob = targetResult.blob;
+        width = targetResult.width;
+        height = targetResult.height;
+        outputQuality = targetResult.quality;
+        attempts = targetResult.attempts;
+
+        if (targetResult.metTarget) {
+          status = 'target-met';
+          message = `Target met: ${formatSize(blob.size)} is within ${targetKB} KB.`;
+        } else if (blob.size >= queuedFile.file.size) {
+          blob = queuedFile.file;
+          width = originalWidth;
+          height = originalHeight;
+          outputQuality = null;
+          status = 'target-not-met';
+          message = `Target not met after ${attempts} attempts; original kept because no smaller result was found.`;
+        } else {
+          status = 'target-not-met';
+          message = `Target not met after ${attempts} attempts; closest result kept.`;
+        }
+      }
+    } else {
+      const candidate = await encode(width, height, outputQuality ?? undefined);
+      const dimensionsChanged = width !== originalWidth || height !== originalHeight;
+
+      if (!dimensionsChanged && candidate.size >= queuedFile.file.size) {
+        blob = queuedFile.file;
+        width = originalWidth;
+        height = originalHeight;
+        outputQuality = null;
+        status = 'kept-original';
+        message = 'No smaller result was found; original kept.';
+      } else {
+        blob = candidate;
+        status = candidate.size < queuedFile.file.size ? 'optimized' : 'larger';
+        message = status === 'optimized'
+          ? 'File size reduced.'
+          : 'Dimensions changed, but the output file is larger than the original.';
+      }
+    }
+
+    const url = objectUrls.replace(`result:${queuedFile.id}`, blob);
+    return {
+      sourceId: queuedFile.id,
+      name: queuedFile.file.name,
+      originalSize: queuedFile.file.size,
+      compressedSize: blob.size,
+      originalWidth,
+      originalHeight,
+      width,
+      height,
+      quality: outputQuality,
+      attempts,
+      status,
+      message,
+      url,
+      previewUrl: url,
+    };
   };
 
   const handleCompress = async () => {
     if (files.length === 0) return;
-
+    clearResults();
     setCompressing(true);
-    setError(null);
-    setResults([]);
 
     try {
-      const compressed = await Promise.all(files.map(compressImage));
-      setResults(compressed);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Compression failed');
+      const outcomes: CompressionOutcome[] = await Promise.all(
+        files.map(async (queuedFile) => {
+          try {
+            return { status: 'success', value: await processFile(queuedFile) };
+          } catch (processingError) {
+            return {
+              status: 'failure',
+              value: {
+                sourceId: queuedFile.id,
+                name: queuedFile.file.name,
+                message: getImageProcessingErrorMessage(processingError),
+              },
+            };
+          }
+        })
+      );
+
+      setResults(
+        outcomes
+          .filter((outcome): outcome is Extract<CompressionOutcome, { status: 'success' }> =>
+            outcome.status === 'success'
+          )
+          .map((outcome) => outcome.value)
+      );
+      setFailures(
+        outcomes
+          .filter((outcome): outcome is Extract<CompressionOutcome, { status: 'failure' }> =>
+            outcome.status === 'failure'
+          )
+          .map((outcome) => outcome.value)
+      );
     } finally {
       setCompressing(false);
     }
   };
 
   const handleDownloadAll = () => {
-    results.forEach((result) => {
-      const a = document.createElement('a');
-      a.href = result.url;
-      a.download = result.name;
-      a.click();
-    });
+    try {
+      results.forEach((result) => downloadUrl(result.url, result.name));
+    } catch (downloadError) {
+      setError(getImageProcessingErrorMessage(downloadError));
+    }
   };
 
-  const totalOriginal = results.reduce((sum, r) => sum + r.originalSize, 0);
-  const totalCompressed = results.reduce((sum, r) => sum + r.compressedSize, 0);
+  const totalOriginal = results.reduce((sum, result) => sum + result.originalSize, 0);
+  const totalCompressed = results.reduce((sum, result) => sum + result.compressedSize, 0);
+  const totalIsSmaller = totalCompressed < totalOriginal;
 
   return (
     <div>
-      <FileUploader accept="image/*" multiple={true} onFilesSelected={handleFiles} />
-      <FileList files={files} onRemove={handleRemove} />
+      <FileUploader accept={inputFormat.accept} multiple={true} onFilesSelected={handleFiles} />
+      <p style={{ marginTop: '0.5rem', fontSize: '0.8125rem', color: '#6b7280' }}>
+        Accepted input: {inputFormat.hint}
+      </p>
+
+      <div style={{ marginTop: '1rem' }}>
+        <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>
+          Compression Mode
+        </label>
+        <select
+          aria-label="Compression Mode"
+          value={mode}
+          onChange={(event) => {
+            clearResults();
+            setMode(event.target.value as CompressionMode);
+          }}
+        >
+          <option value="quality">Quality and dimensions</option>
+          <option value="target">Target file size</option>
+        </select>
+      </div>
+
+      <FileList files={files.map(({ file }) => file)} onRemove={handleRemove} />
 
       {files.length > 0 && (
         <div style={{ marginTop: '1.5rem' }}>
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '1rem' }}>
-            <div style={{ minWidth: '200px' }}>
-              <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>
-                Quality: {quality}%
-              </label>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={quality}
-                onChange={(e) => setQuality(Number(e.target.value))}
-              />
-              <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                Lower = smaller file, higher = better quality
+            {mode === 'quality' ? (
+              <div style={{ minWidth: '200px' }}>
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>
+                  Quality: {quality}%
+                </label>
+                <input
+                  aria-label="Compression Quality"
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={quality}
+                  onChange={(event) => {
+                    clearResults();
+                    setQuality(Number(event.target.value));
+                  }}
+                />
+                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                  Applies to JPG and WebP. PNG is lossless; resize it to reduce size.
+                </div>
               </div>
-            </div>
+            ) : (
+              <div>
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>
+                  Target Size (KB)
+                </label>
+                <input
+                  aria-label="Target Size (KB)"
+                  type="number"
+                  min="1"
+                  max="10000"
+                  step="1"
+                  value={targetKB}
+                  onChange={(event) => {
+                    clearResults();
+                    setTargetKB(Math.max(1, Number(event.target.value) || 1));
+                  }}
+                  style={{ width: '120px' }}
+                />
+              </div>
+            )}
 
             <div>
               <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>
-                Max Width (px)
+                Starting Max Width (px)
               </label>
               <select
+                aria-label="Starting Max Width"
                 value={maxWidth}
-                onChange={(e) => setMaxWidth(Number(e.target.value))}
+                onChange={(event) => {
+                  clearResults();
+                  setMaxWidth(Number(event.target.value));
+                }}
               >
                 <option value={0}>Original</option>
                 <option value={3840}>3840 (4K)</option>
@@ -178,17 +380,27 @@ export default function ImageCompressor() {
 
       {error && <div className="status status-error">{error}</div>}
 
+      {failures.length > 0 && (
+        <div className="status status-error" style={{ marginTop: '1rem' }}>
+          <strong>{failures.length} file{failures.length > 1 ? 's' : ''} could not be processed:</strong>
+          <ul style={{ margin: '0.5rem 0 0 1.25rem' }}>
+            {failures.map((failure) => (
+              <li key={failure.sourceId}><strong>{failure.name}:</strong> {failure.message}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {results.length > 0 && (
         <div style={{ marginTop: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
             <h3 style={{ fontSize: '1.125rem' }}>
-              Results
+              Results ({results.length}/{files.length})
               {totalOriginal > 0 && (
-                <span style={{ fontSize: '0.875rem', fontWeight: 'normal', color: '#6b7280', marginLeft: '0.5rem' }}>
-                  {formatSize(totalOriginal)} → {formatSize(totalCompressed)}
-                  <span style={{ color: '#10b981' }}>
-                    {' '}(-{Math.round((1 - totalCompressed / totalOriginal) * 100)}%)
-                  </span>
+                <span style={{ fontSize: '0.875rem', fontWeight: 'normal', color: totalIsSmaller ? '#059669' : '#6b7280', marginLeft: '0.5rem' }}>
+                  {formatSize(totalOriginal)} to {formatSize(totalCompressed)}
+                  {totalIsSmaller && ` (-${Math.round((1 - totalCompressed / totalOriginal) * 100)}%)`}
+                  {!totalIsSmaller && ' (no aggregate reduction)'}
                 </span>
               )}
             </h3>
@@ -198,25 +410,35 @@ export default function ImageCompressor() {
               </button>
             )}
           </div>
-          {results.map((result, index) => (
-            <div key={index} className="result-item">
-              <div className="result-info">
-                <img src={result.previewUrl} alt={result.name} className="result-preview" />
-                <div>
-                  <div className="file-item-name">{result.name}</div>
-                  <div className="file-item-size">
-                    {formatSize(result.originalSize)} → {formatSize(result.compressedSize)}
-                    <span style={{ color: '#10b981' }}>
-                      {' '}(-{Math.round((1 - result.compressedSize / result.originalSize) * 100)}%)
-                    </span>
+
+          {results.map((result) => {
+            const smaller = result.compressedSize < result.originalSize;
+            return (
+              <div key={result.sourceId} className="result-item">
+                <div className="result-info">
+                  <img src={result.previewUrl} alt={result.name} className="result-preview" />
+                  <div>
+                    <div className="file-item-name">{result.name}</div>
+                    <div className="file-item-size">
+                      {formatSize(result.originalSize)} to {formatSize(result.compressedSize)}
+                      {smaller && ` (-${Math.round((1 - result.compressedSize / result.originalSize) * 100)}%)`}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                      {result.originalWidth}x{result.originalHeight} to {result.width}x{result.height}
+                      {result.quality !== null && ` | quality ${Math.round(result.quality * 100)}%`}
+                      {mode === 'target' && ` | ${result.attempts} attempt${result.attempts === 1 ? '' : 's'}`}
+                    </div>
+                    <div style={{ fontSize: '0.8125rem', color: resultColor(result.status), fontWeight: 600, marginTop: '0.25rem' }}>
+                      {result.message}
+                    </div>
                   </div>
                 </div>
+                <a href={result.url} download={result.name} className="btn btn-primary">
+                  Download
+                </a>
               </div>
-              <a href={result.url} download={result.name} className="btn btn-primary">
-                Download
-              </a>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

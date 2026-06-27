@@ -37,7 +37,7 @@ const faqItems = [
   },
   {
     question: 'Will cropping reduce the quality of my image?',
-    answer: 'No. Cropping only removes pixels outside the selection. The remaining pixels keep their original quality. To save as JPG or WebP, use high quality settings for best results.',
+    answer: 'Cropping removes pixels outside the selection, then the browser re-encodes the result. PNG preserves the cropped pixels losslessly; JPG and WebP use the selected quality and may introduce compression changes.',
   },
   {
     question: 'Can I undo a crop?',

@@ -13,7 +13,7 @@ export function getStaticPaths() {
   }));
 }
 
-const { title, description, defaultAspectRatio, faq, slug } = Astro.props;
+const { title, description, defaultAspectPreset, faq, slug } = Astro.props;
 
 const pageUrl = `https://toolkitfree.net/tools/image-cropper/${Astro.params.variant}`;
 
@@ -64,7 +64,7 @@ const faqStructuredData = {
         <span style="color: #10b981; font-weight: 600;">Your files never leave your device</span>
       </div>
 
-      <ImageCropper client:load defaultAspectRatio={defaultAspectRatio} />
+      <ImageCropper client:load defaultAspectPreset={defaultAspectPreset} />
 
       <section class="features-section">
         <h2>Features</h2>

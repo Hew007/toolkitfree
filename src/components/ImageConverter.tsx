@@ -1,163 +1,200 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import FileList from './FileList';
 import DownloadResult from './DownloadResult';
+import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
+import {
+  downloadUrl,
+  exportCanvas,
+  formatSize,
+  getCanvas2dContext,
+  getImageProcessingErrorMessage,
+  loadImage,
+  type ImageOutputMimeType,
+} from '../lib/image-processing';
+import {
+  OUTPUT_FORMAT_LABELS,
+  createUniqueOutputNames,
+  getConverterInputConfig,
+  getConverterOutputMime,
+} from '../lib/image-converter';
 
-type OutputFormat = 'image/jpeg' | 'image/png' | 'image/webp';
+interface QueuedFile {
+  id: string;
+  file: File;
+}
 
 interface ConvertedFile {
+  sourceId: string;
   name: string;
+  originalSize: number;
   size: number;
   url: string;
   previewUrl: string;
 }
 
-const FORMAT_LABELS: Record<OutputFormat, string> = {
-  'image/jpeg': 'JPG',
-  'image/png': 'PNG',
-  'image/webp': 'WebP',
-};
-
-const FORMAT_EXTENSIONS: Record<OutputFormat, string> = {
-  'image/jpeg': '.jpg',
-  'image/png': '.png',
-  'image/webp': '.webp',
-};
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+interface FailedFile {
+  sourceId: string;
+  name: string;
+  message: string;
 }
 
-const LABEL_TO_MIME: Record<string, OutputFormat> = {
-  'JPG': 'image/jpeg',
-  'PNG': 'image/png',
-  'WebP': 'image/webp',
-};
+type ConversionOutcome =
+  | { status: 'success'; value: ConvertedFile }
+  | { status: 'failure'; value: FailedFile };
 
 interface Props {
   defaultFrom?: string;
   defaultTo?: string;
 }
 
-export default function ImageConverter({ defaultTo }: Props) {
-  const initialFormat = (defaultTo && LABEL_TO_MIME[defaultTo]) || 'image/png';
-  const [files, setFiles] = useState<File[]>([]);
-  const [outputFormat, setOutputFormat] = useState<OutputFormat>(initialFormat);
+export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
+  const inputConfig = getConverterInputConfig(defaultFrom);
+  const [files, setFiles] = useState<QueuedFile[]>([]);
+  const [outputFormat, setOutputFormat] = useState<ImageOutputMimeType>(() =>
+    getConverterOutputMime(defaultTo)
+  );
   const [quality, setQuality] = useState(92);
   const [converting, setConverting] = useState(false);
   const [results, setResults] = useState<ConvertedFile[]>([]);
+  const [failures, setFailures] = useState<FailedFile[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const nextFileId = useRef(0);
+  const objectUrls = useObjectUrlRegistry();
+
+  const clearResults = useCallback(() => {
+    objectUrls.revokePrefix('result:');
+    setResults([]);
+    setFailures([]);
+    setError(null);
+  }, [objectUrls]);
 
   const handleFiles = useCallback((newFiles: File[]) => {
-    setFiles((prev) => [...prev, ...newFiles]);
-    setResults([]);
-    setError(null);
-  }, []);
+    if (newFiles.length === 0) return;
+    clearResults();
+    setFiles((previous) => [
+      ...previous,
+      ...newFiles.map((file) => ({
+        id: `file-${++nextFileId.current}`,
+        file,
+      })),
+    ]);
+  }, [clearResults]);
 
   const handleRemove = useCallback((index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+    clearResults();
+    setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index));
+  }, [clearResults]);
 
-  const convertImage = (file: File, format: OutputFormat, quality: number): Promise<ConvertedFile> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Failed to get canvas context'));
-          return;
-        }
-
-        // Fill white background for JPEG (no transparency)
-        if (format === 'image/jpeg') {
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        ctx.drawImage(img, 0, 0);
-
-        canvas.toBlob(
-          (blob) => {
-            URL.revokeObjectURL(url);
-            if (!blob) {
-              reject(new Error('Conversion failed'));
-              return;
-            }
-
-            const ext = FORMAT_EXTENSIONS[format];
-            const baseName = file.name.replace(/\.[^.]+$/, '');
-            const newName = baseName + ext;
-            const blobUrl = URL.createObjectURL(blob);
-
-            resolve({
-              name: newName,
-              size: blob.size,
-              url: blobUrl,
-              previewUrl: blobUrl,
-            });
-          },
-          format,
-          format === 'image/png' ? undefined : quality / 100
-        );
-      };
-
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error(`Failed to load image: ${file.name}`));
-      };
-
-      img.src = url;
+  const convertImage = async (
+    queuedFile: QueuedFile,
+    format: ImageOutputMimeType,
+    outputName: string
+  ): Promise<ConvertedFile> => {
+    const image = await loadImage(queuedFile.file, {
+      allowedTypes: inputConfig.allowedTypes,
     });
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+
+    const context = getCanvas2dContext(canvas);
+    if (format === 'image/jpeg') {
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    context.drawImage(image, 0, 0);
+
+    const blob = await exportCanvas(
+      canvas,
+      format,
+      format === 'image/png' ? undefined : quality / 100
+    );
+    const url = objectUrls.replace(`result:${queuedFile.id}`, blob);
+
+    return {
+      sourceId: queuedFile.id,
+      name: outputName,
+      originalSize: queuedFile.file.size,
+      size: blob.size,
+      url,
+      previewUrl: url,
+    };
   };
 
   const handleConvert = async () => {
     if (files.length === 0) return;
 
+    clearResults();
     setConverting(true);
-    setError(null);
-    setResults([]);
+    const outputNames = createUniqueOutputNames(
+      files.map(({ file }) => file.name),
+      outputFormat
+    );
 
     try {
-      const converted = await Promise.all(
-        files.map((file) => convertImage(file, outputFormat, quality))
+      const outcomes: ConversionOutcome[] = await Promise.all(
+        files.map(async (queuedFile, index) => {
+          try {
+            return {
+              status: 'success',
+              value: await convertImage(queuedFile, outputFormat, outputNames[index]),
+            };
+          } catch (conversionError) {
+            return {
+              status: 'failure',
+              value: {
+                sourceId: queuedFile.id,
+                name: queuedFile.file.name,
+                message: getImageProcessingErrorMessage(conversionError),
+              },
+            };
+          }
+        })
       );
-      setResults(converted);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Conversion failed');
+
+      setResults(
+        outcomes
+          .filter((outcome): outcome is Extract<ConversionOutcome, { status: 'success' }> =>
+            outcome.status === 'success'
+          )
+          .map((outcome) => outcome.value)
+      );
+      setFailures(
+        outcomes
+          .filter((outcome): outcome is Extract<ConversionOutcome, { status: 'failure' }> =>
+            outcome.status === 'failure'
+          )
+          .map((outcome) => outcome.value)
+      );
     } finally {
       setConverting(false);
     }
   };
 
   const handleDownloadAll = () => {
-    results.forEach((result) => {
-      const a = document.createElement('a');
-      a.href = result.url;
-      a.download = result.name;
-      a.click();
-    });
+    try {
+      results.forEach((result) => downloadUrl(result.url, result.name));
+    } catch (downloadError) {
+      setError(getImageProcessingErrorMessage(downloadError));
+    }
   };
 
-  const totalOriginalSize = files.reduce((sum, f) => sum + f.size, 0);
-  const totalConvertedSize = results.reduce((sum, r) => sum + r.size, 0);
+  const totalOriginalSize = results.reduce((sum, result) => sum + result.originalSize, 0);
+  const totalConvertedSize = results.reduce((sum, result) => sum + result.size, 0);
 
   return (
     <div>
       <FileUploader
-        accept="image/*"
+        accept={inputConfig.accept}
         multiple={true}
         onFilesSelected={handleFiles}
       />
+      <p style={{ marginTop: '0.5rem', fontSize: '0.8125rem', color: '#6b7280' }}>
+        Accepted input: {inputConfig.hint}
+      </p>
 
-      <FileList files={files} onRemove={handleRemove} />
+      <FileList files={files.map(({ file }) => file)} onRemove={handleRemove} />
 
       {files.length > 0 && (
         <div style={{ marginTop: '1.5rem' }}>
@@ -167,10 +204,14 @@ export default function ImageConverter({ defaultTo }: Props) {
                 Output Format
               </label>
               <select
+                aria-label="Output Format"
                 value={outputFormat}
-                onChange={(e) => setOutputFormat(e.target.value as OutputFormat)}
+                onChange={(event) => {
+                  clearResults();
+                  setOutputFormat(event.target.value as ImageOutputMimeType);
+                }}
               >
-                {Object.entries(FORMAT_LABELS).map(([mime, label]) => (
+                {Object.entries(OUTPUT_FORMAT_LABELS).map(([mime, label]) => (
                   <option key={mime} value={mime}>{label}</option>
                 ))}
               </select>
@@ -182,11 +223,15 @@ export default function ImageConverter({ defaultTo }: Props) {
                   Quality: {quality}%
                 </label>
                 <input
+                  aria-label="Output Quality"
                   type="range"
                   min="10"
                   max="100"
                   value={quality}
-                  onChange={(e) => setQuality(Number(e.target.value))}
+                  onChange={(event) => {
+                    clearResults();
+                    setQuality(Number(event.target.value));
+                  }}
                 />
               </div>
             )}
@@ -203,18 +248,27 @@ export default function ImageConverter({ defaultTo }: Props) {
         </div>
       )}
 
-      {error && (
-        <div className="status status-error">{error}</div>
+      {error && <div className="status status-error">{error}</div>}
+
+      {failures.length > 0 && (
+        <div className="status status-error" style={{ marginTop: '1rem' }}>
+          <strong>{failures.length} file{failures.length > 1 ? 's' : ''} could not be converted:</strong>
+          <ul style={{ margin: '0.5rem 0 0 1.25rem' }}>
+            {failures.map((failure) => (
+              <li key={failure.sourceId}><strong>{failure.name}:</strong> {failure.message}</li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {results.length > 0 && (
         <div style={{ marginTop: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', gap: '1rem', flexWrap: 'wrap' }}>
             <h3 style={{ fontSize: '1.125rem' }}>
-              Results
+              Results ({results.length}/{files.length})
               {totalOriginalSize > 0 && (
                 <span style={{ fontSize: '0.875rem', fontWeight: 'normal', color: '#6b7280', marginLeft: '0.5rem' }}>
-                  {formatSize(totalOriginalSize)} → {formatSize(totalConvertedSize)}
+                  {formatSize(totalOriginalSize)} to {formatSize(totalConvertedSize)}
                   {totalConvertedSize < totalOriginalSize && (
                     <span style={{ color: '#10b981' }}>
                       {' '}(-{Math.round((1 - totalConvertedSize / totalOriginalSize) * 100)}%)
@@ -229,8 +283,8 @@ export default function ImageConverter({ defaultTo }: Props) {
               </button>
             )}
           </div>
-          {results.map((result, index) => (
-            <DownloadResult key={index} {...result} />
+          {results.map((result) => (
+            <DownloadResult key={result.sourceId} {...result} />
           ))}
         </div>
       )}

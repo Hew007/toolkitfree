@@ -1,12 +1,8 @@
+import { formatSize } from '../lib/image-processing';
+
 interface FileListProps {
   files: File[];
   onRemove: (index: number) => void;
-}
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
 export default function FileList({ files, onRemove }: FileListProps) {

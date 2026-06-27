@@ -13,6 +13,7 @@ There is no server upload-size quota because files are not uploaded for processi
 Explicitly supported inputs: JPG/JPEG, PNG, WebP.
 Explicitly supported outputs: JPG/JPEG, PNG, WebP.
 Batch input: yes.
+Mixed batches report errors per file while keeping successful outputs. Duplicate output base names receive deterministic -2, -3, and later suffixes.
 
 GIF, BMP, and SVG inputs use the browser decoder and are not guaranteed across devices. GIF conversion creates a static output from one decoded frame; animation is not preserved. SVG external resources and some features may not render.
 
@@ -24,17 +25,17 @@ PNG output uses lossless encoding for decoded pixels, but converting from JPG ca
 
 Supported inputs follow browser decoding, with JPG, PNG, and WebP as the documented baseline. Batch input is supported.
 
-The tool re-encodes through Canvas and can optionally reduce dimensions. Output may be smaller, unchanged, or larger than the source. PNG quality controls do not create a guaranteed optimization. Reducing dimensions removes pixels and is not lossless.
+Quality mode re-encodes through Canvas and can optionally reduce dimensions. JPG and WebP use the selected quality; PNG uses lossless encoding and ignores quality. When a same-dimension candidate is not smaller, the original is kept instead of presenting an increase as an optimization.
 
-The Compress to 100KB page is guidance only. The current implementation does not search for or guarantee an exact target size, so that page is marked noindex pending the dedicated target-size implementation.
+Target mode uses bounded quality search for JPG/WebP and bounded dimension reduction for JPG, WebP, and PNG. A result is labeled Target met only when its actual Blob size is at or below the selected maximum. If the bound cannot be reached, the closest smaller candidate or original is retained and labeled Target not met. The Compress Image to 100KB page defaults to this mode and is indexable.
 
 ## Image Resizer
 
-Processes multiple images with shared dimension and format settings. Output uses Canvas. Browser memory and Canvas dimension limits apply.
+Processes multiple JPG, PNG, or WebP images with shared dimension, format, and quality settings. The seven platform variant pages initialize verified exact presets. In Custom mode, Maintain aspect ratio fits each image inside the selected maximum width and height; disabling it uses the exact dimensions and may stretch the image. Output uses Canvas, so browser memory and Canvas dimension limits apply.
 
 ## Image Cropper
 
-Processes one image at a time. Outputs PNG, JPG, or WebP. PNG encoding is lossless for the cropped pixels; reducing the crop or converting to a lossy format changes data.
+Processes one JPG, PNG, or WebP at a time. Free, 1:1, 16:9, 4:3, 3:2, and 9:16 selections stay inside image bounds during mouse or touch movement and edge/corner resizing. Outputs PNG, JPG, or WebP. PNG encoding is lossless for the cropped pixels; JPG and WebP use the selected quality and may change image data.
 
 ## Image to PDF
 

@@ -2,6 +2,7 @@
 import Layout from '../../../layouts/Layout.astro';
 import ImageResizer from '../../../components/ImageResizer';
 import { allVariants, variantData } from '../../../data/resizer-variants';
+import { RESIZER_VARIANT_PRESETS, type ResizerVariantSlug } from '../../../lib/image-resizer';
 
 export function getStaticPaths() {
   return allVariants.map((v) => ({
@@ -11,6 +12,7 @@ export function getStaticPaths() {
 }
 
 const { title, description, faq, slug } = Astro.props;
+const presetKey = RESIZER_VARIANT_PRESETS[slug as ResizerVariantSlug];
 
 const pageUrl = `https://toolkitfree.net/tools/image-resizer/${Astro.params.variant}`;
 
@@ -57,7 +59,7 @@ const faqStructuredData = {
         {description}
       </p>
 
-      <ImageResizer client:load />
+      <ImageResizer client:load defaultPreset={presetKey} />
 
       <section class="features-section">
         <h2>Features</h2>

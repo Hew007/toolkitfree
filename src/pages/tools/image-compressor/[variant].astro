@@ -10,7 +10,7 @@ export function getStaticPaths() {
       title: 'Compress PNG Images Online Free',
       description: 'Re-encode PNG images or reduce their dimensions in your browser. A smaller output is not guaranteed. Batch support, no file upload needed.',
       faq: [
-        { question: 'How to compress a PNG file?', answer: 'Upload your PNG file, adjust the quality and max width settings, and click Compress. Since PNG is lossless, quality adjustment mainly affects dimensions. Setting a max width is the most effective way to reduce PNG file size.' },
+        { question: 'How to compress a PNG file?', answer: 'Upload your PNG file and choose a smaller maximum width. PNG ignores the quality control because it uses lossless encoding; dimension reduction is the available size-control path.' },
         { question: 'Can I compress PNG without losing quality?', answer: 'PNG output uses lossless encoding, but re-encoding can be the same size or larger. Reducing dimensions removes pixels, so it is not lossless. Convert to WebP when a smaller lossy output is acceptable.' },
         { question: 'How much can I reduce PNG file size?', answer: 'By reducing dimensions, you can typically achieve 30-70% size reduction. For example, scaling a 4000px wide image to 1920px can reduce file size by 75% or more.' },
         { question: 'What is the best way to compress PNG for web?', answer: 'For web use, resize your PNG to the maximum display size needed. A 1920px wide image is usually sufficient. Alternatively, convert to WebP for 25-34% better compression.' },
@@ -54,7 +54,7 @@ export function getStaticPaths() {
       slug: 'compress-for-whatsapp',
       format: 'Any',
       title: 'Compress Images for WhatsApp - Control File Size',
-      description: 'Compress images to share on WhatsApp without losing quality. WhatsApp compresses photos automatically — pre-compress to control the result.',
+      description: 'Resize or re-encode images before sharing on WhatsApp so you can inspect the result first.',
       faq: [
         { question: 'Why do my photos lose quality on WhatsApp?', answer: 'WhatsApp automatically compresses images to save bandwidth. Photos are resized to 1600px and compressed to JPEG at ~70% quality. By pre-compressing with our tool, you control the result.' },
         { question: 'What is the best size for WhatsApp photos?', answer: 'Set max width to 1600px and quality to 80-85%. This matches WhatsApp\'s compression but gives you control. Most photos will be 100-300KB.' },
@@ -64,13 +64,13 @@ export function getStaticPaths() {
     {
       slug: 'compress-to-100kb',
       format: 'Any',
-      title: 'Compress Toward 100KB - Current Tool Limits',
-      description: 'Try settings that may reduce an image toward 100KB, then verify the displayed result. The current tool does not guarantee a 100KB target.',
+      title: 'Compress Image to 100KB - Verified Target Size',
+      description: 'Compress images to 100KB or less using bounded quality and dimension search. Every result states whether the target was met.',
       faq: [
-        { question: 'How to reduce photo size to 100KB?', answer: 'Upload the image, lower quality or dimensions, and check the output size. Results depend on image content, format, and dimensions; the current tool does not automatically hit 100KB.' },
+        { question: 'How to reduce photo size to 100KB?', answer: 'Upload an image and keep Target Size set to 100KB. JPG and WebP use bounded quality search and then dimension reduction when necessary; PNG uses dimension reduction. The result explicitly states whether it reached 100KB.' },
         { question: 'Will 100KB look bad?', answer: 'Visual quality at 100KB varies substantially with image content and dimensions. Inspect the downloaded image before submitting it.' },
-        { question: 'What if my image is still over 100KB?', answer: 'Lower the quality to 50-60% or reduce the max width to 800-1024px. Simple images (documents, screenshots) compress better than complex photos.' },
-        { question: 'Why do forms require images under 100KB?', answer: 'Some forms impose small upload limits. Always verify the displayed output size because this tool does not guarantee a specific target.' },
+        { question: 'What if my image is still over 100KB?', answer: 'The result is marked Target not met and shows the closest smaller candidate, or keeps the original when no candidate is smaller. No over-target result is presented as successful.' },
+        { question: 'Why do forms require images under 100KB?', answer: 'Some forms impose small upload limits. The tool verifies the actual Blob size and labels a result Target met only when it is at or below the selected limit.' },
       ],
     },
   ];
@@ -82,7 +82,7 @@ export function getStaticPaths() {
 }
 
 const { format, title, description, faq } = Astro.props;
-const isTargetSizeGuide = Astro.params.variant === 'compress-to-100kb';
+const isTargetSizeMode = Astro.params.variant === 'compress-to-100kb';
 
 const pageUrl = `https://toolkitfree.net/tools/image-compressor/${Astro.params.variant}`;
 
@@ -121,7 +121,6 @@ const faqStructuredData = {
   description={description}
   canonical={pageUrl}
   structuredData={[structuredData, faqStructuredData, breadcrumbSchema]}
-  noindex={isTargetSizeGuide}
 >
   <div class="tool-layout">
     <div class="tool-content">
@@ -130,13 +129,18 @@ const faqStructuredData = {
         {description}
       </p>
 
-      {isTargetSizeGuide && (
+      {isTargetSizeMode && (
         <div class="status" style="margin-bottom: 1rem;">
-          <strong>Target size is not guaranteed.</strong> Adjust quality or dimensions, run compression, and verify the displayed output size. Automated 100KB targeting is planned for a later update.
+          <strong>Verified 100KB target mode.</strong> Results are labeled Target met only when the actual output Blob is 100KB or less; otherwise the closest result is clearly marked.
         </div>
       )}
 
-      <ImageCompressor client:load />
+      <ImageCompressor
+        client:load
+        defaultMode={isTargetSizeMode ? 'target' : 'quality'}
+        defaultTargetKB={100}
+        defaultFormat={format}
+      />
 
       <section class="features-section">
         <h2>Features</h2>
@@ -144,7 +148,7 @@ const faqStructuredData = {
           <li>Adjustable compression quality</li>
           <li>Max width scaling option</li>
           <li>Batch compression support</li>
-          <li>Before/after size comparison</li>
+          <li>Verified target-size status and actual Blob size</li>
           <li>Image pixels are processed locally</li>
           <li>Capacity depends on browser memory and Canvas limits</li>
         </ul>
