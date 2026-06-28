@@ -39,21 +39,21 @@ Processes one JPG, PNG, or WebP at a time. Free, 1:1, 16:9, 4:3, 3:2, and 9:16 s
 
 ## Image to PDF
 
-Explicitly supported image inputs are JPG, PNG, and WebP. Other formats depend on browser decoding and are not guaranteed. HEIC and TIFF are not supported.
+Explicitly supported image inputs are JPG, PNG, and WebP. HEIC and TIFF are not supported.
 
-Multiple images can be combined into one PDF with one image per page. Available memory and image dimensions limit practical batch size.
+Multiple JPG, PNG, or WebP images can be reordered and combined with one image per page. A4, Letter, Fit-to-Image, orientation, and 0-30mm margins are supported; variant pages initialize their actual presets. Images retain aspect ratio, transparent pixels are flattened to white before JPEG embedding, and an undecodable file is reported without blocking valid pages. Available memory and image dimensions limit practical batch size.
 
 ## Favicon Generator
 
-Processes one image at a time and creates PNG favicon sizes plus a web manifest in a ZIP archive.
+Processes one JPG, PNG, or WebP at a time and creates 16, 32, 180, 192, and 512 pixel PNG icons plus site.webmanifest in a ZIP archive. Non-square sources are centered with transparent padding instead of stretched. No .ico file is generated.
 
 ## Background Remover
 
-Processes one image at a time. Model and runtime files are downloaded, then inference and image processing occur locally. Output quality depends on subject separation and image complexity.
+Processes one JPG, PNG, or WebP at a time. A sizable model and runtime are downloaded on first use, then inference and PNG compositing occur locally. Transparent or preset-color backgrounds are supported. Later offline use depends on browser cache retention; speed and maximum dimensions depend on device memory.
 
 ## QR Generator
 
-Creates one QR code at a time and exports PNG or SVG. QR payload data is generated locally; the page still loads normal website resources.
+Creates one QR code at a time and exports PNG or SVG. WiFi and vCard special characters are escaped, empty data produces no code, optional logos force High error correction, and low-contrast color pairs disable downloads. QR payload data is generated locally; the page still loads normal website resources.
 
 ## Public wording policy
 

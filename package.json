@@ -10,7 +10,8 @@
     "validate:processing": "node scripts/validate-image-processing.mjs",
     "validate:converter": "node scripts/validate-image-converter.mjs",
     "validate:compressor": "node scripts/validate-image-compressor.mjs",
-    "validate:resizer-cropper": "node scripts/validate-resizer-cropper.mjs"
+    "validate:resizer-cropper": "node scripts/validate-resizer-cropper.mjs",
+    "validate:secondary-tools": "node scripts/validate-secondary-tools.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.7",

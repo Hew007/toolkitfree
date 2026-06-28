@@ -20,10 +20,10 @@
 - [Compress Image to 100KB](https://toolkitfree.net/tools/image-compressor/compress-to-100kb): Defaults to a bounded 100KB target search and labels every result as met or not met.
 - [Image Resizer](https://toolkitfree.net/tools/image-resizer): Platform variants start with verified exact presets; custom ratio mode fits each image inside shared maximum dimensions.
 - [Image Cropper](https://toolkitfree.net/tools/image-cropper): Crop one JPG, PNG, or WebP with bounded mouse/touch controls and Free, 1:1, 16:9, 4:3, 3:2, or 9:16 ratios.
-- [Image to PDF](https://toolkitfree.net/tools/image-to-pdf): Combine supported images into a multi-page PDF.
-- [Favicon Generator](https://toolkitfree.net/tools/favicon-generator): Generate favicon assets from one image.
-- [Background Remover](https://toolkitfree.net/tools/background-remover): Remove one image background with a downloaded browser model.
-- [QR Generator](https://toolkitfree.net/tools/qr-generator): Generate PNG or SVG QR codes.
+- [Image to PDF](https://toolkitfree.net/tools/image-to-pdf): Combine ordered JPG, PNG, or WebP files; variant presets, partial decode errors, white transparency flattening, A4/Letter/Fit, orientation, and margins are supported.
+- [Favicon Generator](https://toolkitfree.net/tools/favicon-generator): Generate five PNG sizes plus site.webmanifest; non-square inputs use transparent padding and .ico is not generated.
+- [Background Remover](https://toolkitfree.net/tools/background-remover): Remove one image background locally after downloading a sizable browser model; transparent and preset-color PNG outputs are supported.
+- [QR Generator](https://toolkitfree.net/tools/qr-generator): Generate PNG or SVG QR codes with escaped WiFi/vCard data, optional logos, and contrast-gated downloads.
 
 ## Supported converter pages
 

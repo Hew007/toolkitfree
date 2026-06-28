@@ -12,7 +12,7 @@ export const variantData: Record<string, { title: string; description: string; f
     faq: [
       { question: 'How to convert PNG to favicon?', answer: 'Upload your PNG image, click "Generate Favicons," and download the ZIP file containing all standard favicon sizes plus a webmanifest file.' },
       { question: 'What size should my PNG be?', answer: 'For best results, use a PNG that is at least 512x512 pixels. Square images work best. The tool will resize it to all required favicon dimensions.' },
-      { question: 'Does PNG transparency work for favicons?', answer: 'Yes. PNG transparency is preserved in the generated favicon files. However, favicon.ico (16x16) typically uses a solid background.' },
+      { question: 'Does PNG transparency work for favicons?', answer: 'Yes. PNG transparency is preserved. Non-square images are centered with transparent padding instead of being stretched. This tool generates PNG icons and does not create a favicon.ico file.' },
       { question: 'What files are included in the download?', answer: 'The ZIP includes favicon-16x16.png, favicon-32x32.png, apple-touch-icon.png (180x180), android-chrome-192x192.png, android-chrome-512x512.png, and site.webmanifest.' },
     ],
   },

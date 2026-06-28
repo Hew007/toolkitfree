@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react';
 import QrInputForm from './QrInputForm';
 import QrPreview from './QrPreview';
 import type { QrType } from './QrInputForm';
+import { getImageProcessingErrorMessage, validateImageFile } from '../lib/image-processing';
+import { colorContrastRatio } from '../lib/qr-data';
 
 type DotStyle = 'square' | 'rounded' | 'dots' | 'classy' | 'classy-rounded' | 'extra-rounded';
 type ECL = 'L' | 'M' | 'Q' | 'H';
@@ -23,21 +25,33 @@ export default function QrGenerator() {
   const [errorCorrection, setErrorCorrection] = useState<ECL>('M');
   const [logoImage, setLogoImage] = useState<string | undefined>();
   const [logoSize, setLogoSize] = useState(0.25);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const contrastRatio = colorContrastRatio(fgColor, bgColor);
+  const contrastIsSafe = contrastRatio >= 4.5;
 
-  const handleLogoUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleLogoUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setLogoImage(reader.result as string);
-      setErrorCorrection('H');
-    };
-    reader.readAsDataURL(file);
+    try {
+      validateImageFile(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setLogoImage(reader.result as string);
+        setErrorCorrection('H');
+        setLogoError(null);
+      };
+      reader.onerror = () => setLogoError('The logo could not be read.');
+      reader.readAsDataURL(file);
+    } catch (fileError) {
+      setLogoError(getImageProcessingErrorMessage(fileError));
+      event.target.value = '';
+    }
   }, []);
 
   const handleLogoRemove = useCallback(() => {
     setLogoImage(undefined);
     setErrorCorrection('M');
+    setLogoError(null);
   }, []);
 
   const sectionLabel: React.CSSProperties = {
@@ -49,7 +63,7 @@ export default function QrGenerator() {
   };
 
   return (
-    <div className="qr-generator-layout">
+    <div className="qr-generator-layout" data-qr-contrast={contrastRatio.toFixed(2)} data-qr-download-enabled={contrastIsSafe}>
       {/* Left: Options */}
       <div className="qr-options-panel">
         <QrInputForm type={qrType} onTypeChange={setQrType} onDataChange={setQrData} />
@@ -69,6 +83,11 @@ export default function QrGenerator() {
               <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} style={{ width: 32, height: 32, border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', padding: 0 }} />
             </label>
           </div>
+          {!contrastIsSafe && (
+            <div className="status status-error" data-qr-contrast-warning style={{ marginTop: '0.5rem' }}>
+              Increase foreground/background contrast to enable downloads. Current ratio: {contrastRatio.toFixed(2)}:1.
+            </div>
+          )}
         </div>
 
         {/* Dot Style */}
@@ -110,7 +129,7 @@ export default function QrGenerator() {
               color: '#6b7280',
             }}>
               Upload Logo
-              <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleLogoUpload} style={{ display: 'none' }} />
             </label>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -135,6 +154,8 @@ export default function QrGenerator() {
             </div>
           )}
         </div>
+
+        {logoError && <div className="status status-error">{logoError}</div>}
 
         {/* Error Correction */}
         <div>
@@ -177,6 +198,7 @@ export default function QrGenerator() {
           errorCorrectionLevel={errorCorrection}
           logoImage={logoImage}
           logoSize={logoSize}
+          downloadEnabled={contrastIsSafe}
         />
       </div>
     </div>

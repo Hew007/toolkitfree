@@ -1,4 +1,10 @@
 import { useState, useEffect } from 'react';
+import {
+  buildEmailString as encodeEmail,
+  buildSmsString as encodeSms,
+  buildVcardString as encodeVcard,
+  buildWifiString as encodeWifi,
+} from '../lib/qr-data';
 
 export type QrType = 'text' | 'wifi' | 'vcard' | 'email' | 'phone' | 'sms';
 
@@ -40,39 +46,19 @@ const fieldGroup: React.CSSProperties = {
 };
 
 function buildWifiString(security: string, ssid: string, password: string, hidden: boolean): string {
-  if (!ssid) return '';
-  const t = security === 'none' ? 'nopass' : security;
-  const parts = [`T:${t}`, `S:${ssid}`];
-  if (security !== 'none') parts.push(`P:${password}`);
-  if (hidden) parts.push('H:true');
-  return `WIFI:${parts.join(';')};;`;
+  return encodeWifi(security, ssid, password, hidden);
 }
 
 function buildVcardString(first: string, last: string, phone: string, email: string, company: string, title: string, website: string): string {
-  if (!first && !last && !phone && !email) return '';
-  const lines = ['BEGIN:VCARD', 'VERSION:3.0'];
-  if (last || first) lines.push(`N:${last};${first};;;`);
-  if (first || last) lines.push(`FN:${first} ${last}`.trim());
-  if (phone) lines.push(`TEL:${phone}`);
-  if (email) lines.push(`EMAIL:${email}`);
-  if (company) lines.push(`ORG:${company}`);
-  if (title) lines.push(`TITLE:${title}`);
-  if (website) lines.push(`URL:${website}`);
-  lines.push('END:VCARD');
-  return lines.join('\r\n');
+  return encodeVcard({ first, last, phone, email, company, title, website });
 }
 
 function buildEmailString(email: string, subject: string, body: string): string {
-  if (!email) return '';
-  const params: string[] = [];
-  if (subject) params.push(`subject=${encodeURIComponent(subject)}`);
-  if (body) params.push(`body=${encodeURIComponent(body)}`);
-  return `mailto:${email}${params.length ? '?' + params.join('&') : ''}`;
+  return encodeEmail(email, subject, body);
 }
 
 function buildSmsString(phone: string, message: string): string {
-  if (!phone) return '';
-  return message ? `sms:${phone}?body=${encodeURIComponent(message)}` : `sms:${phone}`;
+  return encodeSms(phone, message);
 }
 
 export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInputFormProps) {
@@ -115,12 +101,14 @@ export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInpu
   }, [type, text, wifiSecurity, wifiSsid, wifiPassword, wifiHidden, vFirst, vLast, vPhone, vEmail, vCompany, vTitle, vWebsite, emailTo, emailSubject, emailBody, phone, smsPhone, smsMessage]);
 
   return (
-    <div>
+    <div data-qr-input-type={type}>
       {/* Tab bar */}
       <div style={{ display: 'flex', gap: '0.375rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         {TABS.map((tab) => (
           <button
             key={tab.key}
+            type="button"
+            data-qr-tab={tab.key}
             onClick={() => onTypeChange(tab.key)}
             style={{
               padding: '0.375rem 0.875rem',

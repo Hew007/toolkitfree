@@ -2,6 +2,7 @@
 import Layout from '../../../layouts/Layout.astro';
 import ImageToPdf from '../../../components/ImageToPdf';
 import { allVariants, variantData } from '../../../data/pdf-variants';
+import { PDF_VARIANT_PRESETS, type PdfVariantSlug } from '../../../lib/image-to-pdf';
 
 export function getStaticPaths() {
   return allVariants.map((v) => ({
@@ -11,6 +12,7 @@ export function getStaticPaths() {
 }
 
 const { title, description, faq, slug } = Astro.props;
+const presetKey = PDF_VARIANT_PRESETS[slug as PdfVariantSlug];
 
 const pageUrl = `https://toolkitfree.net/tools/image-to-pdf/${Astro.params.variant}`;
 
@@ -61,7 +63,7 @@ const faqStructuredData = {
         <span style="color: #10b981; font-weight: 600;">Your files never leave your device</span>
       </div>
 
-      <ImageToPdf client:load />
+      <ImageToPdf client:load defaultPreset={presetKey} />
 
       <section class="features-section">
         <h2>Features</h2>

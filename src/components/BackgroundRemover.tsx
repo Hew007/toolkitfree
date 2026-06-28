@@ -1,209 +1,228 @@
-import { useState, useCallback, useRef } from 'react';
+import { useCallback, useState } from 'react';
 import FileUploader from './FileUploader';
+import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
+import {
+  downloadUrl,
+  exportCanvas,
+  formatSize,
+  getCanvas2dContext,
+  getImageProcessingErrorMessage,
+  loadImage,
+  validateImageFile,
+} from '../lib/image-processing';
+import {
+  mapBackgroundProgress,
+  type BackgroundProgress,
+} from '../lib/background-remover';
 
 interface ProcessedFile {
   name: string;
   size: number;
   url: string;
-  previewUrl: string;
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-}
+const INITIAL_PROGRESS: BackgroundProgress = {
+  stage: 'runtime',
+  label: 'Loading background removal runtime',
+  percent: null,
+};
 
 export default function BackgroundRemover() {
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [progress, setProgress] = useState('');
+  const [progress, setProgress] = useState<BackgroundProgress | null>(null);
   const [result, setResult] = useState<ProcessedFile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [bgColor, setBgColor] = useState('transparent');
-  const objectUrlRef = useRef<string | null>(null);
+  const objectUrls = useObjectUrlRegistry();
+
+  const clearResult = useCallback(() => {
+    objectUrls.revoke('background:result');
+    setResult(null);
+  }, [objectUrls]);
 
   const handleFiles = useCallback((files: File[]) => {
-    if (files.length > 0) {
-      setFile(files[0]);
-      setResult(null);
+    const nextFile = files[0];
+    if (!nextFile) return;
+    try {
+      validateImageFile(nextFile);
+      clearResult();
+      setFile(nextFile);
+      setPreviewUrl(objectUrls.replace('background:preview', nextFile));
       setError(null);
+      setProgress(null);
+    } catch (fileError) {
+      setError(getImageProcessingErrorMessage(fileError));
     }
-  }, []);
+  }, [clearResult, objectUrls]);
 
   const handleRemove = useCallback(() => {
-    if (objectUrlRef.current) {
-      URL.revokeObjectURL(objectUrlRef.current);
-    }
+    objectUrls.revokeAll();
     setFile(null);
+    setPreviewUrl(null);
     setResult(null);
     setError(null);
-  }, []);
+    setProgress(null);
+  }, [objectUrls]);
 
   const removeBackground = async () => {
     if (!file) return;
-
     setProcessing(true);
     setError(null);
-    setProgress('Loading AI model...');
+    clearResult();
+    setProgress(INITIAL_PROGRESS);
 
     try {
-      // Dynamically import the background removal library
       const { removeBackground: removeBg } = await import('@imgly/background-removal');
+      setProgress({ stage: 'model-initialization', label: 'Initializing AI model', percent: null });
 
-      setProgress('Processing image...');
-
-      const blob = await removeBg(file, {
+      const removedBlob = await removeBg(file, {
         progress: (key: string, current: number, total: number) => {
-          if (key === 'compute:inference') {
-            setProgress(`AI processing: ${Math.round((current / total) * 100)}%`);
-          } else if (key === 'fetch:model') {
-            setProgress(`Downloading model: ${Math.round((current / total) * 100)}%`);
-          }
+          setProgress(mapBackgroundProgress(key, current, total));
         },
       });
 
-      // Apply background color if not transparent
-      let finalBlob = blob;
-      if (bgColor !== 'transparent') {
-        const img = new Image();
-        const tempUrl = URL.createObjectURL(blob);
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = reject;
-          img.src = tempUrl;
-        });
-
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.fillStyle = bgColor;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0);
-          finalBlob = await new Promise<Blob>((resolve) => {
-            canvas.toBlob((b) => resolve(b || blob), 'image/png');
-          }) || blob;
-        }
-        URL.revokeObjectURL(tempUrl);
-      }
-
-      if (objectUrlRef.current) {
-        URL.revokeObjectURL(objectUrlRef.current);
-      }
-
-      const url = URL.createObjectURL(finalBlob);
-      objectUrlRef.current = url;
-
-      const baseName = file.name.replace(/\.[^.]+$/, '');
-      setResult({
-        name: baseName + '_no_bg.png',
-        size: finalBlob.size,
-        url,
-        previewUrl: url,
+      setProgress({ stage: 'model-initialization', label: 'Preparing PNG output', percent: null });
+      const removedFile = new File([removedBlob], 'removed-background.png', {
+        type: removedBlob.type || 'image/png',
       });
-      setProgress('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Background removal failed');
-      setProgress('');
+      const image = await loadImage(removedFile, { allowedTypes: ['image/png'] });
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = getCanvas2dContext(canvas);
+      if (bgColor !== 'transparent') {
+        context.fillStyle = bgColor;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      context.drawImage(image, 0, 0);
+      const finalBlob = await exportCanvas(canvas, 'image/png');
+      const url = objectUrls.replace('background:result', finalBlob);
+      const baseName = file.name.replace(/\.[^.]+$/, '') || 'image';
+      setResult({ name: `${baseName}_no_bg.png`, size: finalBlob.size, url });
+      setProgress(null);
+    } catch (processingError) {
+      const standardMessage = getImageProcessingErrorMessage(processingError);
+      setError(
+        standardMessage === 'Image processing failed. Please try another file.'
+          ? 'Background removal could not finish. On first use, check your connection and available device memory, then retry.'
+          : standardMessage
+      );
+      setProgress(null);
     } finally {
       setProcessing(false);
     }
   };
 
+  const handleDownload = () => {
+    if (!result) return;
+    try {
+      downloadUrl(result.url, result.name);
+    } catch (downloadError) {
+      setError(getImageProcessingErrorMessage(downloadError));
+    }
+  };
+
   return (
-    <div>
+    <div data-background-stage={progress?.stage ?? 'idle'}>
       {!file ? (
-        <FileUploader accept="image/*" multiple={false} onFilesSelected={handleFiles} />
+        <FileUploader accept="image/jpeg,image/png,image/webp" multiple={false} onFilesSelected={handleFiles} />
       ) : (
         <>
           <div className="file-item" style={{ marginBottom: '1rem' }}>
+            {previewUrl && <img src={previewUrl} alt="Original preview" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />}
             <span className="file-item-name">{file.name}</span>
             <span className="file-item-size">{formatSize(file.size)}</span>
-            <button className="file-item-remove" onClick={handleRemove}>×</button>
+            <button type="button" aria-label={`Remove ${file.name}`} className="file-item-remove" onClick={handleRemove}>x</button>
           </div>
 
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.5rem' }}>
-              Background Color
-            </label>
+            <span style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.5rem' }}>Background Color</span>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {[
-                { value: 'transparent', label: 'Transparent', color: '#fff', border: true },
+                { value: 'transparent', label: 'Transparent', color: '#fff' },
                 { value: '#ffffff', label: 'White', color: '#ffffff' },
                 { value: '#ff0000', label: 'Red', color: '#ff0000' },
                 { value: '#0000ff', label: 'Blue', color: '#0000ff' },
                 { value: '#008000', label: 'Green', color: '#008000' },
-              ].map((opt) => (
+              ].map((option) => (
                 <button
-                  key={opt.value}
-                  onClick={() => setBgColor(opt.value)}
+                  key={option.value}
+                  type="button"
+                  data-background-color={option.value}
+                  aria-pressed={bgColor === option.value}
+                  disabled={processing}
+                  onClick={() => { setBgColor(option.value); clearResult(); }}
                   style={{
                     padding: '0.375rem 1rem',
-                    borderRadius: '6px',
-                    border: bgColor === opt.value ? '2px solid #2563eb' : `1px solid #e5e7eb`,
-                    background: opt.color,
-                    cursor: 'pointer',
+                    borderRadius: 6,
+                    border: bgColor === option.value ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                    background: option.color,
+                    cursor: processing ? 'not-allowed' : 'pointer',
                     fontSize: '0.8rem',
-                    color: opt.value === '#000000' || opt.value === '#0000ff' || opt.value === '#008000' || opt.value === '#ff0000' ? 'white' : '#1f2937',
+                    color: ['#0000ff', '#008000', '#ff0000'].includes(option.value) ? '#fff' : '#1f2937',
                   }}
                 >
-                  {opt.label}
+                  {option.label}
                 </button>
               ))}
             </div>
           </div>
 
-          <button
-            className="btn btn-primary"
-            onClick={removeBackground}
-            disabled={processing}
-            style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
-          >
-            {processing ? 'Processing...' : 'Remove Background'}
+          <button type="button" className="btn btn-primary" onClick={removeBackground} disabled={processing} style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}>
+            {processing ? 'Processing...' : result ? 'Process Again' : 'Remove Background'}
           </button>
+          <p style={{ marginTop: '0.5rem', color: '#6b7280', fontSize: '0.8125rem' }}>
+            First use downloads a sizable AI model and requires a network connection. Later offline use depends on whether your browser keeps that model cached. Processing speed and maximum image size depend on device memory.
+          </p>
         </>
       )}
 
-      {progress && <div className="status status-processing">{progress}</div>}
+      {progress && (
+        <div className="status status-processing" data-progress-stage={progress.stage}>
+          {progress.label}{progress.percent === null ? '...' : `: ${progress.percent}%`}
+        </div>
+      )}
       {error && <div className="status status-error">{error}</div>}
 
       {result && (
         <div style={{ marginTop: '1.5rem' }}>
           <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Result</h3>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-            {file && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+            {previewUrl && (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Original</div>
-                <img src={URL.createObjectURL(file)} alt="Original" style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '4px', border: '1px solid #e5e7eb' }} />
+                <img src={previewUrl} alt="Original" style={{ maxWidth: 200, maxHeight: 200, borderRadius: 4, border: '1px solid #e5e7eb' }} />
               </div>
             )}
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Result</div>
               <img
-                src={result.previewUrl}
+                src={result.url}
                 alt="Result"
                 style={{
-                  maxWidth: '200px',
-                  maxHeight: '200px',
-                  borderRadius: '4px',
+                  maxWidth: 200,
+                  maxHeight: 200,
+                  borderRadius: 4,
                   border: '1px solid #e5e7eb',
-                  backgroundImage: bgColor === 'transparent' ? 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)' : undefined,
+                  backgroundImage: bgColor === 'transparent'
+                    ? 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)'
+                    : undefined,
                   backgroundSize: '16px 16px',
                   backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
                 }}
               />
             </div>
           </div>
-          <div className="result-item">
+          <div className="result-item" data-background-result={result.name}>
             <div className="result-info">
               <div>
                 <div className="file-item-name">{result.name}</div>
                 <div className="file-item-size">{formatSize(result.size)}</div>
               </div>
             </div>
-            <a href={result.url} download={result.name} className="btn btn-primary">Download</a>
+            <button type="button" onClick={handleDownload} className="btn btn-primary">Download</button>
           </div>
         </div>
       )}

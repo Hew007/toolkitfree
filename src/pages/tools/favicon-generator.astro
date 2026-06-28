@@ -13,7 +13,7 @@ const faqItems = [
   },
   {
     question: 'Is this favicon generator free?',
-    answer: 'Yes, completely free. No sign-up, no watermarks, no limits. All processing happens in your browser.',
+    answer: 'Yes. There is no sign-up or watermark. Practical input size is limited by browser memory and Canvas dimensions.',
   },
   {
     question: 'What image should I use for my favicon?',
@@ -37,7 +37,11 @@ const faqItems = [
   },
   {
     question: 'Can I use any image format?',
-    answer: 'JPG, PNG, and WebP are the supported baseline. Other formats depend on browser decoding and are not guaranteed. For best results, use a square PNG with transparency.',
+    answer: 'JPG, PNG, and WebP are supported. Non-square images are centered with transparent padding. For best small-icon clarity, use a simple square PNG with transparency.',
+  },
+  {
+    question: 'Does this tool generate favicon.ico?',
+    answer: 'No. The ZIP contains five PNG icons and site.webmanifest. The provided HTML references PNG favicon files.',
   },
   {
     question: 'What is the recommended favicon size?',
@@ -108,7 +112,8 @@ const breadcrumbSchema = {
           <li>Generates all standard favicon sizes</li>
           <li>Includes site.webmanifest file</li>
           <li>Ready-to-use HTML code snippet</li>
-          <li>High-quality image scaling</li>
+          <li>Non-square images use transparent padding, never stretching</li>
+          <li>PNG output only; no .ico file is generated</li>
           <li>Supports PNG, JPG, WebP, and more</li>
           <li>100% client-side — your images never leave your device</li>
         </ul>

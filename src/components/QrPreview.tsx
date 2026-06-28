@@ -8,6 +8,7 @@ interface QrPreviewProps {
   errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
   logoImage?: string;
   logoSize: number;
+  downloadEnabled: boolean;
 }
 
 export default function QrPreview({
@@ -18,6 +19,7 @@ export default function QrPreview({
   errorCorrectionLevel,
   logoImage,
   logoSize,
+  downloadEnabled,
 }: QrPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const qrRef = useRef<any>(null);
@@ -25,6 +27,7 @@ export default function QrPreview({
   useEffect(() => {
     if (!containerRef.current || !data) {
       if (containerRef.current) containerRef.current.innerHTML = '';
+      qrRef.current = null;
       return;
     }
 
@@ -64,13 +67,13 @@ export default function QrPreview({
   }, [data, fgColor, bgColor, dotStyle, errorCorrectionLevel, logoImage, logoSize]);
 
   const handleDownload = (ext: 'png' | 'svg') => {
-    if (qrRef.current) {
+    if (downloadEnabled && qrRef.current) {
       qrRef.current.download({ name: 'qrcode', extension: ext });
     }
   };
 
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div data-qr-data={data} data-qr-ready={Boolean(data)} style={{ textAlign: 'center' }}>
       <div
         ref={containerRef}
         style={{
@@ -88,15 +91,15 @@ export default function QrPreview({
       {data && (
         <>
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', marginBottom: '0.5rem' }}>
-            <button className="btn btn-primary" onClick={() => handleDownload('png')}>
+            <button type="button" className="btn btn-primary" disabled={!downloadEnabled} onClick={() => handleDownload('png')}>
               Download PNG
             </button>
-            <button className="btn btn-secondary" onClick={() => handleDownload('svg')}>
+            <button type="button" className="btn btn-secondary" disabled={!downloadEnabled} onClick={() => handleDownload('svg')}>
               Download SVG
             </button>
           </div>
-          <p style={{ fontSize: '0.8rem', color: '#9ca3af', margin: 0 }}>
-            Scan with your phone camera to test
+          <p style={{ fontSize: '0.8rem', color: downloadEnabled ? '#9ca3af' : '#b91c1c', margin: 0 }}>
+            {downloadEnabled ? 'Scan with your phone camera to test' : 'Downloads are disabled until color contrast is improved.'}
           </p>
         </>
       )}

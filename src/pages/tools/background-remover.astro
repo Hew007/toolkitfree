@@ -17,7 +17,7 @@ const faqItems = [
   },
   {
     question: 'How long does it take?',
-    answer: 'The first use takes 10-30 seconds to download the AI model (~40MB). Subsequent uses are faster as the model is cached. Processing itself typically takes 2-10 seconds depending on image size.',
+    answer: 'First use downloads a sizable AI model and therefore needs a network connection. Later runs are usually faster if the browser keeps the model cached. Exact time depends on network speed, image dimensions, device memory, and available acceleration.',
   },
   {
     question: 'Can I add a colored background after removal?',
@@ -33,7 +33,7 @@ const faqItems = [
   },
   {
     question: 'How do I remove the background from a picture for free?',
-    answer: 'Upload your picture, choose transparent or a colored background, and click "Remove Background." Our AI tool is completely free with no sign-up, no watermarks, and no limits.',
+    answer: 'Upload your picture, choose transparent or a colored background, and click "Remove Background." There is no sign-up or watermark; practical image size and speed depend on browser and device memory.',
   },
   {
     question: 'How do I make a transparent background?',
@@ -78,7 +78,7 @@ const breadcrumbSchema = {
       <h1>Free AI Background Remover</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
         Remove image backgrounds instantly using AI. Choose transparent or colored backgrounds.
-        100% client-side — your photos never leave your device.
+        Your photo stays on your device; first use still downloads the AI model and runtime files.
       </p>
 
       <BackgroundRemover client:load />
@@ -99,7 +99,7 @@ const breadcrumbSchema = {
           <li>AI-powered background detection</li>
           <li>Transparent or colored backgrounds</li>
           <li>Works with portraits, products, and objects</li>
-          <li>100% client-side — no uploads</li>
+          <li>Image processing stays local; model files are downloaded separately</li>
           <li>Free with no sign-up or watermark</li>
           <li>High-quality PNG output</li>
         </ul>

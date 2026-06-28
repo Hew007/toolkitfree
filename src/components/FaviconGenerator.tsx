@@ -10,6 +10,7 @@ import {
   loadImage,
   validateImageFile,
 } from '../lib/image-processing';
+import { calculateSquareContainRect } from '../lib/favicon';
 
 interface GeneratedIcon {
   name: string;
@@ -92,7 +93,13 @@ export default function FaviconGenerator() {
         const ctx = getCanvas2dContext(canvas);
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, 0, icon.size, icon.size);
+        ctx.clearRect(0, 0, icon.size, icon.size);
+        const placement = calculateSquareContainRect(
+          img.naturalWidth,
+          img.naturalHeight,
+          icon.size
+        );
+        ctx.drawImage(img, placement.x, placement.y, placement.width, placement.height);
 
         const blob = await exportCanvas(canvas, 'image/png');
 
@@ -145,9 +152,9 @@ export default function FaviconGenerator() {
 <link rel="manifest" href="/site.webmanifest">`;
 
   return (
-    <div>
+    <div data-favicon-output="png-only">
       {!file ? (
-        <FileUploader accept="image/*" multiple={false} onFilesSelected={handleFiles} />
+        <FileUploader accept="image/jpeg,image/png,image/webp" multiple={false} onFilesSelected={handleFiles} />
       ) : (
         <div>
           {/* Preview */}
@@ -167,6 +174,9 @@ export default function FaviconGenerator() {
           <button className="btn btn-primary" onClick={generateFavicons} disabled={processing} style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}>
             {processing ? 'Generating...' : 'Generate Favicons'}
           </button>
+          <p style={{ marginTop: '0.5rem', color: '#6b7280', fontSize: '0.8125rem' }}>
+            Non-square images are centered with transparent padding. This tool creates PNG icons, not an .ico file.
+          </p>
         </div>
       )}
 
@@ -177,7 +187,7 @@ export default function FaviconGenerator() {
           <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Generated Icons</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
             {icons.map((icon) => (
-              <div key={icon.name} style={{ textAlign: 'center' }}>
+              <div key={icon.name} data-favicon-icon={icon.name} data-size={icon.size} style={{ textAlign: 'center' }}>
                 <img
                   src={icon.url}
                   alt={icon.name}
@@ -196,7 +206,7 @@ export default function FaviconGenerator() {
           </div>
 
           {zipUrl && (
-            <div className="result-item" style={{ marginBottom: '1rem' }}>
+            <div className="result-item" data-favicon-zip-url={zipUrl} style={{ marginBottom: '1rem' }}>
               <div className="result-info">
                 <div style={{ width: 48, height: 48, background: '#dbeafe', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}> </div>
                 <div>

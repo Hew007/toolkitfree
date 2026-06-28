@@ -44,8 +44,8 @@ export const variantData: Record<string, { title: string; description: string; f
     faq: [
       { question: 'How to combine multiple images into one PDF?', answer: 'Upload all your images at once. They will be arranged in the order you uploaded them, with each image on its own page. Click "Convert to PDF" and download.' },
       { question: 'How many images can I combine?', answer: 'There is no server quota. The practical limit depends on browser memory, image dimensions, and device performance; large batches can fail.' },
-      { question: 'Can I reorder the images?', answer: 'Currently images are arranged in upload order. Remove and re-upload images in your preferred order if needed.' },
-      { question: 'What image formats are supported?', answer: 'JPG, PNG, and WebP are supported. Other formats depend on the browser decoder and are not guaranteed.' },
+      { question: 'Can I reorder the images?', answer: 'Yes. Use the Up and Down buttons beside each uploaded image. The numbered order shown in the tool is the page order used in the PDF.' },
+      { question: 'What image formats are supported?', answer: 'JPG, PNG, and WebP are supported. Files that cannot be decoded are reported individually while valid images can still be converted.' },
     ],
   },
   'image-to-pdf-no-margin': {
