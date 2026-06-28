@@ -20,6 +20,10 @@ const faqItems = [
     answer: 'Yes, you can upload and resize multiple images simultaneously. All images will be resized to the same dimensions.',
   },
   {
+    question: 'Can I download all resized images at once?',
+    answer: 'Yes. Use Download all as ZIP for a single browser download containing every successful result. You can still download files one by one, while failed inputs remain listed separately.',
+  },
+  {
     question: 'What output formats are supported?',
     answer: 'You can save resized images as JPG, PNG, or WebP. JPG is best for photos, PNG for graphics with transparency, and WebP for the best compression.',
   },
@@ -81,7 +85,7 @@ const breadcrumbSchema = {
           <li>Upload one or more images</li>
           <li>Choose a preset or enter custom width and height</li>
           <li>Select output format and quality</li>
-          <li>Click "Resize" and download your images</li>
+          <li>Click "Resize", then download files individually or once as a ZIP</li>
         </ol>
       </section>
 
@@ -92,7 +96,7 @@ const breadcrumbSchema = {
           <li>Custom width and height</li>
           <li>Maintain aspect ratio option</li>
           <li>Output as JPG, PNG, or WebP</li>
-          <li>Batch resize support</li>
+          <li>Batch resize with one ZIP download</li>
           <li>100% client-side processing</li>
         </ul>
       </section>

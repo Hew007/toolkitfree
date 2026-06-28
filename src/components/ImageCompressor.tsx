@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import FileList from './FileList';
+import BatchResultsSummary from './BatchResultsSummary';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
 import {
-  downloadUrl,
   exportCanvas,
   formatSize,
   getCanvas2dContext,
@@ -31,9 +31,13 @@ type CompressionStatus =
 
 interface CompressedFile {
   sourceId: string;
+  sourceName: string;
+  outputName: string;
   name: string;
   originalSize: number;
+  outputSize: number;
   compressedSize: number;
+  blob: Blob;
   originalWidth: number;
   originalHeight: number;
   width: number;
@@ -92,7 +96,6 @@ export default function ImageCompressor({
   const [compressing, setCompressing] = useState(false);
   const [results, setResults] = useState<CompressedFile[]>([]);
   const [failures, setFailures] = useState<FailedFile[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const nextFileId = useRef(0);
   const objectUrls = useObjectUrlRegistry();
 
@@ -100,7 +103,6 @@ export default function ImageCompressor({
     objectUrls.revokePrefix('result:');
     setResults([]);
     setFailures([]);
-    setError(null);
   }, [objectUrls]);
 
   const handleFiles = useCallback((newFiles: File[]) => {
@@ -205,9 +207,13 @@ export default function ImageCompressor({
     const url = objectUrls.replace(`result:${queuedFile.id}`, blob);
     return {
       sourceId: queuedFile.id,
+      sourceName: queuedFile.file.name,
+      outputName: queuedFile.file.name,
       name: queuedFile.file.name,
       originalSize: queuedFile.file.size,
+      outputSize: blob.size,
       compressedSize: blob.size,
+      blob,
       originalWidth,
       originalHeight,
       width,
@@ -262,18 +268,6 @@ export default function ImageCompressor({
       setCompressing(false);
     }
   };
-
-  const handleDownloadAll = () => {
-    try {
-      results.forEach((result) => downloadUrl(result.url, result.name));
-    } catch (downloadError) {
-      setError(getImageProcessingErrorMessage(downloadError));
-    }
-  };
-
-  const totalOriginal = results.reduce((sum, result) => sum + result.originalSize, 0);
-  const totalCompressed = results.reduce((sum, result) => sum + result.compressedSize, 0);
-  const totalIsSmaller = totalCompressed < totalOriginal;
 
   return (
     <div>
@@ -378,38 +372,15 @@ export default function ImageCompressor({
         </div>
       )}
 
-      {error && <div className="status status-error">{error}</div>}
 
-      {failures.length > 0 && (
-        <div className="status status-error" style={{ marginTop: '1rem' }}>
-          <strong>{failures.length} file{failures.length > 1 ? 's' : ''} could not be processed:</strong>
-          <ul style={{ margin: '0.5rem 0 0 1.25rem' }}>
-            {failures.map((failure) => (
-              <li key={failure.sourceId}><strong>{failure.name}:</strong> {failure.message}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <BatchResultsSummary
+        successes={results}
+        failures={failures}
+        archiveName="toolkitfree-compressed-images.zip"
+      />
 
       {results.length > 0 && (
-        <div style={{ marginTop: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-            <h3 style={{ fontSize: '1.125rem' }}>
-              Results ({results.length}/{files.length})
-              {totalOriginal > 0 && (
-                <span style={{ fontSize: '0.875rem', fontWeight: 'normal', color: totalIsSmaller ? '#059669' : '#6b7280', marginLeft: '0.5rem' }}>
-                  {formatSize(totalOriginal)} to {formatSize(totalCompressed)}
-                  {totalIsSmaller && ` (-${Math.round((1 - totalCompressed / totalOriginal) * 100)}%)`}
-                  {!totalIsSmaller && ' (no aggregate reduction)'}
-                </span>
-              )}
-            </h3>
-            {results.length > 1 && (
-              <button className="btn btn-secondary" onClick={handleDownloadAll}>
-                Download All
-              </button>
-            )}
-          </div>
+        <div>
 
           {results.map((result) => {
             const smaller = result.compressedSize < result.originalSize;

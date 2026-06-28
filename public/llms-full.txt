@@ -13,7 +13,7 @@ There is no server upload-size quota because files are not uploaded for processi
 Explicitly supported inputs: JPG/JPEG, PNG, WebP.
 Explicitly supported outputs: JPG/JPEG, PNG, WebP.
 Batch input: yes.
-Mixed batches report errors per file while keeping successful outputs. Duplicate output base names receive deterministic -2, -3, and later suffixes.
+Mixed batches report errors per file while keeping successful outputs. Duplicate output base names receive deterministic -2, -3, and later suffixes. Converter, Compressor, and Resizer also offer one locally generated ZIP containing only successful results, with collision-safe archive names and individual downloads retained.
 
 GIF, BMP, and SVG inputs use the browser decoder and are not guaranteed across devices. GIF conversion creates a static output from one decoded frame; animation is not preserved. SVG external resources and some features may not render.
 

@@ -20,6 +20,10 @@ const faqItems = [
     answer: 'Yes! You can upload and convert multiple images simultaneously. All conversions happen in parallel for maximum speed.',
   },
   {
+    question: 'How do I download a converted batch?',
+    answer: 'Each successful result has its own download link. You can also choose Download all as ZIP to create one archive in your browser. Failed files are listed with their reason and are not added to the ZIP.',
+  },
+  {
     question: 'Will I lose image quality when converting?',
     answer: 'PNG output uses lossless encoding for the decoded pixels, but conversion cannot restore detail already lost in the source. JPG and WebP are re-encoded and may lose quality; use the slider to control the tradeoff.',
   },
@@ -115,7 +119,7 @@ const faqStructuredData = {
           <li>Upload one or more images by dragging & dropping or clicking to browse</li>
           <li>Select your desired output format (JPG, PNG, or WebP)</li>
           <li>Adjust the quality slider if using JPG or WebP output</li>
-          <li>Click "Convert" and download your converted images</li>
+          <li>Click "Convert", then download files individually or once as a ZIP</li>
         </ol>
       </section>
 
@@ -123,7 +127,7 @@ const faqStructuredData = {
         <h2>Features</h2>
         <ul class="features-list">
           <li>Convert between JPG, PNG, and WebP</li>
-          <li>Batch convert multiple images at once</li>
+          <li>Batch convert multiple images with one ZIP download</li>
           <li>Adjustable quality for JPG and WebP</li>
           <li>100% client-side — no uploads required</li>
           <li>Capacity depends on browser memory and Canvas limits</li>

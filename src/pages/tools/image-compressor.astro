@@ -24,6 +24,10 @@ const faqItems = [
     answer: 'There is no server-side batch quota, but the practical limit depends on available browser memory and image dimensions. Large batches can be slow or fail, especially on mobile devices.',
   },
   {
+    question: 'Can I download all compressed images at once?',
+    answer: 'Yes. After processing, Download all as ZIP creates one local archive containing only successful results. Individual downloads remain available, and any failed file stays visible with its error reason.',
+  },
+  {
     question: 'Will compression affect image dimensions?',
     answer: 'No, unless you set a Max Width limit. By default, compression only affects file quality, not dimensions. If you set a Max Width, images wider than that limit will be scaled down proportionally.',
   },
@@ -88,7 +92,7 @@ const faqStructuredData = {
           <li>Upload one or more images (JPG, PNG, WebP)</li>
           <li>Adjust the quality slider — 80% is a good starting point</li>
           <li>Optionally set a maximum width to reduce dimensions</li>
-          <li>Click "Compress" and download your optimized images</li>
+          <li>Click "Compress", then download files individually or once as a ZIP</li>
         </ol>
       </section>
 
@@ -98,7 +102,7 @@ const faqStructuredData = {
           <li>Adjustable quality from 10% to 100%</li>
           <li>Quality mode or verified target-size mode</li>
           <li>Optional starting max width</li>
-          <li>Batch compress multiple images</li>
+          <li>Batch compress with one ZIP download</li>
           <li>Shows before/after file sizes</li>
           <li>100% client-side processing</li>
           <li>Capacity depends on browser memory and Canvas limits</li>

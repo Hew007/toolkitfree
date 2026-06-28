@@ -150,7 +150,7 @@ async function convertVariant({ route, fixture, accept, outputMime, extension })
       .find((button) => button.textContent.trim() === 'Convert 1 image')
       .click()
   `);
-  await waitFor(`document.body.innerText.includes('Results (1/1)')`, `${route} result`);
+  await waitFor(`document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`, `${route} result`);
   const output = await evaluate(`
     (async () => {
       const link = document.querySelector('.result-item a[download]');
@@ -283,7 +283,7 @@ if (runExtended) {
       .find((button) => button.textContent.trim() === 'Convert 4 images')
       .click()
   `);
-  await waitFor(`document.body.innerText.includes('Results (2/4)')`, 'partial batch success');
+  await waitFor(`document.querySelector('[data-batch-success-count="2"][data-batch-failure-count="2"]')`, 'partial batch success');
   assert.equal(
     await evaluate(
       `document.body.innerText.includes('invalid.txt:') && document.body.innerText.includes('empty.bin:')`
@@ -328,7 +328,7 @@ if (runExtended) {
       .find((button) => button.textContent.trim() === 'Convert 1 image')
       .click()
   `);
-  await waitFor(`document.body.innerText.includes('Results (1/1)')`, 'transparent PNG to JPG');
+  await waitFor(`document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`, 'transparent PNG to JPG');
   const whiteBackground = await evaluate(`
     (async () => {
       const source = document.querySelector('input[type="file"]').files[0];
@@ -378,7 +378,7 @@ if (runExtended) {
       .find((button) => button.textContent.trim() === 'Convert 1 image')
       .click()
   `);
-  await waitFor(`document.body.innerText.includes('Results (1/1)')`, 'transparent PNG to WebP');
+  await waitFor(`document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`, 'transparent PNG to WebP');
   const webpTransparency = await evaluate(`
     (async () => {
       const source = document.querySelector('input[type="file"]').files[0];

@@ -2,9 +2,9 @@ import { useCallback, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import FileList from './FileList';
 import DownloadResult from './DownloadResult';
+import BatchResultsSummary from './BatchResultsSummary';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
 import {
-  downloadUrl,
   exportCanvas,
   formatSize,
   getCanvas2dContext,
@@ -26,9 +26,13 @@ interface QueuedFile {
 
 interface ConvertedFile {
   sourceId: string;
+  sourceName: string;
+  outputName: string;
   name: string;
   originalSize: number;
+  outputSize: number;
   size: number;
+  blob: Blob;
   url: string;
   previewUrl: string;
 }
@@ -58,7 +62,6 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
   const [converting, setConverting] = useState(false);
   const [results, setResults] = useState<ConvertedFile[]>([]);
   const [failures, setFailures] = useState<FailedFile[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const nextFileId = useRef(0);
   const objectUrls = useObjectUrlRegistry();
 
@@ -66,7 +69,6 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
     objectUrls.revokePrefix('result:');
     setResults([]);
     setFailures([]);
-    setError(null);
   }, [objectUrls]);
 
   const handleFiles = useCallback((newFiles: File[]) => {
@@ -114,9 +116,13 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
 
     return {
       sourceId: queuedFile.id,
+      sourceName: queuedFile.file.name,
+      outputName,
       name: outputName,
       originalSize: queuedFile.file.size,
+      outputSize: blob.size,
       size: blob.size,
+      blob,
       url,
       previewUrl: url,
     };
@@ -171,17 +177,6 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
       setConverting(false);
     }
   };
-
-  const handleDownloadAll = () => {
-    try {
-      results.forEach((result) => downloadUrl(result.url, result.name));
-    } catch (downloadError) {
-      setError(getImageProcessingErrorMessage(downloadError));
-    }
-  };
-
-  const totalOriginalSize = results.reduce((sum, result) => sum + result.originalSize, 0);
-  const totalConvertedSize = results.reduce((sum, result) => sum + result.size, 0);
 
   return (
     <div>
@@ -248,41 +243,15 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
         </div>
       )}
 
-      {error && <div className="status status-error">{error}</div>}
 
-      {failures.length > 0 && (
-        <div className="status status-error" style={{ marginTop: '1rem' }}>
-          <strong>{failures.length} file{failures.length > 1 ? 's' : ''} could not be converted:</strong>
-          <ul style={{ margin: '0.5rem 0 0 1.25rem' }}>
-            {failures.map((failure) => (
-              <li key={failure.sourceId}><strong>{failure.name}:</strong> {failure.message}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <BatchResultsSummary
+        successes={results}
+        failures={failures}
+        archiveName="toolkitfree-converted-images.zip"
+      />
 
       {results.length > 0 && (
-        <div style={{ marginTop: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', gap: '1rem', flexWrap: 'wrap' }}>
-            <h3 style={{ fontSize: '1.125rem' }}>
-              Results ({results.length}/{files.length})
-              {totalOriginalSize > 0 && (
-                <span style={{ fontSize: '0.875rem', fontWeight: 'normal', color: '#6b7280', marginLeft: '0.5rem' }}>
-                  {formatSize(totalOriginalSize)} to {formatSize(totalConvertedSize)}
-                  {totalConvertedSize < totalOriginalSize && (
-                    <span style={{ color: '#10b981' }}>
-                      {' '}(-{Math.round((1 - totalConvertedSize / totalOriginalSize) * 100)}%)
-                    </span>
-                  )}
-                </span>
-              )}
-            </h3>
-            {results.length > 1 && (
-              <button className="btn btn-secondary" onClick={handleDownloadAll}>
-                Download All
-              </button>
-            )}
-          </div>
+        <div>
           {results.map((result) => (
             <DownloadResult key={result.sourceId} {...result} />
           ))}

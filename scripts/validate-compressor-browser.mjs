@@ -162,7 +162,7 @@ await evaluate(`
     .click()
 `);
 await waitFor(
-  `document.body.innerText.includes('Results (4/5)') && !document.body.innerText.includes('Compressing...')`,
+  `document.querySelector('[data-batch-success-count="4"][data-batch-failure-count="1"]') && !document.body.innerText.includes('Compressing...')`,
   'mixed target-size results'
 );
 
@@ -235,7 +235,7 @@ await evaluate(`
     .find((button) => button.textContent.trim() === 'Compress 1 image')
     .click()
 `);
-await waitFor(`document.body.innerText.includes('Results (1/1)')`, 'quality result');
+await waitFor(`document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`, 'quality result');
 const qualityResult = await evaluate(`
   (async () => {
     const item = document.querySelector('.result-item');

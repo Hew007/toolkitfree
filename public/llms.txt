@@ -11,6 +11,7 @@
 - Quality compression may not produce a smaller file; when no smaller same-dimension result exists, the original is kept. Target mode verifies the actual output size and reports whether the selected maximum was met.
 - Batch processing is available in Converter, Compressor, Resizer, and Image to PDF. Cropper, Favicon Generator, and Background Remover process one image at a time.
 - Converter batches keep successful outputs when individual files fail and de-duplicate output filenames.
+- Converter, Compressor, and Resizer show per-file failures and can download successful results individually or in one locally generated ZIP.
 - File contents stay on the device. The site still requests normal site assets and advertising resources. Background Remover also downloads model files.
 
 ## Main tools

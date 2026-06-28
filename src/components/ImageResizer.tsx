@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 import FileUploader from './FileUploader';
 import FileList from './FileList';
+import BatchResultsSummary from './BatchResultsSummary';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
 import {
-  downloadUrl,
   exportCanvas,
   formatSize,
   getCanvas2dContext,
@@ -18,15 +18,21 @@ import {
 } from '../lib/image-resizer';
 
 interface ResizedFile {
+  sourceId: string;
+  sourceName: string;
+  outputName: string;
   name: string;
   originalSize: number;
+  outputSize: number;
   newSize: number;
+  blob: Blob;
   width: number;
   height: number;
   url: string;
 }
 
 interface ResizeFailure {
+  sourceId: string;
   name: string;
   message: string;
 }
@@ -53,7 +59,6 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
   const [processing, setProcessing] = useState(false);
   const [results, setResults] = useState<ResizedFile[]>([]);
   const [failures, setFailures] = useState<ResizeFailure[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const objectUrls = useObjectUrlRegistry();
 
   const clearResults = useCallback(() => {
@@ -65,7 +70,6 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
   const handleFiles = useCallback((newFiles: File[]) => {
     setFiles((current) => [...current, ...newFiles]);
     clearResults();
-    setError(null);
   }, [clearResults]);
 
   const handleRemove = useCallback((index: number) => {
@@ -118,9 +122,14 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
     const url = objectUrls.replace(`resizer:result:${index}`, blob);
 
     return {
+      sourceId: `file-${index}`,
+      sourceName: file.name,
+      outputName,
       name: outputName,
       originalSize: file.size,
+      outputSize: blob.size,
       newSize: blob.size,
+      blob,
       width: canvas.width,
       height: canvas.height,
       url,
@@ -130,7 +139,6 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
   const handleResize = async () => {
     if (files.length === 0 || width < 1 || height < 1) return;
     setProcessing(true);
-    setError(null);
     clearResults();
 
     const settled = await Promise.allSettled(files.map((file, index) => resizeImage(file, index)));
@@ -141,6 +149,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
         nextResults.push(outcome.value);
       } else {
         nextFailures.push({
+          sourceId: `file-${index}`,
           name: files[index].name,
           message: getImageProcessingErrorMessage(outcome.reason),
         });
@@ -149,14 +158,6 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
     setResults(nextResults);
     setFailures(nextFailures);
     setProcessing(false);
-  };
-
-  const handleDownload = (result: ResizedFile) => {
-    try {
-      downloadUrl(result.url, result.name);
-    } catch (downloadError) {
-      setError(getImageProcessingErrorMessage(downloadError));
-    }
   };
 
   return (
@@ -220,16 +221,14 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
         </div>
       )}
 
-      {error && <div className="status status-error">{error}</div>}
-      {failures.map((failure) => (
-        <div key={failure.name} className="status status-error" data-resize-error={failure.name}>
-          <strong>{failure.name}:</strong> {failure.message}
-        </div>
-      ))}
+      <BatchResultsSummary
+        successes={results}
+        failures={failures}
+        archiveName="toolkitfree-resized-images.zip"
+      />
 
       {results.length > 0 && (
-        <div style={{ marginTop: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Results</h3>
+        <div>
           {results.map((result) => (
             <div key={result.url} className="result-item" data-resize-result={result.name} data-width={result.width} data-height={result.height}>
               <div className="result-info">
@@ -239,7 +238,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                   <div className="file-item-size">{result.width}x{result.height} - {formatSize(result.newSize)}</div>
                 </div>
               </div>
-              <button type="button" onClick={() => handleDownload(result)} className="btn btn-primary">Download</button>
+              <a href={result.url} download={result.name} className="btn btn-primary">Download</a>
             </div>
           ))}
         </div>
