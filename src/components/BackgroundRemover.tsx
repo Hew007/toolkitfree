@@ -125,7 +125,7 @@ export default function BackgroundRemover() {
   };
 
   return (
-    <div data-background-stage={progress?.stage ?? 'idle'}>
+    <div data-background-stage={progress?.stage ?? 'idle'} aria-busy={processing}>
       {!file ? (
         <FileUploader accept="image/jpeg,image/png,image/webp" multiple={false} onFilesSelected={handleFiles} />
       ) : (
@@ -180,11 +180,11 @@ export default function BackgroundRemover() {
       )}
 
       {progress && (
-        <div className="status status-processing" data-progress-stage={progress.stage}>
+        <div className="status status-processing" role="status" aria-live="polite" data-progress-stage={progress.stage}>
           {progress.label}{progress.percent === null ? '...' : `: ${progress.percent}%`}
         </div>
       )}
-      {error && <div className="status status-error">{error}</div>}
+      {error && <div className="status status-error" role="alert">{error}</div>}
 
       {result && (
         <div style={{ marginTop: '1.5rem' }}>

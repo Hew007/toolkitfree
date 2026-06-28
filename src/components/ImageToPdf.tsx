@@ -218,7 +218,8 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
   };
 
   return (
-    <div data-pdf-preset={defaultPreset} data-page-size={pageSize} data-orientation={orientation} data-margin={margin}>
+    <div data-pdf-preset={defaultPreset} data-page-size={pageSize} data-orientation={orientation} data-margin={margin} aria-busy={processing}>
+      {processing && <div className="visually-hidden" role="status" aria-live="polite">Creating PDF.</div>}
       <FileUploader accept={allowedTypes.join(',')} multiple={true} onFilesSelected={handleFiles} />
 
       {items.length > 0 && (
@@ -277,11 +278,11 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
       )}
 
       {failures.map((failure) => (
-        <div key={`${failure.name}:${failure.message}`} className="status status-error" data-pdf-error={failure.name}>
+        <div key={`${failure.name}:${failure.message}`} className="status status-error" role="alert" data-pdf-error={failure.name}>
           <strong>{failure.name}:</strong> {failure.message}
         </div>
       ))}
-      {error && <div className="status status-error">{error}</div>}
+      {error && <div className="status status-error" role="alert">{error}</div>}
 
       {resultUrl && (
         <div style={{ marginTop: '1.5rem' }}>

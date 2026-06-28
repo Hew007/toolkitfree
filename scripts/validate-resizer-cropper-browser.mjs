@@ -337,7 +337,35 @@ for (const [slug, preset, ratio] of cropperVariants) {
 await navigate('/tools/image-cropper/crop-to-16-9');
 await uploadGenerated({ name: 'drag.png', width: 1200, height: 800 });
 await waitFor(`Boolean(document.querySelector('[data-crop-handle="se"]'))`, 'desktop crop handles');
-const beforeDrag = await evaluate(`Number(document.querySelector('[data-testid="crop-box"]').dataset.cropWidth)`);
+const keyboardStart = await evaluate(`(() => {
+  const box = document.querySelector('[data-testid="crop-box"]');
+  return { y: Number(box.dataset.cropY), width: Number(box.dataset.cropWidth) };
+})()`);
+await evaluate(`
+  (() => {
+    const box = document.querySelector('[data-testid="crop-box"]');
+    box.focus();
+    box.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    box.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', altKey: true, bubbles: true }));
+  })()
+`);
+await waitFor(
+  `Number(document.querySelector('[data-testid="crop-box"]').dataset.cropY) > ${keyboardStart.y} && Number(document.querySelector('[data-testid="crop-box"]').dataset.cropWidth) < ${keyboardStart.width}`,
+  'keyboard move and resize'
+);
+const keyboardRect = await evaluate(`(() => {
+  const box = document.querySelector('[data-testid="crop-box"]');
+  return {
+    y: Number(box.dataset.cropY),
+    width: Number(box.dataset.cropWidth),
+    active: document.activeElement === box,
+    description: box.getAttribute('aria-describedby'),
+  };
+})()`);
+assert.equal(keyboardRect.active, true);
+assert.equal(keyboardRect.description, 'crop-keyboard-instructions');
+
+const beforeDrag = keyboardRect.width;
 await evaluate(`
   (() => {
     const handle = document.querySelector('[data-crop-handle="se"]');
@@ -466,6 +494,7 @@ console.log(
     customContain: { width: boundedResult.width, height: boundedResult.height },
     customExact: { width: exactResult.width, height: exactResult.height },
     cropperVariants: cropperResults,
+    keyboardRect,
     draggedRect,
     mobileRect,
     resizerUrlStats,

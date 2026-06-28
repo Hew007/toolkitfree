@@ -161,7 +161,8 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
   };
 
   return (
-    <div data-resizer-preset={preset}>
+    <div data-resizer-preset={preset} aria-busy={processing}>
+      {processing && <div className="visually-hidden" role="status" aria-live="polite">Resizing images.</div>}
       <FileUploader accept="image/jpeg,image/png,image/webp" multiple={true} onFilesSelected={handleFiles} />
       <FileList files={files} onRemove={handleRemove} />
 

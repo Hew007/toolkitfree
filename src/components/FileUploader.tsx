@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 interface FileUploaderProps {
   accept?: string;
@@ -14,8 +14,8 @@ export default function FileUploader({
   const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
+  const handleDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
     setIsDragOver(true);
   }, []);
 
@@ -24,23 +24,20 @@ export default function FileUploader({
   }, []);
 
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
+    (event: React.DragEvent) => {
+      event.preventDefault();
       setIsDragOver(false);
-      const files = Array.from(e.dataTransfer.files);
-      if (files.length > 0) {
-        onFilesSelected(files);
-      }
+      const files = Array.from(event.dataTransfer.files);
+      if (files.length > 0) onFilesSelected(files);
     },
     [onFilesSelected]
   );
 
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files || []);
-      if (files.length > 0) {
-        onFilesSelected(files);
-      }
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files || []);
+      if (files.length > 0) onFilesSelected(files);
+      event.target.value = '';
     },
     [onFilesSelected]
   );
@@ -51,23 +48,30 @@ export default function FileUploader({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onClick={() => inputRef.current?.click()}
+      data-file-drop-zone
     >
       <div className="drop-zone">
-        <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
-          {isDragOver ? '⬇️' : ' '}
+        <p
+          aria-live="polite"
+          style={{ fontSize: '1rem', fontWeight: 500, color: '#1f2937', marginTop: 0 }}
+        >
+          {isDragOver ? 'Drop files here' : 'Drag and drop files here'}
         </p>
-        <p style={{ fontSize: '1rem', fontWeight: 500, color: '#1f2937' }}>
-          {isDragOver ? 'Drop files here' : 'Drag & drop files here'}
-        </p>
-        <p>or click to browse</p>
+        <p>or</p>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => inputRef.current?.click()}
+        >
+          Choose {multiple ? 'images' : 'an image'}
+        </button>
         <input
           ref={inputRef}
+          style={{ display: 'none' }}
           type="file"
           accept={accept}
           multiple={multiple}
           onChange={handleChange}
-          style={{ display: 'none' }}
         />
       </div>
     </div>

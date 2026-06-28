@@ -173,6 +173,25 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
     window.addEventListener('pointercancel', cleanup);
   };
 
+  const handleCropKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = event.shiftKey ? 10 : 1;
+    let dx = 0;
+    let dy = 0;
+    if (event.key === 'ArrowLeft') dx = -step;
+    if (event.key === 'ArrowRight') dx = step;
+    if (event.key === 'ArrowUp') dy = -step;
+    if (event.key === 'ArrowDown') dy = step;
+    if (dx === 0 && dy === 0) return;
+
+    event.preventDefault();
+    setCropRect((current) =>
+      event.altKey
+        ? resizeCropRect(current, 'se', dx, dy, imageBounds, aspectRatio)
+        : moveCropRect(current, dx, dy, imageBounds)
+    );
+    clearResult();
+  };
+
   const handleCrop = async () => {
     if (!file || imageBounds.width <= 0 || imageBounds.height <= 0) return;
     setProcessing(true);
@@ -236,7 +255,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
   };
 
   return (
-    <div data-crop-aspect={aspectPreset}>
+    <div data-crop-aspect={aspectPreset} aria-busy={processing}>
       {!imageUrl ? (
         <FileUploader accept="image/jpeg,image/png,image/webp" multiple={false} onFilesSelected={handleFiles} />
       ) : (
@@ -257,6 +276,11 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
 
                 <div
                   data-testid="crop-box"
+                  role="group"
+                  tabIndex={0}
+                  aria-label="Crop selection"
+                  aria-describedby="crop-keyboard-instructions"
+                  onKeyDown={handleCropKeyDown}
                   data-crop-x={cropRect.x}
                   data-crop-y={cropRect.y}
                   data-crop-width={cropRect.width}
@@ -284,7 +308,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                       sw: { bottom: 0, left: 0, cursor: 'nesw-resize' },
                       se: { bottom: 0, right: 0, cursor: 'nwse-resize' },
                     };
-                    return <div key={position} data-crop-handle={position} onPointerDown={(event) => handlePointerDown(position, event)} style={{ position: 'absolute', width: 14, height: 14, background: '#fff', border: '2px solid #2563eb', borderRadius: 2, touchAction: 'none', ...positionStyles[position] }} />;
+                    return <div key={position} data-crop-handle={position} aria-hidden="true" onPointerDown={(event) => handlePointerDown(position, event)} style={{ position: 'absolute', width: 14, height: 14, background: '#fff', border: '2px solid #2563eb', borderRadius: 2, touchAction: 'none', ...positionStyles[position] }} />;
                   })}
 
                   {(['n', 's', 'e', 'w'] as const).map((position) => {
@@ -294,14 +318,18 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                       e: { right: 0, top: '50%', marginTop: -18, width: 12, height: 36, cursor: 'ew-resize' },
                       w: { left: 0, top: '50%', marginTop: -18, width: 12, height: 36, cursor: 'ew-resize' },
                     };
-                    return <div key={position} data-crop-handle={position} onPointerDown={(event) => handlePointerDown(position, event)} style={{ position: 'absolute', background: 'rgba(255,255,255,0.9)', border: '1px solid #2563eb', borderRadius: 2, touchAction: 'none', ...positionStyles[position] }} />;
+                    return <div key={position} data-crop-handle={position} aria-hidden="true" onPointerDown={(event) => handlePointerDown(position, event)} style={{ position: 'absolute', background: 'rgba(255,255,255,0.9)', border: '1px solid #2563eb', borderRadius: 2, touchAction: 'none', ...positionStyles[position] }} />;
                   })}
                 </div>
               </div>
             )}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+          <p id="crop-keyboard-instructions" style={{ fontSize: '0.8125rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+            Focus the crop selection and use arrow keys to move it. Hold Alt while pressing an arrow key to resize, or Shift for larger steps.
+          </p>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
             <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>{file?.name} - {imageBounds.width}x{imageBounds.height} - {file ? formatSize(file.size) : ''}</span>
             <button type="button" onClick={handleRemove} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.875rem' }}>Remove</button>
           </div>
@@ -338,7 +366,8 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
         </div>
       )}
 
-      {error && <div className="status status-error">{error}</div>}
+      {processing && <div className="visually-hidden" role="status" aria-live="polite">Cropping image.</div>}
+      {error && <div className="status status-error" role="alert">{error}</div>}
       {result && (
         <div style={{ marginTop: '1.5rem' }}>
           <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Result</h3>

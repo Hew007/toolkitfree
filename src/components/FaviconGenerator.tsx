@@ -152,7 +152,7 @@ export default function FaviconGenerator() {
 <link rel="manifest" href="/site.webmanifest">`;
 
   return (
-    <div data-favicon-output="png-only">
+    <div data-favicon-output="png-only" aria-busy={processing}>
       {!file ? (
         <FileUploader accept="image/jpeg,image/png,image/webp" multiple={false} onFilesSelected={handleFiles} />
       ) : (
@@ -180,7 +180,8 @@ export default function FaviconGenerator() {
         </div>
       )}
 
-      {error && <div className="status status-error">{error}</div>}
+      {processing && <div className="visually-hidden" role="status" aria-live="polite">Generating favicon files.</div>}
+      {error && <div className="status status-error" role="alert">{error}</div>}
 
       {icons.length > 0 && (
         <div style={{ marginTop: '1.5rem' }}>

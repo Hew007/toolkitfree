@@ -132,13 +132,13 @@ export default function BatchResultsSummary({
       )}
 
       {message && (
-        <div className={status === 'error' ? 'status status-error' : 'status'} data-batch-archive-status={status}>
+        <div className={status === 'error' ? 'status status-error' : 'status'} role={status === 'error' ? 'alert' : 'status'} aria-live="polite" data-batch-archive-status={status}>
           {message}
         </div>
       )}
 
       {failures.length > 0 && (
-        <div className="status status-error" style={{ marginBottom: '1rem' }}>
+        <div className="status status-error" role="alert" style={{ marginBottom: '1rem' }}>
           <strong>{failures.length} file{failures.length === 1 ? '' : 's'} could not be processed:</strong>
           <ul style={{ margin: '0.5rem 0 0 1.25rem' }}>
             {failures.map((failure) => (

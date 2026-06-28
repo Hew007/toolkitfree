@@ -270,7 +270,8 @@ export default function ImageCompressor({
   };
 
   return (
-    <div>
+    <div aria-busy={compressing}>
+      {compressing && <div className="visually-hidden" role="status" aria-live="polite">Compressing images.</div>}
       <FileUploader accept={inputFormat.accept} multiple={true} onFilesSelected={handleFiles} />
       <p style={{ marginTop: '0.5rem', fontSize: '0.8125rem', color: '#6b7280' }}>
         Accepted input: {inputFormat.hint}

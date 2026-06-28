@@ -179,7 +179,8 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
   };
 
   return (
-    <div>
+    <div aria-busy={converting}>
+      {converting && <div className="visually-hidden" role="status" aria-live="polite">Converting images.</div>}
       <FileUploader
         accept={inputConfig.accept}
         multiple={true}

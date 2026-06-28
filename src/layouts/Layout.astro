@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import '../styles/responsive-accessibility.css';
 
 interface Props {
   title: string;
@@ -22,6 +23,29 @@ const {
 const siteName = 'ToolkitFree';
 const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
 const canonicalUrl = canonical || `https://toolkitfree.net${Astro.url.pathname}`;
+const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+const navigationGroups = [
+  {
+    label: 'Image tools',
+    links: [
+      { href: '/tools/image-converter', label: 'Converter' },
+      { href: '/tools/image-compressor', label: 'Compressor' },
+      { href: '/tools/image-resizer', label: 'Resizer' },
+      { href: '/tools/image-cropper', label: 'Cropper' },
+      { href: '/tools/background-remover', label: 'Background Remover' },
+    ],
+  },
+  {
+    label: 'Create & export',
+    links: [
+      { href: '/tools/image-to-pdf', label: 'Image to PDF' },
+      { href: '/tools/favicon-generator', label: 'Favicon Generator' },
+      { href: '/tools/qr-generator', label: 'QR Generator' },
+    ],
+  },
+];
+const isCurrent = (href: string) =>
+  currentPath === href || currentPath.startsWith(`${href}/`);
 
 const orgSchema = {
   "@context": "https://schema.org",
@@ -44,7 +68,6 @@ const orgSchema = {
 
   <link rel="canonical" href={canonicalUrl} />
 
-  <!-- Open Graph -->
   <meta property="og:title" content={fullTitle} />
   <meta property="og:description" content={description} />
   <meta property="og:type" content="website" />
@@ -52,45 +75,53 @@ const orgSchema = {
   <meta property="og:url" content={canonicalUrl} />
   {ogImage && <meta property="og:image" content={ogImage} />}
 
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={fullTitle} />
   <meta name="twitter:description" content={description} />
   {ogImage && <meta name="twitter:image" content={ogImage} />}
 
-  <!-- Search Engine Verification -->
   <meta name="yandex-verification" content="a605e0322d8c1403" />
-
-  <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
-  <!-- Structured Data -->
   <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
   {structuredData && (
     <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
   )}
 
-  <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6148409427275044" crossorigin="anonymous"></script>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
   <header class="site-header">
     <div class="container">
       <a href="/" class="site-logo">{siteName}</a>
-      <nav class="site-nav">
-        <a href="/tools/image-converter">Converter</a>
-        <a href="/tools/image-compressor">Compressor</a>
-        <a href="/tools/image-resizer">Resizer</a>
-        <a href="/tools/image-cropper">Cropper</a>
-        <a href="/tools/image-to-pdf">Image to PDF</a>
-        <a href="/tools/favicon-generator">Favicon Generator</a>
-        <a href="/tools/background-remover">Background Remover</a>
-        <a href="/tools/qr-generator">QR Generator</a>
+      <button
+        class="mobile-nav-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="primary-navigation"
+      >
+        Menu
+      </button>
+      <nav id="primary-navigation" class="site-nav" aria-label="Primary navigation">
+        {navigationGroups.map((group) => (
+          <details class="nav-menu-group">
+            <summary>{group.label}</summary>
+            <div class="nav-menu-panel">
+              {group.links.map((link) => (
+                <a href={link.href} aria-current={isCurrent(link.href) ? 'page' : undefined}>
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </details>
+        ))}
       </nav>
     </div>
   </header>
 
-  <main class="site-main">
+  <main id="main-content" class="site-main" tabindex="-1">
     <div class="container">
       <slot />
     </div>
@@ -119,5 +150,53 @@ const orgSchema = {
       </div>
     </div>
   </footer>
+
+  <script>
+    const header = document.querySelector<HTMLElement>('.site-header');
+    const toggle = document.querySelector<HTMLButtonElement>('.mobile-nav-toggle');
+    const navigation = document.querySelector<HTMLElement>('#primary-navigation');
+    const menuGroups = [...document.querySelectorAll<HTMLDetailsElement>('.nav-menu-group')];
+
+    const closeNavigation = (returnFocus = false) => {
+      navigation?.removeAttribute('data-open');
+      toggle?.setAttribute('aria-expanded', 'false');
+      menuGroups.forEach((group) => group.removeAttribute('open'));
+      if (returnFocus) toggle?.focus();
+    };
+
+    toggle?.addEventListener('click', () => {
+      const opening = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(opening));
+      navigation?.toggleAttribute('data-open', opening);
+      if (opening) navigation?.querySelector<HTMLElement>('summary')?.focus();
+    });
+
+    menuGroups.forEach((group) => {
+      group.addEventListener('toggle', () => {
+        if (!group.open) return;
+        menuGroups.forEach((otherGroup) => {
+          if (otherGroup !== group) otherGroup.removeAttribute('open');
+        });
+      });
+    });
+
+    navigation?.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => closeNavigation());
+    });
+
+    document.addEventListener('click', (event) => {
+      if (header && !header.contains(event.target as Node)) closeNavigation();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      const openGroup = menuGroups.find((group) => group.open);
+      if (toggle?.getAttribute('aria-expanded') === 'true') closeNavigation(true);
+      else if (openGroup) {
+        openGroup.removeAttribute('open');
+        openGroup.querySelector<HTMLElement>('summary')?.focus();
+      }
+    });
+  </script>
 </body>
 </html>

@@ -13,7 +13,8 @@
     "validate:resizer-cropper": "node scripts/validate-resizer-cropper.mjs",
     "validate:secondary-tools": "node scripts/validate-secondary-tools.mjs",
     "validate:batch-download": "node scripts/validate-batch-download.mjs",
-    "validate:batch-download:browser": "node scripts/validate-batch-download-browser.mjs"
+    "validate:batch-download:browser": "node scripts/validate-batch-download-browser.mjs",
+    "validate:responsive-accessibility:browser": "node scripts/validate-responsive-accessibility-browser.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.7",

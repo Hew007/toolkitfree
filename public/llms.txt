@@ -14,6 +14,10 @@
 - Converter, Compressor, and Resizer show per-file failures and can download successful results individually or in one locally generated ZIP.
 - File contents stay on the device. The site still requests normal site assets and advertising resources. Background Remover also downloads model files.
 
+## Navigation
+
+- Primary navigation groups tools under Image tools and Create & export; smaller screens use an accessible Menu control.
+
 ## Main tools
 
 - [Image Converter](https://toolkitfree.net/tools/image-converter): Convert JPG, PNG, and WebP. Batch supported.

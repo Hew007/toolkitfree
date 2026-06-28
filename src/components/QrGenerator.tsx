@@ -84,7 +84,7 @@ export default function QrGenerator() {
             </label>
           </div>
           {!contrastIsSafe && (
-            <div className="status status-error" data-qr-contrast-warning style={{ marginTop: '0.5rem' }}>
+            <div className="status status-error" role="alert" data-qr-contrast-warning style={{ marginTop: '0.5rem' }}>
               Increase foreground/background contrast to enable downloads. Current ratio: {contrastRatio.toFixed(2)}:1.
             </div>
           )}
@@ -155,7 +155,7 @@ export default function QrGenerator() {
           )}
         </div>
 
-        {logoError && <div className="status status-error">{logoError}</div>}
+        {logoError && <div className="status status-error" role="alert">{logoError}</div>}
 
         {/* Error Correction */}
         <div>
