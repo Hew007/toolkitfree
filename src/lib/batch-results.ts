@@ -1,4 +1,3 @@
-import JSZip from 'jszip';
 import { normalizeDownloadFilename } from './image-processing.ts';
 
 export interface BatchSuccessResult {
@@ -86,6 +85,7 @@ export async function createBatchArchive(
   }
   if (options.signal?.aborted) throw new BatchArchiveCancelledError();
 
+  const JSZip = (await import('jszip')).default;
   const archive = new JSZip();
   const filenames = createUniqueArchiveNames(results.map((result) => result.outputName));
   const contents = await Promise.all(

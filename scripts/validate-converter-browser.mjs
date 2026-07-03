@@ -73,7 +73,7 @@ socket.addEventListener('message', (event) => {
     const request = pending.get(message.id);
     if (!request) return;
     pending.delete(message.id);
-    if (message.error) request.reject(new Error(message.error.message));
+    if (message.error) request.reject(new Error(request.method + ': ' + message.error.message));
     else request.resolve(message.result);
     return;
   }
@@ -88,7 +88,7 @@ socket.addEventListener('message', (event) => {
 function send(method, params = {}) {
   const id = ++nextId;
   socket.send(JSON.stringify({ id, method, params }));
-  return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
+  return new Promise((resolve, reject) => pending.set(id, { resolve, reject, method }));
 }
 
 async function evaluate(expression) {
@@ -104,7 +104,7 @@ async function evaluate(expression) {
 async function waitFor(expression, label, timeoutMs = 20_000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
-    if (await evaluate(expression)) return;
+    if (await evaluate(`Boolean(${expression})`)) return;
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   throw new Error(`Timed out waiting for ${label}`);
@@ -119,7 +119,7 @@ async function navigate(route) {
 }
 
 async function setFiles(filePaths) {
-  const documentNode = await send('DOM.getDocument', { depth: -1, pierce: true });
+  const documentNode = await send('DOM.getDocument');
   const inputNode = await send('DOM.querySelector', {
     nodeId: documentNode.root.nodeId,
     selector: 'input[type="file"]',

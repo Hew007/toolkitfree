@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
+import { mapWithConcurrency } from '../lib/async-pool';
 import FileList from './FileList';
 import BatchResultsSummary from './BatchResultsSummary';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
@@ -233,8 +234,10 @@ export default function ImageCompressor({
     setCompressing(true);
 
     try {
-      const outcomes: CompressionOutcome[] = await Promise.all(
-        files.map(async (queuedFile) => {
+      const outcomes: CompressionOutcome[] = await mapWithConcurrency(
+        files,
+        2,
+        async (queuedFile) => {
           try {
             return { status: 'success', value: await processFile(queuedFile) };
           } catch (processingError) {
@@ -247,7 +250,7 @@ export default function ImageCompressor({
               },
             };
           }
-        })
+        }
       );
 
       setResults(
@@ -272,7 +275,13 @@ export default function ImageCompressor({
   return (
     <div aria-busy={compressing}>
       {compressing && <div className="visually-hidden" role="status" aria-live="polite">Compressing images.</div>}
-      <FileUploader accept={inputFormat.accept} multiple={true} onFilesSelected={handleFiles} />
+      <FileUploader
+        accept={inputFormat.accept}
+        multiple={true}
+        budgetProfile="compressor"
+        currentFiles={files.map(({ file }) => file)}
+        onFilesSelected={handleFiles}
+      />
       <p style={{ marginTop: '0.5rem', fontSize: '0.8125rem', color: '#6b7280' }}>
         Accepted input: {inputFormat.hint}
       </p>

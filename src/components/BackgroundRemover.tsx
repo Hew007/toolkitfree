@@ -127,7 +127,12 @@ export default function BackgroundRemover() {
   return (
     <div data-background-stage={progress?.stage ?? 'idle'} aria-busy={processing}>
       {!file ? (
-        <FileUploader accept="image/jpeg,image/png,image/webp" multiple={false} onFilesSelected={handleFiles} />
+        <FileUploader
+          accept="image/jpeg,image/png,image/webp"
+          multiple={false}
+          budgetProfile="background"
+          onFilesSelected={handleFiles}
+        />
       ) : (
         <>
           <div className="file-item" style={{ marginBottom: '1rem' }}>

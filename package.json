@@ -14,7 +14,9 @@
     "validate:secondary-tools": "node scripts/validate-secondary-tools.mjs",
     "validate:batch-download": "node scripts/validate-batch-download.mjs",
     "validate:batch-download:browser": "node scripts/validate-batch-download-browser.mjs",
-    "validate:responsive-accessibility:browser": "node scripts/validate-responsive-accessibility-browser.mjs"
+    "validate:responsive-accessibility:browser": "node scripts/validate-responsive-accessibility-browser.mjs",
+    "validate:performance": "node scripts/validate-performance-guards.mjs",
+    "validate:performance:browser": "node scripts/validate-performance-browser.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.7",

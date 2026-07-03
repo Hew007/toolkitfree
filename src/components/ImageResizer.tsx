@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import FileUploader from './FileUploader';
+import { mapSettledWithConcurrency } from '../lib/async-pool';
 import FileList from './FileList';
 import BatchResultsSummary from './BatchResultsSummary';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
@@ -141,7 +142,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
     setProcessing(true);
     clearResults();
 
-    const settled = await Promise.allSettled(files.map((file, index) => resizeImage(file, index)));
+    const settled = await mapSettledWithConcurrency(files, 2, resizeImage);
     const nextResults: ResizedFile[] = [];
     const nextFailures: ResizeFailure[] = [];
     settled.forEach((outcome, index) => {
@@ -163,7 +164,13 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
   return (
     <div data-resizer-preset={preset} aria-busy={processing}>
       {processing && <div className="visually-hidden" role="status" aria-live="polite">Resizing images.</div>}
-      <FileUploader accept="image/jpeg,image/png,image/webp" multiple={true} onFilesSelected={handleFiles} />
+      <FileUploader
+        accept="image/jpeg,image/png,image/webp"
+        multiple={true}
+        budgetProfile="resizer"
+        currentFiles={files}
+        onFilesSelected={handleFiles}
+      />
       <FileList files={files} onRemove={handleRemove} />
 
       {files.length > 0 && (

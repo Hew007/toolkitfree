@@ -154,7 +154,12 @@ export default function FaviconGenerator() {
   return (
     <div data-favicon-output="png-only" aria-busy={processing}>
       {!file ? (
-        <FileUploader accept="image/jpeg,image/png,image/webp" multiple={false} onFilesSelected={handleFiles} />
+        <FileUploader
+          accept="image/jpeg,image/png,image/webp"
+          multiple={false}
+          budgetProfile="favicon"
+          onFilesSelected={handleFiles}
+        />
       ) : (
         <div>
           {/* Preview */}

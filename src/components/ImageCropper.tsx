@@ -257,7 +257,12 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
   return (
     <div data-crop-aspect={aspectPreset} aria-busy={processing}>
       {!imageUrl ? (
-        <FileUploader accept="image/jpeg,image/png,image/webp" multiple={false} onFilesSelected={handleFiles} />
+        <FileUploader
+          accept="image/jpeg,image/png,image/webp"
+          multiple={false}
+          budgetProfile="cropper"
+          onFilesSelected={handleFiles}
+        />
       ) : (
         <div>
           <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%', marginBottom: '1rem', userSelect: 'none', touchAction: 'none' }}>

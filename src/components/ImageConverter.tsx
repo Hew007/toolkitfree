@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
+import { mapWithConcurrency } from '../lib/async-pool';
 import FileList from './FileList';
 import DownloadResult from './DownloadResult';
 import BatchResultsSummary from './BatchResultsSummary';
@@ -139,8 +140,10 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
     );
 
     try {
-      const outcomes: ConversionOutcome[] = await Promise.all(
-        files.map(async (queuedFile, index) => {
+      const outcomes: ConversionOutcome[] = await mapWithConcurrency(
+        files,
+        2,
+        async (queuedFile, index) => {
           try {
             return {
               status: 'success',
@@ -156,7 +159,7 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
               },
             };
           }
-        })
+        }
       );
 
       setResults(
@@ -184,6 +187,8 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
       <FileUploader
         accept={inputConfig.accept}
         multiple={true}
+        budgetProfile="converter"
+        currentFiles={files.map(({ file }) => file)}
         onFilesSelected={handleFiles}
       />
       <p style={{ marginTop: '0.5rem', fontSize: '0.8125rem', color: '#6b7280' }}>

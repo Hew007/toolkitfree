@@ -20,6 +20,10 @@ const faqItems = [
     answer: 'First use downloads a sizable AI model and therefore needs a network connection. Later runs are usually faster if the browser keeps the model cached. Exact time depends on network speed, image dimensions, device memory, and available acceleration.',
   },
   {
+    question: 'How large can my image be?',
+    answer: 'The tool checks dimensions and estimated working memory before processing. It warns when an image may be demanding and blocks inputs above the 100 million pixel safety limit. Mobile devices use stricter memory thresholds; resize very large photos first.',
+  },
+  {
     question: 'Can I add a colored background after removal?',
     answer: 'Yes, you can choose from preset background colors (white, red, blue, green) or keep the background transparent (default).',
   },
@@ -79,6 +83,7 @@ const breadcrumbSchema = {
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
         Remove image backgrounds instantly using AI. Choose transparent or colored backgrounds.
         Your photo stays on your device; first use still downloads the AI model and runtime files.
+        Very large inputs are checked before the model starts to protect the browser tab.
       </p>
 
       <BackgroundRemover client:load />

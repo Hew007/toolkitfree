@@ -220,7 +220,13 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
   return (
     <div data-pdf-preset={defaultPreset} data-page-size={pageSize} data-orientation={orientation} data-margin={margin} aria-busy={processing}>
       {processing && <div className="visually-hidden" role="status" aria-live="polite">Creating PDF.</div>}
-      <FileUploader accept={allowedTypes.join(',')} multiple={true} onFilesSelected={handleFiles} />
+      <FileUploader
+        accept={allowedTypes.join(',')}
+        multiple={true}
+        budgetProfile="pdf"
+        currentFiles={items.map(({ file }) => file)}
+        onFilesSelected={handleFiles}
+      />
 
       {items.length > 0 && (
         <div style={{ marginTop: '1rem' }}>

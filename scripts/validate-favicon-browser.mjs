@@ -70,14 +70,14 @@ async function evaluate(expression) {
 async function waitFor(expression, label, timeoutMs = 20_000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
-    if (await evaluate(expression)) return;
+    if (await evaluate(`Boolean(${expression})`)) return;
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   throw new Error(`Timed out waiting for ${label}`);
 }
 
 async function setFile(filePath) {
-  const documentNode = await send('DOM.getDocument', { depth: -1, pierce: true });
+  const documentNode = await send('DOM.getDocument');
   const inputNode = await send('DOM.querySelector', {
     nodeId: documentNode.root.nodeId,
     selector: 'input[type="file"]',
