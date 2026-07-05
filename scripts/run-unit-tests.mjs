@@ -8,6 +8,7 @@ const tests = [
   'validate-secondary-tools.mjs',
   'validate-batch-download.mjs',
   'validate-performance-guards.mjs',
+  'validate-id-photo.mjs',
 ];
 
 for (const test of tests) {

@@ -27,6 +27,7 @@
     "test:e2e": "node scripts/run-browser-tests.mjs",
     "test:e2e:edge": "node scripts/run-browser-tests.mjs --browser=edge --smoke",
     "validate:site": "node scripts/validate-site-integrity.mjs",
+    "validate:id-photo": "node scripts/validate-id-photo.mjs",
     "check": "node scripts/run-quality-gates.mjs"
   },
   "dependencies": {
