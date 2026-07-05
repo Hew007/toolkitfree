@@ -1,4 +1,6 @@
-export const allVariants = [
+import type { ToolVariantPageData, ToolVariantSummary } from './content-types';
+
+export const allVariants: ToolVariantSummary[] = [
   { slug: 'jpg-to-pdf', label: 'JPG to PDF' },
   { slug: 'png-to-pdf', label: 'PNG to PDF' },
   { slug: 'image-to-a4-pdf', label: 'Image to A4 PDF' },
@@ -7,7 +9,7 @@ export const allVariants = [
   { slug: 'photo-to-pdf', label: 'Photo to PDF' },
 ];
 
-export const variantData: Record<string, { title: string; description: string; faq: { question: string; answer: string }[] }> = {
+export const variantData: Record<string, ToolVariantPageData> = {
   'jpg-to-pdf': {
     title: 'JPG to PDF — Convert Images Online Free',
     description: 'Convert JPG images to PDF format instantly. Supports multiple JPGs, A4/Letter page sizes, adjustable margins. Free, no upload needed.',

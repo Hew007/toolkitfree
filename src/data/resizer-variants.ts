@@ -1,4 +1,6 @@
-export const allVariants = [
+import type { ToolVariantPageData, ToolVariantSummary } from './content-types';
+
+export const allVariants: ToolVariantSummary[] = [
   { slug: 'resize-for-instagram', label: 'Resize for Instagram' },
   { slug: 'resize-for-facebook', label: 'Resize for Facebook' },
   { slug: 'resize-for-twitter', label: 'Resize for Twitter/X' },
@@ -8,7 +10,7 @@ export const allVariants = [
   { slug: 'resize-to-1920x1080', label: 'Resize to 1920x1080' },
 ];
 
-export const variantData: Record<string, { title: string; description: string; faq: { question: string; answer: string }[] }> = {
+export const variantData: Record<string, ToolVariantPageData> = {
   'resize-for-instagram': {
     title: 'Resize Image for Instagram - Post, Story, Reel Sizes',
     description: 'Resize images for Instagram posts (1080x1080), stories (1080x1920), and reels. Free online tool. No upload needed.',

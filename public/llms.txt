@@ -7,7 +7,7 @@
 - Guaranteed converter inputs and outputs: JPG/JPEG, PNG, WebP.
 - Browser-dependent converter inputs: GIF, BMP, SVG. GIF conversion exports one static frame.
 - Not currently supported: HEIC input, TIFF input, GIF output.
-- Large files and batches are limited by device memory, browser decoders, and Canvas dimensions.
+- Large-file preflight checks file count, encoded size, pixels, and estimated working memory. Risky inputs warn before processing; a single image above 100 million pixels is blocked.
 - Quality compression may not produce a smaller file; when no smaller same-dimension result exists, the original is kept. Target mode verifies the actual output size and reports whether the selected maximum was met.
 - Batch processing is available in Converter, Compressor, Resizer, and Image to PDF. Cropper, Favicon Generator, and Background Remover process one image at a time.
 - Converter batches keep successful outputs when individual files fail and de-duplicate output filenames.
@@ -20,15 +20,15 @@
 
 ## Main tools
 
-- [Image Converter](https://toolkitfree.net/tools/image-converter): Convert JPG, PNG, and WebP. Batch supported.
-- [Image Compressor](https://toolkitfree.net/tools/image-compressor): Use quality/dimension controls or a verified target-size mode for JPG, PNG, and WebP.
-- [Compress Image to 100KB](https://toolkitfree.net/tools/image-compressor/compress-to-100kb): Defaults to a bounded 100KB target search and labels every result as met or not met.
-- [Image Resizer](https://toolkitfree.net/tools/image-resizer): Platform variants start with verified exact presets; custom ratio mode fits each image inside shared maximum dimensions.
-- [Image Cropper](https://toolkitfree.net/tools/image-cropper): Crop one JPG, PNG, or WebP with bounded mouse/touch controls and Free, 1:1, 16:9, 4:3, 3:2, or 9:16 ratios.
-- [Image to PDF](https://toolkitfree.net/tools/image-to-pdf): Combine ordered JPG, PNG, or WebP files; variant presets, partial decode errors, white transparency flattening, A4/Letter/Fit, orientation, and margins are supported.
-- [Favicon Generator](https://toolkitfree.net/tools/favicon-generator): Generate five PNG sizes plus site.webmanifest; non-square inputs use transparent padding and .ico is not generated.
-- [Background Remover](https://toolkitfree.net/tools/background-remover): Remove one image background locally after downloading a sizable browser model; transparent and preset-color PNG outputs are supported.
-- [QR Generator](https://toolkitfree.net/tools/qr-generator): Generate PNG or SVG QR codes with escaped WiFi/vCard data, optional logos, and contrast-gated downloads.
+<!-- Generated from src/data/tool-registry.ts by scripts/sync-llms-registry.mjs. -->
+- [Image Converter](https://toolkitfree.net/tools/image-converter): Convert JPG, PNG, and WebP images in your browser, with clearly labeled browser-dependent inputs.
+- [Image Compressor](https://toolkitfree.net/tools/image-compressor): Re-encode or resize images and compare the actual result; smaller output is not guaranteed.
+- [Image Resizer](https://toolkitfree.net/tools/image-resizer): Resize images to custom dimensions or verified platform presets while controlling aspect ratio.
+- [Image Cropper](https://toolkitfree.net/tools/image-cropper): Crop one JPG, PNG, or WebP with visual, touch, and keyboard controls.
+- [Background Remover](https://toolkitfree.net/tools/background-remover): Remove one image background locally after downloading the browser AI model and runtime.
+- [Image to PDF](https://toolkitfree.net/tools/image-to-pdf): Combine ordered JPG, PNG, or WebP images into a PDF with page size, orientation, and margin controls.
+- [Favicon Generator](https://toolkitfree.net/tools/favicon-generator): Generate five PNG favicon sizes and a site.webmanifest from one image.
+- [QR Code Generator](https://toolkitfree.net/tools/qr-generator): Create PNG or SVG QR codes for text, URLs, WiFi, and vCards with contrast-aware downloads.
 
 ## Supported converter pages
 

@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import '../styles/responsive-accessibility.css';
+import { navigationGroups, SITE_LOCALE, SITE_URL, toolRegistry } from '../data/tool-registry';
 
 interface Props {
   title: string;
@@ -22,28 +23,8 @@ const {
 
 const siteName = 'ToolkitFree';
 const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
-const canonicalUrl = canonical || `https://toolkitfree.net${Astro.url.pathname}`;
+const canonicalUrl = canonical || `${SITE_URL}${Astro.url.pathname}`;
 const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
-const navigationGroups = [
-  {
-    label: 'Image tools',
-    links: [
-      { href: '/tools/image-converter', label: 'Converter' },
-      { href: '/tools/image-compressor', label: 'Compressor' },
-      { href: '/tools/image-resizer', label: 'Resizer' },
-      { href: '/tools/image-cropper', label: 'Cropper' },
-      { href: '/tools/background-remover', label: 'Background Remover' },
-    ],
-  },
-  {
-    label: 'Create & export',
-    links: [
-      { href: '/tools/image-to-pdf', label: 'Image to PDF' },
-      { href: '/tools/favicon-generator', label: 'Favicon Generator' },
-      { href: '/tools/qr-generator', label: 'QR Generator' },
-    ],
-  },
-];
 const isCurrent = (href: string) =>
   currentPath === href || currentPath.startsWith(`${href}/`);
 
@@ -58,7 +39,7 @@ const orgSchema = {
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={SITE_LOCALE}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -110,7 +91,7 @@ const orgSchema = {
             <summary>{group.label}</summary>
             <div class="nav-menu-panel">
               {group.links.map((link) => (
-                <a href={link.href} aria-current={isCurrent(link.href) ? 'page' : undefined}>
+                <a href={link.href} data-tool-id={link.id} aria-current={isCurrent(link.href) ? 'page' : undefined}>
                   {link.label}
                 </a>
               ))}
@@ -130,15 +111,10 @@ const orgSchema = {
   <footer class="site-footer">
     <div class="container">
       <div class="footer-content">
-        <div class="footer-links">
-          <a href="/tools/image-converter">Image Converter</a>
-          <a href="/tools/image-compressor">Image Compressor</a>
-          <a href="/tools/image-resizer">Image Resizer</a>
-          <a href="/tools/image-cropper">Image Cropper</a>
-          <a href="/tools/image-to-pdf">Image to PDF</a>
-          <a href="/tools/favicon-generator">Favicon Generator</a>
-          <a href="/tools/background-remover">Background Remover</a>
-          <a href="/tools/qr-generator">QR Generator</a>
+        <div class="footer-links" data-tool-directory="footer">
+          {toolRegistry.map((tool) => (
+            <a href={tool.href} data-tool-id={tool.id}>{tool.name}</a>
+          ))}
         </div>
         <div class="footer-links">
           <a href="/about">About</a>

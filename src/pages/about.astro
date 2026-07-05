@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { toolRegistry } from '../data/tool-registry';
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -26,7 +27,7 @@ const structuredData = {
     <h1>Your Browser Is the Only Tool You Need.</h1>
     <p>
       Free tools. Local processing. Zero compromise.
-      Your files never leave your device — process locally, stay secure, use freely.
+      Your files never leave your device 鈥?process locally, stay secure, use freely.
     </p>
     <div class="privacy-badge">
       Privacy-First by Design
@@ -38,12 +39,11 @@ const structuredData = {
     <p style="color: var(--color-text-light); line-height: 1.8;">
       ToolkitFree is a free, browser-based toolkit that processes your files entirely on your device.
       No file uploads and no accounts. We believe powerful tools should be accessible to everyone,
-      everywhere — without compromising your privacy. Every operation runs locally in your browser,
+      everywhere 鈥?without compromising your privacy. Every operation runs locally in your browser,
       so your files never leave your hands.
     </p>
     <p style="color: var(--color-text-light); line-height: 1.8; margin-top: 1rem;">
-      Currently focused on image tools — converter, compressor, resizer, and background remover —
-      with more categories on the way.
+      Currently focused on image tools 鈥?converter, compressor, resizer, and background remover 鈥?      with more categories on the way.
     </p>
   </section>
 
@@ -52,7 +52,7 @@ const structuredData = {
     <ul class="features-list">
       <li>100% free, no sign-up required</li>
       <li>Your files never leave your device</li>
-      <li>Local processing — no server uploads</li>
+      <li>Local processing 鈥?no server uploads</li>
       <li>No server upload limit; device and browser limits still apply</li>
       <li>No watermarks on output</li>
       <li>Works on any device with a browser</li>
@@ -71,23 +71,13 @@ const structuredData = {
 
   <section class="features-section">
     <h2>Our Tools</h2>
-    <div class="related-tools-grid">
-      <a href="/tools/image-converter" class="tool-card">
-        <h3>Image Converter</h3>
-        <p>Convert between JPG, PNG, WebP, and more.</p>
-      </a>
-      <a href="/tools/image-compressor" class="tool-card">
-        <h3>Image Compressor</h3>
-        <p>Reduce file size while maintaining quality.</p>
-      </a>
-      <a href="/tools/image-resizer" class="tool-card">
-        <h3>Image Resizer</h3>
-        <p>Resize and crop images to exact dimensions.</p>
-      </a>
-      <a href="/tools/background-remover" class="tool-card">
-        <h3>Background Remover</h3>
-        <p>Remove image backgrounds using AI.</p>
-      </a>
+    <div class="related-tools-grid" data-tool-directory="about">
+      {toolRegistry.map((tool) => (
+        <a href={tool.href} class="tool-card" data-tool-id={tool.id}>
+          <h3>{tool.name}</h3>
+          <p>{tool.shortDescription}</p>
+        </a>
+      ))}
     </div>
   </section>
 
@@ -95,7 +85,7 @@ const structuredData = {
     <h2>What's Next</h2>
     <p style="color: var(--color-text-light); line-height: 1.8;">
       We're just getting started. Our roadmap includes expanding beyond image tools into
-      PDF processing, document conversion, and other everyday file utilities — all built
+      PDF processing, document conversion, and other everyday file utilities 鈥?all built
       with the same privacy-first, zero-cost philosophy. More languages and localized
       content are also planned to make these tools accessible to users worldwide.
     </p>

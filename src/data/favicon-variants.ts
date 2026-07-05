@@ -1,11 +1,13 @@
-export const allVariants = [
+import type { ToolVariantPageData, ToolVariantSummary } from './content-types';
+
+export const allVariants: ToolVariantSummary[] = [
   { slug: 'png-to-favicon', label: 'PNG to Favicon' },
   { slug: 'jpg-to-favicon', label: 'JPG to Favicon' },
   { slug: 'logo-to-favicon', label: 'Logo to Favicon' },
   { slug: 'favicon-for-wordpress', label: 'Favicon for WordPress' },
 ];
 
-export const variantData: Record<string, { title: string; description: string; faq: { question: string; answer: string }[] }> = {
+export const variantData: Record<string, ToolVariantPageData> = {
   'png-to-favicon': {
     title: 'PNG to Favicon — Generate All Sizes Free',
     description: 'Convert a PNG image to all favicon sizes (16x16 to 512x512). Download as ZIP with webmanifest. Free, no upload needed.',

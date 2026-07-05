@@ -1,5 +1,6 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import ToolDirectory from '../../../components/ToolDirectory.astro';
 import ImageCropper from '../../../components/ImageCropper';
 import { allVariants, variantData } from '../../../data/cropper-variants';
 
@@ -22,6 +23,7 @@ const structuredData = {
   "@type": "WebApplication",
   "name": title,
   "description": description,
+  "url": pageUrl,
   "applicationCategory": "UtilitiesApplication",
   "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0" },
@@ -105,17 +107,7 @@ const faqStructuredData = {
 
     <aside class="tool-sidebar">
       <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
-      <div style="margin-top: 2rem;">
-        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">More Tools</h3>
-        <ul style="font-size: 0.875rem; list-style: none;">
-          <li style="padding: 0.25rem 0;"><a href="/tools/image-resizer">Image Resizer</a></li>
-          <li style="padding: 0.25rem 0;"><a href="/tools/image-converter">Image Converter</a></li>
-          <li style="padding: 0.25rem 0;"><a href="/tools/image-compressor">Image Compressor</a></li>
-          <li style="padding: 0.25rem 0;"><a href="/tools/image-to-pdf">Image to PDF</a></li>
-          <li style="padding: 0.25rem 0;"><a href="/tools/favicon-generator">Favicon Generator</a></li>
-          <li style="padding: 0.25rem 0;"><a href="/tools/background-remover">Background Remover</a></li>
-        </ul>
-      </div>
+      <ToolDirectory currentId="image-cropper" mode="sidebar" />
     </aside>
   </div>
 </Layout>

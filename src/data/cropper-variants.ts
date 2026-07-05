@@ -1,6 +1,11 @@
 import type { CropAspectPresetKey } from '../lib/image-cropper';
+import type { ToolVariantPageData, ToolVariantSummary } from './content-types';
 
-export const allVariants = [
+interface CropperVariantPageData extends ToolVariantPageData {
+  defaultAspectPreset: CropAspectPresetKey;
+}
+
+export const allVariants: ToolVariantSummary[] = [
   { slug: 'crop-to-square', label: 'Crop to Square' },
   { slug: 'crop-to-16-9', label: 'Crop to 16:9' },
   { slug: 'crop-to-4-3', label: 'Crop to 4:3' },
@@ -8,7 +13,7 @@ export const allVariants = [
   { slug: 'free-crop', label: 'Free Crop' },
 ];
 
-export const variantData: Record<string, { title: string; description: string; defaultAspectPreset: CropAspectPresetKey; faq: { question: string; answer: string }[] }> = {
+export const variantData: Record<string, CropperVariantPageData> = {
   'crop-to-square': {
     title: 'Crop Image to Square Online — Free',
     description: 'Crop images to a perfect square (1:1) for social media profiles, Instagram posts, and thumbnails. Free, no upload needed.',

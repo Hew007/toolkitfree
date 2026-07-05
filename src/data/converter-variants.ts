@@ -1,14 +1,15 @@
+import type { ToolVariantSummary } from './content-types';
+
 export type ConverterVariantAvailability = 'supported' | 'browser-dependent' | 'unsupported';
 
-export interface ConverterVariant {
-  slug: string;
+export interface ConverterVariant extends ToolVariantSummary {
   from: string;
   to: string;
   availability: ConverterVariantAvailability;
   capabilityNote?: string;
 }
 
-export const allVariants: ConverterVariant[] = [
+const variants: Array<Omit<ConverterVariant, 'label' | 'indexable'>> = [
   { slug: 'jpg-to-png', from: 'JPG', to: 'PNG', availability: 'supported' },
   { slug: 'png-to-jpg', from: 'PNG', to: 'JPG', availability: 'supported' },
   { slug: 'webp-to-jpg', from: 'WebP', to: 'JPG', availability: 'supported' },
@@ -58,6 +59,12 @@ export const allVariants: ConverterVariant[] = [
     capabilityNote: 'GIF output is not implemented. The converter exports JPG, PNG, and WebP only.',
   },
 ];
+
+export const allVariants: ConverterVariant[] = variants.map((variant) => ({
+  ...variant,
+  label: `${variant.from} to ${variant.to}`,
+  indexable: variant.availability === 'supported',
+}));
 
 export const faqData: Record<string, { question: string; answer: string }[]> = {
   'jpg-to-png': [

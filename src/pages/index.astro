@@ -1,56 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { toolRegistry } from '../data/tool-registry';
 
-const tools = [
-  {
-    name: 'Image Converter',
-    description: 'Convert images between JPG, PNG, and WebP. Browser-dependent inputs are labeled clearly.',
-    href: '/tools/image-converter',
-    icon: ' ',
-  },
-  {
-    name: 'Image Compressor',
-    description: 'Re-encode or resize images and compare the result. Smaller output is not guaranteed.',
-    href: '/tools/image-compressor',
-    icon: '⚡',
-  },
-  {
-    name: 'Image Resizer',
-    description: 'Resize and crop images to exact dimensions. Presets for Instagram, Facebook, Twitter and more.',
-    href: '/tools/image-resizer',
-    icon: '✂️',
-  },
-  {
-    name: 'Image Cropper',
-    description: 'Crop images with a visual drag tool. Supports square, 16:9, 4:3, 3:2 aspect ratios.',
-    href: '/tools/image-cropper',
-    icon: ' ️',
-  },
-  {
-    name: 'Image to PDF',
-    description: 'Convert images to PDF. Combine multiple images into one PDF with A4 or custom page sizes.',
-    href: '/tools/image-to-pdf',
-    icon: ' ',
-  },
-  {
-    name: 'Favicon Generator',
-    description: 'Generate all favicon sizes from one image. Includes webmanifest and HTML code.',
-    href: '/tools/favicon-generator',
-    icon: ' ',
-  },
-  {
-    name: 'QR Code Generator',
-    description: 'Create QR codes for URLs, WiFi, vCards, and more. Customize colors and add logos.',
-    href: '/tools/qr-generator',
-    icon: ' ',
-  },
-  {
-    name: 'Background Remover',
-    description: 'Remove image backgrounds instantly using AI. Perfect for product photos and portraits.',
-    href: '/tools/background-remover',
-    icon: '✨',
-  },
-];
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -78,9 +29,9 @@ const structuredData = {
   </section>
 
   <section class="tools-grid">
-    {tools.map((tool) => (
-      <a href={tool.href} class="tool-card">
-        <h3>{tool.icon} {tool.name}</h3>
+    {toolRegistry.map((tool) => (
+      <a href={tool.href} class="tool-card" data-tool-id={tool.id}>
+        <h3>{tool.name}</h3>
         <p>{tool.description}</p>
       </a>
     ))}

@@ -16,7 +16,9 @@
     "validate:batch-download:browser": "node scripts/validate-batch-download-browser.mjs",
     "validate:responsive-accessibility:browser": "node scripts/validate-responsive-accessibility-browser.mjs",
     "validate:performance": "node scripts/validate-performance-guards.mjs",
-    "validate:performance:browser": "node scripts/validate-performance-browser.mjs"
+    "validate:performance:browser": "node scripts/validate-performance-browser.mjs",
+    "sync:llms": "node scripts/sync-llms-registry.mjs",
+    "validate:seo": "node scripts/validate-seo-registry.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.7",
