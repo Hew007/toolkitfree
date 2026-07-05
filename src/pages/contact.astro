@@ -2,17 +2,17 @@
 import Layout from '../layouts/Layout.astro';
 
 const structuredData = {
-  "@context": "https://schema.org",
-  "@type": "ContactPage",
-  "name": "Contact Us",
-  "description": "Get in touch with ToolkitFree — questions, feedback, or partnership inquiries.",
-  "url": "https://toolkitfree.net/contact",
-  "mainEntity": {
-    "@type": "Organization",
-    "name": "ToolkitFree",
-    "email": "hnhw182@gmail.com",
-    "url": "https://toolkitfree.net"
-  }
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: 'Contact Us',
+  description: 'Get in touch with ToolkitFree — questions, feedback, or partnership inquiries.',
+  url: 'https://toolkitfree.net/contact',
+  mainEntity: {
+    '@type': 'Organization',
+    name: 'ToolkitFree',
+    email: 'hnhw182@gmail.com',
+    url: 'https://toolkitfree.net',
+  },
 };
 ---
 
@@ -25,19 +25,22 @@ const structuredData = {
   <section class="hero">
     <h1>Get in Touch</h1>
     <p>
-      Have questions, feedback, bug reports, or ideas for new tools?
-      We'd love to hear from you.
+      Have questions, feedback, bug reports, or ideas for new tools? We'd love to hear from you.
     </p>
   </section>
 
   <section class="features-section">
     <h2>Email Us</h2>
     <p style="color: var(--color-text-light); line-height: 1.8;">
-      The best way to reach us is by email. We read every message and do our best to respond
-      within 48 hours.
+      The best way to reach us is by email. We read every message and do our best to respond within
+      48 hours.
     </p>
     <div style="margin-top: 1rem;">
-      <a href="mailto:hnhw182@gmail.com" class="btn btn-primary" style="font-size: 1rem; padding: 0.75rem 1.5rem;">
+      <a
+        href="mailto:hnhw182@gmail.com"
+        class="btn btn-primary"
+        style="font-size: 1rem; padding: 0.75rem 1.5rem;"
+      >
         hnhw182@gmail.com
       </a>
     </div>
@@ -58,8 +61,8 @@ const structuredData = {
     <h2>Before You Reach Out</h2>
     <p style="color: var(--color-text-light); line-height: 1.8;">
       You might find your answer in our <a href="/privacy-policy">Privacy Policy</a> or
-      <a href="/terms">Terms of Service</a>. If you have a question about how a specific tool
-      works, check the FAQ section on the tool's page — it may already have the answer you need.
+      <a href="/terms">Terms of Service</a>. If you have a question about how a specific tool works,
+      check the FAQ section on the tool's page — it may already have the answer you need.
     </p>
   </section>
 </Layout>

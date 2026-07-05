@@ -1,8 +1,5 @@
 export type BackgroundProgressStage =
-  | 'runtime'
-  | 'model-download'
-  | 'model-initialization'
-  | 'inference';
+  'runtime' | 'model-download' | 'model-initialization' | 'inference';
 
 export interface BackgroundProgress {
   stage: BackgroundProgressStage;

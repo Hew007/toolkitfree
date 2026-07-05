@@ -6,95 +6,116 @@ import ImageConverter from '../../components/ImageConverter';
 const faqItems = [
   {
     question: 'How does the image converter work?',
-    answer: 'Our image converter runs entirely in your browser using the Canvas API. When you upload an image, it is loaded into a hidden canvas element, then re-exported in your chosen format. Your files never leave your device.',
+    answer:
+      'Our image converter runs entirely in your browser using the Canvas API. When you upload an image, it is loaded into a hidden canvas element, then re-exported in your chosen format. Your files never leave your device.',
   },
   {
     question: 'What image formats are supported?',
-    answer: 'We support JPG/JPEG, PNG, and WebP formats for both input and output. You can convert between any of these formats. More formats like AVIF and HEIC may be added in future updates.',
+    answer:
+      'We support JPG/JPEG, PNG, and WebP formats for both input and output. You can convert between any of these formats. More formats like AVIF and HEIC may be added in future updates.',
   },
   {
     question: 'Is there a file size limit?',
-    answer: 'There is no server upload limit, but browser memory and Canvas dimension limits still apply. Large images or batches can be slow or fail, especially on mobile devices.',
+    answer:
+      'There is no server upload limit, but browser memory and Canvas dimension limits still apply. Large images or batches can be slow or fail, especially on mobile devices.',
   },
   {
     question: 'Can I convert multiple images at once?',
-    answer: 'Yes! You can upload and convert multiple images simultaneously. All conversions happen in parallel for maximum speed.',
+    answer:
+      'Yes! You can upload and convert multiple images simultaneously. All conversions happen in parallel for maximum speed.',
   },
   {
     question: 'How do I download a converted batch?',
-    answer: 'Each successful result has its own download link. You can also choose Download all as ZIP to create one archive in your browser. Failed files are listed with their reason and are not added to the ZIP.',
+    answer:
+      'Each successful result has its own download link. You can also choose Download all as ZIP to create one archive in your browser. Failed files are listed with their reason and are not added to the ZIP.',
   },
   {
     question: 'Will I lose image quality when converting?',
-    answer: 'PNG output uses lossless encoding for the decoded pixels, but conversion cannot restore detail already lost in the source. JPG and WebP are re-encoded and may lose quality; use the slider to control the tradeoff.',
+    answer:
+      'PNG output uses lossless encoding for the decoded pixels, but conversion cannot restore detail already lost in the source. JPG and WebP are re-encoded and may lose quality; use the slider to control the tradeoff.',
   },
   {
     question: 'Is this tool free?',
-    answer: 'Yes, this tool is completely free to use with no limits. We support the site through non-intrusive ads.',
+    answer:
+      'Yes, this tool is completely free to use with no limits. We support the site through non-intrusive ads.',
   },
   {
     question: 'Do you keep a copy of my images?',
-    answer: 'No. All processing happens in your browser. Your images are never uploaded to any server. When you close the page, all data is gone.',
+    answer:
+      'No. All processing happens in your browser. Your images are never uploaded to any server. When you close the page, all data is gone.',
   },
   {
     question: 'Can I use this on my phone?',
-    answer: 'Yes! Our image converter works on any device with a modern browser, including smartphones and tablets.',
+    answer:
+      'Yes! Our image converter works on any device with a modern browser, including smartphones and tablets.',
   },
   {
     question: 'What is WebP and why should I use it?',
-    answer: 'WebP is a modern image format developed by Google that provides superior lossless and lossy compression for images on the web. WebP images are typically 25-34% smaller than comparable JPEG or PNG images.',
+    answer:
+      'WebP is a modern image format developed by Google that provides superior lossless and lossy compression for images on the web. WebP images are typically 25-34% smaller than comparable JPEG or PNG images.',
   },
   {
     question: 'How do I convert JPG to PNG?',
-    answer: 'Upload your JPG file, select PNG as the output format, and click Convert. The tool decodes the JPG and exports its pixels as PNG. PNG output avoids further lossy encoding, but it cannot restore detail already lost to JPG compression.',
+    answer:
+      'Upload your JPG file, select PNG as the output format, and click Convert. The tool decodes the JPG and exports its pixels as PNG. PNG output avoids further lossy encoding, but it cannot restore detail already lost to JPG compression.',
   },
   {
     question: 'How do I convert PNG to JPG?',
-    answer: 'Upload your PNG file, select JPG as the output format, and click Convert. Note that JPG does not support transparency — transparent areas will be filled with white. You can also adjust the quality slider.',
+    answer:
+      'Upload your PNG file, select JPG as the output format, and click Convert. Note that JPG does not support transparency — transparent areas will be filled with white. You can also adjust the quality slider.',
   },
   {
     question: 'How do I convert images to WebP?',
-    answer: 'Upload any image file (JPG, PNG, etc.), select WebP as the output format, choose your quality level, and click Convert. WebP offers excellent compression while maintaining visual quality.',
+    answer:
+      'Upload any image file (JPG, PNG, etc.), select WebP as the output format, choose your quality level, and click Convert. WebP offers excellent compression while maintaining visual quality.',
   },
   {
     question: 'How do I change a picture from JPG to PNG?',
-    answer: 'Simply drag your JPG file onto the converter, select PNG from the output format dropdown, and click Convert. Your PNG will use lossless encoding for the decoded pixels, while existing JPG artifacts remain.',
+    answer:
+      'Simply drag your JPG file onto the converter, select PNG from the output format dropdown, and click Convert. Your PNG will use lossless encoding for the decoded pixels, while existing JPG artifacts remain.',
   },
   {
     question: 'What is the best free image converter online?',
-    answer: 'ToolkitFree\'s image converter runs entirely in your browser — no uploads, no sign-ups, no watermarks. It supports JPG, PNG, and WebP with batch conversion and adjustable quality.',
+    answer:
+      "ToolkitFree's image converter runs entirely in your browser — no uploads, no sign-ups, no watermarks. It supports JPG, PNG, and WebP with batch conversion and adjustable quality.",
   },
 ];
 
 const structuredData = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "Free Image Converter",
-  "url": "https://toolkitfree.net/tools/image-converter",
-  "applicationCategory": "UtilitiesApplication",
-  "operatingSystem": "Any",
-  "offers": { "@type": "Offer", "price": "0" },
-  "description": "Convert images between JPG, PNG, and WebP formats instantly in your browser. Free, no upload needed.",
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Free Image Converter',
+  url: 'https://toolkitfree.net/tools/image-converter',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0' },
+  description:
+    'Convert images between JPG, PNG, and WebP formats instantly in your browser. Free, no upload needed.',
 };
 
 const breadcrumbSchema = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://toolkitfree.net" },
-    { "@type": "ListItem", "position": 2, "name": "Image Converter", "item": "https://toolkitfree.net/tools/image-converter" },
-  ]
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://toolkitfree.net' },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Image Converter',
+      item: 'https://toolkitfree.net/tools/image-converter',
+    },
+  ],
 };
 
 const faqStructuredData = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": faqItems.map((item) => ({
-    "@type": "Question",
-    "name": item.question,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": item.answer,
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer,
     },
   })),
 };
@@ -109,8 +130,8 @@ const faqStructuredData = {
     <div class="tool-content">
       <h1>Free Online Image Converter</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
-        Convert images between JPG, PNG, and WebP formats instantly.
-        Batch support. No upload needed — your files stay on your device.
+        Convert images between JPG, PNG, and WebP formats instantly. Batch support. No upload needed
+        — your files stay on your device.
       </p>
 
       <ImageConverter client:load />
@@ -144,14 +165,16 @@ const faqStructuredData = {
 
       <section class="faq-section">
         <h2>Frequently Asked Questions</h2>
-        {faqItems.map((item) => (
-          <div class="faq-item">
-            <details>
-              <summary class="faq-question">{item.question}</summary>
-              <div class="faq-answer">{item.answer}</div>
-            </details>
-          </div>
-        ))}
+        {
+          faqItems.map((item) => (
+            <div class="faq-item">
+              <details>
+                <summary class="faq-question">{item.question}</summary>
+                <div class="faq-answer">{item.answer}</div>
+              </details>
+            </div>
+          ))
+        }
       </section>
 
       <ToolDirectory currentId="image-converter" mode="related" />

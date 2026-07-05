@@ -3,17 +3,18 @@ import Layout from '../layouts/Layout.astro';
 import { toolRegistry } from '../data/tool-registry';
 
 const structuredData = {
-  "@context": "https://schema.org",
-  "@type": "AboutPage",
-  "name": "About ToolkitFree",
-  "description": "Free, privacy-first browser-based tools. Your files never leave your device.",
-  "url": "https://toolkitfree.net/about",
-  "mainEntity": {
-    "@type": "Organization",
-    "name": "ToolkitFree",
-    "url": "https://toolkitfree.net",
-    "description": "Free, local-first processing tools that run entirely in your browser. No uploads, no accounts, no limits."
-  }
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: 'About ToolkitFree',
+  description: 'Free, privacy-first browser-based tools. Your files never leave your device.',
+  url: 'https://toolkitfree.net/about',
+  mainEntity: {
+    '@type': 'Organization',
+    name: 'ToolkitFree',
+    url: 'https://toolkitfree.net',
+    description:
+      'Free, local-first processing tools that run entirely in your browser. No uploads, no accounts, no limits.',
+  },
 };
 ---
 
@@ -26,24 +27,23 @@ const structuredData = {
   <section class="hero">
     <h1>Your Browser Is the Only Tool You Need.</h1>
     <p>
-      Free tools. Local processing. Zero compromise.
-      Your files never leave your device 鈥?process locally, stay secure, use freely.
+      Free tools. Local processing. Zero compromise. Your files never leave your device 鈥?process
+      locally, stay secure, use freely.
     </p>
-    <div class="privacy-badge">
-      Privacy-First by Design
-    </div>
+    <div class="privacy-badge">Privacy-First by Design</div>
   </section>
 
   <section class="features-section">
     <h2>What We Do</h2>
     <p style="color: var(--color-text-light); line-height: 1.8;">
-      ToolkitFree is a free, browser-based toolkit that processes your files entirely on your device.
-      No file uploads and no accounts. We believe powerful tools should be accessible to everyone,
-      everywhere 鈥?without compromising your privacy. Every operation runs locally in your browser,
-      so your files never leave your hands.
+      ToolkitFree is a free, browser-based toolkit that processes your files entirely on your
+      device. No file uploads and no accounts. We believe powerful tools should be accessible to
+      everyone, everywhere 鈥?without compromising your privacy. Every operation runs locally in
+      your browser, so your files never leave your hands.
     </p>
     <p style="color: var(--color-text-light); line-height: 1.8; margin-top: 1rem;">
-      Currently focused on image tools 鈥?converter, compressor, resizer, and background remover 鈥?      with more categories on the way.
+      Currently focused on image tools 鈥?converter, compressor, resizer, and background remover 鈥?
+      with more categories on the way.
     </p>
   </section>
 
@@ -62,41 +62,45 @@ const structuredData = {
   <section class="features-section">
     <h2>How It Works</h2>
     <p style="color: var(--color-text-light); line-height: 1.8;">
-      All ToolkitFree tools run entirely in your browser using modern web technologies
-      including the Canvas API and WebAssembly. Your files are processed locally on your
-      device and are not uploaded for processing. Capacity depends on available memory and browser limits.
-      The page still loads site assets and advertising resources; background removal also downloads its model.
+      All ToolkitFree tools run entirely in your browser using modern web technologies including the
+      Canvas API and WebAssembly. Your files are processed locally on your device and are not
+      uploaded for processing. Capacity depends on available memory and browser limits. The page
+      still loads site assets and advertising resources; background removal also downloads its
+      model.
     </p>
   </section>
 
   <section class="features-section">
     <h2>Our Tools</h2>
     <div class="related-tools-grid" data-tool-directory="about">
-      {toolRegistry.map((tool) => (
-        <a href={tool.href} class="tool-card" data-tool-id={tool.id}>
-          <h3>{tool.name}</h3>
-          <p>{tool.shortDescription}</p>
-        </a>
-      ))}
+      {
+        toolRegistry.map((tool) => (
+          <a href={tool.href} class="tool-card" data-tool-id={tool.id}>
+            <h3>{tool.name}</h3>
+            <p>{tool.shortDescription}</p>
+          </a>
+        ))
+      }
     </div>
   </section>
 
   <section class="features-section">
     <h2>What's Next</h2>
     <p style="color: var(--color-text-light); line-height: 1.8;">
-      We're just getting started. Our roadmap includes expanding beyond image tools into
-      PDF processing, document conversion, and other everyday file utilities 鈥?all built
-      with the same privacy-first, zero-cost philosophy. More languages and localized
-      content are also planned to make these tools accessible to users worldwide.
+      We're just getting started. Our roadmap includes expanding beyond image tools into PDF
+      processing, document conversion, and other everyday file utilities 鈥?all built with the same
+      privacy-first, zero-cost philosophy. More languages and localized content are also planned to
+      make these tools accessible to users worldwide.
     </p>
   </section>
 
   <section class="features-section">
     <h2>Privacy & Compliance</h2>
     <p style="color: var(--color-text-light); line-height: 1.8;">
-      By design, ToolkitFree is compliant with major privacy regulations including the
-      EU General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA).
-      File contents are processed locally and are not collected or stored by ToolkitFree. Website usage and advertising data may still be handled as described in our Privacy Policy.
+      By design, ToolkitFree is compliant with major privacy regulations including the EU General
+      Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA). File
+      contents are processed locally and are not collected or stored by ToolkitFree. Website usage
+      and advertising data may still be handled as described in our Privacy Policy.
     </p>
     <p style="color: var(--color-text-light); line-height: 1.8; margin-top: 1rem;">
       For more details, see our <a href="/privacy-policy">Privacy Policy</a> and
@@ -107,8 +111,9 @@ const structuredData = {
   <section class="features-section" style="margin-bottom: 2rem;">
     <h2>Get in Touch</h2>
     <p style="color: var(--color-text-light); line-height: 1.8;">
-      Have questions, feedback, or ideas? We'd love to hear from you.
-      Reach out at <a href="mailto:hnhw182@gmail.com">hnhw182@gmail.com</a> or visit our
+      Have questions, feedback, or ideas? We'd love to hear from you. Reach out at <a
+        href="mailto:hnhw182@gmail.com">hnhw182@gmail.com</a
+      > or visit our
       <a href="/contact">Contact</a> page.
     </p>
   </section>

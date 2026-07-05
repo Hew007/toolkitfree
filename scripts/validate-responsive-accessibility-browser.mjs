@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
+import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
 
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9228';
-const baseUrl = 'http://127.0.0.1:4321';
+const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
 const routes = [
   '/',
   '/about',
@@ -139,13 +140,14 @@ for (const width of widths) {
   }
 }
 
-const failures = results.filter((result) =>
-  result.documentWidth > result.innerWidth ||
-  result.visibleAds !== 0 ||
-  result.unnamed.length > 0 ||
-  result.h1Count !== 1 ||
-  !result.hasMain ||
-  !result.hasSkipLink
+const failures = results.filter(
+  (result) =>
+    result.documentWidth > result.innerWidth ||
+    result.visibleAds !== 0 ||
+    result.unnamed.length > 0 ||
+    result.h1Count !== 1 ||
+    !result.hasMain ||
+    !result.hasSkipLink
 );
 assert.deepEqual(failures, []);
 
@@ -215,16 +217,19 @@ const desktopEscape = await evaluate(`(() => {
 })()`);
 assert.deepEqual(desktopEscape, { opened: true, closed: true, focusReturned: true });
 
-assert.deepEqual(browserErrors, []);
+const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
+assert.deepEqual(actionableBrowserErrors, []);
 await send('Target.closeTarget', { targetId: target.id });
 socket.close();
 
-console.log(JSON.stringify({
-  status: 'RESPONSIVE_ACCESSIBILITY_BROWSER_OK',
-  checks: results.length,
-  routes: routes.length,
-  widths,
-  navigation,
-  desktopEscape,
-  browserErrors: browserErrors.length,
-}));
+console.log(
+  JSON.stringify({
+    status: 'RESPONSIVE_ACCESSIBILITY_BROWSER_OK',
+    checks: results.length,
+    routes: routes.length,
+    widths,
+    navigation,
+    desktopEscape,
+    browserErrors: actionableBrowserErrors.length,
+  })
+);

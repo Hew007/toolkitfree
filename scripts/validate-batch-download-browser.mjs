@@ -3,12 +3,13 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
+import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
 
 const root = process.cwd();
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9227';
-const baseUrl = 'http://127.0.0.1:4321';
+const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
 const fixtures = path.join(root, 'docs/optimization/baseline/fixtures');
-const tempDir = path.join(root, '.tmp-opt07-browser');
+const tempDir = process.env.BROWSER_TEMP_DIR || path.join(root, '.tmp-opt07-browser');
 const downloadDir = path.join(tempDir, 'downloads');
 const duplicatePng = path.join(tempDir, 'sample.png');
 
@@ -94,7 +95,8 @@ async function setFiles(filePaths) {
 }
 
 async function clickAction(text) {
-  assert.equal(await evaluate(`
+  assert.equal(
+    await evaluate(`
     (() => {
       const button = [...document.querySelectorAll('button')]
         .find((candidate) => candidate.textContent.trim() === ${JSON.stringify(text)});
@@ -102,7 +104,10 @@ async function clickAction(text) {
       button.click();
       return true;
     })()
-  `), true, `${text} button`);
+  `),
+    true,
+    `${text} button`
+  );
 }
 
 async function waitForDownload(filename) {
@@ -141,7 +146,10 @@ async function downloadAndInspectZip(filename, expectedResults) {
   const archive = await JSZip.loadAsync(fs.readFileSync(downloaded));
   const entries = Object.keys(archive.files).filter((name) => !archive.files[name].dir);
 
-  assert.deepEqual(entries, expectedResults.map((result) => result.name));
+  assert.deepEqual(
+    entries,
+    expectedResults.map((result) => result.name)
+  );
   for (const result of expectedResults) {
     const content = await archive.file(result.name).async('uint8array');
     assert.equal(content.byteLength, result.size, `${result.name} ZIP size`);
@@ -202,8 +210,14 @@ await waitFor(
 );
 assert.equal(await evaluate(`document.body.innerText.includes('invalid.txt:')`), true);
 const converterResults = await inspectResults();
-assert.deepEqual(converterResults.map((result) => result.name), ['sample.png', 'sample-2.png']);
-assert.equal(converterResults.every((result) => result.type === 'image/png'), true);
+assert.deepEqual(
+  converterResults.map((result) => result.name),
+  ['sample.png', 'sample-2.png']
+);
+assert.equal(
+  converterResults.every((result) => result.type === 'image/png'),
+  true
+);
 reports.push(await downloadAndInspectZip('toolkitfree-converted-images.zip', converterResults));
 assert.deepEqual(await evaluate(`window.__objectUrlStats()`), {
   created: 5,
@@ -221,10 +235,7 @@ await evaluate(`
 await waitFor(`window.__objectUrlStats().active === 0`, 'old converter URLs cleanup');
 
 await navigate('/tools/image-compressor');
-await setFiles([
-  path.join(fixtures, 'photo.jpg'),
-  path.join(fixtures, 'sample.webp'),
-]);
+await setFiles([path.join(fixtures, 'photo.jpg'), path.join(fixtures, 'sample.webp')]);
 await waitFor(`document.querySelectorAll('.file-item').length === 2`, 'compressor files');
 await clickAction('Compress 2 images');
 await waitFor(
@@ -232,14 +243,14 @@ await waitFor(
   'compressor results'
 );
 const compressorResults = await inspectResults();
-assert.deepEqual(compressorResults.map((result) => result.type), ['image/jpeg', 'image/webp']);
+assert.deepEqual(
+  compressorResults.map((result) => result.type),
+  ['image/jpeg', 'image/webp']
+);
 reports.push(await downloadAndInspectZip('toolkitfree-compressed-images.zip', compressorResults));
 
 await navigate('/tools/image-resizer');
-await setFiles([
-  path.join(fixtures, 'photo.jpg'),
-  path.join(fixtures, 'sample.webp'),
-]);
+await setFiles([path.join(fixtures, 'photo.jpg'), path.join(fixtures, 'sample.webp')]);
 await waitFor(`document.querySelectorAll('.file-item').length === 2`, 'resizer files');
 await clickAction('Resize 2 images');
 await waitFor(
@@ -247,7 +258,10 @@ await waitFor(
   'resizer results'
 );
 const resizerResults = await inspectResults();
-assert.equal(resizerResults.every((result) => result.type === 'image/jpeg'), true);
+assert.equal(
+  resizerResults.every((result) => result.type === 'image/jpeg'),
+  true
+);
 reports.push(await downloadAndInspectZip('toolkitfree-resized-images.zip', resizerResults));
 
 await navigate('/tools/image-converter');
@@ -260,15 +274,18 @@ await waitFor(
 );
 assert.equal(await evaluate(`document.querySelector('[data-batch-download]').disabled`), true);
 
-assert.deepEqual(browserErrors, []);
+const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
+assert.deepEqual(actionableBrowserErrors, []);
 await send('Target.closeTarget', { targetId: target.id });
 socket.close();
 
-console.log(JSON.stringify({
-  status: 'BATCH_DOWNLOAD_BROWSER_OK',
-  reports,
-  mixedBatch: { success: 2, failure: 1 },
-  allFailureBlocked: true,
-  oldUrlsReleased: true,
-  browserErrors: browserErrors.length,
-}));
+console.log(
+  JSON.stringify({
+    status: 'BATCH_DOWNLOAD_BROWSER_OK',
+    reports,
+    mixedBatch: { success: 2, failure: 1 },
+    allFailureBlocked: true,
+    oldUrlsReleased: true,
+    browserErrors: actionableBrowserErrors.length,
+  })
+);

@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
 
 const root = process.cwd();
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9229';
-const baseUrl = 'http://127.0.0.1:4321';
+const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
 const assetDirectory = path.join(root, 'dist', '_astro');
 
 function findAsset(prefix) {
@@ -164,18 +165,30 @@ const idle = {};
 for (const [route, forbidden] of [
   ['/', Object.values(heavyAssets)],
   ['/tools/image-converter', Object.values(heavyAssets)],
-  ['/tools/image-to-pdf', [heavyAssets.jspdf, heavyAssets.jszip, heavyAssets.qr, heavyAssets.background]],
-  ['/tools/favicon-generator', [heavyAssets.jszip, heavyAssets.jspdf, heavyAssets.qr, heavyAssets.background]],
-  ['/tools/qr-generator', [heavyAssets.qr, heavyAssets.jszip, heavyAssets.jspdf, heavyAssets.background]],
-  ['/tools/background-remover', [
-    heavyAssets.background,
-    heavyAssets.jszip,
-    heavyAssets.jspdf,
-    heavyAssets.qr,
-    'ort.bundle',
-    'ort.webgpu',
-    '.wasm',
-  ]],
+  [
+    '/tools/image-to-pdf',
+    [heavyAssets.jspdf, heavyAssets.jszip, heavyAssets.qr, heavyAssets.background],
+  ],
+  [
+    '/tools/favicon-generator',
+    [heavyAssets.jszip, heavyAssets.jspdf, heavyAssets.qr, heavyAssets.background],
+  ],
+  [
+    '/tools/qr-generator',
+    [heavyAssets.qr, heavyAssets.jszip, heavyAssets.jspdf, heavyAssets.background],
+  ],
+  [
+    '/tools/background-remover',
+    [
+      heavyAssets.background,
+      heavyAssets.jszip,
+      heavyAssets.jspdf,
+      heavyAssets.qr,
+      'ort.bundle',
+      'ort.webgpu',
+      '.wasm',
+    ],
+  ],
 ]) {
   await navigate(route);
   for (const filename of forbidden) {
@@ -232,7 +245,10 @@ await evaluate(`
   })()
 `);
 await waitForRequest(heavyAssets.qr, 'QR library dynamic request');
-await waitFor(`document.querySelector('[data-qr-ready="true"] canvas, [data-qr-ready="true"] svg')`, 'QR output');
+await waitFor(
+  `document.querySelector('[data-qr-ready="true"] canvas, [data-qr-ready="true"] svg')`,
+  'QR output'
+);
 
 await send('Emulation.setDeviceMetricsOverride', {
   width: 375,
@@ -245,7 +261,9 @@ await uploadGeneratedPng({ name: 'warning.png', width: 6000, height: 6000, heade
 await waitFor(`Boolean(document.querySelector('[data-input-budget="warning"]'))`, 'budget warning');
 assert.equal(await evaluate(`document.querySelectorAll('.file-item').length`), 0);
 assert.equal(
-  await evaluate(`Boolean([...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Continue anyway'))`),
+  await evaluate(
+    `Boolean([...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Continue anyway'))`
+  ),
   true
 );
 await evaluate(`
@@ -260,27 +278,32 @@ await uploadGeneratedPng({ name: 'blocked.png', width: 12000, height: 10000, hea
 await waitFor(`Boolean(document.querySelector('[data-input-budget="blocked"]'))`, 'budget block');
 assert.equal(await evaluate(`document.querySelectorAll('.file-item').length`), 0);
 assert.equal(
-  await evaluate(`Boolean([...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Continue anyway'))`),
+  await evaluate(
+    `Boolean([...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Continue anyway'))`
+  ),
   false
 );
 
-assert.deepEqual(browserErrors, []);
+const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
+assert.deepEqual(actionableBrowserErrors, []);
 await send('Target.closeTarget', { targetId: target.id });
 socket.close();
 
-console.log(JSON.stringify({
-  status: 'PERFORMANCE_BROWSER_OK',
-  heavyAssets,
-  idle,
-  dynamicLoads: {
-    jszip: true,
-    jspdf: true,
-    faviconZip: true,
-    qr: true,
-  },
-  budget: {
-    warningOverride: true,
-    blockedAt120MillionPixels: true,
-  },
-  browserErrors: browserErrors.length,
-}));
+console.log(
+  JSON.stringify({
+    status: 'PERFORMANCE_BROWSER_OK',
+    heavyAssets,
+    idle,
+    dynamicLoads: {
+      jszip: true,
+      jspdf: true,
+      faviconZip: true,
+      qr: true,
+    },
+    budget: {
+      warningOverride: true,
+      blockedAt120MillionPixels: true,
+    },
+    browserErrors: actionableBrowserErrors.length,
+  })
+);

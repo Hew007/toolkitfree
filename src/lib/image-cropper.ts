@@ -46,10 +46,7 @@ function validBounds(bounds: CropBounds): CropBounds {
   return bounds;
 }
 
-export function createInitialCropRect(
-  bounds: CropBounds,
-  ratio: number | null
-): CropRect {
+export function createInitialCropRect(bounds: CropBounds, ratio: number | null): CropRect {
   validBounds(bounds);
   if (ratio === null) {
     return { x: 0, y: 0, width: bounds.width, height: bounds.height };
@@ -91,14 +88,10 @@ function fitRatioSize(
   minimumSize: number
 ): { width: number; height: number } {
   const boundedMaxWidth = Math.max(1, Math.min(maxWidth, maxHeight * ratio));
-  const minimumWidth = Math.min(
-    boundedMaxWidth,
-    Math.max(minimumSize, minimumSize * ratio)
-  );
+  const minimumWidth = Math.min(boundedMaxWidth, Math.max(minimumSize, minimumSize * ratio));
   const widthFromHeight = desiredHeight * ratio;
   const preferredWidth =
-    Math.abs(desiredWidth - boundedMaxWidth) >=
-    Math.abs(widthFromHeight - boundedMaxWidth)
+    Math.abs(desiredWidth - boundedMaxWidth) >= Math.abs(widthFromHeight - boundedMaxWidth)
       ? desiredWidth
       : widthFromHeight;
   const width = clamp(preferredWidth, minimumWidth, boundedMaxWidth);
@@ -165,14 +158,7 @@ function resizeWithRatio(
   const desiredHeight = handle.includes('n') ? start.height - dy : start.height + dy;
   const maxWidth = handle.includes('w') ? anchorX : bounds.width - anchorX;
   const maxHeight = handle.includes('n') ? anchorY : bounds.height - anchorY;
-  const size = fitRatioSize(
-    desiredWidth,
-    desiredHeight,
-    ratio,
-    maxWidth,
-    maxHeight,
-    minimumSize
-  );
+  const size = fitRatioSize(desiredWidth, desiredHeight, ratio, maxWidth, maxHeight, minimumSize);
 
   return {
     x: handle.includes('w') ? anchorX - size.width : anchorX,
@@ -219,28 +205,14 @@ export function resizeCropRect(
   minimumSize = 10
 ): CropRect {
   validBounds(bounds);
-  const feasibleMinimum = Math.max(
-    1,
-    Math.min(minimumSize, bounds.width, bounds.height)
-  );
+  const feasibleMinimum = Math.max(1, Math.min(minimumSize, bounds.width, bounds.height));
   if (ratio === null) {
     return resizeFree(start, handle, dx, dy, bounds, feasibleMinimum);
   }
-  return resizeWithRatio(
-    start,
-    handle,
-    dx,
-    dy,
-    bounds,
-    ratio,
-    feasibleMinimum
-  );
+  return resizeWithRatio(start, handle, dx, dy, bounds, ratio, feasibleMinimum);
 }
 
-export function toPixelCropRect(
-  rect: CropRect,
-  bounds: CropBounds
-): CropRect {
+export function toPixelCropRect(rect: CropRect, bounds: CropBounds): CropRect {
   validBounds(bounds);
   const x = clamp(Math.round(rect.x), 0, Math.max(0, Math.round(bounds.width) - 1));
   const y = clamp(Math.round(rect.y), 0, Math.max(0, Math.round(bounds.height) - 1));

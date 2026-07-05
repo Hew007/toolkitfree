@@ -59,36 +59,42 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
     setFailures([]);
   }, [objectUrls]);
 
-  const handleFiles = useCallback((newFiles: File[]) => {
-    const accepted: PdfItem[] = [];
-    const rejected: PdfFailure[] = [];
-    for (const file of newFiles) {
-      try {
-        validateImageFile(file, { allowedTypes });
-        const id = nextId.current++;
-        accepted.push({
-          id,
-          file,
-          previewUrl: objectUrls.replace(`pdf:preview:${id}`, file),
-        });
-      } catch (fileError) {
-        rejected.push({ name: file.name, message: getImageProcessingErrorMessage(fileError) });
+  const handleFiles = useCallback(
+    (newFiles: File[]) => {
+      const accepted: PdfItem[] = [];
+      const rejected: PdfFailure[] = [];
+      for (const file of newFiles) {
+        try {
+          validateImageFile(file, { allowedTypes });
+          const id = nextId.current++;
+          accepted.push({
+            id,
+            file,
+            previewUrl: objectUrls.replace(`pdf:preview:${id}`, file),
+          });
+        } catch (fileError) {
+          rejected.push({ name: file.name, message: getImageProcessingErrorMessage(fileError) });
+        }
       }
-    }
-    setItems((current) => [...current, ...accepted]);
-    clearResult();
-    setFailures(rejected);
-    setError(null);
-  }, [allowedTypes, clearResult, objectUrls]);
+      setItems((current) => [...current, ...accepted]);
+      clearResult();
+      setFailures(rejected);
+      setError(null);
+    },
+    [allowedTypes, clearResult, objectUrls]
+  );
 
-  const handleRemove = useCallback((index: number) => {
-    setItems((current) => {
-      const item = current[index];
-      if (item) objectUrls.revoke(`pdf:preview:${item.id}`);
-      return current.filter((_, itemIndex) => itemIndex !== index);
-    });
-    clearResult();
-  }, [clearResult, objectUrls]);
+  const handleRemove = useCallback(
+    (index: number) => {
+      setItems((current) => {
+        const item = current[index];
+        if (item) objectUrls.revoke(`pdf:preview:${item.id}`);
+        return current.filter((_, itemIndex) => itemIndex !== index);
+      });
+      clearResult();
+    },
+    [clearResult, objectUrls]
+  );
 
   const moveItem = (index: number, direction: -1 | 1) => {
     setItems((current) => {
@@ -108,7 +114,7 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
       return {
         width,
         height,
-        orientation: width > height ? 'landscape' as const : 'portrait' as const,
+        orientation: width > height ? ('landscape' as const) : ('portrait' as const),
       };
     }
     const fixed = PDF_PAGE_SIZES[pageSize];
@@ -184,14 +190,7 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.drawImage(image, 0, 0);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-        doc.addImage(
-          dataUrl,
-          'JPEG',
-          placement.x,
-          placement.y,
-          placement.width,
-          placement.height
-        );
+        doc.addImage(dataUrl, 'JPEG', placement.x, placement.y, placement.width, placement.height);
       }
 
       const blob = doc.output('blob');
@@ -202,7 +201,9 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
       setResultSize(blob.size);
       setResultPages(valid.length);
     } catch (conversionError) {
-      setError(conversionError instanceof Error ? conversionError.message : 'PDF conversion failed.');
+      setError(
+        conversionError instanceof Error ? conversionError.message : 'PDF conversion failed.'
+      );
     } finally {
       setProcessing(false);
     }
@@ -218,8 +219,18 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
   };
 
   return (
-    <div data-pdf-preset={defaultPreset} data-page-size={pageSize} data-orientation={orientation} data-margin={margin} aria-busy={processing}>
-      {processing && <div className="visually-hidden" role="status" aria-live="polite">Creating PDF.</div>}
+    <div
+      data-pdf-preset={defaultPreset}
+      data-page-size={pageSize}
+      data-orientation={orientation}
+      data-margin={margin}
+      aria-busy={processing}
+    >
+      {processing && (
+        <div className="visually-hidden" role="status" aria-live="polite">
+          Creating PDF.
+        </div>
+      )}
       <FileUploader
         accept={allowedTypes.join(',')}
         multiple={true}
@@ -232,25 +243,87 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
         <div style={{ marginTop: '1rem' }}>
           <div style={{ display: 'grid', gap: '0.5rem', marginBottom: '1rem' }}>
             {items.map((item, index) => (
-              <div key={item.id} className="file-item" data-pdf-file={item.file.name} data-order={index + 1}>
-                <img src={item.previewUrl} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 4 }} />
+              <div
+                key={item.id}
+                className="file-item"
+                data-pdf-file={item.file.name}
+                data-order={index + 1}
+              >
+                <img
+                  src={item.previewUrl}
+                  alt=""
+                  style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 4 }}
+                />
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div className="file-item-name">{index + 1}. {item.file.name}</div>
+                  <div className="file-item-name">
+                    {index + 1}. {item.file.name}
+                  </div>
                   <div className="file-item-size">{formatSize(item.file.size)}</div>
                 </div>
-                <button type="button" aria-label={`Move ${item.file.name} up`} onClick={() => moveItem(index, -1)} disabled={index === 0} className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem' }}>Up</button>
-                <button type="button" aria-label={`Move ${item.file.name} down`} onClick={() => moveItem(index, 1)} disabled={index === items.length - 1} className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem' }}>Down</button>
-                <button type="button" aria-label={`Remove ${item.file.name}`} className="file-item-remove" onClick={() => handleRemove(index)}>x</button>
+                <button
+                  type="button"
+                  aria-label={`Move ${item.file.name} up`}
+                  onClick={() => moveItem(index, -1)}
+                  disabled={index === 0}
+                  className="btn btn-secondary"
+                  style={{ padding: '0.25rem 0.5rem' }}
+                >
+                  Up
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Move ${item.file.name} down`}
+                  onClick={() => moveItem(index, 1)}
+                  disabled={index === items.length - 1}
+                  className="btn btn-secondary"
+                  style={{ padding: '0.25rem 0.5rem' }}
+                >
+                  Down
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Remove ${item.file.name}`}
+                  className="file-item-remove"
+                  onClick={() => handleRemove(index)}
+                >
+                  x
+                </button>
               </div>
             ))}
           </div>
 
           {!resultUrl && (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                  gap: '1rem',
+                  marginBottom: '1rem',
+                }}
+              >
                 <div>
-                  <label htmlFor="pdf-page-size" style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>Page Size</label>
-                  <select id="pdf-page-size" data-testid="pdf-page-size" value={pageSize} onChange={(event) => { setPageSize(event.target.value as PdfPageSize); clearResult(); }} style={{ width: '100%' }}>
+                  <label
+                    htmlFor="pdf-page-size"
+                    style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      display: 'block',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
+                    Page Size
+                  </label>
+                  <select
+                    id="pdf-page-size"
+                    data-testid="pdf-page-size"
+                    value={pageSize}
+                    onChange={(event) => {
+                      setPageSize(event.target.value as PdfPageSize);
+                      clearResult();
+                    }}
+                    style={{ width: '100%' }}
+                  >
                     <option value="a4">{PDF_PAGE_SIZES.a4.label}</option>
                     <option value="letter">{PDF_PAGE_SIZES.letter.label}</option>
                     <option value="fit">Fit to Image</option>
@@ -258,8 +331,27 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
                 </div>
                 {pageSize !== 'fit' && (
                   <div>
-                    <label htmlFor="pdf-orientation" style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>Orientation</label>
-                    <select id="pdf-orientation" data-testid="pdf-orientation" value={orientation} onChange={(event) => { setOrientation(event.target.value as PdfOrientation); clearResult(); }} style={{ width: '100%' }}>
+                    <label
+                      htmlFor="pdf-orientation"
+                      style={{
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        display: 'block',
+                        marginBottom: '0.25rem',
+                      }}
+                    >
+                      Orientation
+                    </label>
+                    <select
+                      id="pdf-orientation"
+                      data-testid="pdf-orientation"
+                      value={orientation}
+                      onChange={(event) => {
+                        setOrientation(event.target.value as PdfOrientation);
+                        clearResult();
+                      }}
+                      style={{ width: '100%' }}
+                    >
                       <option value="portrait">Portrait</option>
                       <option value="landscape">Landscape</option>
                     </select>
@@ -267,16 +359,47 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
                 )}
                 {pageSize !== 'fit' && (
                   <div>
-                    <label htmlFor="pdf-margin" style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>Margin: {margin}mm</label>
-                    <input id="pdf-margin" data-testid="pdf-margin" type="range" min="0" max="30" value={margin} onChange={(event) => { setMargin(Number(event.target.value)); clearResult(); }} style={{ width: '100%' }} />
+                    <label
+                      htmlFor="pdf-margin"
+                      style={{
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        display: 'block',
+                        marginBottom: '0.25rem',
+                      }}
+                    >
+                      Margin: {margin}mm
+                    </label>
+                    <input
+                      id="pdf-margin"
+                      data-testid="pdf-margin"
+                      type="range"
+                      min="0"
+                      max="30"
+                      value={margin}
+                      onChange={(event) => {
+                        setMargin(Number(event.target.value));
+                        clearResult();
+                      }}
+                      style={{ width: '100%' }}
+                    />
                   </div>
                 )}
               </div>
               <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginBottom: '1rem' }}>
-                Images are added to the PDF in the order shown above. Transparent pixels are placed on white before PDF encoding.
+                Images are added to the PDF in the order shown above. Transparent pixels are placed
+                on white before PDF encoding.
               </p>
-              <button type="button" className="btn btn-primary" onClick={handleConvert} disabled={processing} style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}>
-                {processing ? 'Converting...' : `Convert ${items.length} image${items.length > 1 ? 's' : ''} to PDF`}
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleConvert}
+                disabled={processing}
+                style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
+              >
+                {processing
+                  ? 'Converting...'
+                  : `Convert ${items.length} image${items.length > 1 ? 's' : ''} to PDF`}
               </button>
             </>
           )}
@@ -284,23 +407,42 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
       )}
 
       {failures.map((failure) => (
-        <div key={`${failure.name}:${failure.message}`} className="status status-error" role="alert" data-pdf-error={failure.name}>
+        <div
+          key={`${failure.name}:${failure.message}`}
+          className="status status-error"
+          role="alert"
+          data-pdf-error={failure.name}
+        >
           <strong>{failure.name}:</strong> {failure.message}
         </div>
       ))}
-      {error && <div className="status status-error" role="alert">{error}</div>}
+      {error && (
+        <div className="status status-error" role="alert">
+          {error}
+        </div>
+      )}
 
       {resultUrl && (
         <div style={{ marginTop: '1.5rem' }}>
           <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Result</h3>
-          <div className="result-item" data-pdf-result data-pdf-url={resultUrl} data-pages={resultPages} data-size={resultSize}>
+          <div
+            className="result-item"
+            data-pdf-result
+            data-pdf-url={resultUrl}
+            data-pages={resultPages}
+            data-size={resultSize}
+          >
             <div className="result-info">
               <div>
                 <div className="file-item-name">converted-images.pdf</div>
-                <div className="file-item-size">{formatSize(resultSize)} - {resultPages} page{resultPages > 1 ? 's' : ''}</div>
+                <div className="file-item-size">
+                  {formatSize(resultSize)} - {resultPages} page{resultPages > 1 ? 's' : ''}
+                </div>
               </div>
             </div>
-            <button type="button" onClick={handleDownload} className="btn btn-primary">Download PDF</button>
+            <button type="button" onClick={handleDownload} className="btn btn-primary">
+              Download PDF
+            </button>
           </div>
         </div>
       )}

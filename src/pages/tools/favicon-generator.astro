@@ -6,82 +6,104 @@ import FaviconGenerator from '../../components/FaviconGenerator';
 const faqItems = [
   {
     question: 'What is a favicon?',
-    answer: 'A favicon (favorite icon) is the small image shown in browser tabs, bookmarks, and mobile home screens. It helps users identify your website visually.',
+    answer:
+      'A favicon (favorite icon) is the small image shown in browser tabs, bookmarks, and mobile home screens. It helps users identify your website visually.',
   },
   {
     question: 'What sizes does this tool generate?',
-    answer: 'We generate all standard sizes: 16x16, 32x32 (favicon), 180x180 (Apple touch icon), 192x192 and 512x512 (Android Chrome), plus a site.webmanifest file.',
+    answer:
+      'We generate all standard sizes: 16x16, 32x32 (favicon), 180x180 (Apple touch icon), 192x192 and 512x512 (Android Chrome), plus a site.webmanifest file.',
   },
   {
     question: 'Is this favicon generator free?',
-    answer: 'Yes. There is no sign-up or watermark. Practical input size is limited by browser memory and Canvas dimensions.',
+    answer:
+      'Yes. There is no sign-up or watermark. Practical input size is limited by browser memory and Canvas dimensions.',
   },
   {
     question: 'What image should I use for my favicon?',
-    answer: 'Use a simple, square image — ideally 512x512 or larger. Logos, icons, or letters work best. Avoid complex photos as favicons are displayed very small.',
+    answer:
+      'Use a simple, square image — ideally 512x512 or larger. Logos, icons, or letters work best. Avoid complex photos as favicons are displayed very small.',
   },
   {
     question: 'How do I add the favicon to my website?',
-    answer: 'After downloading the ZIP, extract the files to your website\'s root directory and add the provided HTML code to your page\'s <head> section.',
+    answer:
+      "After downloading the ZIP, extract the files to your website's root directory and add the provided HTML code to your page's <head> section.",
   },
   {
     question: 'Does this work for WordPress?',
-    answer: 'Yes. For WordPress, upload the 512x512 image as your Site Icon in Appearance > Customize > Site Identity. The other files work with custom themes.',
+    answer:
+      'Yes. For WordPress, upload the 512x512 image as your Site Icon in Appearance > Customize > Site Identity. The other files work with custom themes.',
   },
   {
     question: 'What is site.webmanifest?',
-    answer: 'It\'s a JSON file that tells browsers how to display your site when added to a mobile home screen. It\'s important for Progressive Web Apps (PWAs).',
+    answer:
+      "It's a JSON file that tells browsers how to display your site when added to a mobile home screen. It's important for Progressive Web Apps (PWAs).",
   },
   {
     question: 'Are my images uploaded to a server?',
-    answer: 'No. All processing happens entirely in your browser using the Canvas API and JSZip library. Your images never leave your device.',
+    answer:
+      'No. All processing happens entirely in your browser using the Canvas API and JSZip library. Your images never leave your device.',
   },
   {
     question: 'Can I use any image format?',
-    answer: 'JPG, PNG, and WebP are supported. Non-square images are centered with transparent padding. For best small-icon clarity, use a simple square PNG with transparency.',
+    answer:
+      'JPG, PNG, and WebP are supported. Non-square images are centered with transparent padding. For best small-icon clarity, use a simple square PNG with transparency.',
   },
   {
     question: 'Does this tool generate favicon.ico?',
-    answer: 'No. The ZIP contains five PNG icons and site.webmanifest. The provided HTML references PNG favicon files.',
+    answer:
+      'No. The ZIP contains five PNG icons and site.webmanifest. The provided HTML references PNG favicon files.',
   },
   {
     question: 'What is the recommended favicon size?',
-    answer: 'The minimum recommended size is 512x512 pixels. Larger is fine. Square images produce the best results across all generated sizes.',
+    answer:
+      'The minimum recommended size is 512x512 pixels. Larger is fine. Square images produce the best results across all generated sizes.',
   },
 ];
 
 const structuredData = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "Free Favicon Generator",
-  "description": "Generate all favicon sizes from one image. Creates 16x16, 32x32, 180x180, 192x192, 512x512 PNG icons plus webmanifest. 100% client-side.",
-  "url": "https://toolkitfree.net/tools/favicon-generator",
-  "applicationCategory": "UtilitiesApplication",
-  "operatingSystem": "Any",
-  "offers": { "@type": "Offer", "price": "0" },
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Free Favicon Generator',
+  description:
+    'Generate all favicon sizes from one image. Creates 16x16, 32x32, 180x180, 192x192, 512x512 PNG icons plus webmanifest. 100% client-side.',
+  url: 'https://toolkitfree.net/tools/favicon-generator',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0' },
 };
 
 const breadcrumbSchema = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://toolkitfree.net" },
-    { "@type": "ListItem", "position": 2, "name": "Favicon Generator", "item": "https://toolkitfree.net/tools/favicon-generator" },
-  ]
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://toolkitfree.net' },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Favicon Generator',
+      item: 'https://toolkitfree.net/tools/favicon-generator',
+    },
+  ],
 };
 ---
 
 <Layout
   title="Free Favicon Generator — Create All Sizes from One Image"
   description="Generate all favicon sizes from one image: 16x16, 32x32, Apple touch icon, Android Chrome. Download ZIP with webmanifest. HTML code included. Free, no upload needed."
-  structuredData={[structuredData, {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faqItems.map((item) => ({
-      "@type": "Question", "name": item.question,
-      "acceptedAnswer": { "@type": "Answer", "text": item.answer },
-    })),
-  }, breadcrumbSchema]}
+  structuredData={[
+    structuredData,
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: { '@type': 'Answer', text: item.answer },
+      })),
+    },
+    breadcrumbSchema,
+  ]}
 >
   <div class="tool-layout">
     <div class="tool-content">
@@ -127,14 +149,16 @@ const breadcrumbSchema = {
 
       <section class="faq-section">
         <h2>Frequently Asked Questions</h2>
-        {faqItems.map((item) => (
-          <div class="faq-item">
-            <details>
-              <summary class="faq-question">{item.question}</summary>
-              <div class="faq-answer">{item.answer}</div>
-            </details>
-          </div>
-        ))}
+        {
+          faqItems.map((item) => (
+            <div class="faq-item">
+              <details>
+                <summary class="faq-question">{item.question}</summary>
+                <div class="faq-answer">{item.answer}</div>
+              </details>
+            </div>
+          ))
+        }
       </section>
 
       <ToolDirectory currentId="favicon-generator" mode="related" />

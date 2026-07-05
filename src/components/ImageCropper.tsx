@@ -89,21 +89,24 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
     };
   }, [updateDisplayScale]);
 
-  const handleFiles = useCallback((newFiles: File[]) => {
-    const nextFile = newFiles[0];
-    if (!nextFile) return;
-    try {
-      validateImageFile(nextFile);
-      clearResult();
-      setFile(nextFile);
-      setImageBounds(EMPTY_BOUNDS);
-      setCropRect(EMPTY_CROP);
-      setImageUrl(objectUrls.replace('cropper:preview', nextFile));
-      setError(null);
-    } catch (fileError) {
-      setError(getImageProcessingErrorMessage(fileError));
-    }
-  }, [clearResult, objectUrls]);
+  const handleFiles = useCallback(
+    (newFiles: File[]) => {
+      const nextFile = newFiles[0];
+      if (!nextFile) return;
+      try {
+        validateImageFile(nextFile);
+        clearResult();
+        setFile(nextFile);
+        setImageBounds(EMPTY_BOUNDS);
+        setCropRect(EMPTY_CROP);
+        setImageUrl(objectUrls.replace('cropper:preview', nextFile));
+        setError(null);
+      } catch (fileError) {
+        setError(getImageProcessingErrorMessage(fileError));
+      }
+    },
+    [clearResult, objectUrls]
+  );
 
   const handleRemove = useCallback(() => {
     cleanupDragRef.current?.();
@@ -153,9 +156,10 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
       const scale = displayScale || 1;
       const dx = (moveEvent.clientX - drag.startX) / scale;
       const dy = (moveEvent.clientY - drag.startY) / scale;
-      const nextRect = drag.handle === 'move'
-        ? moveCropRect(drag.startRect, dx, dy, imageBounds)
-        : resizeCropRect(drag.startRect, drag.handle, dx, dy, imageBounds, aspectRatio);
+      const nextRect =
+        drag.handle === 'move'
+          ? moveCropRect(drag.startRect, dx, dy, imageBounds)
+          : resizeCropRect(drag.startRect, drag.handle, dx, dy, imageBounds, aspectRatio);
       setCropRect(nextRect);
       clearResult();
     };
@@ -220,7 +224,11 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
         canvas.width,
         canvas.height
       );
-      const blob = await exportCanvas(canvas, format, format === 'image/png' ? undefined : quality / 100);
+      const blob = await exportCanvas(
+        canvas,
+        format,
+        format === 'image/png' ? undefined : quality / 100
+      );
       const baseName = file.name.replace(/\.[^.]+$/, '') || 'cropped-image';
       const outputName = `${baseName}-cropped.${OUTPUT_FORMATS[format].extension}`;
       const url = objectUrls.replace('cropper:result', blob);
@@ -265,20 +273,53 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
         />
       ) : (
         <div>
-          <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%', marginBottom: '1rem', userSelect: 'none', touchAction: 'none' }}>
-            <img ref={imageRef} src={imageUrl} onLoad={handleImageLoad} alt="Crop preview" style={{ display: 'block', maxWidth: '100%', height: 'auto' }} draggable={false} />
+          <div
+            style={{
+              position: 'relative',
+              display: 'inline-block',
+              maxWidth: '100%',
+              marginBottom: '1rem',
+              userSelect: 'none',
+              touchAction: 'none',
+            }}
+          >
+            <img
+              ref={imageRef}
+              src={imageUrl}
+              onLoad={handleImageLoad}
+              alt="Crop preview"
+              style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
+              draggable={false}
+            />
             {cropRect.width > 0 && (
               <div style={{ position: 'absolute', inset: 0 }}>
-                <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} aria-hidden="true">
+                <svg
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    pointerEvents: 'none',
+                  }}
+                  aria-hidden="true"
+                >
                   <defs>
                     <mask id="crop-mask">
                       <rect width="100%" height="100%" fill="white" />
-                      <rect x={scaled.left} y={scaled.top} width={scaled.width} height={scaled.height} fill="black" />
+                      <rect
+                        x={scaled.left}
+                        y={scaled.top}
+                        width={scaled.width}
+                        height={scaled.height}
+                        fill="black"
+                      />
                     </mask>
                   </defs>
                   <rect width="100%" height="100%" fill="rgba(0,0,0,0.5)" mask="url(#crop-mask)" />
                 </svg>
 
+                {/* The 2D crop region is intentionally keyboard focusable as one composite control. */}
+                {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
                 <div
                   data-testid="crop-box"
                   role="group"
@@ -301,10 +342,46 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                   }}
                   onPointerDown={(event) => handlePointerDown('move', event)}
                 >
-                  <div style={{ position: 'absolute', left: '33.33%', top: 0, width: 1, height: '100%', background: 'rgba(255,255,255,0.4)' }} />
-                  <div style={{ position: 'absolute', left: '66.66%', top: 0, width: 1, height: '100%', background: 'rgba(255,255,255,0.4)' }} />
-                  <div style={{ position: 'absolute', top: '33.33%', left: 0, height: 1, width: '100%', background: 'rgba(255,255,255,0.4)' }} />
-                  <div style={{ position: 'absolute', top: '66.66%', left: 0, height: 1, width: '100%', background: 'rgba(255,255,255,0.4)' }} />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '33.33%',
+                      top: 0,
+                      width: 1,
+                      height: '100%',
+                      background: 'rgba(255,255,255,0.4)',
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '66.66%',
+                      top: 0,
+                      width: 1,
+                      height: '100%',
+                      background: 'rgba(255,255,255,0.4)',
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '33.33%',
+                      left: 0,
+                      height: 1,
+                      width: '100%',
+                      background: 'rgba(255,255,255,0.4)',
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '66.66%',
+                      left: 0,
+                      height: 1,
+                      width: '100%',
+                      background: 'rgba(255,255,255,0.4)',
+                    }}
+                  />
 
                   {(['nw', 'ne', 'sw', 'se'] as const).map((position) => {
                     const positionStyles: Record<string, React.CSSProperties> = {
@@ -313,78 +390,272 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                       sw: { bottom: 0, left: 0, cursor: 'nesw-resize' },
                       se: { bottom: 0, right: 0, cursor: 'nwse-resize' },
                     };
-                    return <div key={position} data-crop-handle={position} aria-hidden="true" onPointerDown={(event) => handlePointerDown(position, event)} style={{ position: 'absolute', width: 14, height: 14, background: '#fff', border: '2px solid #2563eb', borderRadius: 2, touchAction: 'none', ...positionStyles[position] }} />;
+                    return (
+                      <div
+                        key={position}
+                        data-crop-handle={position}
+                        aria-hidden="true"
+                        onPointerDown={(event) => handlePointerDown(position, event)}
+                        style={{
+                          position: 'absolute',
+                          width: 14,
+                          height: 14,
+                          background: '#fff',
+                          border: '2px solid #2563eb',
+                          borderRadius: 2,
+                          touchAction: 'none',
+                          ...positionStyles[position],
+                        }}
+                      />
+                    );
                   })}
 
                   {(['n', 's', 'e', 'w'] as const).map((position) => {
                     const positionStyles: Record<string, React.CSSProperties> = {
-                      n: { top: 0, left: '50%', marginLeft: -18, width: 36, height: 12, cursor: 'ns-resize' },
-                      s: { bottom: 0, left: '50%', marginLeft: -18, width: 36, height: 12, cursor: 'ns-resize' },
-                      e: { right: 0, top: '50%', marginTop: -18, width: 12, height: 36, cursor: 'ew-resize' },
-                      w: { left: 0, top: '50%', marginTop: -18, width: 12, height: 36, cursor: 'ew-resize' },
+                      n: {
+                        top: 0,
+                        left: '50%',
+                        marginLeft: -18,
+                        width: 36,
+                        height: 12,
+                        cursor: 'ns-resize',
+                      },
+                      s: {
+                        bottom: 0,
+                        left: '50%',
+                        marginLeft: -18,
+                        width: 36,
+                        height: 12,
+                        cursor: 'ns-resize',
+                      },
+                      e: {
+                        right: 0,
+                        top: '50%',
+                        marginTop: -18,
+                        width: 12,
+                        height: 36,
+                        cursor: 'ew-resize',
+                      },
+                      w: {
+                        left: 0,
+                        top: '50%',
+                        marginTop: -18,
+                        width: 12,
+                        height: 36,
+                        cursor: 'ew-resize',
+                      },
                     };
-                    return <div key={position} data-crop-handle={position} aria-hidden="true" onPointerDown={(event) => handlePointerDown(position, event)} style={{ position: 'absolute', background: 'rgba(255,255,255,0.9)', border: '1px solid #2563eb', borderRadius: 2, touchAction: 'none', ...positionStyles[position] }} />;
+                    return (
+                      <div
+                        key={position}
+                        data-crop-handle={position}
+                        aria-hidden="true"
+                        onPointerDown={(event) => handlePointerDown(position, event)}
+                        style={{
+                          position: 'absolute',
+                          background: 'rgba(255,255,255,0.9)',
+                          border: '1px solid #2563eb',
+                          borderRadius: 2,
+                          touchAction: 'none',
+                          ...positionStyles[position],
+                        }}
+                      />
+                    );
                   })}
                 </div>
               </div>
             )}
           </div>
 
-          <p id="crop-keyboard-instructions" style={{ fontSize: '0.8125rem', color: '#6b7280', marginBottom: '0.75rem' }}>
-            Focus the crop selection and use arrow keys to move it. Hold Alt while pressing an arrow key to resize, or Shift for larger steps.
+          <p
+            id="crop-keyboard-instructions"
+            style={{ fontSize: '0.8125rem', color: '#6b7280', marginBottom: '0.75rem' }}
+          >
+            Focus the crop selection and use arrow keys to move it. Hold Alt while pressing an arrow
+            key to resize, or Shift for larger steps.
           </p>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>{file?.name} - {imageBounds.width}x{imageBounds.height} - {file ? formatSize(file.size) : ''}</span>
-            <button type="button" onClick={handleRemove} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.875rem' }}>Remove</button>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '1rem',
+              marginBottom: '1rem',
+            }}
+          >
+            <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+              {file?.name} - {imageBounds.width}x{imageBounds.height} -{' '}
+              {file ? formatSize(file.size) : ''}
+            </span>
+            <button
+              type="button"
+              onClick={handleRemove}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#ef4444',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              Remove
+            </button>
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end', marginBottom: '1rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '0.75rem',
+              alignItems: 'flex-end',
+              marginBottom: '1rem',
+            }}
+          >
             <div>
-              <span style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>Aspect Ratio</span>
+              <span
+                style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  display: 'block',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                Aspect Ratio
+              </span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
                 {Object.entries(CROP_ASPECT_PRESETS).map(([key, value]) => (
-                  <button key={key} type="button" data-crop-aspect-option={key} onClick={() => handleAspectChange(key as CropAspectPresetKey)} className="btn" aria-pressed={aspectPreset === key} style={{ padding: '0.375rem 0.75rem', fontSize: '0.8125rem', background: aspectPreset === key ? '#2563eb' : '#f3f4f6', color: aspectPreset === key ? '#fff' : '#374151', border: `1px solid ${aspectPreset === key ? '#2563eb' : '#e5e7eb'}`, borderRadius: 6, cursor: 'pointer' }}>
+                  <button
+                    key={key}
+                    type="button"
+                    data-crop-aspect-option={key}
+                    onClick={() => handleAspectChange(key as CropAspectPresetKey)}
+                    className="btn"
+                    aria-pressed={aspectPreset === key}
+                    style={{
+                      padding: '0.375rem 0.75rem',
+                      fontSize: '0.8125rem',
+                      background: aspectPreset === key ? '#2563eb' : '#f3f4f6',
+                      color: aspectPreset === key ? '#fff' : '#374151',
+                      border: `1px solid ${aspectPreset === key ? '#2563eb' : '#e5e7eb'}`,
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                    }}
+                  >
                     {value.label}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <label htmlFor="crop-format" style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>Format</label>
-              <select id="crop-format" data-testid="crop-format" value={format} onChange={(event) => { setFormat(event.target.value as ImageOutputMimeType); clearResult(); }} style={{ padding: '0.375rem', border: '1px solid #e5e7eb', borderRadius: 6 }}>
-                {Object.entries(OUTPUT_FORMATS).map(([mimeType, value]) => <option key={mimeType} value={mimeType}>{value.label}</option>)}
+              <label
+                htmlFor="crop-format"
+                style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  display: 'block',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                Format
+              </label>
+              <select
+                id="crop-format"
+                data-testid="crop-format"
+                value={format}
+                onChange={(event) => {
+                  setFormat(event.target.value as ImageOutputMimeType);
+                  clearResult();
+                }}
+                style={{ padding: '0.375rem', border: '1px solid #e5e7eb', borderRadius: 6 }}
+              >
+                {Object.entries(OUTPUT_FORMATS).map(([mimeType, value]) => (
+                  <option key={mimeType} value={mimeType}>
+                    {value.label}
+                  </option>
+                ))}
               </select>
             </div>
             {format !== 'image/png' && (
               <div>
-                <label htmlFor="crop-quality" style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>Quality: {quality}%</label>
-                <input id="crop-quality" data-testid="crop-quality" type="range" min="10" max="100" value={quality} onChange={(event) => { setQuality(Number(event.target.value)); clearResult(); }} style={{ width: 120 }} />
+                <label
+                  htmlFor="crop-quality"
+                  style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    display: 'block',
+                    marginBottom: '0.25rem',
+                  }}
+                >
+                  Quality: {quality}%
+                </label>
+                <input
+                  id="crop-quality"
+                  data-testid="crop-quality"
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={quality}
+                  onChange={(event) => {
+                    setQuality(Number(event.target.value));
+                    clearResult();
+                  }}
+                  style={{ width: 120 }}
+                />
               </div>
             )}
-            <div data-testid="crop-size" style={{ fontSize: '0.8125rem', color: '#6b7280', marginLeft: 'auto' }}>Crop: {Math.round(cropRect.width)}x{Math.round(cropRect.height)}</div>
+            <div
+              data-testid="crop-size"
+              style={{ fontSize: '0.8125rem', color: '#6b7280', marginLeft: 'auto' }}
+            >
+              Crop: {Math.round(cropRect.width)}x{Math.round(cropRect.height)}
+            </div>
           </div>
 
-          <button type="button" className="btn btn-primary" onClick={handleCrop} disabled={processing || cropRect.width < 1 || cropRect.height < 1} style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleCrop}
+            disabled={processing || cropRect.width < 1 || cropRect.height < 1}
+            style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
+          >
             {processing ? 'Cropping...' : 'Crop Image'}
           </button>
         </div>
       )}
 
-      {processing && <div className="visually-hidden" role="status" aria-live="polite">Cropping image.</div>}
-      {error && <div className="status status-error" role="alert">{error}</div>}
+      {processing && (
+        <div className="visually-hidden" role="status" aria-live="polite">
+          Cropping image.
+        </div>
+      )}
+      {error && (
+        <div className="status status-error" role="alert">
+          {error}
+        </div>
+      )}
       {result && (
         <div style={{ marginTop: '1.5rem' }}>
           <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Result</h3>
-          <div className="result-item" data-crop-result={result.name} data-width={result.width} data-height={result.height}>
+          <div
+            className="result-item"
+            data-crop-result={result.name}
+            data-width={result.width}
+            data-height={result.height}
+          >
             <div className="result-info">
               <img src={result.url} alt={result.name} className="result-preview" />
               <div>
                 <div className="file-item-name">{result.name}</div>
-                <div className="file-item-size">{result.width}x{result.height} - {formatSize(result.newSize)}</div>
+                <div className="file-item-size">
+                  {result.width}x{result.height} - {formatSize(result.newSize)}
+                </div>
               </div>
             </div>
-            <button type="button" onClick={handleDownload} className="btn btn-primary">Download</button>
+            <button type="button" onClick={handleDownload} className="btn btn-primary">
+              Download
+            </button>
           </div>
         </div>
       )}

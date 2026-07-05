@@ -20,12 +20,21 @@ export default function InputBudgetNotice({
       data-input-budget={assessment.level}
       style={{ textAlign: 'left' }}
     >
-      <strong>{blocked ? 'This selection is too large to process safely.' : 'This selection may use substantial memory.'}</strong>
+      <strong>
+        {blocked
+          ? 'This selection is too large to process safely.'
+          : 'This selection may use substantial memory.'}
+      </strong>
       <ul style={{ margin: '0.5rem 0 0.75rem 1.25rem' }}>
-        {assessment.issues.map((issue) => <li key={issue.code}>{issue.message}</li>)}
+        {assessment.issues.map((issue) => (
+          <li key={issue.code}>{issue.message}</li>
+        ))}
       </ul>
       <p style={{ marginBottom: '0.75rem' }}>
-        Choose fewer files{isResizer ? ' or use smaller output dimensions' : ', use the Image Resizer to shrink large images first'}
+        Choose fewer files
+        {isResizer
+          ? ' or use smaller output dimensions'
+          : ', use the Image Resizer to shrink large images first'}
         {blocked ? '.' : ', or continue and accept the risk of a slow or unresponsive tab.'}
       </p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>

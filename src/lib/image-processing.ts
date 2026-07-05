@@ -1,8 +1,4 @@
-export const SUPPORTED_IMAGE_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-] as const;
+export const SUPPORTED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 
 export type SupportedImageMimeType = (typeof SUPPORTED_IMAGE_MIME_TYPES)[number];
 export type ImageOutputMimeType = SupportedImageMimeType;
@@ -103,12 +99,7 @@ export function validateImageDimensions(
   height: number,
   options: ValidateDimensionsOptions = {}
 ): ImageDimensions {
-  if (
-    !Number.isSafeInteger(width) ||
-    !Number.isSafeInteger(height) ||
-    width <= 0 ||
-    height <= 0
-  ) {
+  if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width <= 0 || height <= 0) {
     throw new ImageProcessingError(
       'INVALID_DIMENSIONS',
       'The decoded image has invalid dimensions.',
@@ -237,11 +228,7 @@ export async function loadImage(
 }
 
 interface CanvasExportLike {
-  toBlob(
-    callback: (blob: Blob | null) => void,
-    type?: string,
-    quality?: number
-  ): void;
+  toBlob(callback: (blob: Blob | null) => void, type?: string, quality?: number): void;
 }
 
 export async function exportCanvas(
@@ -280,6 +267,8 @@ export function getCanvas2dContext(canvas: HTMLCanvasElement): CanvasRenderingCo
 
 export function normalizeDownloadFilename(filename: string): string {
   const normalized = filename
+    // Control characters and filesystem-reserved punctuation are unsafe in downloads.
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001f<>:"/\\|?*]+/g, '-')
     .replace(/\s+/g, ' ')
     .replace(/^[.-]+/, '')

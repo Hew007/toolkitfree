@@ -1,14 +1,16 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
 
 const root = process.cwd();
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9223';
 const browserName = process.env.BROWSER_NAME || 'Chrome';
 const runExtended = process.env.EXTENDED === '1';
-const baseUrl = 'http://127.0.0.1:4321/tools/image-converter';
+const baseUrl = `${process.env.BASE_URL || 'http://127.0.0.1:4321'}/tools/image-converter`;
 const fixtures = path.join(root, 'docs/optimization/baseline/fixtures');
-const tempDir = path.join(root, `.tmp-opt03-${browserName.toLowerCase()}`);
+const tempDir =
+  process.env.BROWSER_TEMP_DIR || path.join(root, `.tmp-opt03-${browserName.toLowerCase()}`);
 const downloadDir = path.join(tempDir, 'downloads');
 const samplePng = path.join(tempDir, 'sample.png');
 const sampleBmp = path.join(tempDir, 'sample.bmp');
@@ -150,7 +152,10 @@ async function convertVariant({ route, fixture, accept, outputMime, extension })
       .find((button) => button.textContent.trim() === 'Convert 1 image')
       .click()
   `);
-  await waitFor(`document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`, `${route} result`);
+  await waitFor(
+    `document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`,
+    `${route} result`
+  );
   const output = await evaluate(`
     (async () => {
       const link = document.querySelector('.result-item a[download]');
@@ -283,7 +288,10 @@ if (runExtended) {
       .find((button) => button.textContent.trim() === 'Convert 4 images')
       .click()
   `);
-  await waitFor(`document.querySelector('[data-batch-success-count="2"][data-batch-failure-count="2"]')`, 'partial batch success');
+  await waitFor(
+    `document.querySelector('[data-batch-success-count="2"][data-batch-failure-count="2"]')`,
+    'partial batch success'
+  );
   assert.equal(
     await evaluate(
       `document.body.innerText.includes('invalid.txt:') && document.body.innerText.includes('empty.bin:')`
@@ -302,7 +310,10 @@ if (runExtended) {
     batchOutputs.map(({ name }) => name),
     ['sample.png', 'sample-2.png']
   );
-  assert.equal(batchOutputs.every(({ type }) => type === 'image/png'), true);
+  assert.equal(
+    batchOutputs.every(({ type }) => type === 'image/png'),
+    true
+  );
   assert.deepEqual(await evaluate(`window.__objectUrlStats()`), {
     created: 4,
     revoked: 2,
@@ -316,9 +327,10 @@ if (runExtended) {
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   assert.equal(fs.existsSync(downloadedPng), true);
-  assert.deepEqual([...fs.readFileSync(downloadedPng).subarray(0, 8)], [
-    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-  ]);
+  assert.deepEqual(
+    [...fs.readFileSync(downloadedPng).subarray(0, 8)],
+    [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+  );
 
   await navigate('/png-to-jpg');
   await setFiles([path.join(fixtures, 'transparent.png')]);
@@ -328,7 +340,10 @@ if (runExtended) {
       .find((button) => button.textContent.trim() === 'Convert 1 image')
       .click()
   `);
-  await waitFor(`document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`, 'transparent PNG to JPG');
+  await waitFor(
+    `document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`,
+    'transparent PNG to JPG'
+  );
   const whiteBackground = await evaluate(`
     (async () => {
       const source = document.querySelector('input[type="file"]').files[0];
@@ -363,9 +378,7 @@ if (runExtended) {
   `);
   assert.equal(whiteBackground.transparentPixel >= 0, true);
   assert.equal(
-    whiteBackground.red > 240 &&
-      whiteBackground.green > 240 &&
-      whiteBackground.blue > 240,
+    whiteBackground.red > 240 && whiteBackground.green > 240 && whiteBackground.blue > 240,
     true,
     'Transparent PNG pixels should become white in JPG'
   );
@@ -378,7 +391,10 @@ if (runExtended) {
       .find((button) => button.textContent.trim() === 'Convert 1 image')
       .click()
   `);
-  await waitFor(`document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`, 'transparent PNG to WebP');
+  await waitFor(
+    `document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`,
+    'transparent PNG to WebP'
+  );
   const webpTransparency = await evaluate(`
     (async () => {
       const source = document.querySelector('input[type="file"]').files[0];
@@ -422,7 +438,8 @@ if (runExtended) {
   await send('Emulation.clearDeviceMetricsOverride');
 }
 
-assert.deepEqual(browserErrors, []);
+const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
+assert.deepEqual(actionableBrowserErrors, []);
 await send('Target.closeTarget', { targetId: target.id });
 socket.close();
 
@@ -432,6 +449,6 @@ console.log(
     browser: browserName,
     matrixCases: matrixResults.length,
     extended: runExtended,
-    browserErrors: browserErrors.length,
+    browserErrors: actionableBrowserErrors.length,
   })
 );

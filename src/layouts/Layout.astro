@@ -12,167 +12,178 @@ interface Props {
   noindex?: boolean;
 }
 
-const {
-  title,
-  description,
-  canonical,
-  ogImage,
-  structuredData,
-  noindex = false,
-} = Astro.props;
+const { title, description, canonical, ogImage, structuredData, noindex = false } = Astro.props;
 
 const siteName = 'ToolkitFree';
 const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
 const canonicalUrl = canonical || `${SITE_URL}${Astro.url.pathname}`;
 const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
-const isCurrent = (href: string) =>
-  currentPath === href || currentPath.startsWith(`${href}/`);
+const isCurrent = (href: string) => currentPath === href || currentPath.startsWith(`${href}/`);
 
 const orgSchema = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "ToolkitFree",
-  "url": "https://toolkitfree.net",
-  "logo": "https://toolkitfree.net/favicon.svg",
-  "description": "Free online image tools for converting, compressing, resizing, and editing images in your browser."
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'ToolkitFree',
+  url: 'https://toolkitfree.net',
+  logo: 'https://toolkitfree.net/favicon.svg',
+  description:
+    'Free online image tools for converting, compressing, resizing, and editing images in your browser.',
 };
 ---
 
 <!doctype html>
 <html lang={SITE_LOCALE}>
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content={description} />
-  {noindex && <meta name="robots" content="noindex, follow" />}
-  <title>{fullTitle}</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    <title>{fullTitle}</title>
 
-  <link rel="canonical" href={canonicalUrl} />
+    <link rel="canonical" href={canonicalUrl} />
 
-  <meta property="og:title" content={fullTitle} />
-  <meta property="og:description" content={description} />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content={siteName} />
-  <meta property="og:url" content={canonicalUrl} />
-  {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:url" content={canonicalUrl} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
 
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content={fullTitle} />
-  <meta name="twitter:description" content={description} />
-  {ogImage && <meta name="twitter:image" content={ogImage} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
 
-  <meta name="yandex-verification" content="a605e0322d8c1403" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="yandex-verification" content="a605e0322d8c1403" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
-  <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
-  {structuredData && (
-    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
-  )}
+    <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
+    {
+      structuredData && (
+        <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+      )
+    }
 
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6148409427275044" crossorigin="anonymous"></script>
-</head>
-<body>
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6148409427275044"
+      crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
 
-  <header class="site-header">
-    <div class="container">
-      <a href="/" class="site-logo">{siteName}</a>
-      <button
-        class="mobile-nav-toggle"
-        type="button"
-        aria-expanded="false"
-        aria-controls="primary-navigation"
-      >
-        Menu
-      </button>
-      <nav id="primary-navigation" class="site-nav" aria-label="Primary navigation">
-        {navigationGroups.map((group) => (
-          <details class="nav-menu-group">
-            <summary>{group.label}</summary>
-            <div class="nav-menu-panel">
-              {group.links.map((link) => (
-                <a href={link.href} data-tool-id={link.id} aria-current={isCurrent(link.href) ? 'page' : undefined}>
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          </details>
-        ))}
-      </nav>
-    </div>
-  </header>
-
-  <main id="main-content" class="site-main" tabindex="-1">
-    <div class="container">
-      <slot />
-    </div>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-links" data-tool-directory="footer">
-          {toolRegistry.map((tool) => (
-            <a href={tool.href} data-tool-id={tool.id}>{tool.name}</a>
-          ))}
-        </div>
-        <div class="footer-links">
-          <a href="/about">About</a>
-          <a href="/terms">Terms</a>
-          <a href="/privacy-policy">Privacy</a>
-          <a href="/contact">Contact</a>
-        </div>
-        <p class="footer-copy">&copy; {new Date().getFullYear()} {siteName}. All rights reserved.</p>
+    <header class="site-header">
+      <div class="container">
+        <a href="/" class="site-logo">{siteName}</a>
+        <button
+          class="mobile-nav-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="primary-navigation"
+        >
+          Menu
+        </button>
+        <nav id="primary-navigation" class="site-nav" aria-label="Primary navigation">
+          {
+            navigationGroups.map((group) => (
+              <details class="nav-menu-group">
+                <summary>{group.label}</summary>
+                <div class="nav-menu-panel">
+                  {group.links.map((link) => (
+                    <a
+                      href={link.href}
+                      data-tool-id={link.id}
+                      aria-current={isCurrent(link.href) ? 'page' : undefined}
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))
+          }
+        </nav>
       </div>
-    </div>
-  </footer>
+    </header>
 
-  <script>
-    const header = document.querySelector<HTMLElement>('.site-header');
-    const toggle = document.querySelector<HTMLButtonElement>('.mobile-nav-toggle');
-    const navigation = document.querySelector<HTMLElement>('#primary-navigation');
-    const menuGroups = [...document.querySelectorAll<HTMLDetailsElement>('.nav-menu-group')];
+    <main id="main-content" class="site-main" tabindex="-1">
+      <div class="container">
+        <slot />
+      </div>
+    </main>
 
-    const closeNavigation = (returnFocus = false) => {
-      navigation?.removeAttribute('data-open');
-      toggle?.setAttribute('aria-expanded', 'false');
-      menuGroups.forEach((group) => group.removeAttribute('open'));
-      if (returnFocus) toggle?.focus();
-    };
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-links" data-tool-directory="footer">
+            {
+              toolRegistry.map((tool) => (
+                <a href={tool.href} data-tool-id={tool.id}>
+                  {tool.name}
+                </a>
+              ))
+            }
+          </div>
+          <div class="footer-links">
+            <a href="/about">About</a>
+            <a href="/terms">Terms</a>
+            <a href="/privacy-policy">Privacy</a>
+            <a href="/contact">Contact</a>
+          </div>
+          <p class="footer-copy">
+            &copy; {new Date().getFullYear()}
+            {siteName}. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
 
-    toggle?.addEventListener('click', () => {
-      const opening = toggle.getAttribute('aria-expanded') !== 'true';
-      toggle.setAttribute('aria-expanded', String(opening));
-      navigation?.toggleAttribute('data-open', opening);
-      if (opening) navigation?.querySelector<HTMLElement>('summary')?.focus();
-    });
+    <script>
+      const header = document.querySelector<HTMLElement>('.site-header');
+      const toggle = document.querySelector<HTMLButtonElement>('.mobile-nav-toggle');
+      const navigation = document.querySelector<HTMLElement>('#primary-navigation');
+      const menuGroups = [...document.querySelectorAll<HTMLDetailsElement>('.nav-menu-group')];
 
-    menuGroups.forEach((group) => {
-      group.addEventListener('toggle', () => {
-        if (!group.open) return;
-        menuGroups.forEach((otherGroup) => {
-          if (otherGroup !== group) otherGroup.removeAttribute('open');
+      const closeNavigation = (returnFocus = false) => {
+        navigation?.removeAttribute('data-open');
+        toggle?.setAttribute('aria-expanded', 'false');
+        menuGroups.forEach((group) => group.removeAttribute('open'));
+        if (returnFocus) toggle?.focus();
+      };
+
+      toggle?.addEventListener('click', () => {
+        const opening = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', String(opening));
+        navigation?.toggleAttribute('data-open', opening);
+        if (opening) navigation?.querySelector<HTMLElement>('summary')?.focus();
+      });
+
+      menuGroups.forEach((group) => {
+        group.addEventListener('toggle', () => {
+          if (!group.open) return;
+          menuGroups.forEach((otherGroup) => {
+            if (otherGroup !== group) otherGroup.removeAttribute('open');
+          });
         });
       });
-    });
 
-    navigation?.querySelectorAll('a').forEach((link) => {
-      link.addEventListener('click', () => closeNavigation());
-    });
+      navigation?.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => closeNavigation());
+      });
 
-    document.addEventListener('click', (event) => {
-      if (header && !header.contains(event.target as Node)) closeNavigation();
-    });
+      document.addEventListener('click', (event) => {
+        if (header && !header.contains(event.target as Node)) closeNavigation();
+      });
 
-    document.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape') return;
-      const openGroup = menuGroups.find((group) => group.open);
-      if (toggle?.getAttribute('aria-expanded') === 'true') closeNavigation(true);
-      else if (openGroup) {
-        openGroup.removeAttribute('open');
-        openGroup.querySelector<HTMLElement>('summary')?.focus();
-      }
-    });
-  </script>
-</body>
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        const openGroup = menuGroups.find((group) => group.open);
+        if (toggle?.getAttribute('aria-expanded') === 'true') closeNavigation(true);
+        else if (openGroup) {
+          openGroup.removeAttribute('open');
+          openGroup.querySelector<HTMLElement>('summary')?.focus();
+        }
+      });
+    </script>
+  </body>
 </html>

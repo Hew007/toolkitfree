@@ -63,7 +63,9 @@ export default function QrPreview({
 
     render();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [data, fgColor, bgColor, dotStyle, errorCorrectionLevel, logoImage, logoSize]);
 
   const handleDownload = (ext: 'png' | 'svg') => {
@@ -90,16 +92,41 @@ export default function QrPreview({
       />
       {data && (
         <>
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', marginBottom: '0.5rem' }}>
-            <button type="button" className="btn btn-primary" disabled={!downloadEnabled} onClick={() => handleDownload('png')}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '0.75rem',
+              justifyContent: 'center',
+              marginBottom: '0.5rem',
+            }}
+          >
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={!downloadEnabled}
+              onClick={() => handleDownload('png')}
+            >
               Download PNG
             </button>
-            <button type="button" className="btn btn-secondary" disabled={!downloadEnabled} onClick={() => handleDownload('svg')}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={!downloadEnabled}
+              onClick={() => handleDownload('svg')}
+            >
               Download SVG
             </button>
           </div>
-          <p style={{ fontSize: '0.8rem', color: downloadEnabled ? '#9ca3af' : '#b91c1c', margin: 0 }}>
-            {downloadEnabled ? 'Scan with your phone camera to test' : 'Downloads are disabled until color contrast is improved.'}
+          <p
+            style={{
+              fontSize: '0.8rem',
+              color: downloadEnabled ? '#9ca3af' : '#b91c1c',
+              margin: 0,
+            }}
+          >
+            {downloadEnabled
+              ? 'Scan with your phone camera to test'
+              : 'Downloads are disabled until color contrast is improved.'}
           </p>
         </>
       )}

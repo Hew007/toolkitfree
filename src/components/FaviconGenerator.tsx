@@ -41,23 +41,26 @@ export default function FaviconGenerator() {
     objectUrls.revoke('zip');
   }, [objectUrls]);
 
-  const handleFiles = useCallback((newFiles: File[]) => {
-    const f = newFiles[0];
-    if (!f) return;
+  const handleFiles = useCallback(
+    (newFiles: File[]) => {
+      const f = newFiles[0];
+      if (!f) return;
 
-    try {
-      validateImageFile(f);
-      clearGeneratedUrls();
-      setFile(f);
-      setIcons([]);
-      setZipUrl(null);
-      setZipSize(0);
-      setError(null);
-      setPreviewUrl(objectUrls.replace('preview', f));
-    } catch (err) {
-      setError(getImageProcessingErrorMessage(err));
-    }
-  }, [clearGeneratedUrls, objectUrls]);
+      try {
+        validateImageFile(f);
+        clearGeneratedUrls();
+        setFile(f);
+        setIcons([]);
+        setZipUrl(null);
+        setZipSize(0);
+        setError(null);
+        setPreviewUrl(objectUrls.replace('preview', f));
+      } catch (err) {
+        setError(getImageProcessingErrorMessage(err));
+      }
+    },
+    [clearGeneratedUrls, objectUrls]
+  );
 
   const handleRemove = useCallback(() => {
     objectUrls.revokeAll();
@@ -165,35 +168,74 @@ export default function FaviconGenerator() {
           {/* Preview */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
             {previewUrl && (
-              <img src={previewUrl} alt="Source" style={{ width: 80, height: 80, objectFit: 'contain', border: '1px solid #e5e7eb', borderRadius: 8 }} />
+              <img
+                src={previewUrl}
+                alt="Source"
+                style={{
+                  width: 80,
+                  height: 80,
+                  objectFit: 'contain',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 8,
+                }}
+              />
             )}
             <div>
               <div style={{ fontWeight: 500 }}>{file.name}</div>
               <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>{formatSize(file.size)}</div>
             </div>
-            <button onClick={handleRemove} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.875rem' }}>
+            <button
+              onClick={handleRemove}
+              style={{
+                marginLeft: 'auto',
+                background: 'none',
+                border: 'none',
+                color: '#ef4444',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
               Remove
             </button>
           </div>
 
-          <button className="btn btn-primary" onClick={generateFavicons} disabled={processing} style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}>
+          <button
+            className="btn btn-primary"
+            onClick={generateFavicons}
+            disabled={processing}
+            style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
+          >
             {processing ? 'Generating...' : 'Generate Favicons'}
           </button>
           <p style={{ marginTop: '0.5rem', color: '#6b7280', fontSize: '0.8125rem' }}>
-            Non-square images are centered with transparent padding. This tool creates PNG icons, not an .ico file.
+            Non-square images are centered with transparent padding. This tool creates PNG icons,
+            not an .ico file.
           </p>
         </div>
       )}
 
-      {processing && <div className="visually-hidden" role="status" aria-live="polite">Generating favicon files.</div>}
-      {error && <div className="status status-error" role="alert">{error}</div>}
+      {processing && (
+        <div className="visually-hidden" role="status" aria-live="polite">
+          Generating favicon files.
+        </div>
+      )}
+      {error && (
+        <div className="status status-error" role="alert">
+          {error}
+        </div>
+      )}
 
       {icons.length > 0 && (
         <div style={{ marginTop: '1.5rem' }}>
           <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Generated Icons</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
             {icons.map((icon) => (
-              <div key={icon.name} data-favicon-icon={icon.name} data-size={icon.size} style={{ textAlign: 'center' }}>
+              <div
+                key={icon.name}
+                data-favicon-icon={icon.name}
+                data-size={icon.size}
+                style={{ textAlign: 'center' }}
+              >
                 <img
                   src={icon.url}
                   alt={icon.name}
@@ -206,18 +248,39 @@ export default function FaviconGenerator() {
                     imageRendering: icon.size <= 32 ? 'pixelated' : 'auto',
                   }}
                 />
-                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>{icon.size}x{icon.size}</div>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                  {icon.size}x{icon.size}
+                </div>
               </div>
             ))}
           </div>
 
           {zipUrl && (
-            <div className="result-item" data-favicon-zip-url={zipUrl} style={{ marginBottom: '1rem' }}>
+            <div
+              className="result-item"
+              data-favicon-zip-url={zipUrl}
+              style={{ marginBottom: '1rem' }}
+            >
               <div className="result-info">
-                <div style={{ width: 48, height: 48, background: '#dbeafe', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}> </div>
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    background: '#dbeafe',
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.5rem',
+                  }}
+                >
+                  {' '}
+                </div>
                 <div>
                   <div className="file-item-name">favicons.zip</div>
-                  <div className="file-item-size">{formatSize(zipSize)} — {icons.length} icons + webmanifest</div>
+                  <div className="file-item-size">
+                    {formatSize(zipSize)} — {icons.length} icons + webmanifest
+                  </div>
                 </div>
               </div>
               <button type="button" className="btn btn-primary" onClick={handleDownloadZip}>
@@ -232,16 +295,18 @@ export default function FaviconGenerator() {
             <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginBottom: '0.5rem' }}>
               Add this to your <code>&lt;head&gt;</code> section:
             </p>
-            <pre style={{
-              background: '#f3f4f6',
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              padding: '1rem',
-              fontSize: '0.8125rem',
-              overflow: 'auto',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-all',
-            }}>
+            <pre
+              style={{
+                background: '#f3f4f6',
+                border: '1px solid #e5e7eb',
+                borderRadius: 8,
+                padding: '1rem',
+                fontSize: '0.8125rem',
+                overflow: 'auto',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-all',
+              }}
+            >
               {htmlSnippet}
             </pre>
             <button

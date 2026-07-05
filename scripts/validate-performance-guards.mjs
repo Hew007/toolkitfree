@@ -1,10 +1,6 @@
 import assert from 'node:assert/strict';
 import { mapWithConcurrency } from '../src/lib/async-pool.ts';
-import {
-  assessImageBudget,
-  inspectImageMetadata,
-} from '../src/lib/image-budget.ts';
-
+import { assessImageBudget, inspectImageMetadata } from '../src/lib/image-budget.ts';
 
 function pngFile(width, height) {
   const bytes = new Uint8Array(24);
@@ -89,22 +85,30 @@ const warningMetadata = Array.from({ length: 21 }, (_, index) => ({
 }));
 const warning = assessImageBudget(warningMetadata, 'converter', 'desktop');
 assert.equal(warning.level, 'warning');
-assert.equal(warning.issues.some((issue) => issue.code === 'FILE_COUNT'), true);
+assert.equal(
+  warning.issues.some((issue) => issue.code === 'FILE_COUNT'),
+  true
+);
 
 const blocked = assessImageBudget(
-  [{
-    name: 'huge.png',
-    size: 1024,
-    type: 'image/png',
-    width: 12_000,
-    height: 10_000,
-    pixels: 120_000_000,
-  }],
+  [
+    {
+      name: 'huge.png',
+      size: 1024,
+      type: 'image/png',
+      width: 12_000,
+      height: 10_000,
+      pixels: 120_000_000,
+    },
+  ],
   'background',
   'desktop'
 );
 assert.equal(blocked.level, 'blocked');
-assert.equal(blocked.issues.some((issue) => issue.code === 'SINGLE_IMAGE_PIXELS'), true);
+assert.equal(
+  blocked.issues.some((issue) => issue.code === 'SINGLE_IMAGE_PIXELS'),
+  true
+);
 
 let active = 0;
 let maximumActive = 0;
@@ -119,11 +123,13 @@ assert.deepEqual(poolResults, [2, 4, 6, 8, 10]);
 assert.equal(maximumActive, 2);
 await assert.rejects(() => mapWithConcurrency([1], 0, async (value) => value), /positive integer/);
 
-console.log(JSON.stringify({
-  status: 'PERFORMANCE_GUARDS_OK',
-  metadataFormats: fixtures.length,
-  safeLevel: safe.level,
-  warningCodes: warning.issues.map((issue) => issue.code),
-  blockedCodes: blocked.issues.map((issue) => issue.code),
-  maximumConcurrency: maximumActive,
-}));
+console.log(
+  JSON.stringify({
+    status: 'PERFORMANCE_GUARDS_OK',
+    metadataFormats: fixtures.length,
+    safeLevel: safe.level,
+    warningCodes: warning.issues.map((issue) => issue.code),
+    blockedCodes: blocked.issues.map((issue) => issue.code),
+    maximumConcurrency: maximumActive,
+  })
+);

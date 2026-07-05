@@ -1,11 +1,5 @@
 export type ImageBudgetProfile =
-  | 'converter'
-  | 'compressor'
-  | 'resizer'
-  | 'cropper'
-  | 'pdf'
-  | 'favicon'
-  | 'background';
+  'converter' | 'compressor' | 'resizer' | 'cropper' | 'pdf' | 'favicon' | 'background';
 
 export type ImageBudgetDevice = 'desktop' | 'mobile';
 export type ImageBudgetLevel = 'safe' | 'warning' | 'blocked';
@@ -129,8 +123,7 @@ function parseBmp(view: DataView, bytes: Uint8Array) {
 function parseJpeg(view: DataView, bytes: Uint8Array) {
   if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return null;
   const startOfFrame = new Set([
-    0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7,
-    0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf,
+    0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf,
   ]);
   let offset = 2;
   while (offset + 8 < bytes.length) {
@@ -158,11 +151,7 @@ function uint24(bytes: Uint8Array, offset: number): number {
 }
 
 function parseWebp(view: DataView, bytes: Uint8Array) {
-  if (
-    bytes.length < 30 ||
-    readAscii(bytes, 0, 4) !== 'RIFF' ||
-    readAscii(bytes, 8, 4) !== 'WEBP'
-  ) {
+  if (bytes.length < 30 || readAscii(bytes, 0, 4) !== 'RIFF' || readAscii(bytes, 8, 4) !== 'WEBP') {
     return null;
   }
   const chunk = readAscii(bytes, 12, 4);
@@ -191,7 +180,9 @@ function parseSvg(bytes: Uint8Array) {
   const height = numberAttribute('height');
   if (width && height) return dimensions(width, height);
   const viewBox = svgTag.match(/\bviewBox\s*=\s*["'][^"']*?([\d.]+)[,\s]+([\d.]+)\s*["']/i);
-  return viewBox ? dimensions(Math.round(Number(viewBox[1])), Math.round(Number(viewBox[2]))) : null;
+  return viewBox
+    ? dimensions(Math.round(Number(viewBox[1])), Math.round(Number(viewBox[2])))
+    : null;
 }
 
 export async function inspectImageMetadata(file: File): Promise<ImageMetadata> {
@@ -237,9 +228,7 @@ export function assessImageBudget(
     knownPixels: metadata.reduce((sum, file) => sum + (file.pixels ?? 0), 0),
     unknownDimensions: metadata.filter((file) => file.pixels === null).length,
     estimatedWorkingBytes: Math.round(
-      metadata.reduce((sum, file) => sum + (file.pixels ?? 0), 0) *
-      4 *
-      RGBA_SURFACES[profile]
+      metadata.reduce((sum, file) => sum + (file.pixels ?? 0), 0) * 4 * RGBA_SURFACES[profile]
     ),
   };
   const issues: ImageBudgetIssue[] = [];
@@ -274,14 +263,16 @@ export function assessImageBudget(
     totals.knownPixels,
     limits.warningPixels,
     limits.blockedPixels,
-    () => `The selected images contain about ${Math.round(totals.knownPixels / 1_000_000)} million pixels.`
+    () =>
+      `The selected images contain about ${Math.round(totals.knownPixels / 1_000_000)} million pixels.`
   );
   addThresholdIssue(
     'WORKING_MEMORY',
     totals.estimatedWorkingBytes,
     limits.warningWorkingBytes,
     limits.blockedWorkingBytes,
-    () => `This operation may need about ${formatMebibytes(totals.estimatedWorkingBytes)} of working memory.`
+    () =>
+      `This operation may need about ${formatMebibytes(totals.estimatedWorkingBytes)} of working memory.`
   );
 
   const oversized = metadata.find((file) => (file.pixels ?? 0) > MAX_SINGLE_IMAGE_PIXELS);
@@ -313,7 +304,5 @@ export async function reviewImageBudget(
 export function detectImageBudgetDevice(): ImageBudgetDevice {
   if (typeof window === 'undefined') return 'desktop';
   const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
-  return window.innerWidth < 768 || (memory !== undefined && memory <= 4)
-    ? 'mobile'
-    : 'desktop';
+  return window.innerWidth < 768 || (memory !== undefined && memory <= 4) ? 'mobile' : 'desktop';
 }

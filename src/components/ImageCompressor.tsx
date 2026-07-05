@@ -23,12 +23,7 @@ interface QueuedFile {
   file: File;
 }
 
-type CompressionStatus =
-  | 'optimized'
-  | 'target-met'
-  | 'target-not-met'
-  | 'kept-original'
-  | 'larger';
+type CompressionStatus = 'optimized' | 'target-met' | 'target-not-met' | 'kept-original' | 'larger';
 
 interface CompressedFile {
   sourceId: string;
@@ -58,8 +53,7 @@ interface FailedFile {
 }
 
 type CompressionOutcome =
-  | { status: 'success'; value: CompressedFile }
-  | { status: 'failure'; value: FailedFile };
+  { status: 'success'; value: CompressedFile } | { status: 'failure'; value: FailedFile };
 
 interface Props {
   defaultMode?: CompressionMode;
@@ -67,7 +61,10 @@ interface Props {
   defaultFormat?: string;
 }
 
-const INPUT_FORMATS: Record<string, { accept: string; allowedTypes: readonly string[]; hint: string }> = {
+const INPUT_FORMATS: Record<
+  string,
+  { accept: string; allowedTypes: readonly string[]; hint: string }
+> = {
   PNG: { accept: 'image/png', allowedTypes: ['image/png'], hint: 'PNG' },
   JPG: { accept: 'image/jpeg', allowedTypes: ['image/jpeg'], hint: 'JPG or JPEG' },
   Any: {
@@ -106,19 +103,25 @@ export default function ImageCompressor({
     setFailures([]);
   }, [objectUrls]);
 
-  const handleFiles = useCallback((newFiles: File[]) => {
-    if (newFiles.length === 0) return;
-    clearResults();
-    setFiles((previous) => [
-      ...previous,
-      ...newFiles.map((file) => ({ id: `file-${++nextFileId.current}`, file })),
-    ]);
-  }, [clearResults]);
+  const handleFiles = useCallback(
+    (newFiles: File[]) => {
+      if (newFiles.length === 0) return;
+      clearResults();
+      setFiles((previous) => [
+        ...previous,
+        ...newFiles.map((file) => ({ id: `file-${++nextFileId.current}`, file })),
+      ]);
+    },
+    [clearResults]
+  );
 
-  const handleRemove = useCallback((index: number) => {
-    clearResults();
-    setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index));
-  }, [clearResults]);
+  const handleRemove = useCallback(
+    (index: number) => {
+      clearResults();
+      setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index));
+    },
+    [clearResults]
+  );
 
   const processFile = async (queuedFile: QueuedFile): Promise<CompressedFile> => {
     const image = await loadImage(queuedFile.file, {
@@ -135,7 +138,11 @@ export default function ImageCompressor({
       canvas.height = height;
       const context = getCanvas2dContext(canvas);
       context.drawImage(image, 0, 0, width, height);
-      return exportCanvas(canvas, outputType, outputType === 'image/png' ? undefined : encodeQuality);
+      return exportCanvas(
+        canvas,
+        outputType,
+        outputType === 'image/png' ? undefined : encodeQuality
+      );
     };
 
     let blob: Blob;
@@ -199,9 +206,10 @@ export default function ImageCompressor({
       } else {
         blob = candidate;
         status = candidate.size < queuedFile.file.size ? 'optimized' : 'larger';
-        message = status === 'optimized'
-          ? 'File size reduced.'
-          : 'Dimensions changed, but the output file is larger than the original.';
+        message =
+          status === 'optimized'
+            ? 'File size reduced.'
+            : 'Dimensions changed, but the output file is larger than the original.';
       }
     }
 
@@ -255,15 +263,17 @@ export default function ImageCompressor({
 
       setResults(
         outcomes
-          .filter((outcome): outcome is Extract<CompressionOutcome, { status: 'success' }> =>
-            outcome.status === 'success'
+          .filter(
+            (outcome): outcome is Extract<CompressionOutcome, { status: 'success' }> =>
+              outcome.status === 'success'
           )
           .map((outcome) => outcome.value)
       );
       setFailures(
         outcomes
-          .filter((outcome): outcome is Extract<CompressionOutcome, { status: 'failure' }> =>
-            outcome.status === 'failure'
+          .filter(
+            (outcome): outcome is Extract<CompressionOutcome, { status: 'failure' }> =>
+              outcome.status === 'failure'
           )
           .map((outcome) => outcome.value)
       );
@@ -274,7 +284,11 @@ export default function ImageCompressor({
 
   return (
     <div aria-busy={compressing}>
-      {compressing && <div className="visually-hidden" role="status" aria-live="polite">Compressing images.</div>}
+      {compressing && (
+        <div className="visually-hidden" role="status" aria-live="polite">
+          Compressing images.
+        </div>
+      )}
       <FileUploader
         accept={inputFormat.accept}
         multiple={true}
@@ -287,10 +301,19 @@ export default function ImageCompressor({
       </p>
 
       <div style={{ marginTop: '1rem' }}>
-        <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>
+        <label
+          htmlFor="compressor-mode"
+          style={{
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            display: 'block',
+            marginBottom: '0.25rem',
+          }}
+        >
           Compression Mode
         </label>
         <select
+          id="compressor-mode"
           aria-label="Compression Mode"
           value={mode}
           onChange={(event) => {
@@ -307,13 +330,30 @@ export default function ImageCompressor({
 
       {files.length > 0 && (
         <div style={{ marginTop: '1.5rem' }}>
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '1rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '1.5rem',
+              alignItems: 'flex-end',
+              flexWrap: 'wrap',
+              marginBottom: '1rem',
+            }}
+          >
             {mode === 'quality' ? (
               <div style={{ minWidth: '200px' }}>
-                <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>
+                <label
+                  htmlFor="compressor-quality"
+                  style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    display: 'block',
+                    marginBottom: '0.25rem',
+                  }}
+                >
                   Quality: {quality}%
                 </label>
                 <input
+                  id="compressor-quality"
                   aria-label="Compression Quality"
                   type="range"
                   min="10"
@@ -330,10 +370,19 @@ export default function ImageCompressor({
               </div>
             ) : (
               <div>
-                <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>
+                <label
+                  htmlFor="compressor-target-size"
+                  style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    display: 'block',
+                    marginBottom: '0.25rem',
+                  }}
+                >
                   Target Size (KB)
                 </label>
                 <input
+                  id="compressor-target-size"
                   aria-label="Target Size (KB)"
                   type="number"
                   min="1"
@@ -350,10 +399,19 @@ export default function ImageCompressor({
             )}
 
             <div>
-              <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>
+              <label
+                htmlFor="compressor-max-width"
+                style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  display: 'block',
+                  marginBottom: '0.25rem',
+                }}
+              >
                 Starting Max Width (px)
               </label>
               <select
+                id="compressor-max-width"
                 aria-label="Starting Max Width"
                 value={maxWidth}
                 onChange={(event) => {
@@ -377,11 +435,12 @@ export default function ImageCompressor({
             disabled={compressing}
             style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
           >
-            {compressing ? 'Compressing...' : `Compress ${files.length} image${files.length > 1 ? 's' : ''}`}
+            {compressing
+              ? 'Compressing...'
+              : `Compress ${files.length} image${files.length > 1 ? 's' : ''}`}
           </button>
         </div>
       )}
-
 
       <BatchResultsSummary
         successes={results}
@@ -391,7 +450,6 @@ export default function ImageCompressor({
 
       {results.length > 0 && (
         <div>
-
           {results.map((result) => {
             const smaller = result.compressedSize < result.originalSize;
             return (
@@ -402,14 +460,24 @@ export default function ImageCompressor({
                     <div className="file-item-name">{result.name}</div>
                     <div className="file-item-size">
                       {formatSize(result.originalSize)} to {formatSize(result.compressedSize)}
-                      {smaller && ` (-${Math.round((1 - result.compressedSize / result.originalSize) * 100)}%)`}
+                      {smaller &&
+                        ` (-${Math.round((1 - result.compressedSize / result.originalSize) * 100)}%)`}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                      {result.originalWidth}x{result.originalHeight} to {result.width}x{result.height}
+                      {result.originalWidth}x{result.originalHeight} to {result.width}x
+                      {result.height}
                       {result.quality !== null && ` | quality ${Math.round(result.quality * 100)}%`}
-                      {mode === 'target' && ` | ${result.attempts} attempt${result.attempts === 1 ? '' : 's'}`}
+                      {mode === 'target' &&
+                        ` | ${result.attempts} attempt${result.attempts === 1 ? '' : 's'}`}
                     </div>
-                    <div style={{ fontSize: '0.8125rem', color: resultColor(result.status), fontWeight: 600, marginTop: '0.25rem' }}>
+                    <div
+                      style={{
+                        fontSize: '0.8125rem',
+                        color: resultColor(result.status),
+                        fontWeight: 600,
+                        marginTop: '0.25rem',
+                      }}
+                    >
                       {result.message}
                     </div>
                   </div>

@@ -212,12 +212,7 @@ export async function compressToTargetSize(
       }
     }
 
-    const nextDimensions = scaleDimensions(
-      width,
-      height,
-      dimensionScale,
-      minLongEdge
-    );
+    const nextDimensions = scaleDimensions(width, height, dimensionScale, minLongEdge);
     if (!nextDimensions) break;
     width = nextDimensions.width;
     height = nextDimensions.height;

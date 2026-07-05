@@ -63,7 +63,11 @@ export default function QrGenerator() {
   };
 
   return (
-    <div className="qr-generator-layout" data-qr-contrast={contrastRatio.toFixed(2)} data-qr-download-enabled={contrastIsSafe}>
+    <div
+      className="qr-generator-layout"
+      data-qr-contrast={contrastRatio.toFixed(2)}
+      data-qr-download-enabled={contrastIsSafe}
+    >
       {/* Left: Options */}
       <div className="qr-options-panel">
         <QrInputForm type={qrType} onTypeChange={setQrType} onDataChange={setQrData} />
@@ -74,18 +78,64 @@ export default function QrGenerator() {
         <div style={{ marginBottom: '1rem' }}>
           <span style={sectionLabel}>Colors</span>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.375rem',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+              }}
+            >
               Foreground
-              <input type="color" value={fgColor} onChange={(e) => setFgColor(e.target.value)} style={{ width: 32, height: 32, border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', padding: 0 }} />
+              <input
+                type="color"
+                value={fgColor}
+                onChange={(e) => setFgColor(e.target.value)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  border: '1px solid #d1d5db',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              />
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.375rem',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+              }}
+            >
               Background
-              <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} style={{ width: 32, height: 32, border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', padding: 0 }} />
+              <input
+                type="color"
+                value={bgColor}
+                onChange={(e) => setBgColor(e.target.value)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  border: '1px solid #d1d5db',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              />
             </label>
           </div>
           {!contrastIsSafe && (
-            <div className="status status-error" role="alert" data-qr-contrast-warning style={{ marginTop: '0.5rem' }}>
-              Increase foreground/background contrast to enable downloads. Current ratio: {contrastRatio.toFixed(2)}:1.
+            <div
+              className="status status-error"
+              role="alert"
+              data-qr-contrast-warning
+              style={{ marginTop: '0.5rem' }}
+            >
+              Increase foreground/background contrast to enable downloads. Current ratio:{' '}
+              {contrastRatio.toFixed(2)}:1.
             </div>
           )}
         </div>
@@ -119,23 +169,47 @@ export default function QrGenerator() {
         <div style={{ marginBottom: '1rem' }}>
           <span style={sectionLabel}>Logo (optional)</span>
           {!logoImage ? (
-            <label style={{
-              display: 'inline-block',
-              padding: '0.375rem 1rem',
-              border: '1px dashed #d1d5db',
-              borderRadius: 6,
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              color: '#6b7280',
-            }}>
+            <label
+              style={{
+                display: 'inline-block',
+                padding: '0.375rem 1rem',
+                border: '1px dashed #d1d5db',
+                borderRadius: 6,
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                color: '#6b7280',
+              }}
+            >
               Upload Logo
-              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleLogoUpload} style={{ display: 'none' }} />
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleLogoUpload}
+                style={{ display: 'none' }}
+              />
             </label>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <img src={logoImage} alt="Logo" style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 4, border: '1px solid #e5e7eb' }} />
+              <img
+                src={logoImage}
+                alt="Logo"
+                style={{
+                  width: 40,
+                  height: 40,
+                  objectFit: 'contain',
+                  borderRadius: 4,
+                  border: '1px solid #e5e7eb',
+                }}
+              />
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '0.75rem', color: '#6b7280', display: 'block', marginBottom: '0.25rem' }}>
+                <label
+                  style={{
+                    fontSize: '0.75rem',
+                    color: '#6b7280',
+                    display: 'block',
+                    marginBottom: '0.25rem',
+                  }}
+                >
                   Size: {Math.round(logoSize * 100)}%
                 </label>
                 <input
@@ -148,20 +222,39 @@ export default function QrGenerator() {
                   style={{ width: '100%' }}
                 />
               </div>
-              <button onClick={handleLogoRemove} style={{
-                background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.25rem', color: '#9ca3af', padding: '0.25rem',
-              }}>×</button>
+              <button
+                onClick={handleLogoRemove}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '1.25rem',
+                  color: '#9ca3af',
+                  padding: '0.25rem',
+                }}
+              >
+                ×
+              </button>
             </div>
           )}
         </div>
 
-        {logoError && <div className="status status-error" role="alert">{logoError}</div>}
+        {logoError && (
+          <div className="status status-error" role="alert">
+            {logoError}
+          </div>
+        )}
 
         {/* Error Correction */}
         <div>
           <span style={sectionLabel}>
             Error Correction
-            {logoImage && <span style={{ fontWeight: 400, color: '#6b7280' }}> (auto-set to High for logo)</span>}
+            {logoImage && (
+              <span style={{ fontWeight: 400, color: '#6b7280' }}>
+                {' '}
+                (auto-set to High for logo)
+              </span>
+            )}
           </span>
           <div style={{ display: 'flex', gap: '0.375rem' }}>
             {(['L', 'M', 'Q', 'H'] as ECL[]).map((level) => (

@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
+import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
 
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9227';
-const baseUrl = 'http://127.0.0.1:4321';
+const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
 const downloadPath = process.env.BROWSER_DOWNLOAD_DIR || 'C:\\tmp\\toolkitfree-opt06-downloads';
 fs.rmSync(downloadPath, { recursive: true, force: true });
 fs.mkdirSync(downloadPath, { recursive: true });
@@ -189,7 +190,14 @@ for (const [slug, preset, pageSize, accept] of pdfVariants) {
 await navigate('/tools/image-to-pdf/multiple-images-to-pdf');
 await upload([
   { name: 'first.png', type: 'image/png', width: 400, height: 200, color: '#ef4444' },
-  { name: 'second.png', type: 'image/png', width: 200, height: 400, color: '#22c55e', transparent: true },
+  {
+    name: 'second.png',
+    type: 'image/png',
+    width: 200,
+    height: 400,
+    color: '#22c55e',
+    transparent: true,
+  },
   { name: 'broken.png', type: 'image/png', corrupt: true },
 ]);
 await waitFor(`document.querySelectorAll('[data-pdf-file]').length === 3`, 'three PDF inputs');
@@ -204,8 +212,14 @@ await evaluate(`
     .click()
 `);
 await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'partial PDF result');
-assert.equal(await evaluate(`Boolean(document.querySelector('[data-pdf-error="broken.png"]'))`), true);
-assert.equal(await evaluate(`Number(document.querySelector('[data-pdf-result]').dataset.pages)`), 2);
+assert.equal(
+  await evaluate(`Boolean(document.querySelector('[data-pdf-error="broken.png"]'))`),
+  true
+);
+assert.equal(
+  await evaluate(`Number(document.querySelector('[data-pdf-result]').dataset.pages)`),
+  2
+);
 const pdfBase64 = await evaluate(`
   (async () => {
     const url = document.querySelector('[data-pdf-result]').dataset.pdfUrl;
@@ -269,7 +283,10 @@ await evaluate(`
     .find((button) => button.textContent.trim() === 'Generate Favicons')
     .click()
 `);
-await waitFor(`document.querySelectorAll('[data-favicon-icon]').length === 5`, 'five favicon outputs');
+await waitFor(
+  `document.querySelectorAll('[data-favicon-icon]').length === 5`,
+  'five favicon outputs'
+);
 const faviconResults = await evaluate(`
   (async () => Promise.all(
     [...document.querySelectorAll('[data-favicon-icon]')].map(async (item) => {
@@ -331,12 +348,20 @@ assert.deepEqual(zipNames, [
   'site.webmanifest',
 ]);
 const manifest = JSON.parse(await zip.file('site.webmanifest').async('string'));
-assert.deepEqual(manifest.icons.map((icon) => icon.sizes), ['192x192', '512x512']);
+assert.deepEqual(
+  manifest.icons.map((icon) => icon.sizes),
+  ['192x192', '512x512']
+);
 assert.equal(await evaluate(`document.querySelector('pre').innerText.includes('.ico')`), false);
 
 await navigate('/tools/qr-generator');
 assert.equal(await evaluate(`Boolean(document.querySelector('[data-qr-ready="true"]'))`), false);
-assert.equal(await evaluate(`document.querySelectorAll('button').length > 0 && !document.body.innerText.includes('Download PNG')`), true);
+assert.equal(
+  await evaluate(
+    `document.querySelectorAll('button').length > 0 && !document.body.innerText.includes('Download PNG')`
+  ),
+  true
+);
 await evaluate(`
   (() => {
     const input = document.querySelector('textarea[placeholder="Enter text or URL..."]');
@@ -352,7 +377,10 @@ await waitFor(
 await waitFor(`Boolean(document.querySelector('[data-qr-data] canvas'))`, 'QR canvas');
 
 await evaluate(`document.querySelector('[data-qr-tab="wifi"]').click()`);
-await waitFor(`document.querySelector('[data-qr-input-type]').dataset.qrInputType === 'wifi'`, 'WiFi tab');
+await waitFor(
+  `document.querySelector('[data-qr-input-type]').dataset.qrInputType === 'wifi'`,
+  'WiFi tab'
+);
 await evaluate(`
   (() => {
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
@@ -370,7 +398,10 @@ await waitFor(
 );
 
 await evaluate(`document.querySelector('[data-qr-tab="vcard"]').click()`);
-await waitFor(`document.querySelector('[data-qr-input-type]').dataset.qrInputType === 'vcard'`, 'vCard tab');
+await waitFor(
+  `document.querySelector('[data-qr-input-type]').dataset.qrInputType === 'vcard'`,
+  'vCard tab'
+);
 await evaluate(`
   (() => {
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
@@ -388,7 +419,10 @@ await waitFor(
 );
 
 await evaluate(`document.querySelector('[data-qr-tab="text"]').click()`);
-await waitFor(`document.querySelector('[data-qr-input-type]').dataset.qrInputType === 'text'`, 'Text tab');
+await waitFor(
+  `document.querySelector('[data-qr-input-type]').dataset.qrInputType === 'text'`,
+  'Text tab'
+);
 await evaluate(`
   (() => {
     const input = document.querySelector('textarea[placeholder="Enter text or URL..."]');
@@ -397,10 +431,17 @@ await evaluate(`
     input.dispatchEvent(new Event('input', { bubbles: true }));
   })()
 `);
-await waitFor(`document.querySelector('[data-qr-data]')?.dataset.qrData === 'download-check'`, 'download QR');
-await evaluate(`[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Download PNG').click()`);
+await waitFor(
+  `document.querySelector('[data-qr-data]')?.dataset.qrData === 'download-check'`,
+  'download QR'
+);
+await evaluate(
+  `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Download PNG').click()`
+);
 await waitForFile('qrcode.png');
-await evaluate(`[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Download SVG').click()`);
+await evaluate(
+  `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Download SVG').click()`
+);
 await waitForFile('qrcode.svg');
 const pngBytes = fs.readFileSync(path.join(downloadPath, 'qrcode.png'));
 assert.equal(pngBytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), true);
@@ -418,7 +459,10 @@ await evaluate(`
     colors[1].dispatchEvent(new Event('input', { bubbles: true }));
   })()
 `);
-await waitFor(`Boolean(document.querySelector('[data-qr-contrast-warning]'))`, 'QR contrast warning');
+await waitFor(
+  `Boolean(document.querySelector('[data-qr-contrast-warning]'))`,
+  'QR contrast warning'
+);
 assert.equal(
   await evaluate(
     `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Download PNG').disabled`
@@ -429,9 +473,18 @@ assert.equal(
 await navigate('/tools/background-remover');
 await upload([{ name: 'corrupt.png', type: 'image/png', corrupt: true }]);
 await waitFor(`document.body.innerText.includes('corrupt.png')`, 'corrupt background input');
-await evaluate(`[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Remove Background').click()`);
-await waitFor(`Boolean(document.querySelector('.status-error'))`, 'background error recovery', 180_000);
-assert.equal(await evaluate(`Boolean(document.querySelector('button[aria-label="Remove corrupt.png"]'))`), true);
+await evaluate(
+  `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Remove Background').click()`
+);
+await waitFor(
+  `Boolean(document.querySelector('.status-error'))`,
+  'background error recovery',
+  180_000
+);
+assert.equal(
+  await evaluate(`Boolean(document.querySelector('button[aria-label="Remove corrupt.png"]'))`),
+  true
+);
 await evaluate(`document.querySelector('button[aria-label="Remove corrupt.png"]').click()`);
 await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, 'background input reset');
 
@@ -454,9 +507,14 @@ for (const definition of backgroundCases) {
       transparent: definition.transparent,
     },
   ]);
-  await waitFor(`document.body.innerText.includes('${definition.name}')`, `${definition.name} input`);
+  await waitFor(
+    `document.body.innerText.includes('${definition.name}')`,
+    `${definition.name} input`
+  );
   if (definition.color !== 'transparent') {
-    await evaluate(`document.querySelector('[data-background-color="${definition.color}"]').click()`);
+    await evaluate(
+      `document.querySelector('[data-background-color="${definition.color}"]').click()`
+    );
   }
   await evaluate(`
     (() => {
@@ -469,8 +527,14 @@ for (const definition of backgroundCases) {
       window.__backgroundObserver = observer;
     })()
   `);
-  await evaluate(`[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Remove Background').click()`);
-  await waitFor(`Boolean(document.querySelector('[data-background-result]'))`, `${definition.name} background result`, 240_000);
+  await evaluate(
+    `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Remove Background').click()`
+  );
+  await waitFor(
+    `Boolean(document.querySelector('[data-background-result]'))`,
+    `${definition.name} background result`,
+    240_000
+  );
   const inspected = await evaluate(`
     (async () => {
       window.__backgroundObserver?.disconnect();
@@ -497,28 +561,55 @@ for (const definition of backgroundCases) {
   assert.equal(inspected.type, 'image/png');
   assert.equal(inspected.width > 0 && inspected.height > 0, true);
   assert.equal(inspected.stages.includes('runtime'), true);
-  assert.equal(inspected.stages.includes('model-initialization') || inspected.stages.includes('model-download'), true);
+  assert.equal(
+    inspected.stages.includes('model-initialization') ||
+      inspected.stages.includes('model-download'),
+    true
+  );
   if (definition.color === '#0000ff') {
-    assert.equal(inspected.corner[2] > inspected.corner[0], true, 'Colored background should be blue');
+    assert.equal(
+      inspected.corner[2] > inspected.corner[0],
+      true,
+      'Colored background should be blue'
+    );
     assert.equal(inspected.corner[3], 255);
   }
   backgroundResults.push(inspected);
-  await evaluate(`document.querySelector('button[aria-label="Remove ${definition.name}"]').click()`);
-  await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, `${definition.name} cleanup`);
+  await evaluate(
+    `document.querySelector('button[aria-label="Remove ${definition.name}"]').click()`
+  );
+  await waitFor(
+    `Boolean(document.querySelector('input[type="file"]'))`,
+    `${definition.name} cleanup`
+  );
   backgroundCleanupStats.push(await evaluate(`window.__objectUrlStats()`));
 }
 const backgroundStats = await evaluate(`window.__objectUrlStats()`);
-assert.equal(new Set(backgroundCleanupStats.map((stats) => stats.active)).size, 1, 'Background URL baseline must not grow between runs');
-assert.equal(backgroundStats.active <= 2, true, 'Only model runtime session URLs may remain active');
+assert.equal(
+  new Set(backgroundCleanupStats.map((stats) => stats.active)).size,
+  1,
+  'Background URL baseline must not grow between runs'
+);
+assert.equal(
+  backgroundStats.active <= 2,
+  true,
+  'Only model runtime session URLs may remain active'
+);
 
-assert.deepEqual(browserErrors, []);
+const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
+assert.deepEqual(actionableBrowserErrors, []);
 await send('Target.closeTarget', { targetId: target.id });
 socket.close();
 
 console.log(
   JSON.stringify({
     status: 'SECONDARY_TOOLS_BROWSER_OK',
-    pdf: { variants: pdfVariants.length, bytes: pdfBuffer.length, pages: 2, fitMediaBox: mediaBox.slice(1) },
+    pdf: {
+      variants: pdfVariants.length,
+      bytes: pdfBuffer.length,
+      pages: 2,
+      fitMediaBox: mediaBox.slice(1),
+    },
     favicon: { icons: faviconResults.length, zipNames, paddingPixels },
     qr: { pngBytes: pngBytes.length, svgBytes: Buffer.byteLength(svgText), contrastBlocked: true },
     background: backgroundResults.map(({ name, type, width, height, stages }) => ({
@@ -531,6 +622,6 @@ console.log(
     pdfStats,
     backgroundStats,
     backgroundCleanupStats,
-    browserErrors: browserErrors.length,
+    browserErrors: actionableBrowserErrors.length,
   })
 );

@@ -2,13 +2,13 @@
 import Layout from '../layouts/Layout.astro';
 import { toolRegistry } from '../data/tool-registry';
 
-
 const structuredData = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "ToolkitFree",
-  "description": "Free online image tools. Convert, compress, resize, and edit images in your browser. No uploads needed.",
-  "url": "https://toolkitfree.net",
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'ToolkitFree',
+  description:
+    'Free online image tools. Convert, compress, resize, and edit images in your browser. No uploads needed.',
+  url: 'https://toolkitfree.net',
 };
 ---
 
@@ -20,28 +20,26 @@ const structuredData = {
   <section class="hero">
     <h1>Free Online Image Tools</h1>
     <p>
-      Convert, compress, resize, and edit images directly in your browser.
-      No uploads needed — your files never leave your device.
+      Convert, compress, resize, and edit images directly in your browser. No uploads needed — your
+      files never leave your device.
     </p>
-    <div class="privacy-badge">
-      100% Client-Side Processing
-    </div>
+    <div class="privacy-badge">100% Client-Side Processing</div>
   </section>
 
   <section class="tools-grid">
-    {toolRegistry.map((tool) => (
-      <a href={tool.href} class="tool-card" data-tool-id={tool.id}>
-        <h3>{tool.name}</h3>
-        <p>{tool.description}</p>
-      </a>
-    ))}
+    {
+      toolRegistry.map((tool) => (
+        <a href={tool.href} class="tool-card" data-tool-id={tool.id}>
+          <h3>{tool.name}</h3>
+          <p>{tool.description}</p>
+        </a>
+      ))
+    }
   </section>
 
   <!-- Ad Placeholder: In-content -->
   <div style="margin: 3rem 0;">
-    <div class="ad-placeholder ad-banner">
-      Ad Space (728x90)
-    </div>
+    <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
   </div>
 
   <section class="features-section">
@@ -59,9 +57,11 @@ const structuredData = {
   <section class="features-section">
     <h2>How ToolkitFree Works</h2>
     <p style="color: var(--color-text-light);">
-      All ToolkitFree tools run entirely in your browser using modern web technologies including the Canvas API and WebAssembly.
-      Your images are processed locally on your device — they are never uploaded to any server.
-      File contents stay local, but capacity depends on device memory and browser Canvas limits. The page still downloads site assets, advertising code, and, for background removal, model files.
+      All ToolkitFree tools run entirely in your browser using modern web technologies including the
+      Canvas API and WebAssembly. Your images are processed locally on your device — they are never
+      uploaded to any server. File contents stay local, but capacity depends on device memory and
+      browser Canvas limits. The page still downloads site assets, advertising code, and, for
+      background removal, model files.
     </p>
   </section>
 
@@ -81,11 +81,16 @@ const structuredData = {
       <a href="/tools/image-converter/jpg-to-png" class="tool-card"><h3>JPG to PNG</h3></a>
       <a href="/tools/image-converter/png-to-jpg" class="tool-card"><h3>PNG to JPG</h3></a>
       <a href="/tools/image-converter/jpg-to-webp" class="tool-card"><h3>JPG to WebP</h3></a>
-      <a href="/tools/image-compressor/compress-for-web" class="tool-card"><h3>Compress for Web</h3></a>
-      <a href="/tools/image-resizer/resize-for-instagram" class="tool-card"><h3>Resize for Instagram</h3></a>
+      <a href="/tools/image-compressor/compress-for-web" class="tool-card"
+        ><h3>Compress for Web</h3></a
+      >
+      <a href="/tools/image-resizer/resize-for-instagram" class="tool-card"
+        ><h3>Resize for Instagram</h3></a
+      >
       <a href="/tools/image-cropper/crop-to-square" class="tool-card"><h3>Crop to Square</h3></a>
       <a href="/tools/image-to-pdf/jpg-to-pdf" class="tool-card"><h3>JPG to PDF</h3></a>
-      <a href="/tools/favicon-generator/png-to-favicon" class="tool-card"><h3>PNG to Favicon</h3></a>
+      <a href="/tools/favicon-generator/png-to-favicon" class="tool-card"><h3>PNG to Favicon</h3></a
+      >
       <a href="/tools/background-remover" class="tool-card"><h3>Remove Background</h3></a>
     </div>
   </section>

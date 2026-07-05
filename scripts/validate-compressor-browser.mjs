@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
+import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
 
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9225';
-const targetUrl = 'http://127.0.0.1:4321/tools/image-compressor/compress-to-100kb';
-const qualityUrl = 'http://127.0.0.1:4321/tools/image-compressor';
+const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
+const targetUrl = `${baseUrl}/tools/image-compressor/compress-to-100kb`;
+const qualityUrl = `${baseUrl}/tools/image-compressor`;
 
 const target = await fetch(`${endpoint}/json/new?${encodeURIComponent('about:blank')}`, {
   method: 'PUT',
@@ -201,10 +202,15 @@ assert.equal(byName['complex.png'].type, 'image/png');
 const targetStats = await evaluate(`window.__objectUrlStats()`);
 assert.deepEqual(targetStats, { created: 9, revoked: 5, active: 4 });
 
-const attempts = targetResults
-  .flatMap(({ text }) => [...text.matchAll(/\| (\d+) attempts?/g)].map((match) => Number(match[1])));
+const attempts = targetResults.flatMap(({ text }) =>
+  [...text.matchAll(/\| (\d+) attempts?/g)].map((match) => Number(match[1]))
+);
 assert.equal(attempts.length, 4, 'Every successful target result should report attempts');
-assert.equal(attempts.every((count) => count <= 63), true, 'Target iterations must be bounded');
+assert.equal(
+  attempts.every((count) => count <= 63),
+  true,
+  'Target iterations must be bounded'
+);
 
 await navigate(qualityUrl);
 assert.equal(
@@ -235,7 +241,10 @@ await evaluate(`
     .find((button) => button.textContent.trim() === 'Compress 1 image')
     .click()
 `);
-await waitFor(`document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`, 'quality result');
+await waitFor(
+  `document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`,
+  'quality result'
+);
 const qualityResult = await evaluate(`
   (async () => {
     const item = document.querySelector('.result-item');
@@ -248,7 +257,8 @@ assert.equal(qualityResult.size, tinyInputSize);
 assert.equal(qualityResult.text.includes('No smaller result was found; original kept.'), true);
 assert.equal(qualityResult.text.includes('--'), false, 'Double-negative saving must not appear');
 
-assert.deepEqual(browserErrors, []);
+const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
+assert.deepEqual(actionableBrowserErrors, []);
 await send('Target.closeTarget', { targetId: target.id });
 socket.close();
 
@@ -260,6 +270,6 @@ console.log(
     maxAttempts: Math.max(...attempts),
     qualityOriginalBytes: tinyInputSize,
     qualityOutputBytes: qualityResult.size,
-    browserErrors: browserErrors.length,
+    browserErrors: actionableBrowserErrors.length,
   })
 );

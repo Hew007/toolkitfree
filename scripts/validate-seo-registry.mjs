@@ -63,17 +63,33 @@ function extractToolIds(fragment) {
   return [...fragment.matchAll(/data-tool-id="([^"]+)"/g)].map((match) => match[1]);
 }
 
-unique(toolRegistry.map((tool) => tool.id), 'Tool ids');
-unique(toolRegistry.map((tool) => tool.href), 'Tool hrefs');
-assert.equal(toolRegistry.every((tool) => tool.status === 'public'), true);
+unique(
+  toolRegistry.map((tool) => tool.id),
+  'Tool ids'
+);
+unique(
+  toolRegistry.map((tool) => tool.href),
+  'Tool hrefs'
+);
+assert.equal(
+  toolRegistry.every((tool) => tool.status === 'public'),
+  true
+);
 
 const categoryIds = new Set(toolCategories.map((category) => category.id));
 const registryIds = new Set(toolRegistry.map((tool) => tool.id));
 for (const tool of toolRegistry) {
   assert.equal(categoryIds.has(tool.category), true, `${tool.id} category`);
   assert.equal(tool.related.includes(tool.id), false, `${tool.id} cannot relate to itself`);
-  assert.equal(tool.related.every((id) => registryIds.has(id)), true, `${tool.id} related ids`);
-  unique(tool.variants.map((variant) => variant.slug), `${tool.id} variant slugs`);
+  assert.equal(
+    tool.related.every((id) => registryIds.has(id)),
+    true,
+    `${tool.id} related ids`
+  );
+  unique(
+    tool.variants.map((variant) => variant.slug),
+    `${tool.id} variant slugs`
+  );
 }
 
 const indexableToolPaths = getIndexableToolPaths().map(({ path: route }) => route);
@@ -118,21 +134,31 @@ for (const { route, html } of pages) {
   assert.equal(/hreflang=/i.test(html), false, `${route} must not publish unavailable locales`);
   assert.equal(html.includes(`<html lang="${SITE_LOCALE}">`), true, `${route} language`);
 
-  const schemas = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
-    .map((match) => JSON.parse(match[1]));
+  const schemas = [
+    ...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g),
+  ].map((match) => JSON.parse(match[1]));
   jsonLdBlocks += schemas.length;
-  const flattened = schemas.flatMap((schema) => Array.isArray(schema) ? schema : [schema]);
+  const flattened = schemas.flatMap((schema) => (Array.isArray(schema) ? schema : [schema]));
   for (const webApp of flattened.filter((schema) => schema?.['@type'] === 'WebApplication')) {
     webApplications += 1;
-    assert.equal(typeof webApp.name === 'string' && webApp.name.length > 0, true, `${route} WebApplication name`);
-    assert.equal(typeof webApp.description === 'string' && webApp.description.length > 0, true, `${route} WebApplication description`);
+    assert.equal(
+      typeof webApp.name === 'string' && webApp.name.length > 0,
+      true,
+      `${route} WebApplication name`
+    );
+    assert.equal(
+      typeof webApp.description === 'string' && webApp.description.length > 0,
+      true,
+      `${route} WebApplication description`
+    );
     const schemaUrl = new URL(webApp.url);
     assert.equal(schemaUrl.origin, SITE_URL, `${route} WebApplication URL origin`);
     assert.equal(normalizeRoute(schemaUrl.pathname), route, `${route} WebApplication URL path`);
   }
   const faq = flattened.find((schema) => schema?.['@type'] === 'FAQPage');
-  const visibleFaq = [...html.matchAll(/<summary class="faq-question">([\s\S]*?)<\/summary>/g)]
-    .map((match) => decodeHtml(match[1]));
+  const visibleFaq = [...html.matchAll(/<summary class="faq-question">([\s\S]*?)<\/summary>/g)].map(
+    (match) => decodeHtml(match[1])
+  );
   if (faq) {
     faqPages += 1;
     assert.deepEqual(
@@ -147,23 +173,31 @@ for (const { route, html } of pages) {
 
 const home = pages.find(({ route }) => route === '/')?.html;
 assert.ok(home);
-assert.deepEqual(extractToolIds(home.match(/<section class="tools-grid">([\s\S]*?)<\/section>/)?.[1] ?? ''), [...registryIds]);
+assert.deepEqual(
+  extractToolIds(home.match(/<section class="tools-grid">([\s\S]*?)<\/section>/)?.[1] ?? ''),
+  [...registryIds]
+);
 
 const layoutSample = pages.find(({ route }) => route === '/tools/image-converter')?.html;
 assert.ok(layoutSample);
 const nav = layoutSample.match(/<nav id="primary-navigation"[\s\S]*?<\/nav>/)?.[0] ?? '';
-const footer = layoutSample.match(/<div class="footer-links" data-tool-directory="footer">[\s\S]*?<\/div>/)?.[0] ?? '';
+const footer =
+  layoutSample.match(
+    /<div class="footer-links" data-tool-directory="footer">[\s\S]*?<\/div>/
+  )?.[0] ?? '';
 assert.deepEqual(extractToolIds(nav), [...registryIds]);
 assert.deepEqual(extractToolIds(footer), [...registryIds]);
 
-console.log(JSON.stringify({
-  status: 'SEO_REGISTRY_VALIDATION_OK',
-  tools: toolRegistry.length,
-  variants: toolRegistry.reduce((sum, tool) => sum + tool.variants.length, 0),
-  indexableRoutes: expectedIndexableRoutes.length,
-  htmlPages: pages.length,
-  jsonLdBlocks,
-  webApplications,
-  faqPages,
-  locale: SITE_LOCALE,
-}));
+console.log(
+  JSON.stringify({
+    status: 'SEO_REGISTRY_VALIDATION_OK',
+    tools: toolRegistry.length,
+    variants: toolRegistry.reduce((sum, tool) => sum + tool.variants.length, 0),
+    indexableRoutes: expectedIndexableRoutes.length,
+    htmlPages: pages.length,
+    jsonLdBlocks,
+    webApplications,
+    faqPages,
+    locale: SITE_LOCALE,
+  })
+);

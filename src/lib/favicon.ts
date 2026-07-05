@@ -11,9 +11,7 @@ export function calculateSquareContainRect(
   targetSize: number
 ): ContainRect {
   if (
-    ![sourceWidth, sourceHeight, targetSize].every(
-      (value) => Number.isFinite(value) && value > 0
-    )
+    ![sourceWidth, sourceHeight, targetSize].every((value) => Number.isFinite(value) && value > 0)
   ) {
     throw new Error('Favicon dimensions must be greater than zero.');
   }

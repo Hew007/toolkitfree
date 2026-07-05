@@ -18,7 +18,16 @@
     "validate:performance": "node scripts/validate-performance-guards.mjs",
     "validate:performance:browser": "node scripts/validate-performance-browser.mjs",
     "sync:llms": "node scripts/sync-llms-registry.mjs",
-    "validate:seo": "node scripts/validate-seo-registry.mjs"
+    "validate:seo": "node scripts/validate-seo-registry.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write \"src/**/*.{ts,tsx,astro}\" \"scripts/*.mjs\" \"*.{json,mjs,js}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,astro}\" \"scripts/*.mjs\" \"*.{json,mjs,js}\"",
+    "test": "node scripts/run-unit-tests.mjs",
+    "test:e2e": "node scripts/run-browser-tests.mjs",
+    "test:e2e:edge": "node scripts/run-browser-tests.mjs --browser=edge --smoke",
+    "validate:site": "node scripts/validate-site-integrity.mjs",
+    "check": "node scripts/run-quality-gates.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.7",
@@ -33,7 +42,15 @@
   "devDependencies": {
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
+    "eslint": "^9.39.4",
+    "eslint-plugin-astro": "^1.7.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.4",
+    "prettier-plugin-astro": "^0.14.1",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.62.1",
     "wrangler": "^4.93.0"
   }
 }

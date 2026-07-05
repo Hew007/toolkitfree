@@ -7,7 +7,6 @@ import BatchResultsSummary from './BatchResultsSummary';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
 import {
   exportCanvas,
-  formatSize,
   getCanvas2dContext,
   getImageProcessingErrorMessage,
   loadImage,
@@ -45,8 +44,7 @@ interface FailedFile {
 }
 
 type ConversionOutcome =
-  | { status: 'success'; value: ConvertedFile }
-  | { status: 'failure'; value: FailedFile };
+  { status: 'success'; value: ConvertedFile } | { status: 'failure'; value: FailedFile };
 
 interface Props {
   defaultFrom?: string;
@@ -72,22 +70,28 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
     setFailures([]);
   }, [objectUrls]);
 
-  const handleFiles = useCallback((newFiles: File[]) => {
-    if (newFiles.length === 0) return;
-    clearResults();
-    setFiles((previous) => [
-      ...previous,
-      ...newFiles.map((file) => ({
-        id: `file-${++nextFileId.current}`,
-        file,
-      })),
-    ]);
-  }, [clearResults]);
+  const handleFiles = useCallback(
+    (newFiles: File[]) => {
+      if (newFiles.length === 0) return;
+      clearResults();
+      setFiles((previous) => [
+        ...previous,
+        ...newFiles.map((file) => ({
+          id: `file-${++nextFileId.current}`,
+          file,
+        })),
+      ]);
+    },
+    [clearResults]
+  );
 
-  const handleRemove = useCallback((index: number) => {
-    clearResults();
-    setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index));
-  }, [clearResults]);
+  const handleRemove = useCallback(
+    (index: number) => {
+      clearResults();
+      setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index));
+    },
+    [clearResults]
+  );
 
   const convertImage = async (
     queuedFile: QueuedFile,
@@ -164,15 +168,17 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
 
       setResults(
         outcomes
-          .filter((outcome): outcome is Extract<ConversionOutcome, { status: 'success' }> =>
-            outcome.status === 'success'
+          .filter(
+            (outcome): outcome is Extract<ConversionOutcome, { status: 'success' }> =>
+              outcome.status === 'success'
           )
           .map((outcome) => outcome.value)
       );
       setFailures(
         outcomes
-          .filter((outcome): outcome is Extract<ConversionOutcome, { status: 'failure' }> =>
-            outcome.status === 'failure'
+          .filter(
+            (outcome): outcome is Extract<ConversionOutcome, { status: 'failure' }> =>
+              outcome.status === 'failure'
           )
           .map((outcome) => outcome.value)
       );
@@ -183,7 +189,11 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
 
   return (
     <div aria-busy={converting}>
-      {converting && <div className="visually-hidden" role="status" aria-live="polite">Converting images.</div>}
+      {converting && (
+        <div className="visually-hidden" role="status" aria-live="polite">
+          Converting images.
+        </div>
+      )}
       <FileUploader
         accept={inputConfig.accept}
         multiple={true}
@@ -199,12 +209,29 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
 
       {files.length > 0 && (
         <div style={{ marginTop: '1.5rem' }}>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '1rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '1rem',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              marginBottom: '1rem',
+            }}
+          >
             <div>
-              <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>
+              <label
+                htmlFor="converter-output-format"
+                style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  display: 'block',
+                  marginBottom: '0.25rem',
+                }}
+              >
                 Output Format
               </label>
               <select
+                id="converter-output-format"
                 aria-label="Output Format"
                 value={outputFormat}
                 onChange={(event) => {
@@ -213,17 +240,28 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
                 }}
               >
                 {Object.entries(OUTPUT_FORMAT_LABELS).map(([mime, label]) => (
-                  <option key={mime} value={mime}>{label}</option>
+                  <option key={mime} value={mime}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
 
             {outputFormat !== 'image/png' && (
               <div style={{ minWidth: '200px' }}>
-                <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.25rem' }}>
+                <label
+                  htmlFor="converter-output-quality"
+                  style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    display: 'block',
+                    marginBottom: '0.25rem',
+                  }}
+                >
                   Quality: {quality}%
                 </label>
                 <input
+                  id="converter-output-quality"
                   aria-label="Output Quality"
                   type="range"
                   min="10"
@@ -244,11 +282,12 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
             disabled={converting}
             style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
           >
-            {converting ? 'Converting...' : `Convert ${files.length} image${files.length > 1 ? 's' : ''}`}
+            {converting
+              ? 'Converting...'
+              : `Convert ${files.length} image${files.length > 1 ? 's' : ''}`}
           </button>
         </div>
       )}
-
 
       <BatchResultsSummary
         successes={results}

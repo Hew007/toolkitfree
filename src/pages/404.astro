@@ -13,12 +13,14 @@ import { toolRegistry } from '../data/tool-registry';
       The page you're looking for doesn't exist or has been moved.
     </p>
     <div class="related-tools-grid" data-tool-directory="not-found">
-      {toolRegistry.map((tool) => (
-        <a href={tool.href} class="tool-card" data-tool-id={tool.id}>
-          <h3>{tool.name}</h3>
-          <p>{tool.shortDescription}</p>
-        </a>
-      ))}
+      {
+        toolRegistry.map((tool) => (
+          <a href={tool.href} class="tool-card" data-tool-id={tool.id}>
+            <h3>{tool.name}</h3>
+            <p>{tool.shortDescription}</p>
+          </a>
+        ))
+      }
     </div>
   </section>
 </Layout>

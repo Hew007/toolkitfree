@@ -7,10 +7,7 @@ import {
   type BatchFailureResult,
   type BatchSuccessResult,
 } from '../lib/batch-results';
-import {
-  downloadUrl,
-  formatSize,
-} from '../lib/image-processing';
+import { downloadUrl, formatSize } from '../lib/image-processing';
 
 interface BatchResultsSummaryProps {
   successes: readonly BatchSuccessResult[];
@@ -68,7 +65,9 @@ export default function BatchResultsSummary({
         setMessage('ZIP creation was cancelled. You can try again.');
       } else {
         setStatus('error');
-        setMessage('The ZIP file could not be created. Your individual downloads are still available.');
+        setMessage(
+          'The ZIP file could not be created. Your individual downloads are still available.'
+        );
       }
     } finally {
       if (controllerRef.current === controller) controllerRef.current = null;
@@ -81,9 +80,10 @@ export default function BatchResultsSummary({
 
   if (totals.successCount === 0 && totals.failureCount === 0) return null;
 
-  const sizeChange = totals.originalSize > 0
-    ? Math.round(((totals.outputSize - totals.originalSize) / totals.originalSize) * 100)
-    : 0;
+  const sizeChange =
+    totals.originalSize > 0
+      ? Math.round(((totals.outputSize - totals.originalSize) / totals.originalSize) * 100)
+      : 0;
 
   return (
     <section
@@ -92,7 +92,16 @@ export default function BatchResultsSummary({
       data-batch-failure-count={totals.failureCount}
       style={{ marginTop: '1.5rem' }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '1rem',
+          flexWrap: 'wrap',
+          marginBottom: '1rem',
+        }}
+      >
         <div>
           <h3 style={{ fontSize: '1.125rem' }}>
             Results: {totals.successCount} succeeded, {totals.failureCount} failed
@@ -117,7 +126,9 @@ export default function BatchResultsSummary({
             disabled={totals.successCount === 0}
             data-batch-download
           >
-            {status === 'error' || status === 'cancelled' ? 'Retry ZIP download' : 'Download all as ZIP'}
+            {status === 'error' || status === 'cancelled'
+              ? 'Retry ZIP download'
+              : 'Download all as ZIP'}
           </button>
         )}
       </div>
@@ -132,14 +143,21 @@ export default function BatchResultsSummary({
       )}
 
       {message && (
-        <div className={status === 'error' ? 'status status-error' : 'status'} role={status === 'error' ? 'alert' : 'status'} aria-live="polite" data-batch-archive-status={status}>
+        <div
+          className={status === 'error' ? 'status status-error' : 'status'}
+          role={status === 'error' ? 'alert' : 'status'}
+          aria-live="polite"
+          data-batch-archive-status={status}
+        >
           {message}
         </div>
       )}
 
       {failures.length > 0 && (
         <div className="status status-error" role="alert" style={{ marginBottom: '1rem' }}>
-          <strong>{failures.length} file{failures.length === 1 ? '' : 's'} could not be processed:</strong>
+          <strong>
+            {failures.length} file{failures.length === 1 ? '' : 's'} could not be processed:
+          </strong>
           <ul style={{ margin: '0.5rem 0 0 1.25rem' }}>
             {failures.map((failure) => (
               <li key={failure.sourceId}>

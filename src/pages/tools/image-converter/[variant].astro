@@ -11,9 +11,10 @@ export function getStaticPaths() {
       ...variant,
       faq: faqData[variant.slug],
       description: descriptions[variant.slug],
-      title: variant.availability === 'unsupported'
-        ? `${variant.from} to ${variant.to} - Current Support Status`
-        : `Convert ${variant.from} to ${variant.to} Online Free`,
+      title:
+        variant.availability === 'unsupported'
+          ? `${variant.from} to ${variant.to} - Current Support Status`
+          : `Convert ${variant.from} to ${variant.to} Online Free`,
     },
   }));
 }
@@ -25,33 +26,38 @@ const isLimitedVariant = availability !== 'supported';
 const pageUrl = `https://toolkitfree.net/tools/image-converter/${Astro.params.variant}`;
 
 const structuredData = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": title,
-  "description": description,
-  "applicationCategory": "UtilitiesApplication",
-  "operatingSystem": "Any",
-  "offers": { "@type": "Offer", "price": "0" },
-  "url": pageUrl,
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: title,
+  description: description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0' },
+  url: pageUrl,
 };
 
 const breadcrumbSchema = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://toolkitfree.net" },
-    { "@type": "ListItem", "position": 2, "name": "Image Converter", "item": "https://toolkitfree.net/tools/image-converter" },
-    { "@type": "ListItem", "position": 3, "name": `${from} to ${to}`, "item": pageUrl },
-  ]
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://toolkitfree.net' },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Image Converter',
+      item: 'https://toolkitfree.net/tools/image-converter',
+    },
+    { '@type': 'ListItem', position: 3, name: `${from} to ${to}`, item: pageUrl },
+  ],
 };
 
 const faqStructuredData = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": faq.map((item: { question: string; answer: string }) => ({
-    "@type": "Question",
-    "name": item.question,
-    "acceptedAnswer": { "@type": "Answer", "text": item.answer },
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map((item: { question: string; answer: string }) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
   })),
 };
 ---
@@ -60,44 +66,72 @@ const faqStructuredData = {
   title={title}
   description={description}
   canonical={pageUrl}
-  structuredData={isUnsupported ? [faqStructuredData, breadcrumbSchema] : [structuredData, faqStructuredData, breadcrumbSchema]}
+  structuredData={isUnsupported
+    ? [faqStructuredData, breadcrumbSchema]
+    : [structuredData, faqStructuredData, breadcrumbSchema]}
   noindex={isLimitedVariant}
 >
   <div class="tool-layout">
     <div class="tool-content">
       <h1>{title}</h1>
       <p style="color: var(--color-text-light); margin-bottom: 0.5rem;">
-        {isUnsupported ? from + ' to ' + to + ' conversion is not available in the current tool.' : 'Convert ' + from + ' images to ' + to + ' in your browser without uploading the image file.'}
+        {
+          isUnsupported
+            ? from + ' to ' + to + ' conversion is not available in the current tool.'
+            : 'Convert ' +
+              from +
+              ' images to ' +
+              to +
+              ' in your browser without uploading the image file.'
+        }
       </p>
       <div class="privacy-badge">Image processing stays on this device</div>
 
-      {isLimitedVariant && (
-        <div class={'status ' + (isUnsupported ? 'status-error' : '')} style="margin-top: 1rem;">
-          <strong>{isUnsupported ? 'Not currently supported.' : 'Browser-dependent input.'}</strong>
-          {' '}{capabilityNote}
-        </div>
-      )}
+      {
+        isLimitedVariant && (
+          <div class={'status ' + (isUnsupported ? 'status-error' : '')} style="margin-top: 1rem;">
+            <strong>
+              {isUnsupported ? 'Not currently supported.' : 'Browser-dependent input.'}
+            </strong>{' '}
+            {capabilityNote}
+          </div>
+        )
+      }
 
-      {!isUnsupported && (
-        <div style="margin-top: 1.5rem;">
-          <ImageConverter client:load defaultFrom={from} defaultTo={to} />
-        </div>
-      )}
+      {
+        !isUnsupported && (
+          <div style="margin-top: 1.5rem;">
+            <ImageConverter client:load defaultFrom={from} defaultTo={to} />
+          </div>
+        )
+      }
 
-      {!isUnsupported && <section class="howto-section">
-        <h2>How to Convert {from} to {to}</h2>
-        <ol class="howto-steps">
-          <li>Upload your {from} file by dragging & dropping or clicking to browse</li>
-          <li>Select {to} as the output format</li>
-          {to !== 'PNG' && <li>Adjust the quality slider if needed</li>}
-          <li>Click "Convert" and download your {to} file</li>
-        </ol>
-      </section>}
+      {
+        !isUnsupported && (
+          <section class="howto-section">
+            <h2>
+              How to Convert {from} to {to}
+            </h2>
+            <ol class="howto-steps">
+              <li>Upload your {from} file by dragging & dropping or clicking to browse</li>
+              <li>Select {to} as the output format</li>
+              {to !== 'PNG' && <li>Adjust the quality slider if needed</li>}
+              <li>Click "Convert" and download your {to} file</li>
+            </ol>
+          </section>
+        )
+      }
 
       <section class="features-section">
         <h2>Features</h2>
         <ul class="features-list">
-          <li>{isUnsupported ? from + ' input or ' + to + ' output requires a future implementation' : from + ' to ' + to + ' conversion using the browser decoder'}</li>
+          <li>
+            {
+              isUnsupported
+                ? from + ' input or ' + to + ' output requires a future implementation'
+                : from + ' to ' + to + ' conversion using the browser decoder'
+            }
+          </li>
           {!isUnsupported && <li>Batch convert multiple files</li>}
           {!isUnsupported && <li>Image pixels are processed locally - no file upload</li>}
           {!isUnsupported && <li>Capacity depends on browser memory and canvas limits</li>}
@@ -112,22 +146,32 @@ const faqStructuredData = {
 
       <section class="faq-section">
         <h2>Frequently Asked Questions</h2>
-        {faq.map((item: { question: string; answer: string }) => (
-          <div class="faq-item">
-            <details>
-              <summary class="faq-question">{item.question}</summary>
-              <div class="faq-answer">{item.answer}</div>
-            </details>
-          </div>
-        ))}
+        {
+          faq.map((item: { question: string; answer: string }) => (
+            <div class="faq-item">
+              <details>
+                <summary class="faq-question">{item.question}</summary>
+                <div class="faq-answer">{item.answer}</div>
+              </details>
+            </div>
+          ))
+        }
       </section>
 
       <section class="related-tools">
         <h2>More Conversion Tools</h2>
         <div class="related-tools-grid">
-          {allVariants.filter(v => v.slug !== slug).map(v => (
-            <a href={`/tools/image-converter/${v.slug}`} class="tool-card"><h3>{v.from} to {v.to}</h3></a>
-          ))}
+          {
+            allVariants
+              .filter((v) => v.slug !== slug)
+              .map((v) => (
+                <a href={`/tools/image-converter/${v.slug}`} class="tool-card">
+                  <h3>
+                    {v.from} to {v.to}
+                  </h3>
+                </a>
+              ))
+          }
         </div>
       </section>
     </div>
@@ -137,9 +181,15 @@ const faqStructuredData = {
       <div style="margin-top: 2rem;">
         <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">All Conversions</h3>
         <ul style="font-size: 0.875rem; list-style: none;">
-          {allVariants.map(v => (
-            <li style="padding: 0.25rem 0;"><a href={`/tools/image-converter/${v.slug}`}>{v.from} → {v.to}</a></li>
-          ))}
+          {
+            allVariants.map((v) => (
+              <li style="padding: 0.25rem 0;">
+                <a href={`/tools/image-converter/${v.slug}`}>
+                  {v.from} → {v.to}
+                </a>
+              </li>
+            ))
+          }
         </ul>
       </div>
       <ToolDirectory currentId="image-converter" mode="sidebar" />

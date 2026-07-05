@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
+import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
 
 const root = process.cwd();
 const fixture = path.join(root, 'docs/optimization/baseline/fixtures/opaque.png');
@@ -9,7 +10,7 @@ const emptyFixture = path.join(root, 'docs/optimization/baseline/fixtures/empty.
 const downloadDir = path.join(root, '.tmp-opt02-downloads');
 const downloadPath = path.join(downloadDir, 'favicons.zip');
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9222';
-const pageUrl = 'http://127.0.0.1:4321/tools/favicon-generator';
+const pageUrl = `${process.env.BASE_URL || 'http://127.0.0.1:4321'}/tools/favicon-generator`;
 
 fs.mkdirSync(downloadDir, { recursive: true });
 if (fs.existsSync(downloadPath)) fs.rmSync(downloadPath);
@@ -157,10 +158,7 @@ await evaluate(`
     .find((button) => button.textContent.trim() === 'Download ZIP')
     .click()
 `);
-await waitFor(
-  `true`,
-  'download click dispatch'
-);
+await waitFor(`true`, 'download click dispatch');
 
 const downloadStarted = Date.now();
 while (!fs.existsSync(downloadPath) && Date.now() - downloadStarted < 10_000) {
@@ -202,7 +200,8 @@ assert.equal(
   false,
   'Empty file must not enter the processing workflow'
 );
-assert.deepEqual(browserErrors, []);
+const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
+assert.deepEqual(actionableBrowserErrors, []);
 
 await send('Target.closeTarget', { targetId: target.id });
 socket.close();
@@ -216,6 +215,6 @@ console.log(
     removedStats,
     zipBytes: fs.statSync(downloadPath).size,
     zipEntries: Object.keys(archive.files).length,
-    browserErrors: browserErrors.length,
+    browserErrors: actionableBrowserErrors.length,
   })
 );

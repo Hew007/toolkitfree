@@ -22,10 +22,12 @@ export const GET: APIRoute = () => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${pages
-  .map(({ path, lastModified }) => `  <url>
+  .map(
+    ({ path, lastModified }) => `  <url>
     <loc>${SITE_URL}${path}</loc>
     <lastmod>${lastModified}</lastmod>
-  </url>`)
+  </url>`
+  )
   .join('\n')}
 </urlset>`;
 

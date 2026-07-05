@@ -11,9 +11,7 @@ export default function DownloadResult({ name, size, url, previewUrl }: Download
   return (
     <div className="result-item">
       <div className="result-info">
-        {previewUrl && (
-          <img src={previewUrl} alt={name} className="result-preview" />
-        )}
+        {previewUrl && <img src={previewUrl} alt={name} className="result-preview" />}
         <div>
           <div className="file-item-name">{name}</div>
           <div className="file-item-size">{formatSize(size)}</div>

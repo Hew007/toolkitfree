@@ -74,10 +74,7 @@ export function calculatePdfPlacement(
     throw new Error('Margin leaves no drawable page area.');
   }
 
-  const scale = Math.min(
-    availableWidth / imageWidth,
-    availableHeight / imageHeight
-  );
+  const scale = Math.min(availableWidth / imageWidth, availableHeight / imageHeight);
   const width = imageWidth * scale;
   const height = imageHeight * scale;
 

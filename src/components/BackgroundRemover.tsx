@@ -10,10 +10,7 @@ import {
   loadImage,
   validateImageFile,
 } from '../lib/image-processing';
-import {
-  mapBackgroundProgress,
-  type BackgroundProgress,
-} from '../lib/background-remover';
+import { mapBackgroundProgress, type BackgroundProgress } from '../lib/background-remover';
 
 interface ProcessedFile {
   name: string;
@@ -42,20 +39,23 @@ export default function BackgroundRemover() {
     setResult(null);
   }, [objectUrls]);
 
-  const handleFiles = useCallback((files: File[]) => {
-    const nextFile = files[0];
-    if (!nextFile) return;
-    try {
-      validateImageFile(nextFile);
-      clearResult();
-      setFile(nextFile);
-      setPreviewUrl(objectUrls.replace('background:preview', nextFile));
-      setError(null);
-      setProgress(null);
-    } catch (fileError) {
-      setError(getImageProcessingErrorMessage(fileError));
-    }
-  }, [clearResult, objectUrls]);
+  const handleFiles = useCallback(
+    (files: File[]) => {
+      const nextFile = files[0];
+      if (!nextFile) return;
+      try {
+        validateImageFile(nextFile);
+        clearResult();
+        setFile(nextFile);
+        setPreviewUrl(objectUrls.replace('background:preview', nextFile));
+        setError(null);
+        setProgress(null);
+      } catch (fileError) {
+        setError(getImageProcessingErrorMessage(fileError));
+      }
+    },
+    [clearResult, objectUrls]
+  );
 
   const handleRemove = useCallback(() => {
     objectUrls.revokeAll();
@@ -136,14 +136,36 @@ export default function BackgroundRemover() {
       ) : (
         <>
           <div className="file-item" style={{ marginBottom: '1rem' }}>
-            {previewUrl && <img src={previewUrl} alt="Original preview" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />}
+            {previewUrl && (
+              <img
+                src={previewUrl}
+                alt="Original preview"
+                style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }}
+              />
+            )}
             <span className="file-item-name">{file.name}</span>
             <span className="file-item-size">{formatSize(file.size)}</span>
-            <button type="button" aria-label={`Remove ${file.name}`} className="file-item-remove" onClick={handleRemove}>x</button>
+            <button
+              type="button"
+              aria-label={`Remove ${file.name}`}
+              className="file-item-remove"
+              onClick={handleRemove}
+            >
+              x
+            </button>
           </div>
 
           <div style={{ marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 500, display: 'block', marginBottom: '0.5rem' }}>Background Color</span>
+            <span
+              style={{
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                display: 'block',
+                marginBottom: '0.5rem',
+              }}
+            >
+              Background Color
+            </span>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {[
                 { value: 'transparent', label: 'Transparent', color: '#fff' },
@@ -158,7 +180,10 @@ export default function BackgroundRemover() {
                   data-background-color={option.value}
                   aria-pressed={bgColor === option.value}
                   disabled={processing}
-                  onClick={() => { setBgColor(option.value); clearResult(); }}
+                  onClick={() => {
+                    setBgColor(option.value);
+                    clearResult();
+                  }}
                   style={{
                     padding: '0.375rem 1rem',
                     borderRadius: 6,
@@ -166,7 +191,9 @@ export default function BackgroundRemover() {
                     background: option.color,
                     cursor: processing ? 'not-allowed' : 'pointer',
                     fontSize: '0.8rem',
-                    color: ['#0000ff', '#008000', '#ff0000'].includes(option.value) ? '#fff' : '#1f2937',
+                    color: ['#0000ff', '#008000', '#ff0000'].includes(option.value)
+                      ? '#fff'
+                      : '#1f2937',
                   }}
                 >
                   {option.label}
@@ -175,21 +202,39 @@ export default function BackgroundRemover() {
             </div>
           </div>
 
-          <button type="button" className="btn btn-primary" onClick={removeBackground} disabled={processing} style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={removeBackground}
+            disabled={processing}
+            style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
+          >
             {processing ? 'Processing...' : result ? 'Process Again' : 'Remove Background'}
           </button>
           <p style={{ marginTop: '0.5rem', color: '#6b7280', fontSize: '0.8125rem' }}>
-            First use downloads a sizable AI model and requires a network connection. Later offline use depends on whether your browser keeps that model cached. Processing speed and maximum image size depend on device memory.
+            First use downloads a sizable AI model and requires a network connection. Later offline
+            use depends on whether your browser keeps that model cached. Processing speed and
+            maximum image size depend on device memory.
           </p>
         </>
       )}
 
       {progress && (
-        <div className="status status-processing" role="status" aria-live="polite" data-progress-stage={progress.stage}>
-          {progress.label}{progress.percent === null ? '...' : `: ${progress.percent}%`}
+        <div
+          className="status status-processing"
+          role="status"
+          aria-live="polite"
+          data-progress-stage={progress.stage}
+        >
+          {progress.label}
+          {progress.percent === null ? '...' : `: ${progress.percent}%`}
         </div>
       )}
-      {error && <div className="status status-error" role="alert">{error}</div>}
+      {error && (
+        <div className="status status-error" role="alert">
+          {error}
+        </div>
+      )}
 
       {result && (
         <div style={{ marginTop: '1.5rem' }}>
@@ -197,12 +242,25 @@ export default function BackgroundRemover() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
             {previewUrl && (
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Original</div>
-                <img src={previewUrl} alt="Original" style={{ maxWidth: 200, maxHeight: 200, borderRadius: 4, border: '1px solid #e5e7eb' }} />
+                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                  Original
+                </div>
+                <img
+                  src={previewUrl}
+                  alt="Original"
+                  style={{
+                    maxWidth: 200,
+                    maxHeight: 200,
+                    borderRadius: 4,
+                    border: '1px solid #e5e7eb',
+                  }}
+                />
               </div>
             )}
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Result</div>
+              <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                Result
+              </div>
               <img
                 src={result.url}
                 alt="Result"
@@ -211,9 +269,10 @@ export default function BackgroundRemover() {
                   maxHeight: 200,
                   borderRadius: 4,
                   border: '1px solid #e5e7eb',
-                  backgroundImage: bgColor === 'transparent'
-                    ? 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)'
-                    : undefined,
+                  backgroundImage:
+                    bgColor === 'transparent'
+                      ? 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)'
+                      : undefined,
                   backgroundSize: '16px 16px',
                   backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
                 }}
@@ -227,7 +286,9 @@ export default function BackgroundRemover() {
                 <div className="file-item-size">{formatSize(result.size)}</div>
               </div>
             </div>
-            <button type="button" onClick={handleDownload} className="btn btn-primary">Download</button>
+            <button type="button" onClick={handleDownload} className="btn btn-primary">
+              Download
+            </button>
           </div>
         </div>
       )}

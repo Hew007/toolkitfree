@@ -16,14 +16,7 @@ assert.deepEqual(
     'archive',
     'archive',
   ]),
-  [
-    'photo.jpg',
-    'photo (2).jpg',
-    'PHOTO (3).JPG',
-    'bad-name-.png',
-    'archive',
-    'archive (2)',
-  ]
+  ['photo.jpg', 'photo (2).jpg', 'PHOTO (3).JPG', 'bad-name-.png', 'archive', 'archive (2)']
 );
 
 const successes = [
@@ -67,24 +60,24 @@ assert.equal(await archive.file('photo.png').async('string'), 'one');
 assert.equal(await archive.file('photo (2).png').async('string'), 'two');
 assert.equal(archive.file('bad.png'), null);
 
-await assert.rejects(
-  () => createBatchArchive([], {}),
-  /At least one successful result/
-);
+await assert.rejects(() => createBatchArchive([], {}), /At least one successful result/);
 
 const controller = new AbortController();
 await assert.rejects(
-  () => createBatchArchive(successes, {
-    signal: controller.signal,
-    onProgress: () => controller.abort(),
-  }),
+  () =>
+    createBatchArchive(successes, {
+      signal: controller.signal,
+      onProgress: () => controller.abort(),
+    }),
   (error) => error instanceof BatchArchiveCancelledError
 );
 
-console.log(JSON.stringify({
-  status: 'BATCH_DOWNLOAD_VALIDATION_OK',
-  entries: Object.keys(archive.files).length,
-  uniqueNameCases: 6,
-  progressUpdates: progress.length,
-  cancellationVerified: true,
-}));
+console.log(
+  JSON.stringify({
+    status: 'BATCH_DOWNLOAD_VALIDATION_OK',
+    entries: Object.keys(archive.files).length,
+    uniqueNameCases: 6,
+    progressUpdates: progress.length,
+    cancellationVerified: true,
+  })
+);

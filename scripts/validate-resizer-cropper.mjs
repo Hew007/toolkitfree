@@ -29,36 +29,19 @@ for (const [slug, dimensions] of Object.entries(expectedResizerVariants)) {
 }
 
 assert.deepEqual(
-  calculateResizeDimensions(
-    { width: 4000, height: 3000 },
-    { width: 1920, height: 1080 },
-    true
-  ),
+  calculateResizeDimensions({ width: 4000, height: 3000 }, { width: 1920, height: 1080 }, true),
   { width: 1440, height: 1080 }
 );
 assert.deepEqual(
-  calculateResizeDimensions(
-    { width: 4000, height: 3000 },
-    { width: 1920, height: 1080 },
-    false
-  ),
+  calculateResizeDimensions({ width: 4000, height: 3000 }, { width: 1920, height: 1080 }, false),
   { width: 1920, height: 1080 }
 );
 assert.deepEqual(
-  calculateResizeDimensions(
-    { width: 2, height: 1 },
-    { width: 1, height: 1 },
-    true
-  ),
+  calculateResizeDimensions({ width: 2, height: 1 }, { width: 1, height: 1 }, true),
   { width: 1, height: 1 }
 );
 assert.throws(
-  () =>
-    calculateResizeDimensions(
-      { width: 0, height: 100 },
-      { width: 100, height: 100 },
-      true
-    ),
+  () => calculateResizeDimensions({ width: 0, height: 100 }, { width: 100, height: 100 }, true),
   /Source width/
 );
 
@@ -83,12 +66,7 @@ for (const [slug, expectedRatio] of Object.entries(expectedCropRatios)) {
   }
 }
 
-const moved = moveCropRect(
-  { x: 100, y: 100, width: 400, height: 300 },
-  1000,
-  -1000,
-  bounds
-);
+const moved = moveCropRect({ x: 100, y: 100, width: 400, height: 300 }, 1000, -1000, bounds);
 assert.deepEqual(moved, { x: 800, y: 0, width: 400, height: 300 });
 
 const handles = ['nw', 'ne', 'sw', 'se', 'n', 's', 'e', 'w'];

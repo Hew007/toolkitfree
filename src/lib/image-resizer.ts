@@ -52,10 +52,7 @@ export function calculateResizeDimensions(
     return { width: requestedWidth, height: requestedHeight };
   }
 
-  const scale = Math.min(
-    requestedWidth / sourceWidth,
-    requestedHeight / sourceHeight
-  );
+  const scale = Math.min(requestedWidth / sourceWidth, requestedHeight / sourceHeight);
 
   return {
     width: Math.max(1, Math.round(sourceWidth * scale)),

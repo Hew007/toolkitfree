@@ -44,35 +44,38 @@ export default function FileUploader({
     setPendingFiles([]);
   }, []);
 
-  const submitFiles = useCallback(async (newFiles: File[]) => {
-    if (newFiles.length === 0) return;
-    if (!budgetProfile) {
-      onFilesSelected(newFiles);
-      return;
-    }
-
-    const reviewId = ++reviewIdRef.current;
-    setReviewing(true);
-    setAssessment(null);
-    setPendingFiles([]);
-    try {
-      const nextAssessment = await reviewImageBudget(
-        [...currentFiles, ...newFiles],
-        budgetProfile
-      );
-      if (reviewId !== reviewIdRef.current) return;
-      if (nextAssessment.level === 'safe') {
+  const submitFiles = useCallback(
+    async (newFiles: File[]) => {
+      if (newFiles.length === 0) return;
+      if (!budgetProfile) {
         onFilesSelected(newFiles);
-      } else {
-        setPendingFiles(newFiles);
-        setAssessment(nextAssessment);
+        return;
       }
-    } catch {
-      if (reviewId === reviewIdRef.current) onFilesSelected(newFiles);
-    } finally {
-      if (reviewId === reviewIdRef.current) setReviewing(false);
-    }
-  }, [budgetProfile, currentFiles, onFilesSelected]);
+
+      const reviewId = ++reviewIdRef.current;
+      setReviewing(true);
+      setAssessment(null);
+      setPendingFiles([]);
+      try {
+        const nextAssessment = await reviewImageBudget(
+          [...currentFiles, ...newFiles],
+          budgetProfile
+        );
+        if (reviewId !== reviewIdRef.current) return;
+        if (nextAssessment.level === 'safe') {
+          onFilesSelected(newFiles);
+        } else {
+          setPendingFiles(newFiles);
+          setAssessment(nextAssessment);
+        }
+      } catch {
+        if (reviewId === reviewIdRef.current) onFilesSelected(newFiles);
+      } finally {
+        if (reviewId === reviewIdRef.current) setReviewing(false);
+      }
+    },
+    [budgetProfile, currentFiles, onFilesSelected]
+  );
 
   const handleDrop = useCallback(
     (event: React.DragEvent) => {

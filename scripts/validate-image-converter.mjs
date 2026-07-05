@@ -22,11 +22,7 @@ assert.equal(getConverterOutputMime('PNG'), 'image/png');
 assert.equal(getConverterOutputMime('WebP'), 'image/webp');
 assert.throws(() => getConverterOutputMime('GIF'), /Unsupported converter output label/);
 
-assert.deepEqual(getConverterInputConfig().allowedTypes, [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-]);
+assert.deepEqual(getConverterInputConfig().allowedTypes, ['image/jpeg', 'image/png', 'image/webp']);
 assert.equal(getConverterInputConfig('JPG').accept, 'image/jpeg');
 assert.equal(getConverterInputConfig('PNG').accept, 'image/png');
 assert.equal(getConverterInputConfig('WebP').accept, 'image/webp');
@@ -50,18 +46,24 @@ const browserDependent = allVariants.filter(
 const unsupported = allVariants.filter((variant) => variant.availability === 'unsupported');
 
 assert.equal(supported.length, 6);
-assert.deepEqual(
-  supported.map(({ from, to }) => `${from}->${to}`).sort(),
-  ['JPG->PNG', 'JPG->WebP', 'PNG->JPG', 'PNG->WebP', 'WebP->JPG', 'WebP->PNG']
-);
-assert.deepEqual(
-  browserDependent.map(({ slug }) => slug).sort(),
-  ['bmp-to-png', 'gif-to-png', 'svg-to-png']
-);
-assert.deepEqual(
-  unsupported.map(({ slug }) => slug).sort(),
-  ['heic-to-jpg', 'png-to-gif', 'tiff-to-jpg']
-);
+assert.deepEqual(supported.map(({ from, to }) => `${from}->${to}`).sort(), [
+  'JPG->PNG',
+  'JPG->WebP',
+  'PNG->JPG',
+  'PNG->WebP',
+  'WebP->JPG',
+  'WebP->PNG',
+]);
+assert.deepEqual(browserDependent.map(({ slug }) => slug).sort(), [
+  'bmp-to-png',
+  'gif-to-png',
+  'svg-to-png',
+]);
+assert.deepEqual(unsupported.map(({ slug }) => slug).sort(), [
+  'heic-to-jpg',
+  'png-to-gif',
+  'tiff-to-jpg',
+]);
 assert.equal(
   allVariants.every(
     (variant) =>

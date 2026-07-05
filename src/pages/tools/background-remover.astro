@@ -6,86 +6,107 @@ import BackgroundRemover from '../../components/BackgroundRemover';
 const faqItems = [
   {
     question: 'How does background removal work?',
-    answer: 'We use an AI model that runs entirely in your browser via WebAssembly. The model detects the subject (person, product, animal, etc.) and removes everything else. No data is sent to any server.',
+    answer:
+      'We use an AI model that runs entirely in your browser via WebAssembly. The model detects the subject (person, product, animal, etc.) and removes everything else. No data is sent to any server.',
   },
   {
     question: 'What types of images work best?',
-    answer: 'The tool works best with clear subjects — portraits, product photos, and objects with defined edges. Images with complex backgrounds or multiple subjects may need manual cleanup.',
+    answer:
+      'The tool works best with clear subjects — portraits, product photos, and objects with defined edges. Images with complex backgrounds or multiple subjects may need manual cleanup.',
   },
   {
     question: 'Is the background removal free?',
-    answer: 'Yes, completely free. The AI model runs in your browser, so there are no server costs for us to pass on.',
+    answer:
+      'Yes, completely free. The AI model runs in your browser, so there are no server costs for us to pass on.',
   },
   {
     question: 'How long does it take?',
-    answer: 'First use downloads a sizable AI model and therefore needs a network connection. Later runs are usually faster if the browser keeps the model cached. Exact time depends on network speed, image dimensions, device memory, and available acceleration.',
+    answer:
+      'First use downloads a sizable AI model and therefore needs a network connection. Later runs are usually faster if the browser keeps the model cached. Exact time depends on network speed, image dimensions, device memory, and available acceleration.',
   },
   {
     question: 'How large can my image be?',
-    answer: 'The tool checks dimensions and estimated working memory before processing. It warns when an image may be demanding and blocks inputs above the 100 million pixel safety limit. Mobile devices use stricter memory thresholds; resize very large photos first.',
+    answer:
+      'The tool checks dimensions and estimated working memory before processing. It warns when an image may be demanding and blocks inputs above the 100 million pixel safety limit. Mobile devices use stricter memory thresholds; resize very large photos first.',
   },
   {
     question: 'Can I add a colored background after removal?',
-    answer: 'Yes, you can choose from preset background colors (white, red, blue, green) or keep the background transparent (default).',
+    answer:
+      'Yes, you can choose from preset background colors (white, red, blue, green) or keep the background transparent (default).',
   },
   {
     question: 'What output format will I get?',
-    answer: 'The result is always a PNG file to preserve transparency. If you choose a colored background, the PNG will include that background color.',
+    answer:
+      'The result is always a PNG file to preserve transparency. If you choose a colored background, the PNG will include that background color.',
   },
   {
     question: 'Is my image uploaded to a server?',
-    answer: 'No. All processing happens locally in your browser using WebAssembly. Your image never leaves your device.',
+    answer:
+      'No. All processing happens locally in your browser using WebAssembly. Your image never leaves your device.',
   },
   {
     question: 'How do I remove the background from a picture for free?',
-    answer: 'Upload your picture, choose transparent or a colored background, and click "Remove Background." There is no sign-up or watermark; practical image size and speed depend on browser and device memory.',
+    answer:
+      'Upload your picture, choose transparent or a colored background, and click "Remove Background." There is no sign-up or watermark; practical image size and speed depend on browser and device memory.',
   },
   {
     question: 'How do I make a transparent background?',
-    answer: 'Upload your image and click "Remove Background." The default output is transparent (PNG). You can then download the PNG file which preserves the transparency for use in designs, documents, or websites.',
+    answer:
+      'Upload your image and click "Remove Background." The default output is transparent (PNG). You can then download the PNG file which preserves the transparency for use in designs, documents, or websites.',
   },
 ];
 
 const structuredData = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "Free Background Remover",
-  "description": "Remove image backgrounds instantly using AI. Create transparent backgrounds or replace with a color. Works with portraits, products, and objects. 100% client-side.",
-  "url": "https://toolkitfree.net/tools/background-remover",
-  "applicationCategory": "UtilitiesApplication",
-  "operatingSystem": "Any",
-  "offers": { "@type": "Offer", "price": "0" },
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Free Background Remover',
+  description:
+    'Remove image backgrounds instantly using AI. Create transparent backgrounds or replace with a color. Works with portraits, products, and objects. 100% client-side.',
+  url: 'https://toolkitfree.net/tools/background-remover',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0' },
 };
 
 const breadcrumbSchema = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://toolkitfree.net" },
-    { "@type": "ListItem", "position": 2, "name": "Background Remover", "item": "https://toolkitfree.net/tools/background-remover" },
-  ]
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://toolkitfree.net' },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Background Remover',
+      item: 'https://toolkitfree.net/tools/background-remover',
+    },
+  ],
 };
 ---
 
 <Layout
   title="Free Background Remover - Remove Image Backgrounds with AI | Transparent"
   description="Remove image backgrounds instantly using AI. Create transparent backgrounds or cut out subjects. Free, runs in your browser. No upload needed. Perfect for product photos, portraits, and e-commerce."
-  structuredData={[structuredData, {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faqItems.map((item) => ({
-      "@type": "Question", "name": item.question,
-      "acceptedAnswer": { "@type": "Answer", "text": item.answer },
-    })),
-  }, breadcrumbSchema]}
+  structuredData={[
+    structuredData,
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: { '@type': 'Answer', text: item.answer },
+      })),
+    },
+    breadcrumbSchema,
+  ]}
 >
   <div class="tool-layout">
     <div class="tool-content">
       <h1>Free AI Background Remover</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
-        Remove image backgrounds instantly using AI. Choose transparent or colored backgrounds.
-        Your photo stays on your device; first use still downloads the AI model and runtime files.
-        Very large inputs are checked before the model starts to protect the browser tab.
+        Remove image backgrounds instantly using AI. Choose transparent or colored backgrounds. Your
+        photo stays on your device; first use still downloads the AI model and runtime files. Very
+        large inputs are checked before the model starts to protect the browser tab.
       </p>
 
       <BackgroundRemover client:load />
@@ -118,14 +139,16 @@ const breadcrumbSchema = {
 
       <section class="faq-section">
         <h2>Frequently Asked Questions</h2>
-        {faqItems.map((item) => (
-          <div class="faq-item">
-            <details>
-              <summary class="faq-question">{item.question}</summary>
-              <div class="faq-answer">{item.answer}</div>
-            </details>
-          </div>
-        ))}
+        {
+          faqItems.map((item) => (
+            <div class="faq-item">
+              <details>
+                <summary class="faq-question">{item.question}</summary>
+                <div class="faq-answer">{item.answer}</div>
+              </details>
+            </div>
+          ))
+        }
       </section>
 
       <ToolDirectory currentId="background-remover" mode="related" />

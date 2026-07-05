@@ -37,11 +37,7 @@ expectCode(
   'UNSUPPORTED_FILE_TYPE'
 );
 expectCode(
-  () =>
-    validateImageFile(
-      { name: 'large.png', size: 11, type: 'image/png' },
-      { maxBytes: 10 }
-    ),
+  () => validateImageFile({ name: 'large.png', size: 11, type: 'image/png' }, { maxBytes: 10 }),
   'INVALID_FILE_SIZE'
 );
 
@@ -51,10 +47,7 @@ assert.deepEqual(validateImageDimensions(400, 300), {
   pixels: 120_000,
 });
 expectCode(() => validateImageDimensions(0, 10), 'INVALID_DIMENSIONS');
-expectCode(
-  () => validateImageDimensions(100, 100, { maxPixels: 9_999 }),
-  'PIXEL_LIMIT_EXCEEDED'
-);
+expectCode(() => validateImageDimensions(100, 100, { maxPixels: 9_999 }), 'PIXEL_LIMIT_EXCEEDED');
 
 const created = [];
 const revoked = [];
@@ -183,9 +176,7 @@ assert.equal(anchor.rel, 'noopener');
 assert.equal(clicked && appended && removed, true);
 
 assert.equal(
-  getImageProcessingErrorMessage(
-    new ImageProcessingError('OUTPUT_TYPE_MISMATCH', 'debug details')
-  ),
+  getImageProcessingErrorMessage(new ImageProcessingError('OUTPUT_TYPE_MISMATCH', 'debug details')),
   'Your browser does not support the requested output format.'
 );
 assert.equal(

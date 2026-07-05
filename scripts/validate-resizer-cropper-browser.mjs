@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
+import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
 
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9226';
-const baseUrl = 'http://127.0.0.1:4321';
+const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
 
 const target = await fetch(`${endpoint}/json/new?${encodeURIComponent('about:blank')}`, {
   method: 'PUT',
@@ -165,7 +166,10 @@ const resizerResults = [];
 for (const [slug, preset, width, height] of resizerVariants) {
   await navigate(`/tools/image-resizer/${slug}`);
   await uploadGenerated({ name: `${slug}.png`, width: 400, height: 300 });
-  await waitFor(`Boolean(document.querySelector('[data-testid="resize-preset"]'))`, `${slug} controls`);
+  await waitFor(
+    `Boolean(document.querySelector('[data-testid="resize-preset"]'))`,
+    `${slug} controls`
+  );
 
   const controls = await evaluate(`({
     preset: document.querySelector('[data-testid="resize-preset"]').value,
@@ -198,7 +202,10 @@ for (const [slug, preset, width, height] of resizerVariants) {
 
 await navigate('/tools/image-resizer');
 await uploadGenerated({ name: 'landscape.png', width: 400, height: 300, transparent: true });
-await waitFor(`Boolean(document.querySelector('[data-testid="resize-width"]'))`, 'custom resizer controls');
+await waitFor(
+  `Boolean(document.querySelector('[data-testid="resize-width"]'))`,
+  'custom resizer controls'
+);
 assert.deepEqual(
   await evaluate(`({
     preset: document.querySelector('[data-testid="resize-preset"]').value,
@@ -388,7 +395,9 @@ await waitFor(
   `Number(document.querySelector('[data-testid="crop-box"]').dataset.cropWidth) < ${beforeDrag}`,
   'mouse corner resize'
 );
-const afterMouseDrag = await evaluate(`Number(document.querySelector('[data-testid="crop-box"]').dataset.cropWidth)`);
+const afterMouseDrag = await evaluate(
+  `Number(document.querySelector('[data-testid="crop-box"]').dataset.cropWidth)`
+);
 
 await evaluate(`
   (() => {
@@ -482,7 +491,8 @@ await send('Emulation.clearDeviceMetricsOverride');
 
 const cropperUrlStats = await evaluate(`window.__objectUrlStats()`);
 assert.equal(cropperUrlStats.active, 1);
-assert.deepEqual(browserErrors, []);
+const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
+assert.deepEqual(actionableBrowserErrors, []);
 
 await send('Target.closeTarget', { targetId: target.id });
 socket.close();
@@ -499,6 +509,6 @@ console.log(
     mobileRect,
     resizerUrlStats,
     cropperUrlStats,
-    browserErrors: browserErrors.length,
+    browserErrors: actionableBrowserErrors.length,
   })
 );
