@@ -8,6 +8,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "validate:processing": "node scripts/validate-image-processing.mjs",
+    "validate:enhancer": "node scripts/validate-image-enhancer.mjs",
     "validate:converter": "node scripts/validate-image-converter.mjs",
     "validate:compressor": "node scripts/validate-image-compressor.mjs",
     "validate:resizer-cropper": "node scripts/validate-resizer-cropper.mjs",

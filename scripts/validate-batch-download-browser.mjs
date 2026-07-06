@@ -196,7 +196,7 @@ await send('Page.addScriptToEvaluateOnNewDocument', {
 
 const reports = [];
 
-await navigate('/tools/image-converter');
+await navigate('/tools/image-converter/');
 await setFiles([
   path.join(fixtures, 'sample.webp'),
   duplicatePng,
@@ -234,7 +234,7 @@ await evaluate(`
 `);
 await waitFor(`window.__objectUrlStats().active === 0`, 'old converter URLs cleanup');
 
-await navigate('/tools/image-compressor');
+await navigate('/tools/image-compressor/');
 await setFiles([path.join(fixtures, 'photo.jpg'), path.join(fixtures, 'sample.webp')]);
 await waitFor(`document.querySelectorAll('.file-item').length === 2`, 'compressor files');
 await clickAction('Compress 2 images');
@@ -249,7 +249,7 @@ assert.deepEqual(
 );
 reports.push(await downloadAndInspectZip('toolkitfree-compressed-images.zip', compressorResults));
 
-await navigate('/tools/image-resizer');
+await navigate('/tools/image-resizer/');
 await setFiles([path.join(fixtures, 'photo.jpg'), path.join(fixtures, 'sample.webp')]);
 await waitFor(`document.querySelectorAll('.file-item').length === 2`, 'resizer files');
 await clickAction('Resize 2 images');
@@ -264,7 +264,7 @@ assert.equal(
 );
 reports.push(await downloadAndInspectZip('toolkitfree-resized-images.zip', resizerResults));
 
-await navigate('/tools/image-converter');
+await navigate('/tools/image-converter/');
 await setFiles([path.join(fixtures, 'invalid.txt')]);
 await waitFor(`document.querySelectorAll('.file-item').length === 1`, 'all-failure file');
 await clickAction('Convert 1 image');

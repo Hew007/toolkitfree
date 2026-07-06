@@ -1,5 +1,5 @@
 ---
-import { getOtherTools, getRelatedTools, type ToolId } from '../data/tool-registry';
+import { getOtherTools, getRelatedTools, toPublicPath, type ToolId } from '../data/tool-registry';
 
 interface Props {
   currentId: ToolId;
@@ -16,7 +16,7 @@ const tools = mode === 'related' ? getRelatedTools(currentId) : getOtherTools(cu
       <h2>Related Tools</h2>
       <div class="related-tools-grid">
         {tools.map((tool) => (
-          <a href={tool.href} class="tool-card" data-tool-id={tool.id}>
+          <a href={toPublicPath(tool.href)} class="tool-card" data-tool-id={tool.id}>
             <h3>{tool.name}</h3>
             <p>{tool.shortDescription}</p>
           </a>
@@ -29,7 +29,7 @@ const tools = mode === 'related' ? getRelatedTools(currentId) : getOtherTools(cu
       <ul style="font-size: 0.875rem; list-style: none;">
         {tools.map((tool) => (
           <li style="padding: 0.25rem 0;">
-            <a href={tool.href} data-tool-id={tool.id}>
+            <a href={toPublicPath(tool.href)} data-tool-id={tool.id}>
               {tool.name}
             </a>
           </li>

@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { toolRegistry } from '../data/tool-registry';
+import { toPublicPath, toolRegistry } from '../data/tool-registry';
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -75,7 +75,7 @@ const structuredData = {
     <div class="related-tools-grid" data-tool-directory="about">
       {
         toolRegistry.map((tool) => (
-          <a href={tool.href} class="tool-card" data-tool-id={tool.id}>
+          <a href={toPublicPath(tool.href)} class="tool-card" data-tool-id={tool.id}>
             <h3>{tool.name}</h3>
             <p>{tool.shortDescription}</p>
           </a>
@@ -103,8 +103,8 @@ const structuredData = {
       and advertising data may still be handled as described in our Privacy Policy.
     </p>
     <p style="color: var(--color-text-light); line-height: 1.8; margin-top: 1rem;">
-      For more details, see our <a href="/privacy-policy">Privacy Policy</a> and
-      <a href="/terms">Terms of Service</a>.
+      For more details, see our <a href="/privacy-policy/">Privacy Policy</a> and
+      <a href="/terms/">Terms of Service</a>.
     </p>
   </section>
 
@@ -114,7 +114,7 @@ const structuredData = {
       Have questions, feedback, or ideas? We'd love to hear from you. Reach out at <a
         href="mailto:hnhw182@gmail.com">hnhw182@gmail.com</a
       > or visit our
-      <a href="/contact">Contact</a> page.
+      <a href="/contact/">Contact</a> page.
     </p>
   </section>
 </Layout>

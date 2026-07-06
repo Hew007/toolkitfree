@@ -5,18 +5,19 @@ const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9228';
 const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
 const routes = [
   '/',
-  '/about',
-  '/contact',
-  '/privacy-policy',
-  '/guides/image-format-comparison',
-  '/tools/image-converter',
-  '/tools/image-compressor',
-  '/tools/image-resizer',
-  '/tools/image-cropper',
-  '/tools/image-to-pdf',
-  '/tools/favicon-generator',
-  '/tools/background-remover',
-  '/tools/qr-generator',
+  '/about/',
+  '/contact/',
+  '/privacy-policy/',
+  '/guides/image-format-comparison/',
+  '/tools/image-converter/',
+  '/tools/image-compressor/',
+  '/tools/image-resizer/',
+  '/tools/image-enhancer/',
+  '/tools/image-cropper/',
+  '/tools/image-to-pdf/',
+  '/tools/favicon-generator/',
+  '/tools/background-remover/',
+  '/tools/qr-generator/',
 ];
 const widths = [320, 375, 768, 1024, 1440];
 
@@ -157,7 +158,7 @@ await send('Emulation.setDeviceMetricsOverride', {
   deviceScaleFactor: 1,
   mobile: true,
 });
-await navigate('/tools/image-converter');
+await navigate('/tools/image-converter/');
 const navigation = await evaluate(`(() => {
   const toggle = document.querySelector('.mobile-nav-toggle');
   const nav = document.querySelector('.site-nav');
@@ -191,7 +192,7 @@ await send('Emulation.setDeviceMetricsOverride', {
   deviceScaleFactor: 1,
   mobile: false,
 });
-await navigate('/tools/qr-generator');
+await navigate('/tools/qr-generator/');
 assert.deepEqual(
   await evaluate(`(() => ({
     toggle: getComputedStyle(document.querySelector('.mobile-nav-toggle')).display,
@@ -203,7 +204,7 @@ assert.deepEqual(
     toggle: 'none',
     nav: 'flex',
     groups: 2,
-    active: '/tools/qr-generator',
+    active: '/tools/qr-generator/',
   }
 );
 

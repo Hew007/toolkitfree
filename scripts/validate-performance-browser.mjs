@@ -164,21 +164,22 @@ await send('Browser.setDownloadBehavior', { behavior: 'deny' });
 const idle = {};
 for (const [route, forbidden] of [
   ['/', Object.values(heavyAssets)],
-  ['/tools/image-converter', Object.values(heavyAssets)],
+  ['/tools/image-converter/', Object.values(heavyAssets)],
+  ['/tools/image-enhancer/', Object.values(heavyAssets)],
   [
-    '/tools/image-to-pdf',
+    '/tools/image-to-pdf/',
     [heavyAssets.jspdf, heavyAssets.jszip, heavyAssets.qr, heavyAssets.background],
   ],
   [
-    '/tools/favicon-generator',
+    '/tools/favicon-generator/',
     [heavyAssets.jszip, heavyAssets.jspdf, heavyAssets.qr, heavyAssets.background],
   ],
   [
-    '/tools/qr-generator',
+    '/tools/qr-generator/',
     [heavyAssets.qr, heavyAssets.jszip, heavyAssets.jspdf, heavyAssets.background],
   ],
   [
-    '/tools/background-remover',
+    '/tools/background-remover/',
     [
       heavyAssets.background,
       heavyAssets.jszip,
@@ -197,7 +198,7 @@ for (const [route, forbidden] of [
   idle[route] = requestSummary();
 }
 
-await navigate('/tools/image-converter');
+await navigate('/tools/image-converter/');
 await uploadGeneratedPng({ name: 'one.png', width: 96, height: 64 });
 await waitFor(`document.querySelectorAll('.file-item').length === 1`, 'converter file');
 await evaluate(`
@@ -210,7 +211,7 @@ assert.equal(requested(heavyAssets.jszip), false, 'JSZip should remain unloaded 
 await evaluate(`document.querySelector('[data-batch-download]').click()`);
 await waitForRequest(heavyAssets.jszip, 'JSZip dynamic request');
 
-await navigate('/tools/image-to-pdf');
+await navigate('/tools/image-to-pdf/');
 await uploadGeneratedPng({ name: 'page.png', width: 96, height: 64 });
 await waitFor(`Boolean(document.querySelector('[data-pdf-file]'))`, 'PDF file');
 assert.equal(requested(heavyAssets.jspdf), false);
@@ -222,7 +223,7 @@ await evaluate(`
 await waitForRequest(heavyAssets.jspdf, 'jsPDF dynamic request');
 await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'PDF result');
 
-await navigate('/tools/favicon-generator');
+await navigate('/tools/favicon-generator/');
 await uploadGeneratedPng({ name: 'favicon.png', width: 96, height: 64 });
 await waitFor(`document.body.innerText.includes('Generate Favicons')`, 'favicon file');
 assert.equal(requested(heavyAssets.jszip), false);
@@ -234,7 +235,7 @@ await evaluate(`
 await waitForRequest(heavyAssets.jszip, 'Favicon JSZip dynamic request');
 await waitFor(`Boolean(document.querySelector('[data-favicon-zip-url]'))`, 'favicon ZIP');
 
-await navigate('/tools/qr-generator');
+await navigate('/tools/qr-generator/');
 assert.equal(requested(heavyAssets.qr), false);
 await evaluate(`
   (() => {
@@ -256,7 +257,7 @@ await send('Emulation.setDeviceMetricsOverride', {
   deviceScaleFactor: 1,
   mobile: true,
 });
-await navigate('/tools/image-converter');
+await navigate('/tools/image-converter/');
 await uploadGeneratedPng({ name: 'warning.png', width: 6000, height: 6000, headerOnly: true });
 await waitFor(`Boolean(document.querySelector('[data-input-budget="warning"]'))`, 'budget warning');
 assert.equal(await evaluate(`document.querySelectorAll('.file-item').length`), 0);
@@ -273,7 +274,7 @@ await evaluate(`
 `);
 await waitFor(`document.querySelectorAll('.file-item').length === 1`, 'warning override');
 
-await navigate('/tools/image-converter');
+await navigate('/tools/image-converter/');
 await uploadGeneratedPng({ name: 'blocked.png', width: 12000, height: 10000, headerOnly: true });
 await waitFor(`Boolean(document.querySelector('[data-input-budget="blocked"]'))`, 'budget block');
 assert.equal(await evaluate(`document.querySelectorAll('.file-item').length`), 0);

@@ -5,6 +5,8 @@ import {
   getIndexableToolPaths,
   SITE_LOCALE,
   SITE_URL,
+  toPublicPath,
+  toPublicUrl,
   toolCategories,
   toolRegistry,
 } from '../src/data/tool-registry.ts';
@@ -98,7 +100,7 @@ unique(indexableToolPaths, 'Indexable tool paths');
 for (const file of ['public/llms.txt', 'public/llms-full.txt']) {
   const content = fs.readFileSync(path.join(root, file), 'utf8');
   for (const tool of toolRegistry) {
-    assert.equal(content.includes(`${SITE_URL}${tool.href}`), true, `${file} includes ${tool.id}`);
+    assert.equal(content.includes(toPublicUrl(tool.href)), true, `${file} includes ${tool.id}`);
   }
 }
 
@@ -116,9 +118,11 @@ const expectedIndexableRoutes = [...staticPaths, ...indexableToolPaths].sort();
 assert.deepEqual(actualIndexableRoutes, expectedIndexableRoutes, 'Indexable HTML routes');
 
 const sitemap = fs.readFileSync(path.join(dist, 'sitemap.xml'), 'utf8');
-const sitemapRoutes = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
-  .map((match) => normalizeRoute(new URL(match[1]).pathname))
-  .sort();
+const sitemapUrls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => new URL(match[1]));
+for (const url of sitemapUrls) {
+  assert.equal(url.pathname, toPublicPath(normalizeRoute(url.pathname)), 'Sitemap trailing slash');
+}
+const sitemapRoutes = sitemapUrls.map((url) => normalizeRoute(url.pathname)).sort();
 unique(sitemapRoutes, 'Sitemap routes');
 assert.deepEqual(sitemapRoutes, expectedIndexableRoutes, 'Sitemap and indexable HTML');
 
@@ -131,6 +135,9 @@ for (const { route, html } of pages) {
   const canonical = new URL(canonicalMatches[0][1]);
   assert.equal(canonical.origin, SITE_URL, `${route} canonical origin`);
   assert.equal(normalizeRoute(canonical.pathname), route, `${route} canonical path`);
+  assert.equal(canonical.pathname, toPublicPath(route), `${route} canonical trailing slash`);
+  const title = decodeHtml(html.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '');
+  assert.equal(title.length > 0 && title.length <= 70, true, `${route} title length`);
   assert.equal(/hreflang=/i.test(html), false, `${route} must not publish unavailable locales`);
   assert.equal(html.includes(`<html lang="${SITE_LOCALE}">`), true, `${route} language`);
 
@@ -154,6 +161,11 @@ for (const { route, html } of pages) {
     const schemaUrl = new URL(webApp.url);
     assert.equal(schemaUrl.origin, SITE_URL, `${route} WebApplication URL origin`);
     assert.equal(normalizeRoute(schemaUrl.pathname), route, `${route} WebApplication URL path`);
+    assert.equal(
+      schemaUrl.pathname,
+      toPublicPath(route),
+      `${route} WebApplication URL trailing slash`
+    );
   }
   const faq = flattened.find((schema) => schema?.['@type'] === 'FAQPage');
   const visibleFaq = [...html.matchAll(/<summary class="faq-question">([\s\S]*?)<\/summary>/g)].map(
@@ -187,6 +199,12 @@ const footer =
   )?.[0] ?? '';
 assert.deepEqual(extractToolIds(nav), [...registryIds]);
 assert.deepEqual(extractToolIds(footer), [...registryIds]);
+for (const tool of toolRegistry) {
+  const publicHref = `href="${toPublicPath(tool.href)}"`;
+  assert.equal(home.includes(publicHref), true, `Home link for ${tool.id}`);
+  assert.equal(nav.includes(publicHref), true, `Navigation link for ${tool.id}`);
+  assert.equal(footer.includes(publicHref), true, `Footer link for ${tool.id}`);
+}
 
 console.log(
   JSON.stringify({

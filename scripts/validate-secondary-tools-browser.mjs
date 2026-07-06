@@ -171,7 +171,7 @@ const pdfVariants = [
   ['photo-to-pdf', 'photo', 'a4', 'image/jpeg,image/png,image/webp'],
 ];
 for (const [slug, preset, pageSize, accept] of pdfVariants) {
-  await navigate(`/tools/image-to-pdf/${slug}`);
+  await navigate(`/tools/image-to-pdf/${slug}/`);
   const state = await evaluate(`(() => {
     const root = document.querySelector('[data-pdf-preset]');
     return {
@@ -187,7 +187,7 @@ for (const [slug, preset, pageSize, accept] of pdfVariants) {
   assert.equal(state.accept, accept, slug);
 }
 
-await navigate('/tools/image-to-pdf/multiple-images-to-pdf');
+await navigate('/tools/image-to-pdf/multiple-images-to-pdf/');
 await upload([
   { name: 'first.png', type: 'image/png', width: 400, height: 200, color: '#ef4444' },
   {
@@ -239,7 +239,7 @@ assert.equal((pdfText.match(/\/MediaBox/g) || []).length >= 2, true);
 const pdfStats = await evaluate(`window.__objectUrlStats()`);
 assert.equal(pdfStats.active, 4, 'Three previews plus one PDF result should remain active');
 
-await navigate('/tools/image-to-pdf/image-to-pdf-no-margin');
+await navigate('/tools/image-to-pdf/image-to-pdf-no-margin/');
 await upload([{ name: 'wide.png', type: 'image/png', width: 400, height: 200 }]);
 await waitFor(`Boolean(document.querySelector('[data-pdf-file]'))`, 'fit PDF input');
 await evaluate(`
@@ -263,7 +263,7 @@ const mediaBox = /\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/.exec(fitPdfText);
 assert.ok(mediaBox, 'Fit PDF must include a MediaBox');
 assert.equal(Math.abs(Number(mediaBox[1]) / Number(mediaBox[2]) - 2) < 0.01, true);
 
-await navigate('/tools/favicon-generator');
+await navigate('/tools/favicon-generator/');
 await upload([
   {
     name: 'wide-logo.png',
@@ -354,7 +354,7 @@ assert.deepEqual(
 );
 assert.equal(await evaluate(`document.querySelector('pre').innerText.includes('.ico')`), false);
 
-await navigate('/tools/qr-generator');
+await navigate('/tools/qr-generator/');
 assert.equal(await evaluate(`Boolean(document.querySelector('[data-qr-ready="true"]'))`), false);
 assert.equal(
   await evaluate(
@@ -470,7 +470,58 @@ assert.equal(
   true
 );
 
-await navigate('/tools/background-remover');
+await navigate('/tools/image-enhancer/');
+await upload([
+  {
+    name: 'enhance-source.png',
+    type: 'image/png',
+    width: 120,
+    height: 60,
+    color: '#16a34a',
+  },
+]);
+await waitFor(
+  `Boolean(document.querySelector('[data-enhancer-preview]')?.width)`,
+  'enhancer preview'
+);
+const enhancerInitial = await evaluate(`(() => {
+  const canvas = document.querySelector('[data-enhancer-preview]');
+  const pixel = [...canvas.getContext('2d').getImageData(60, 30, 1, 1).data];
+  return { width: canvas.width, height: canvas.height, pixel };
+})()`);
+assert.equal(enhancerInitial.width, 120);
+assert.equal(enhancerInitial.height, 60);
+assert.equal(enhancerInitial.pixel[3], 255);
+await evaluate(`(() => {
+  const brightness = document.querySelector('#enhancer-brightness');
+  const sharpness = document.querySelector('#enhancer-sharpness');
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+  setter.call(brightness, '20');
+  brightness.dispatchEvent(new Event('input', { bubbles: true }));
+  setter.call(sharpness, '50');
+  sharpness.dispatchEvent(new Event('input', { bubbles: true }));
+})()`);
+await waitFor(
+  `document.querySelector('output[for="enhancer-brightness"]')?.textContent.trim() === '+20'`,
+  'enhancer controls'
+);
+await evaluate(`document.querySelector('button[aria-label="Reset brightness"]').click()`);
+await waitFor(`document.querySelector('#enhancer-brightness').value === '0'`, 'brightness reset');
+await evaluate(`document.querySelector('[data-enhancer-download]').click()`);
+const enhancerDownload = await waitForFile('enhance-source-enhanced.png');
+const enhancerBytes = fs.readFileSync(enhancerDownload);
+assert.equal(
+  enhancerBytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
+  true
+);
+const enhancerStats = await evaluate(`window.__objectUrlStats()`);
+assert.equal(enhancerStats.active, 0, 'Enhancer download URLs should be revoked');
+await evaluate(
+  `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Remove image').click()`
+);
+await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, 'enhancer cleanup');
+
+await navigate('/tools/background-remover/');
 await upload([{ name: 'corrupt.png', type: 'image/png', corrupt: true }]);
 await waitFor(`document.body.innerText.includes('corrupt.png')`, 'corrupt background input');
 await evaluate(
@@ -612,6 +663,12 @@ console.log(
     },
     favicon: { icons: faviconResults.length, zipNames, paddingPixels },
     qr: { pngBytes: pngBytes.length, svgBytes: Buffer.byteLength(svgText), contrastBlocked: true },
+    enhancer: {
+      width: enhancerInitial.width,
+      height: enhancerInitial.height,
+      pngBytes: enhancerBytes.length,
+      objectUrls: enhancerStats,
+    },
     background: backgroundResults.map(({ name, type, width, height, stages }) => ({
       name,
       type,

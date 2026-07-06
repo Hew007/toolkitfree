@@ -164,7 +164,7 @@ const resizerVariants = [
 const resizerResults = [];
 
 for (const [slug, preset, width, height] of resizerVariants) {
-  await navigate(`/tools/image-resizer/${slug}`);
+  await navigate(`/tools/image-resizer/${slug}/`);
   await uploadGenerated({ name: `${slug}.png`, width: 400, height: 300 });
   await waitFor(
     `Boolean(document.querySelector('[data-testid="resize-preset"]'))`,
@@ -200,7 +200,7 @@ for (const [slug, preset, width, height] of resizerVariants) {
   resizerResults.push({ slug, width: result.width, height: result.height });
 }
 
-await navigate('/tools/image-resizer');
+await navigate('/tools/image-resizer/');
 await uploadGenerated({ name: 'landscape.png', width: 400, height: 300, transparent: true });
 await waitFor(
   `Boolean(document.querySelector('[data-testid="resize-width"]'))`,
@@ -295,7 +295,7 @@ const cropperVariants = [
 const cropperResults = [];
 
 for (const [slug, preset, ratio] of cropperVariants) {
-  await navigate(`/tools/image-cropper/${slug}`);
+  await navigate(`/tools/image-cropper/${slug}/`);
   await uploadGenerated({ name: `${slug}.png`, width: 1200, height: 800, transparent: true });
   await waitFor(`Boolean(document.querySelector('[data-testid="crop-box"]'))`, `${slug} crop box`);
   assert.equal(
@@ -341,7 +341,7 @@ for (const [slug, preset, ratio] of cropperVariants) {
   cropperResults.push({ slug, width: result.width, height: result.height });
 }
 
-await navigate('/tools/image-cropper/crop-to-16-9');
+await navigate('/tools/image-cropper/crop-to-16-9/');
 await uploadGenerated({ name: 'drag.png', width: 1200, height: 800 });
 await waitFor(`Boolean(document.querySelector('[data-crop-handle="se"]'))`, 'desktop crop handles');
 const keyboardStart = await evaluate(`(() => {
@@ -441,7 +441,7 @@ await send('Emulation.setDeviceMetricsOverride', {
   deviceScaleFactor: 2,
   mobile: true,
 });
-await navigate('/tools/image-cropper/crop-to-square');
+await navigate('/tools/image-cropper/crop-to-square/');
 await uploadGenerated({ name: 'portrait.png', width: 600, height: 1000, transparent: true });
 await waitFor(`Boolean(document.querySelector('[data-crop-handle="nw"]'))`, 'mobile crop handles');
 assert.equal(

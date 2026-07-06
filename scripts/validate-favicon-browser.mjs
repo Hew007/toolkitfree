@@ -10,7 +10,7 @@ const emptyFixture = path.join(root, 'docs/optimization/baseline/fixtures/empty.
 const downloadDir = path.join(root, '.tmp-opt02-downloads');
 const downloadPath = path.join(downloadDir, 'favicons.zip');
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9222';
-const pageUrl = `${process.env.BASE_URL || 'http://127.0.0.1:4321'}/tools/favicon-generator`;
+const pageUrl = `${process.env.BASE_URL || 'http://127.0.0.1:4321'}/tools/favicon-generator/`;
 
 fs.mkdirSync(downloadDir, { recursive: true });
 if (fs.existsSync(downloadPath)) fs.rmSync(downloadPath);

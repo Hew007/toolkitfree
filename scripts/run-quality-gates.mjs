@@ -20,12 +20,12 @@ const steps = [
     args: ['node_modules/prettier/bin/prettier.cjs', '--check', ...prettierTargets],
   },
   {
-    name: 'Unit and algorithm tests',
-    args: ['scripts/run-unit-tests.mjs'],
-  },
-  {
     name: 'Production build',
     args: ['node_modules/astro/astro.js', 'build'],
+  },
+  {
+    name: 'Unit and algorithm tests',
+    args: ['scripts/run-unit-tests.mjs'],
   },
   {
     name: 'SEO registry',

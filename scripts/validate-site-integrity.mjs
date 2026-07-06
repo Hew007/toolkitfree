@@ -22,9 +22,10 @@ function routeFile(route) {
 assert.equal(fs.existsSync(dist), true, 'Run the production build before site validation');
 const files = collectFiles(dist);
 const htmlFiles = files.filter((file) => file.endsWith('.html'));
-assert.equal(htmlFiles.length, 57, 'Static HTML page count');
+assert.equal(htmlFiles.length, 58, 'Static HTML page count');
 
 const brokenLinks = [];
+const redirectingLinks = [];
 let internalLinks = 0;
 for (const file of htmlFiles) {
   const html = fs.readFileSync(file, 'utf8');
@@ -32,6 +33,13 @@ for (const file of htmlFiles) {
   for (const href of hrefs) {
     if (!href.startsWith('/') || href.startsWith('//')) continue;
     internalLinks += 1;
+    const pathname = href.split(/[?#]/, 1)[0];
+    if (pathname !== '/' && !path.extname(pathname) && !pathname.endsWith('/')) {
+      redirectingLinks.push({
+        from: path.relative(dist, file).replaceAll('\\', '/'),
+        href,
+      });
+    }
     const target = routeFile(href);
     if (!fs.existsSync(target)) {
       brokenLinks.push({
@@ -42,6 +50,7 @@ for (const file of htmlFiles) {
   }
 }
 assert.deepEqual(brokenLinks, [], 'Internal links must resolve to build output');
+assert.deepEqual(redirectingLinks, [], 'Internal page links must use trailing slashes');
 
 const robots = fs.readFileSync(path.join(dist, 'robots.txt'), 'utf8');
 assert.match(robots, /Sitemap:\s*https:\/\/toolkitfree\.net\/sitemap\.xml/i);
@@ -56,5 +65,6 @@ console.log(
     htmlPages: htmlFiles.length,
     internalLinks,
     brokenLinks: brokenLinks.length,
+    redirectingLinks: redirectingLinks.length,
   })
 );

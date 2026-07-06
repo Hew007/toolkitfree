@@ -3,8 +3,8 @@ import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
 
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9225';
 const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
-const targetUrl = `${baseUrl}/tools/image-compressor/compress-to-100kb`;
-const qualityUrl = `${baseUrl}/tools/image-compressor`;
+const targetUrl = `${baseUrl}/tools/image-compressor/compress-to-100kb/`;
+const qualityUrl = `${baseUrl}/tools/image-compressor/`;
 
 const target = await fetch(`${endpoint}/json/new?${encodeURIComponent('about:blank')}`, {
   method: 'PUT',

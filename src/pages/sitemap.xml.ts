@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getIndexableToolPaths, SITE_URL } from '../data/tool-registry';
+import { getIndexableToolPaths, toPublicUrl } from '../data/tool-registry';
 
 const staticPages = [
   { path: '/', lastModified: '2026-07-04' },
@@ -24,7 +24,7 @@ export const GET: APIRoute = () => {
 ${pages
   .map(
     ({ path, lastModified }) => `  <url>
-    <loc>${SITE_URL}${path}</loc>
+    <loc>${toPublicUrl(path)}</loc>
     <lastmod>${lastModified}</lastmod>
   </url>`
   )

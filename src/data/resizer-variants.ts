@@ -73,7 +73,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
     ],
   },
   'resize-for-youtube': {
-    title: 'Resize Image for YouTube - Thumbnail, Banner, Profile Sizes',
+    title: 'Resize Images for YouTube - Thumbnails and Banners',
     description:
       'Resize images for YouTube thumbnails (1280x720), channel banners (2560x1440), and profile pictures. Free tool.',
     faq: [
@@ -112,7 +112,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
     ],
   },
   'resize-for-tiktok': {
-    title: 'Resize Image for TikTok - Profile, Thumbnail, Cover Sizes',
+    title: 'Resize Images for TikTok - Profile and Cover Sizes',
     description:
       'Resize images for TikTok profile pictures (200x200), video covers (1080x1920), and thumbnails. Free online tool.',
     faq: [

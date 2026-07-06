@@ -165,7 +165,7 @@ const faqStructuredData = {
             allVariants
               .filter((v) => v.slug !== slug)
               .map((v) => (
-                <a href={`/tools/image-converter/${v.slug}`} class="tool-card">
+                <a href={`/tools/image-converter/${v.slug}/`} class="tool-card">
                   <h3>
                     {v.from} to {v.to}
                   </h3>
@@ -184,7 +184,7 @@ const faqStructuredData = {
           {
             allVariants.map((v) => (
               <li style="padding: 0.25rem 0;">
-                <a href={`/tools/image-converter/${v.slug}`}>
+                <a href={`/tools/image-converter/${v.slug}/`}>
                   {v.from} → {v.to}
                 </a>
               </li>

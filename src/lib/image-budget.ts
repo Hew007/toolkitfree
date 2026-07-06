@@ -1,5 +1,12 @@
 export type ImageBudgetProfile =
-  'converter' | 'compressor' | 'resizer' | 'cropper' | 'pdf' | 'favicon' | 'background';
+  | 'converter'
+  | 'compressor'
+  | 'resizer'
+  | 'enhancer'
+  | 'cropper'
+  | 'pdf'
+  | 'favicon'
+  | 'background';
 
 export type ImageBudgetDevice = 'desktop' | 'mobile';
 export type ImageBudgetLevel = 'safe' | 'warning' | 'blocked';
@@ -77,6 +84,7 @@ const RGBA_SURFACES: Record<ImageBudgetProfile, number> = {
   converter: 2,
   compressor: 3,
   resizer: 2,
+  enhancer: 4,
   cropper: 2,
   pdf: 3.5,
   favicon: 2,

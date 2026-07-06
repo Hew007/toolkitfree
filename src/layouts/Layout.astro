@@ -1,7 +1,14 @@
 ---
 import '../styles/global.css';
 import '../styles/responsive-accessibility.css';
-import { navigationGroups, SITE_LOCALE, SITE_URL, toolRegistry } from '../data/tool-registry';
+import {
+  navigationGroups,
+  SITE_LOCALE,
+  SITE_URL,
+  toPublicPath,
+  toPublicUrl,
+  toolRegistry,
+} from '../data/tool-registry';
 
 interface Props {
   title: string;
@@ -16,15 +23,38 @@ const { title, description, canonical, ogImage, structuredData, noindex = false 
 
 const siteName = 'ToolkitFree';
 const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
-const canonicalUrl = canonical || `${SITE_URL}${Astro.url.pathname}`;
+const canonicalTarget = new URL(canonical ?? Astro.url.pathname, SITE_URL);
+canonicalTarget.pathname = toPublicPath(canonicalTarget.pathname);
+const canonicalUrl = canonicalTarget.toString();
 const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
 const isCurrent = (href: string) => currentPath === href || currentPath.startsWith(`${href}/`);
+
+const normalizeStructuredUrls = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(normalizeStructuredUrls);
+  if (!value || typeof value !== 'object') return value;
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => {
+      if (
+        (key === 'url' || key === 'item') &&
+        typeof entry === 'string' &&
+        (entry === SITE_URL || entry.startsWith(`${SITE_URL}/`))
+      ) {
+        const url = new URL(entry);
+        url.pathname = toPublicPath(url.pathname);
+        return [key, url.toString()];
+      }
+      return [key, normalizeStructuredUrls(entry)];
+    })
+  );
+};
+const normalizedStructuredData = normalizeStructuredUrls(structuredData);
 
 const orgSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'ToolkitFree',
-  url: 'https://toolkitfree.net',
+  url: toPublicUrl('/'),
   logo: 'https://toolkitfree.net/favicon.svg',
   description:
     'Free online image tools for converting, compressing, resizing, and editing images in your browser.',
@@ -59,8 +89,8 @@ const orgSchema = {
 
     <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
     {
-      structuredData && (
-        <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+      normalizedStructuredData && (
+        <script type="application/ld+json" set:html={JSON.stringify(normalizedStructuredData)} />
       )
     }
 
@@ -91,7 +121,7 @@ const orgSchema = {
                 <div class="nav-menu-panel">
                   {group.links.map((link) => (
                     <a
-                      href={link.href}
+                      href={toPublicPath(link.href)}
                       data-tool-id={link.id}
                       aria-current={isCurrent(link.href) ? 'page' : undefined}
                     >
@@ -118,17 +148,17 @@ const orgSchema = {
           <div class="footer-links" data-tool-directory="footer">
             {
               toolRegistry.map((tool) => (
-                <a href={tool.href} data-tool-id={tool.id}>
+                <a href={toPublicPath(tool.href)} data-tool-id={tool.id}>
                   {tool.name}
                 </a>
               ))
             }
           </div>
           <div class="footer-links">
-            <a href="/about">About</a>
-            <a href="/terms">Terms</a>
-            <a href="/privacy-policy">Privacy</a>
-            <a href="/contact">Contact</a>
+            <a href="/about/">About</a>
+            <a href="/terms/">Terms</a>
+            <a href="/privacy-policy/">Privacy</a>
+            <a href="/contact/">Contact</a>
           </div>
           <p class="footer-copy">
             &copy; {new Date().getFullYear()}

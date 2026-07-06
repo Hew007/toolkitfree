@@ -9,10 +9,23 @@ import type { ToolVariantSummary } from './content-types.ts';
 export const SITE_URL = 'https://toolkitfree.net';
 export const SITE_LOCALE = 'en';
 
+export function toPublicPath(path: string): string {
+  if (!path.startsWith('/')) {
+    throw new Error(`Public paths must start with "/": ${path}`);
+  }
+  if (path === '/') return '/';
+  return `${path.replace(/\/+$/, '')}/`;
+}
+
+export function toPublicUrl(path: string): string {
+  return `${SITE_URL}${toPublicPath(path)}`;
+}
+
 export type ToolId =
   | 'image-converter'
   | 'image-compressor'
   | 'image-resizer'
+  | 'image-enhancer'
   | 'image-cropper'
   | 'background-remover'
   | 'image-to-pdf'
@@ -58,6 +71,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     related: [
       'image-compressor',
       'image-resizer',
+      'image-enhancer',
       'image-cropper',
       'background-remover',
       'qr-generator',
@@ -78,6 +92,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     related: [
       'image-converter',
       'image-resizer',
+      'image-enhancer',
       'image-cropper',
       'background-remover',
       'qr-generator',
@@ -97,12 +112,33 @@ export const toolRegistry: readonly ToolDefinition[] = [
     lastModified: '2026-07-04',
     related: [
       'image-cropper',
+      'image-enhancer',
       'image-compressor',
       'image-converter',
       'background-remover',
       'qr-generator',
     ],
     variants: resizerVariants,
+  },
+  {
+    id: 'image-enhancer',
+    name: 'Image Enhancer',
+    navLabel: 'Enhancer',
+    href: '/tools/image-enhancer',
+    description:
+      'Adjust brightness, contrast, saturation, sharpness, blur, and grayscale locally with a live preview.',
+    shortDescription: 'Adjust and preview image appearance locally.',
+    category: 'image-tools',
+    status: 'public',
+    lastModified: '2026-07-06',
+    related: [
+      'image-converter',
+      'image-compressor',
+      'image-resizer',
+      'image-cropper',
+      'background-remover',
+    ],
+    variants: [],
   },
   {
     id: 'image-cropper',
@@ -116,6 +152,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     lastModified: '2026-07-04',
     related: [
       'image-resizer',
+      'image-enhancer',
       'image-converter',
       'image-compressor',
       'image-to-pdf',
@@ -137,6 +174,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     related: [
       'image-cropper',
       'image-resizer',
+      'image-enhancer',
       'image-compressor',
       'image-converter',
       'qr-generator',

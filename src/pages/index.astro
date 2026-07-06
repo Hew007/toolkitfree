@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { toolRegistry } from '../data/tool-registry';
+import { toPublicPath, toolRegistry } from '../data/tool-registry';
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -13,7 +13,7 @@ const structuredData = {
 ---
 
 <Layout
-  title="Free Online Image Tools - Convert, Compress, Resize Images"
+  title="Free Online Image Tools - Convert, Compress, Resize"
   description="Free online image tools. Convert formats, compress file size, resize dimensions, and remove backgrounds. All processing happens in your browser - your files never leave your device."
   structuredData={structuredData}
 >
@@ -29,7 +29,7 @@ const structuredData = {
   <section class="tools-grid">
     {
       toolRegistry.map((tool) => (
-        <a href={tool.href} class="tool-card" data-tool-id={tool.id}>
+        <a href={toPublicPath(tool.href)} class="tool-card" data-tool-id={tool.id}>
           <h3>{tool.name}</h3>
           <p>{tool.description}</p>
         </a>
@@ -78,20 +78,21 @@ const structuredData = {
   <section class="features-section">
     <h2>Popular Tools</h2>
     <div class="related-tools-grid">
-      <a href="/tools/image-converter/jpg-to-png" class="tool-card"><h3>JPG to PNG</h3></a>
-      <a href="/tools/image-converter/png-to-jpg" class="tool-card"><h3>PNG to JPG</h3></a>
-      <a href="/tools/image-converter/jpg-to-webp" class="tool-card"><h3>JPG to WebP</h3></a>
-      <a href="/tools/image-compressor/compress-for-web" class="tool-card"
+      <a href="/tools/image-converter/jpg-to-png/" class="tool-card"><h3>JPG to PNG</h3></a>
+      <a href="/tools/image-converter/png-to-jpg/" class="tool-card"><h3>PNG to JPG</h3></a>
+      <a href="/tools/image-converter/jpg-to-webp/" class="tool-card"><h3>JPG to WebP</h3></a>
+      <a href="/tools/image-compressor/compress-for-web/" class="tool-card"
         ><h3>Compress for Web</h3></a
       >
-      <a href="/tools/image-resizer/resize-for-instagram" class="tool-card"
+      <a href="/tools/image-resizer/resize-for-instagram/" class="tool-card"
         ><h3>Resize for Instagram</h3></a
       >
-      <a href="/tools/image-cropper/crop-to-square" class="tool-card"><h3>Crop to Square</h3></a>
-      <a href="/tools/image-to-pdf/jpg-to-pdf" class="tool-card"><h3>JPG to PDF</h3></a>
-      <a href="/tools/favicon-generator/png-to-favicon" class="tool-card"><h3>PNG to Favicon</h3></a
+      <a href="/tools/image-cropper/crop-to-square/" class="tool-card"><h3>Crop to Square</h3></a>
+      <a href="/tools/image-to-pdf/jpg-to-pdf/" class="tool-card"><h3>JPG to PDF</h3></a>
+      <a href="/tools/favicon-generator/png-to-favicon/" class="tool-card"
+        ><h3>PNG to Favicon</h3></a
       >
-      <a href="/tools/background-remover" class="tool-card"><h3>Remove Background</h3></a>
+      <a href="/tools/background-remover/" class="tool-card"><h3>Remove Background</h3></a>
     </div>
   </section>
 </Layout>

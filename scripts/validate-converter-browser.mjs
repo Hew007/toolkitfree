@@ -203,63 +203,63 @@ await send('Page.addScriptToEvaluateOnNewDocument', {
 
 const matrix = [
   {
-    route: '/jpg-to-png',
+    route: '/jpg-to-png/',
     fixture: path.join(fixtures, 'photo.jpg'),
     accept: 'image/jpeg',
     outputMime: 'image/png',
     extension: '.png',
   },
   {
-    route: '/jpg-to-webp',
+    route: '/jpg-to-webp/',
     fixture: path.join(fixtures, 'photo.jpg'),
     accept: 'image/jpeg',
     outputMime: 'image/webp',
     extension: '.webp',
   },
   {
-    route: '/png-to-jpg',
+    route: '/png-to-jpg/',
     fixture: path.join(fixtures, 'transparent.png'),
     accept: 'image/png',
     outputMime: 'image/jpeg',
     extension: '.jpg',
   },
   {
-    route: '/png-to-webp',
+    route: '/png-to-webp/',
     fixture: path.join(fixtures, 'transparent.png'),
     accept: 'image/png',
     outputMime: 'image/webp',
     extension: '.webp',
   },
   {
-    route: '/webp-to-jpg',
+    route: '/webp-to-jpg/',
     fixture: path.join(fixtures, 'sample.webp'),
     accept: 'image/webp',
     outputMime: 'image/jpeg',
     extension: '.jpg',
   },
   {
-    route: '/webp-to-png',
+    route: '/webp-to-png/',
     fixture: path.join(fixtures, 'sample.webp'),
     accept: 'image/webp',
     outputMime: 'image/png',
     extension: '.png',
   },
   {
-    route: '/gif-to-png',
+    route: '/gif-to-png/',
     fixture: path.join(fixtures, 'sample.gif'),
     accept: 'image/gif',
     outputMime: 'image/png',
     extension: '.png',
   },
   {
-    route: '/bmp-to-png',
+    route: '/bmp-to-png/',
     fixture: sampleBmp,
     accept: 'image/bmp,image/x-ms-bmp',
     outputMime: 'image/png',
     extension: '.png',
   },
   {
-    route: '/svg-to-png',
+    route: '/svg-to-png/',
     fixture: path.join(fixtures, 'vector.svg'),
     accept: 'image/svg+xml',
     outputMime: 'image/png',
@@ -271,7 +271,7 @@ const matrixResults = [];
 for (const item of matrix) matrixResults.push(await convertVariant(item));
 
 if (runExtended) {
-  await navigate('');
+  await navigate('/');
   assert.equal(
     await evaluate(`document.querySelector('input[type="file"]').accept`),
     'image/jpeg,image/png,image/webp'
@@ -332,7 +332,7 @@ if (runExtended) {
     [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
   );
 
-  await navigate('/png-to-jpg');
+  await navigate('/png-to-jpg/');
   await setFiles([path.join(fixtures, 'transparent.png')]);
   await waitFor(`document.querySelectorAll('.file-item').length === 1`, 'transparent PNG');
   await evaluate(`
@@ -383,7 +383,7 @@ if (runExtended) {
     'Transparent PNG pixels should become white in JPG'
   );
 
-  await navigate('/png-to-webp');
+  await navigate('/png-to-webp/');
   await setFiles([path.join(fixtures, 'transparent.png')]);
   await waitFor(`document.querySelectorAll('.file-item').length === 1`, 'transparent PNG for WebP');
   await evaluate(`

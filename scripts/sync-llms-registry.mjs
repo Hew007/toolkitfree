@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { SITE_URL, toolRegistry } from '../src/data/tool-registry.ts';
+import { toPublicUrl, toolRegistry } from '../src/data/tool-registry.ts';
 
 const checkOnly = process.argv.includes('--check');
 
@@ -12,9 +12,13 @@ function replaceSection(content, heading, nextHeading, section) {
   return `${content.slice(0, start)}${section.trim()}\n\n${content.slice(end)}`;
 }
 
+function readText(file) {
+  return fs.readFileSync(file, 'utf8').replaceAll('\r\n', '\n');
+}
+
 function updateFile(file, content) {
   if (checkOnly) {
-    if (fs.readFileSync(file, 'utf8') !== content) {
+    if (readText(file) !== content) {
       throw new Error(`${file} is out of sync with the tool registry.`);
     }
     return;
@@ -23,11 +27,11 @@ function updateFile(file, content) {
 }
 
 const compactList = toolRegistry
-  .map((tool) => `- [${tool.name}](${SITE_URL}${tool.href}): ${tool.description}`)
+  .map((tool) => `- [${tool.name}](${toPublicUrl(tool.href)}): ${tool.description}`)
   .join('\n');
 
 const llmsPath = 'public/llms.txt';
-const llms = fs.readFileSync(llmsPath, 'utf8');
+const llms = readText(llmsPath);
 updateFile(
   llmsPath,
   replaceSection(
@@ -42,7 +46,7 @@ ${compactList}`
 );
 
 const fullPath = 'public/llms-full.txt';
-let full = fs.readFileSync(fullPath, 'utf8');
+let full = readText(fullPath);
 const registrySection = `## Tool registry
 
 <!-- Generated from src/data/tool-registry.ts by scripts/sync-llms-registry.mjs. -->

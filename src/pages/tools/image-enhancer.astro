@@ -1,0 +1,147 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ToolDirectory from '../../components/ToolDirectory.astro';
+import ImageEnhancer from '../../components/ImageEnhancer';
+import { getTool, toPublicUrl } from '../../data/tool-registry';
+
+const tool = getTool('image-enhancer');
+const toolUrl = toPublicUrl(tool.href);
+const faqItems = [
+  {
+    question: 'How does the image enhancer work?',
+    answer:
+      'The tool uses your browser Canvas API to adjust brightness, contrast, saturation, sharpness, blur, and grayscale. Processing stays on your device.',
+  },
+  {
+    question: 'Is my image uploaded to a server?',
+    answer:
+      'No. The image is decoded, previewed, processed, and exported locally in your browser. It is not uploaded to ToolkitFree.',
+  },
+  {
+    question: 'What file formats are supported?',
+    answer:
+      'You can open JPG, PNG, and WebP images. You can export the processed image as PNG, JPG, or WebP.',
+  },
+  {
+    question: 'What does the sharpness slider do?',
+    answer:
+      'It increases local edge contrast with a small sharpening kernel. It can make a slightly soft image look crisper, but it cannot restore missing detail.',
+  },
+  {
+    question: 'What is the difference between brightness and contrast?',
+    answer:
+      'Brightness shifts the overall light level. Contrast changes the difference between lighter and darker areas.',
+  },
+  {
+    question: 'Can I combine multiple adjustments?',
+    answer:
+      'Yes. The live preview combines all selected adjustments. Reset all returns every visual adjustment to its neutral value.',
+  },
+  {
+    question: 'Will the exported image lose quality?',
+    answer:
+      'PNG preserves the processed pixels without lossy compression. JPG and WebP can reduce file size by discarding some detail, so they include a quality control.',
+  },
+  {
+    question: 'Can this tool fix a badly blurred photo?',
+    answer:
+      'No. Sharpening can emphasize existing edges, but it cannot reconstruct detail that is absent from the source image.',
+  },
+];
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Free Image Enhancer',
+  description: tool.description,
+  url: toolUrl,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0' },
+};
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: toPublicUrl('/') },
+    { '@type': 'ListItem', position: 2, name: tool.name, item: toolUrl },
+  ],
+};
+
+const faqStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })),
+};
+---
+
+<Layout
+  title="Free Image Enhancer - Adjust Photos Online"
+  description="Adjust image brightness, contrast, saturation, sharpness, blur, and grayscale with a private browser-based live preview."
+  structuredData={[structuredData, faqStructuredData, breadcrumbSchema]}
+>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>Free Online Image Enhancer</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
+        Adjust the appearance of one JPG, PNG, or WebP image with a live preview. Processing stays
+        in your browser, so your file never leaves your device.
+      </p>
+
+      <ImageEnhancer client:load />
+
+      <section class="howto-section">
+        <h2>How to Enhance an Image</h2>
+        <ol class="howto-steps">
+          <li>Choose one JPG, PNG, or WebP image</li>
+          <li>Adjust brightness, contrast, saturation, sharpness, blur, or grayscale</li>
+          <li>Check the live preview and reset individual controls when needed</li>
+          <li>Choose PNG, JPG, or WebP and download the processed image</li>
+        </ol>
+      </section>
+
+      <section class="features-section">
+        <h2>Features</h2>
+        <ul class="features-list">
+          <li>Brightness, contrast, and saturation controls</li>
+          <li>Edge sharpening with a corrected RGBA pixel kernel</li>
+          <li>Browser blur and grayscale effects</li>
+          <li>Live preview before export</li>
+          <li>PNG, JPG, and WebP output with quality control where supported</li>
+          <li>Large-image memory review before processing</li>
+          <li>100% client-side processing with no file upload</li>
+        </ul>
+      </section>
+
+      <div style="margin: 2rem 0;">
+        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
+      </div>
+
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {
+          faqItems.map((item) => (
+            <div class="faq-item">
+              <details>
+                <summary class="faq-question">{item.question}</summary>
+                <div class="faq-answer">{item.answer}</div>
+              </details>
+            </div>
+          ))
+        }
+      </section>
+
+      <ToolDirectory currentId="image-enhancer" mode="related" />
+    </div>
+
+    <aside class="tool-sidebar">
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
+      <ToolDirectory currentId="image-enhancer" mode="sidebar" />
+    </aside>
+  </div>
+</Layout>

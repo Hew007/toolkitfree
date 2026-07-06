@@ -11,14 +11,15 @@ There is no server upload-size quota because files are not uploaded for processi
 ## Tool registry
 
 <!-- Generated from src/data/tool-registry.ts by scripts/sync-llms-registry.mjs. -->
-- [Image Converter](https://toolkitfree.net/tools/image-converter): Convert JPG, PNG, and WebP images in your browser, with clearly labeled browser-dependent inputs.
-- [Image Compressor](https://toolkitfree.net/tools/image-compressor): Re-encode or resize images and compare the actual result; smaller output is not guaranteed.
-- [Image Resizer](https://toolkitfree.net/tools/image-resizer): Resize images to custom dimensions or verified platform presets while controlling aspect ratio.
-- [Image Cropper](https://toolkitfree.net/tools/image-cropper): Crop one JPG, PNG, or WebP with visual, touch, and keyboard controls.
-- [Background Remover](https://toolkitfree.net/tools/background-remover): Remove one image background locally after downloading the browser AI model and runtime.
-- [Image to PDF](https://toolkitfree.net/tools/image-to-pdf): Combine ordered JPG, PNG, or WebP images into a PDF with page size, orientation, and margin controls.
-- [Favicon Generator](https://toolkitfree.net/tools/favicon-generator): Generate five PNG favicon sizes and a site.webmanifest from one image.
-- [QR Code Generator](https://toolkitfree.net/tools/qr-generator): Create PNG or SVG QR codes for text, URLs, WiFi, and vCards with contrast-aware downloads.
+- [Image Converter](https://toolkitfree.net/tools/image-converter/): Convert JPG, PNG, and WebP images in your browser, with clearly labeled browser-dependent inputs.
+- [Image Compressor](https://toolkitfree.net/tools/image-compressor/): Re-encode or resize images and compare the actual result; smaller output is not guaranteed.
+- [Image Resizer](https://toolkitfree.net/tools/image-resizer/): Resize images to custom dimensions or verified platform presets while controlling aspect ratio.
+- [Image Enhancer](https://toolkitfree.net/tools/image-enhancer/): Adjust brightness, contrast, saturation, sharpness, blur, and grayscale locally with a live preview.
+- [Image Cropper](https://toolkitfree.net/tools/image-cropper/): Crop one JPG, PNG, or WebP with visual, touch, and keyboard controls.
+- [Background Remover](https://toolkitfree.net/tools/background-remover/): Remove one image background locally after downloading the browser AI model and runtime.
+- [Image to PDF](https://toolkitfree.net/tools/image-to-pdf/): Combine ordered JPG, PNG, or WebP images into a PDF with page size, orientation, and margin controls.
+- [Favicon Generator](https://toolkitfree.net/tools/favicon-generator/): Generate five PNG favicon sizes and a site.webmanifest from one image.
+- [QR Code Generator](https://toolkitfree.net/tools/qr-generator/): Create PNG or SVG QR codes for text, URLs, WiFi, and vCards with contrast-aware downloads.
 
 ## Image Converter
 
