@@ -3,6 +3,8 @@ dist/
 
 # dependencies
 node_modules/
+pnpm-lock.yaml
+pnpm-workspace.yaml
 
 # environment
 .env
@@ -30,3 +32,6 @@ docs/
 .dev.vars*
 !.dev.vars.example
 !.env.example
+
+# local one-off backups
+.local-backups/
