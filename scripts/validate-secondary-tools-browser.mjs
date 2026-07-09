@@ -481,7 +481,10 @@ await upload([
   },
 ]);
 await waitFor(
-  `Boolean(document.querySelector('[data-enhancer-preview]')?.width)`,
+  `(() => {
+    const canvas = document.querySelector('[data-enhancer-preview]');
+    return canvas?.width === 120 && canvas?.height === 60;
+  })()`,
   'enhancer preview'
 );
 const enhancerInitial = await evaluate(`(() => {
