@@ -21,12 +21,16 @@ Most tools run entirely in the browser with Canvas API, WebAssembly, or client-s
 - QR Code Generator
 - Background Remover
 - Image Enhancer
+- Image Collage Maker
 
 In-progress planning:
 
 - ID Photo / Passport Photo size and print-preparation tool
-- Image Collage / Photo Grid tool
 - Additional PDF utilities
+
+## Follow-up Backlog
+
+- Simplify Image Collage Maker interactions: reduce configuration up front, make defaults smarter, and optimize for a fast upload → choose simple layout → download flow.
 
 ## Package Manager
 
