@@ -166,6 +166,7 @@ for (const [route, forbidden] of [
   ['/', Object.values(heavyAssets)],
   ['/tools/image-converter/', Object.values(heavyAssets)],
   ['/tools/image-enhancer/', Object.values(heavyAssets)],
+  ['/tools/image-collage/', Object.values(heavyAssets)],
   [
     '/tools/image-to-pdf/',
     [heavyAssets.jspdf, heavyAssets.jszip, heavyAssets.qr, heavyAssets.background],

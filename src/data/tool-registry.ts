@@ -26,6 +26,7 @@ export type ToolId =
   | 'image-compressor'
   | 'image-resizer'
   | 'image-enhancer'
+  | 'image-collage'
   | 'image-cropper'
   | 'background-remover'
   | 'image-to-pdf'
@@ -137,6 +138,27 @@ export const toolRegistry: readonly ToolDefinition[] = [
       'image-resizer',
       'image-cropper',
       'background-remover',
+    ],
+    variants: [],
+  },
+  {
+    id: 'image-collage',
+    name: 'Image Collage Maker',
+    navLabel: 'Collage Maker',
+    href: '/tools/image-collage',
+    description:
+      'Combine JPG, PNG, or WebP images into a grid, side-by-side stitch, or vertical collage locally in your browser.',
+    shortDescription: 'Combine images into a grid or stitched collage.',
+    category: 'image-tools',
+    status: 'public',
+    lastModified: '2026-07-10',
+    related: [
+      'image-cropper',
+      'image-resizer',
+      'image-enhancer',
+      'image-compressor',
+      'image-converter',
+      'image-to-pdf',
     ],
     variants: [],
   },

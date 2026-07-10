@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 const tests = [
   'validate-image-processing.mjs',
   'validate-image-enhancer.mjs',
+  'validate-image-collage.mjs',
   'validate-image-converter.mjs',
   'validate-image-compressor.mjs',
   'validate-resizer-cropper.mjs',

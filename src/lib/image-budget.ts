@@ -3,6 +3,7 @@ export type ImageBudgetProfile =
   | 'compressor'
   | 'resizer'
   | 'enhancer'
+  | 'collage'
   | 'cropper'
   | 'pdf'
   | 'favicon'
@@ -85,6 +86,7 @@ const RGBA_SURFACES: Record<ImageBudgetProfile, number> = {
   compressor: 3,
   resizer: 2,
   enhancer: 4,
+  collage: 3,
   cropper: 2,
   pdf: 3.5,
   favicon: 2,

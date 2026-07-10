@@ -21,6 +21,7 @@ const fullTests = [
   'validate-batch-download-browser.mjs',
   'validate-responsive-accessibility-browser.mjs',
   'validate-performance-browser.mjs',
+  'validate-collage-browser.mjs',
 ];
 const tests = smokeOnly
   ? ['validate-converter-browser.mjs', 'validate-responsive-accessibility-browser.mjs']

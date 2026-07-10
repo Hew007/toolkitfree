@@ -13,6 +13,7 @@ const routes = [
   '/tools/image-compressor/',
   '/tools/image-resizer/',
   '/tools/image-enhancer/',
+  '/tools/image-collage/',
   '/tools/image-cropper/',
   '/tools/image-to-pdf/',
   '/tools/favicon-generator/',
