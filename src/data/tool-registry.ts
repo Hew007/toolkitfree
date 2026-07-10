@@ -171,7 +171,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Crop images with bounded visual controls.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-07-04',
+    lastModified: '2026-07-10',
     related: [
       'image-resizer',
       'image-enhancer',

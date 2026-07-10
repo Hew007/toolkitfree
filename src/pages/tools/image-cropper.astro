@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import ToolDirectory from '../../components/ToolDirectory.astro';
 import ImageCropper from '../../components/ImageCropper';
+import { allVariants, variantData } from '../../data/cropper-variants';
 
 const faqItems = [
   {
@@ -84,8 +85,8 @@ const breadcrumbSchema = {
 ---
 
 <Layout
-  title="Free Image Cropper — Crop Photos Online | ToolkitFree"
-  description="Crop images online with a visual crop tool. Supports free crop, square (1:1), 16:9, 4:3, 3:2 aspect ratios. Drag to select crop area. Free, no upload needed."
+  title="Crop Image Online — Free Image Cropper | ToolkitFree"
+  description="Crop images online for free with a visual drag-and-drop cropper. Choose square, 16:9, 4:3, 3:2, or any custom area. Private browser-based processing."
   structuredData={[
     structuredData,
     {
@@ -104,8 +105,8 @@ const breadcrumbSchema = {
     <div class="tool-content">
       <h1>Free Online Image Cropper</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
-        Crop images to any size with a visual drag-and-drop tool. Supports square, 16:9, 4:3, 3:2,
-        and free aspect ratios. All processing in your browser.
+        Crop an image online with a visual drag-and-drop tool. Choose square, 16:9, 4:3, 3:2, or any
+        custom crop area. All processing stays in your browser.
       </p>
 
       <div class="privacy-badge">
@@ -123,6 +124,24 @@ const breadcrumbSchema = {
           <li>Choose output format and click "Crop Image"</li>
           <li>Download your cropped image</li>
         </ol>
+      </section>
+
+      <section class="related-tools">
+        <h2>Crop for a Specific Shape or Use Case</h2>
+        <p style="color: var(--color-text-light);">
+          Start with the crop ratio that matches where you will use the image. Each option opens the
+          same private cropper with that ratio selected.
+        </p>
+        <div class="related-tools-grid">
+          {
+            allVariants.map((variant) => (
+              <a href={`/tools/image-cropper/${variant.slug}/`} class="tool-card">
+                <h3>{variant.label}</h3>
+                <p>{variantData[variant.slug].description}</p>
+              </a>
+            ))
+          }
+        </div>
       </section>
 
       <section class="features-section">
