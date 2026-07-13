@@ -16,6 +16,7 @@ There is no server upload-size quota because files are not uploaded for processi
 - [Image Resizer](https://toolkitfree.net/tools/image-resizer/): Resize images to custom dimensions or verified platform presets while controlling aspect ratio.
 - [Image Enhancer](https://toolkitfree.net/tools/image-enhancer/): Adjust brightness, contrast, saturation, sharpness, blur, and grayscale locally with a live preview.
 - [Image Collage Maker](https://toolkitfree.net/tools/image-collage/): Combine JPG, PNG, or WebP images into a grid, side-by-side stitch, or vertical collage locally in your browser.
+- [ID Photo Size & Print Tool](https://toolkitfree.net/tools/id-photo-maker/): Manually position an original photo, export a selected ID photo size, and make a local print sheet without claiming government approval.
 - [Image Cropper](https://toolkitfree.net/tools/image-cropper/): Crop one JPG, PNG, or WebP with visual, touch, and keyboard controls.
 - [Background Remover](https://toolkitfree.net/tools/background-remover/): Remove one image background locally after downloading the browser AI model and runtime.
 - [Image to PDF](https://toolkitfree.net/tools/image-to-pdf/): Combine ordered JPG, PNG, or WebP images into a PDF with page size, orientation, and margin controls.

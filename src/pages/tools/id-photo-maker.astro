@@ -1,0 +1,138 @@
+﻿---
+import Layout from '../../layouts/Layout.astro';
+import IdPhotoMaker from '../../components/IdPhotoMaker';
+import ToolDirectory from '../../components/ToolDirectory.astro';
+import { getTool, toPublicUrl } from '../../data/tool-registry';
+
+const tool = getTool('id-photo-maker');
+const toolUrl = toPublicUrl(tool.href);
+const faqItems = [
+  {
+    question: 'Does this tool create an officially approved passport photo?',
+    answer:
+      'No. It prepares a photo at the size you select and makes a print sheet, but it cannot check every government or receiving-authority rule and does not guarantee acceptance.',
+  },
+  {
+    question: 'Does ToolkitFree upload my photo?',
+    answer:
+      'No. In original-photo mode, the photo is cropped, scaled, arranged, and exported in your browser. ToolkitFree does not receive the image file.',
+  },
+  {
+    question: 'Does the tool change my face or background?',
+    answer:
+      'No. This version only lets you manually position and crop the original image, then export it at a selected size. It does not use face detection, background replacement, or beauty filters.',
+  },
+  {
+    question: 'What photo sizes are included?',
+    answer:
+      'You can enter any width and height in pixels, millimetres, or inches. The available US and UK entries are size references with source links and warnings, not compliance guarantees.',
+  },
+  {
+    question: 'What is on the print sheet?',
+    answer:
+      'The print sheet repeats the prepared photo on a 4 by 6 inch or A4 PNG with optional dashed cut lines. Use matching paper and disable unexpected printer scaling when printing.',
+  },
+  {
+    question: 'Can I use the Canada passport requirements here?',
+    answer:
+      'No. Canada has requirements that include a commercial photographer and restrictions on cropping and software changes. ToolkitFree does not offer a Canada compliance preset.',
+  },
+];
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: tool.name,
+  description: tool.description,
+  url: toolUrl,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0' },
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: toPublicUrl('/') },
+    { '@type': 'ListItem', position: 2, name: tool.name, item: toolUrl },
+  ],
+};
+---
+
+<Layout
+  title="ID Photo Size & Print Tool — Free Online"
+  description="Prepare an ID photo at a custom, US, or UK reference size. Position the original photo, export JPG or PNG, and make a local 4×6 or A4 print sheet."
+  structuredData={[
+    structuredData,
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: { '@type': 'Answer', text: item.answer },
+      })),
+    },
+    breadcrumbSchema,
+  ]}
+>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>Free ID Photo Size & Print Tool</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
+        Position your original photo, export a chosen size, and make a 4×6 or A4 print sheet. All
+        file processing stays in your browser.
+      </p>
+      <div class="privacy-badge">
+        <span style="color: #047857; font-weight: 600;">Your photo never leaves your device</span>
+      </div>
+      <IdPhotoMaker client:load />
+      <section class="howto-section">
+        <h2>How to Prepare an ID Photo</h2><ol class="howto-steps">
+          <li>Upload one JPG, PNG, or WebP photo.</li><li>
+            Choose a size reference or enter your own width, height, and DPI.
+          </li><li>
+            Drag the photo to frame it, then use zoom controls and the reference lines as a manual
+            guide.
+          </li><li>Prepare a single digital photo and an optional 4×6 or A4 print sheet.</li><li>
+            Review the receiving authority’s current rules before submitting or printing.
+          </li>
+        </ol>
+      </section>
+      <section class="features-section">
+        <h2>What This Tool Does</h2><ul class="features-list">
+          <li>Manual original-photo positioning and fixed-ratio cropping</li><li>
+            Custom sizes in pixels, millimetres, or inches
+          </li><li>US and UK size-reference entries with source warnings</li><li>
+            JPG or PNG digital export plus 4×6 and A4 print sheets
+          </li><li>Optional cut lines and visible output dimensions</li><li>
+            No face detection, beauty filters, or background replacement
+          </li><li>100% browser-based processing with no photo upload</li>
+        </ul>
+      </section>
+      <div style="margin: 2rem 0;">
+        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
+      </div>
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>{
+          faqItems.map((item) => (
+            <div class="faq-item">
+              <details>
+                <>
+                  <summary class="faq-question">{item.question}</summary>
+                  <div class="faq-answer">{item.answer}</div>
+                </>
+              </details>
+            </div>
+          ))
+        }
+      </section>
+      <ToolDirectory currentId="id-photo-maker" mode="related" />
+    </div>
+    <aside class="tool-sidebar">
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div><ToolDirectory
+        currentId="id-photo-maker"
+        mode="sidebar"
+      />
+    </aside>
+  </div>
+</Layout>
