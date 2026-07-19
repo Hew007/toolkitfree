@@ -27,6 +27,7 @@ export type ToolId =
   | 'image-resizer'
   | 'image-enhancer'
   | 'image-collage'
+  | 'id-photo-maker'
   | 'image-cropper'
   | 'background-remover'
   | 'image-to-pdf'
@@ -163,6 +164,26 @@ export const toolRegistry: readonly ToolDefinition[] = [
     variants: [],
   },
   {
+    id: 'id-photo-maker',
+    name: 'ID Photo Size & Print Tool',
+    navLabel: 'ID Photo',
+    href: '/tools/id-photo-maker',
+    description:
+      'Manually position an original photo, export a selected ID photo size, and make a local print sheet without claiming government approval.',
+    shortDescription: 'Prepare a custom-size ID photo and print sheet locally.',
+    category: 'image-tools',
+    status: 'public',
+    lastModified: '2026-07-13',
+    related: [
+      'image-cropper',
+      'image-resizer',
+      'image-to-pdf',
+      'image-converter',
+      'image-compressor',
+    ],
+    variants: [],
+  },
+  {
     id: 'image-cropper',
     name: 'Image Cropper',
     navLabel: 'Cropper',
@@ -179,6 +200,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
       'image-compressor',
       'image-to-pdf',
       'background-remover',
+      'id-photo-maker',
     ],
     variants: cropperVariants,
   },

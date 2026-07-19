@@ -7,6 +7,7 @@ const root = process.cwd();
 const browserArg = process.argv.find((arg) => arg.startsWith('--browser='));
 const browserName = browserArg?.split('=')[1]?.toLowerCase() === 'edge' ? 'Edge' : 'Chrome';
 const smokeOnly = process.argv.includes('--smoke');
+const idPhotoOnly = process.argv.includes('--id-photo');
 const previewPort = Number(process.env.E2E_PREVIEW_PORT || (browserName === 'Edge' ? 4332 : 4331));
 const debugPort = Number(process.env.E2E_DEBUG_PORT || (browserName === 'Edge' ? 9232 : 9231));
 const baseUrl = `http://127.0.0.1:${previewPort}`;
@@ -22,10 +23,13 @@ const fullTests = [
   'validate-responsive-accessibility-browser.mjs',
   'validate-performance-browser.mjs',
   'validate-collage-browser.mjs',
+  'validate-id-photo-browser.mjs',
 ];
-const tests = smokeOnly
-  ? ['validate-converter-browser.mjs', 'validate-responsive-accessibility-browser.mjs']
-  : fullTests;
+const tests = idPhotoOnly
+  ? ['validate-id-photo-browser.mjs']
+  : smokeOnly
+    ? ['validate-converter-browser.mjs', 'validate-responsive-accessibility-browser.mjs']
+    : fullTests;
 
 function findBrowser() {
   const browserCandidates =
@@ -167,6 +171,6 @@ console.log(
     scripts: tests.length,
     baseUrl,
     browser: browserName,
-    mode: smokeOnly ? 'smoke' : 'full',
+    mode: idPhotoOnly ? 'id-photo' : smokeOnly ? 'smoke' : 'full',
   })
 );
