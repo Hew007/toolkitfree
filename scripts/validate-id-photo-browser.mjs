@@ -92,6 +92,65 @@ await evaluate(`(async () => {
 })()`);
 
 await waitFor(`Boolean(document.querySelector('[data-testid="id-photo-editor"]'))`, 'photo editor');
+const uiLayouts = [];
+for (const width of [1440, 1240, 900, 600, 375]) {
+  await send('Emulation.setDeviceMetricsOverride', {
+    width,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: width <= 600,
+  });
+  const layout = await evaluate(`(() => {
+    const maker = document.querySelector('[data-id-photo-maker]');
+    const grids = [...document.querySelectorAll('.id-photo-options-grid')];
+    const gridReports = grids.map((grid) => {
+      const fields = [...grid.querySelectorAll(':scope > .id-photo-field')];
+      const rectangles = fields.map((field) => {
+        const rect = field.getBoundingClientRect();
+        const control = field.querySelector('.id-photo-control').getBoundingClientRect();
+        return {
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom,
+          controlInside: control.left >= rect.left - 1 && control.right <= rect.right + 1
+        };
+      });
+      const overlaps = rectangles.some((first, index) => rectangles.slice(index + 1).some((second) =>
+        first.left < second.right - 1 && first.right > second.left + 1 &&
+        first.top < second.bottom - 1 && first.bottom > second.top + 1
+      ));
+      const firstTop = rectangles[0]?.top ?? 0;
+      return {
+        columns: rectangles.filter((rect) => Math.abs(rect.top - firstTop) < 2).length,
+        overlaps,
+        controlsInside: rectangles.every((rect) => rect.controlInside),
+        scrollWidth: grid.scrollWidth,
+        clientWidth: grid.clientWidth
+      };
+    });
+    return {
+      width: ${width},
+      makerFits: maker.scrollWidth <= maker.clientWidth + 1,
+      grids: gridReports
+    };
+  })()`);
+  assert.equal(layout.makerFits, true, `ID photo maker should fit at ${width}px`);
+  assert.equal(
+    layout.grids.every(
+      (grid) => !grid.overlaps && grid.controlsInside && grid.scrollWidth <= grid.clientWidth + 1
+    ),
+    true,
+    `ID photo fields should not overlap or overflow at ${width}px`
+  );
+  uiLayouts.push(layout);
+}
+assert.equal(
+  uiLayouts.at(-1).grids.every((grid) => grid.columns === 1),
+  true
+);
+await send('Emulation.clearDeviceMetricsOverride');
+
 assert.match(
   await evaluate(`document.querySelector('[data-testid="id-photo-output-size"]').textContent`),
   /413\s*×\s*531px/
@@ -122,18 +181,6 @@ await waitFor(
   `document.querySelector('[data-testid="id-photo-output-size"]').textContent.includes('600 × 600px')`,
   'US reference size'
 );
-await send('Emulation.setDeviceMetricsOverride', {
-  width: 375,
-  height: 812,
-  deviceScaleFactor: 2,
-  mobile: true,
-});
-const responsive = await evaluate(`(() => {
-  const maker = document.querySelector('[data-id-photo-maker]');
-  return { scrollWidth: maker.scrollWidth, clientWidth: maker.clientWidth };
-})()`);
-assert.equal(responsive.scrollWidth <= responsive.clientWidth + 1, true);
-await send('Emulation.clearDeviceMetricsOverride');
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
 await send('Target.closeTarget', { targetId: target.id });
@@ -142,7 +189,7 @@ console.log(
   JSON.stringify({
     status: 'ID_PHOTO_BROWSER_OK',
     customResults,
-    responsive,
+    uiLayouts,
     browserErrors: actionableBrowserErrors.length,
   })
 );

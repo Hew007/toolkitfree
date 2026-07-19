@@ -37,16 +37,16 @@ function NumberField({
   onChange: (value: number) => void;
 }) {
   return (
-    <label style={{ display: 'grid', gap: '0.35rem', fontSize: '0.875rem', fontWeight: 600 }}>
+    <label className="id-photo-field">
       {label}
       <input
+        className="id-photo-control"
         type="number"
         min={min}
         max={max}
         step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
       />
     </label>
   );
@@ -56,23 +56,14 @@ export default function IdPhotoOptions({ presets, settings, onChange }: IdPhotoO
   const update = <K extends keyof IdPhotoSettings>(key: K, value: IdPhotoSettings[K]) =>
     onChange({ ...settings, [key]: value });
   return (
-    <section
-      aria-label="ID photo options"
-      style={{ display: 'grid', gap: '1rem', marginBottom: '1.5rem' }}
-    >
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '0.75rem',
-        }}
-      >
-        <label style={{ display: 'grid', gap: '0.35rem', fontSize: '0.875rem', fontWeight: 600 }}>
+    <section className="id-photo-options" aria-label="ID photo options">
+      <div className="id-photo-options-grid">
+        <label className="id-photo-field">
           Size reference
           <select
+            className="id-photo-control"
             value={settings.presetId}
             onChange={(event) => update('presetId', event.target.value as IdPhotoPresetId)}
-            style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
           >
             {presets.map((preset) => (
               <option key={preset.id} value={preset.id}>
@@ -81,12 +72,12 @@ export default function IdPhotoOptions({ presets, settings, onChange }: IdPhotoO
             ))}
           </select>
         </label>
-        <label style={{ display: 'grid', gap: '0.35rem', fontSize: '0.875rem', fontWeight: 600 }}>
+        <label className="id-photo-field">
           Unit
           <select
+            className="id-photo-control"
             value={settings.unit}
             onChange={(event) => update('unit', event.target.value as IdPhotoSettings['unit'])}
-            style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
           >
             <option value="px">Pixels</option>
             <option value="mm">Millimetres</option>
@@ -117,19 +108,13 @@ export default function IdPhotoOptions({ presets, settings, onChange }: IdPhotoO
           onChange={(value) => update('dpi', value)}
         />
       </div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '0.75rem',
-        }}
-      >
-        <label style={{ display: 'grid', gap: '0.35rem', fontSize: '0.875rem', fontWeight: 600 }}>
+      <div className="id-photo-options-grid">
+        <label className="id-photo-field">
           Download format
           <select
+            className="id-photo-control"
             value={settings.format}
             onChange={(event) => update('format', event.target.value as ImageOutputMimeType)}
-            style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
           >
             <option value="image/jpeg">JPG</option>
             <option value="image/png">PNG</option>
@@ -144,12 +129,12 @@ export default function IdPhotoOptions({ presets, settings, onChange }: IdPhotoO
             onChange={(value) => update('quality', value)}
           />
         )}
-        <label style={{ display: 'grid', gap: '0.35rem', fontSize: '0.875rem', fontWeight: 600 }}>
+        <label className="id-photo-field">
           Print sheet
           <select
+            className="id-photo-control"
             value={settings.paper}
             onChange={(event) => update('paper', event.target.value as IdPhotoSettings['paper'])}
-            style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
           >
             <option value="4x6">4 × 6 inches</option>
             <option value="a4">A4</option>
@@ -172,7 +157,7 @@ export default function IdPhotoOptions({ presets, settings, onChange }: IdPhotoO
           onChange={(value) => update('gapMm', value)}
         />
       </div>
-      <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.875rem' }}>
+      <label className="id-photo-checkbox">
         <input
           type="checkbox"
           checked={settings.cutLines}

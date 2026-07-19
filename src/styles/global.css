@@ -450,6 +450,53 @@ button {
   margin-top: 1rem;
 }
 
+/* ID photo options */
+.id-photo-options {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  margin-bottom: 1.5rem;
+}
+
+.id-photo-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+.id-photo-field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.id-photo-control {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--color-text);
+}
+
+.id-photo-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.id-photo-checkbox input {
+  flex: 0 0 auto;
+}
+
 @media (max-width: 640px) {
   .settings-grid {
     grid-template-columns: 1fr;

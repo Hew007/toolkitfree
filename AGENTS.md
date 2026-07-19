@@ -31,6 +31,11 @@ In-progress planning:
 ## Follow-up Backlog
 
 - Simplify Image Collage Maker interactions: reduce configuration up front, make defaults smarter, and optimize for a fast upload → choose simple layout → download flow.
+- After the Image Collage Maker simplification is complete, follow this release and growth sequence without skipping steps:
+  1. Run automated UI coverage across every public page at desktop, intermediate, tablet, and mobile widths. Check layout overlap and overflow, primary interactions, uploads, downloads, browser errors, accessibility basics, and screenshots for visual review.
+  2. Hand the fully tested local or preview build to the project owner for a complete manual verification pass. Do not begin promotion until the owner confirms this pass is complete.
+  3. Produce a concrete promotion plan with platform order, content, landing pages, measurement, and feedback checkpoints; then execute it gradually on approved external platforms.
+  4. Continue technical SEO, content SEO, GEO/answer-engine optimization, internal linking, and relevant non-spammy external link acquisition, using Search Console and Cloudflare data to adjust the plan.
 
 ## Package Manager
 
