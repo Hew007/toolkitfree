@@ -12,6 +12,7 @@ interface FileUploaderProps {
   onFilesSelected: (files: File[]) => void;
   budgetProfile?: ImageBudgetProfile;
   currentFiles?: readonly File[];
+  singleFileLabel?: string;
 }
 
 export default function FileUploader({
@@ -20,6 +21,7 @@ export default function FileUploader({
   onFilesSelected,
   budgetProfile,
   currentFiles = [],
+  singleFileLabel = 'an image',
 }: FileUploaderProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [reviewing, setReviewing] = useState(false);
@@ -131,7 +133,7 @@ export default function FileUploader({
             onClick={() => inputRef.current?.click()}
             disabled={reviewing}
           >
-            Choose {multiple ? 'images' : 'an image'}
+            Choose {multiple ? 'images' : singleFileLabel}
           </button>
           <input
             ref={inputRef}

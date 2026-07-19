@@ -4,6 +4,7 @@ import { allVariants as cropperVariants } from './cropper-variants.ts';
 import { allVariants as faviconVariants } from './favicon-variants.ts';
 import { allVariants as pdfVariants } from './pdf-variants.ts';
 import { allVariants as resizerVariants } from './resizer-variants.ts';
+import { allVariants as animationVariants } from './animation-variants.ts';
 import type { ToolVariantSummary } from './content-types.ts';
 
 export const SITE_URL = 'https://toolkitfree.net';
@@ -32,7 +33,8 @@ export type ToolId =
   | 'background-remover'
   | 'image-to-pdf'
   | 'favicon-generator'
-  | 'qr-generator';
+  | 'qr-generator'
+  | 'video-to-gif';
 
 export type ToolCategory = 'image-tools' | 'create-export';
 
@@ -224,6 +226,26 @@ export const toolRegistry: readonly ToolDefinition[] = [
       'qr-generator',
     ],
     variants: [],
+  },
+  {
+    id: 'video-to-gif',
+    name: 'Video to GIF, WebP & APNG',
+    navLabel: 'Video to GIF',
+    href: '/tools/video-to-gif',
+    description:
+      'Turn short videos, GIFs, animated WebP files, and APNG files into browser-generated GIF, animated WebP, or APNG output.',
+    shortDescription: 'Convert short videos and animated images locally.',
+    category: 'create-export',
+    status: 'public',
+    lastModified: '2026-07-19',
+    related: [
+      'image-converter',
+      'image-compressor',
+      'image-resizer',
+      'image-cropper',
+      'image-to-pdf',
+    ],
+    variants: animationVariants,
   },
   {
     id: 'image-to-pdf',

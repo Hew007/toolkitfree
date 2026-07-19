@@ -1,0 +1,17 @@
+ToolkitFree FFmpeg WebAssembly notice
+=====================================
+
+This site distributes @ffmpeg/core version 0.12.10 for in-browser media conversion.
+
+@ffmpeg/core is licensed under GPL-2.0-or-later. The exact package metadata, compiled
+artifacts, source project, build scripts, and license information are available at:
+
+https://www.npmjs.com/package/@ffmpeg/core/v/0.12.10
+https://github.com/ffmpegwasm/ffmpeg.wasm/tree/v0.12.10
+https://github.com/ffmpeg/FFmpeg/tree/n5.1.4
+https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+
+The JavaScript wrapper @ffmpeg/ffmpeg 0.12.15 and @ffmpeg/util 0.12.2 are distributed
+under their respective upstream licenses. ToolkitFree does not modify the FFmpeg core
+binary; the deployment build splits that binary into transport-sized parts and
+reassembles the identical bytes in the browser after an integrity check.

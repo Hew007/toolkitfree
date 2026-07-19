@@ -22,7 +22,7 @@ function routeFile(route) {
 assert.equal(fs.existsSync(dist), true, 'Run the production build before site validation');
 const files = collectFiles(dist);
 const htmlFiles = files.filter((file) => file.endsWith('.html'));
-assert.equal(htmlFiles.length, 60, 'Static HTML page count');
+assert.equal(htmlFiles.length, 63, 'Static HTML page count');
 
 const brokenLinks = [];
 const redirectingLinks = [];

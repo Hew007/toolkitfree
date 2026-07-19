@@ -1,0 +1,106 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import AnimationConverter from '../../../components/AnimationConverter';
+import ToolDirectory from '../../../components/ToolDirectory.astro';
+import { allVariants } from '../../../data/animation-variants';
+import { toPublicUrl } from '../../../data/tool-registry';
+
+export function getStaticPaths() {
+  return allVariants.map((variant) => ({ params: { variant: variant.slug }, props: variant }));
+}
+
+const { title, heading, description, output, label } = Astro.props;
+const pageUrl = toPublicUrl(`/tools/video-to-gif/${Astro.params.variant}`);
+const faq = [
+  {
+    question: `Does ${label.toLowerCase()} upload my video?`,
+    answer:
+      'No. Your media file stays in the browser. A versioned WebAssembly conversion engine is downloaded when you start.',
+  },
+  {
+    question: 'Why can some MOV files fail?',
+    answer:
+      'MOV is a container that can hold different codecs. This browser converter supports common decodable video streams but cannot promise every MOV or HEVC variant.',
+  },
+  {
+    question: 'What limits apply?',
+    answer:
+      'Desktop video files are limited to 50 MiB and mobile video files to 25 MiB. A selected clip can be up to 20 seconds, subject to frame and pixel budgets.',
+  },
+];
+const schemas = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: heading,
+    description,
+    url: pageUrl,
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Any',
+    offers: { '@type': 'Offer', price: '0' },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: { '@type': 'Answer', text: item.answer },
+    })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: toPublicUrl('/') },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Video to GIF, WebP & APNG',
+        item: toPublicUrl('/tools/video-to-gif'),
+      },
+      { '@type': 'ListItem', position: 3, name: label, item: pageUrl },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} canonical={pageUrl} structuredData={schemas}>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>{heading}</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1rem;">{description}</p>
+      <div class="privacy-badge">
+        Your file stays on this device · the conversion engine downloads on first use
+      </div>
+      <AnimationConverter client:load defaultOutput={output} />
+      <section class="howto-section">
+        <h2>How It Works</h2>
+        <ol class="howto-steps">
+          <li>Choose a short MP4, WebM, or compatible MOV file.</li>
+          <li>Set the start time, maximum duration, size, frame rate, and loop behavior.</li>
+          <li>Start the local browser conversion and keep the tab open.</li>
+          <li>Review the generated file size and download the result.</li>
+        </ol>
+      </section>
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {
+          faq.map((item) => (
+            <div class="faq-item">
+              <details>
+                <summary class="faq-question">{item.question}</summary>
+                <div class="faq-answer">{item.answer}</div>
+              </details>
+            </div>
+          ))
+        }
+      </section>
+      <ToolDirectory currentId="video-to-gif" mode="related" />
+    </div>
+    <aside class="tool-sidebar">
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
+      <ToolDirectory currentId="video-to-gif" mode="sidebar" />
+    </aside>
+  </div>
+</Layout>

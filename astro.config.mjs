@@ -6,6 +6,11 @@ export default defineConfig({
   integrations: [react()],
   output: 'static',
   trailingSlash: 'always',
+  vite: {
+    optimizeDeps: {
+      exclude: ['@ffmpeg/ffmpeg'],
+    },
+  },
   i18n: {
     defaultLocale: 'en',
     locales: ['en', 'zh'],

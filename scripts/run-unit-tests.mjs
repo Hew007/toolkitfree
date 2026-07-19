@@ -11,6 +11,7 @@ const tests = [
   'validate-batch-download.mjs',
   'validate-performance-guards.mjs',
   'validate-id-photo.mjs',
+  'validate-animation-converter.mjs',
 ];
 
 for (const test of tests) {

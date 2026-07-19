@@ -1,0 +1,153 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AnimationConverter from '../../components/AnimationConverter';
+import ToolDirectory from '../../components/ToolDirectory.astro';
+import { getTool, toPublicUrl } from '../../data/tool-registry';
+
+const tool = getTool('video-to-gif');
+const toolUrl = toPublicUrl(tool.href);
+const faqItems = [
+  {
+    question: 'Are my video and animation files uploaded?',
+    answer:
+      'No. File content is decoded and converted in your browser. The page downloads a versioned FFmpeg WebAssembly engine when you start a conversion, but it does not send your media file to ToolkitFree.',
+  },
+  {
+    question: 'Which video formats can I convert?',
+    answer:
+      'The tool accepts MP4, WebM, and common MOV files. Actual decoding depends on the codec inside the file, so some HEVC, unusual MOV, or damaged videos may not open.',
+  },
+  {
+    question: 'Can I convert video to animated WebP or APNG?',
+    answer:
+      'Yes. Choose Animated WebP for a compact modern animation or APNG for full-color lossless frames and transparency. APNG output is often much larger.',
+  },
+  {
+    question: 'Can I convert an animated WebP to GIF or APNG?',
+    answer:
+      'Yes when the browser exposes animated WebP frame decoding. The converter checks that capability directly and shows a clear message when it is unavailable.',
+  },
+  {
+    question: 'Why are video length, frame rate, and size limited?',
+    answer:
+      'Browser conversion holds codec memory, decoded frames, and output data on your device. The limits reduce the chance of a frozen tab or an out-of-memory crash.',
+  },
+  {
+    question: 'Does the animation include audio?',
+    answer: 'No. GIF, animated WebP, and APNG do not carry the source video audio in this tool.',
+  },
+];
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: tool.name,
+  description: tool.description,
+  url: toolUrl,
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0' },
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: toPublicUrl('/') },
+    { '@type': 'ListItem', position: 2, name: tool.name, item: toolUrl },
+  ],
+};
+---
+
+<Layout
+  title="Video to GIF, Animated WebP & APNG Converter — Free"
+  description="Convert a short MP4, WebM, MOV, GIF, animated WebP, or APNG locally in your browser. Trim, resize, set frame rate and loop count, then download."
+  structuredData={[
+    structuredData,
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: { '@type': 'Answer', text: item.answer },
+      })),
+    },
+    breadcrumbSchema,
+  ]}
+>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>Video to GIF, Animated WebP & APNG Converter</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1rem;">
+        Turn a short video or animated image into GIF, animated WebP, or APNG. Trim the clip, choose
+        a practical size and frame rate, then convert on this device.
+      </p>
+      <div class="privacy-badge">
+        Your file stays on this device · the conversion engine downloads on first use
+      </div>
+      <AnimationConverter client:load />
+
+      <section class="howto-section">
+        <h2>How to Convert a Video to an Animated Image</h2>
+        <ol class="howto-steps">
+          <li>Choose one MP4, WebM, compatible MOV, GIF, animated WebP, or APNG file.</li>
+          <li>Select GIF, Animated WebP, or APNG as the output.</li>
+          <li>Choose a preset and adjust the start time, maximum duration, and loop count.</li>
+          <li>Start the conversion and keep this tab open while the browser processes the file.</li>
+          <li>Review the result size and download the generated animation.</li>
+        </ol>
+      </section>
+
+      <section class="features-section">
+        <h2>Format Guide</h2>
+        <ul class="features-list format-guide-list">
+          <li class="format-guide-item">
+            <strong>GIF:</strong>
+            <span>broadly compatible, but limited colors and larger photo-like output.</span>
+          </li>
+          <li class="format-guide-item">
+            <strong>Animated WebP:</strong>
+            <span>usually compact, with full color and transparency support.</span>
+          </li>
+          <li class="format-guide-item">
+            <strong>APNG:</strong>
+            <span>lossless full-color animation and alpha transparency, usually larger.</span>
+          </li>
+          <li>
+            One file per conversion, with device-aware file, frame, duration, and pixel limits.
+          </li>
+          <li>Audio is removed because these animated image formats do not use it here.</li>
+          <li>No watermark and no media-file upload.</li>
+        </ul>
+      </section>
+
+      <div style="margin: 2rem 0;">
+        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
+      </div>
+
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {
+          faqItems.map((item) => (
+            <div class="faq-item">
+              <details>
+                <summary class="faq-question">{item.question}</summary>
+                <div class="faq-answer">{item.answer}</div>
+              </details>
+            </div>
+          ))
+        }
+      </section>
+
+      <p class="tool-hint">
+        Codec notices and source information: <a href="/licenses/ffmpeg-core.txt"
+          >FFmpeg core license</a
+        >.
+      </p>
+      <ToolDirectory currentId="video-to-gif" mode="related" />
+    </div>
+    <aside class="tool-sidebar">
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
+      <ToolDirectory currentId="video-to-gif" mode="sidebar" />
+    </aside>
+  </div>
+</Layout>

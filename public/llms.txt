@@ -29,6 +29,7 @@
 - [ID Photo Size & Print Tool](https://toolkitfree.net/tools/id-photo-maker/): Manually position an original photo, export a selected ID photo size, and make a local print sheet without claiming government approval.
 - [Image Cropper](https://toolkitfree.net/tools/image-cropper/): Crop one JPG, PNG, or WebP with visual, touch, and keyboard controls.
 - [Background Remover](https://toolkitfree.net/tools/background-remover/): Remove one image background locally after downloading the browser AI model and runtime.
+- [Video to GIF, WebP & APNG](https://toolkitfree.net/tools/video-to-gif/): Turn short videos, GIFs, animated WebP files, and APNG files into browser-generated GIF, animated WebP, or APNG output.
 - [Image to PDF](https://toolkitfree.net/tools/image-to-pdf/): Combine ordered JPG, PNG, or WebP images into a PDF with page size, orientation, and margin controls.
 - [Favicon Generator](https://toolkitfree.net/tools/favicon-generator/): Generate five PNG favicon sizes and a site.webmanifest from one image.
 - [QR Code Generator](https://toolkitfree.net/tools/qr-generator/): Create PNG or SVG QR codes for text, URLs, WiFi, and vCards with contrast-aware downloads.

@@ -3,6 +3,7 @@ dist/
 
 # dependencies
 node_modules/
+public/generated/ffmpeg/
 pnpm-lock.yaml
 pnpm-workspace.yaml
 
