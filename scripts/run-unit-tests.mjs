@@ -12,6 +12,7 @@ const tests = [
   'validate-performance-guards.mjs',
   'validate-id-photo.mjs',
   'validate-animation-converter.mjs',
+  'validate-pdf-page-tools.mjs',
 ];
 
 for (const test of tests) {

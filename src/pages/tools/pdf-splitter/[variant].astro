@@ -1,0 +1,110 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import PdfPageExtractor from '../../../components/PdfPageExtractor';
+import ToolDirectory from '../../../components/ToolDirectory.astro';
+import { allVariants } from '../../../data/pdf-page-variants';
+import { toPublicUrl } from '../../../data/tool-registry';
+
+export function getStaticPaths() {
+  return allVariants.map((variant) => ({ params: { variant: variant.slug }, props: variant }));
+}
+
+const { title, heading, description, defaultMode, label } = Astro.props;
+const pageUrl = toPublicUrl(`/tools/pdf-splitter/${Astro.params.variant}`);
+const faq = [
+  {
+    question: `Does ${label.toLowerCase()} upload my document?`,
+    answer:
+      'No. PDF reading, preview rendering, page copying, and export happen locally in your browser.',
+  },
+  {
+    question: 'Can I choose a page range?',
+    answer:
+      'Yes. Enter individual pages or ranges such as 1-3, 5, 8-10. The range follows the current displayed page order.',
+  },
+  {
+    question: 'Can I reorder or rotate pages first?',
+    answer:
+      'Yes. Every page card includes controls to move, rotate, remove, and select that page before export.',
+  },
+  {
+    question: 'Are encrypted PDFs supported?',
+    answer: 'No. Password-protected and encrypted PDFs are not supported in this version.',
+  },
+];
+const schemas = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: heading,
+    description,
+    url: pageUrl,
+    applicationCategory: 'UtilitiesApplication',
+    operatingSystem: 'Any',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: { '@type': 'Answer', text: item.answer },
+    })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: toPublicUrl('/') },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'PDF Splitter & Page Extractor',
+        item: toPublicUrl('/tools/pdf-splitter'),
+      },
+      { '@type': 'ListItem', position: 3, name: label, item: pageUrl },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} canonical={pageUrl} structuredData={schemas}>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>{heading}</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1rem;">{description}</p>
+      <div class="privacy-badge">Your PDF stays on this device · no document upload</div>
+      <PdfPageExtractor client:load defaultMode={defaultMode} />
+
+      <section class="howto-section">
+        <h2>How It Works</h2>
+        <ol class="howto-steps">
+          <li>Choose one PDF and wait for local page previews.</li>
+          <li>Select pages individually or enter a page range.</li>
+          <li>Reorder, rotate, or remove pages as needed.</li>
+          <li>Export and download the selected pages.</li>
+        </ol>
+      </section>
+
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {
+          faq.map((item) => (
+            <div class="faq-item">
+              <details>
+                <summary class="faq-question">{item.question}</summary>
+                <div class="faq-answer">{item.answer}</div>
+              </details>
+            </div>
+          ))
+        }
+      </section>
+      <ToolDirectory currentId="pdf-splitter" mode="related" />
+    </div>
+    <aside class="tool-sidebar">
+      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
+      <ToolDirectory currentId="pdf-splitter" mode="sidebar" />
+    </aside>
+  </div>
+</Layout>

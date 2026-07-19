@@ -31,6 +31,7 @@
 - [Background Remover](https://toolkitfree.net/tools/background-remover/): Remove one image background locally after downloading the browser AI model and runtime.
 - [Video to GIF, WebP & APNG](https://toolkitfree.net/tools/video-to-gif/): Turn short videos, GIFs, animated WebP files, and APNG files into browser-generated GIF, animated WebP, or APNG output.
 - [Image to PDF](https://toolkitfree.net/tools/image-to-pdf/): Combine ordered JPG, PNG, or WebP images into a PDF with page size, orientation, and margin controls.
+- [PDF Splitter & Page Extractor](https://toolkitfree.net/tools/pdf-splitter/): Extract, split, reorder, rotate, or remove PDF pages locally and export one PDF or separate page files.
 - [Favicon Generator](https://toolkitfree.net/tools/favicon-generator/): Generate five PNG favicon sizes and a site.webmanifest from one image.
 - [QR Code Generator](https://toolkitfree.net/tools/qr-generator/): Create PNG or SVG QR codes for text, URLs, WiFi, and vCards with contrast-aware downloads.
 

@@ -34,6 +34,7 @@
     "validate:site": "node scripts/validate-site-integrity.mjs",
     "validate:id-photo": "node scripts/validate-id-photo.mjs",
     "validate:animation-converter": "node scripts/validate-animation-converter.mjs",
+    "validate:pdf-pages": "node scripts/validate-pdf-page-tools.mjs",
     "validate:asset-size": "node scripts/validate-static-asset-sizes.mjs",
     "check": "node scripts/run-quality-gates.mjs"
   },
@@ -46,6 +47,8 @@
     "astro": "^5.7.10",
     "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
+    "pdf-lib": "1.17.1",
+    "pdfjs-dist": "6.1.200",
     "qr-code-styling": "^1.9.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"

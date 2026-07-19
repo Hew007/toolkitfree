@@ -14,11 +14,19 @@ function findAsset(prefix) {
   return match;
 }
 
+function findAssetMatching(pattern, label) {
+  const match = fs.readdirSync(assetDirectory).find((name) => pattern.test(name));
+  if (!match) throw new Error(`Could not find built ${label} asset`);
+  return match;
+}
+
 const heavyAssets = {
   jszip: findAsset('jszip.min.'),
   jspdf: findAsset('jspdf.es.min.'),
   qr: findAsset('qr-code-styling.'),
   background: findAsset('index.re'),
+  pdfjs: findAssetMatching(/^pdf\.[^.]+\.js$/, 'PDF.js'),
+  pdfWorker: 'pdf.worker.min.',
 };
 
 const target = await fetch(`${endpoint}/json/new?${encodeURIComponent('about:blank')}`, {
@@ -167,6 +175,17 @@ for (const [route, forbidden] of [
   ['/tools/image-converter/', Object.values(heavyAssets)],
   ['/tools/image-enhancer/', Object.values(heavyAssets)],
   ['/tools/image-collage/', Object.values(heavyAssets)],
+  [
+    '/tools/pdf-splitter/',
+    [
+      heavyAssets.pdfjs,
+      heavyAssets.pdfWorker,
+      heavyAssets.jszip,
+      heavyAssets.jspdf,
+      heavyAssets.qr,
+      heavyAssets.background,
+    ],
+  ],
   [
     '/tools/image-to-pdf/',
     [heavyAssets.jspdf, heavyAssets.jszip, heavyAssets.qr, heavyAssets.background],

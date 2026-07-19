@@ -3,6 +3,7 @@ import { allVariants as converterVariants } from './converter-variants.ts';
 import { allVariants as cropperVariants } from './cropper-variants.ts';
 import { allVariants as faviconVariants } from './favicon-variants.ts';
 import { allVariants as pdfVariants } from './pdf-variants.ts';
+import { allVariants as pdfPageVariants } from './pdf-page-variants.ts';
 import { allVariants as resizerVariants } from './resizer-variants.ts';
 import { allVariants as animationVariants } from './animation-variants.ts';
 import type { ToolVariantSummary } from './content-types.ts';
@@ -32,6 +33,7 @@ export type ToolId =
   | 'image-cropper'
   | 'background-remover'
   | 'image-to-pdf'
+  | 'pdf-splitter'
   | 'favicon-generator'
   | 'qr-generator'
   | 'video-to-gif';
@@ -94,6 +96,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     status: 'public',
     lastModified: '2026-07-04',
     related: [
+      'pdf-splitter',
       'image-converter',
       'image-resizer',
       'image-enhancer',
@@ -162,6 +165,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
       'image-compressor',
       'image-converter',
       'image-to-pdf',
+      'pdf-splitter',
     ],
     variants: [],
   },
@@ -239,6 +243,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     status: 'public',
     lastModified: '2026-07-19',
     related: [
+      'pdf-splitter',
       'image-converter',
       'image-compressor',
       'image-resizer',
@@ -259,6 +264,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     status: 'public',
     lastModified: '2026-07-04',
     related: [
+      'pdf-splitter',
       'image-converter',
       'image-compressor',
       'image-cropper',
@@ -266,6 +272,26 @@ export const toolRegistry: readonly ToolDefinition[] = [
       'favicon-generator',
     ],
     variants: pdfVariants,
+  },
+  {
+    id: 'pdf-splitter',
+    name: 'PDF Splitter & Page Extractor',
+    navLabel: 'PDF Splitter',
+    href: '/tools/pdf-splitter',
+    description:
+      'Extract, split, reorder, rotate, or remove PDF pages locally and export one PDF or separate page files.',
+    shortDescription: 'Split, extract, reorder, and rotate PDF pages locally.',
+    category: 'create-export',
+    status: 'public',
+    lastModified: '2026-07-19',
+    related: [
+      'image-to-pdf',
+      'image-converter',
+      'image-cropper',
+      'image-compressor',
+      'qr-generator',
+    ],
+    variants: pdfPageVariants,
   },
   {
     id: 'favicon-generator',

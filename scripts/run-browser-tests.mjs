@@ -9,6 +9,7 @@ const browserName = browserArg?.split('=')[1]?.toLowerCase() === 'edge' ? 'Edge'
 const smokeOnly = process.argv.includes('--smoke');
 const idPhotoOnly = process.argv.includes('--id-photo');
 const animationOnly = process.argv.includes('--animation');
+const pdfPagesOnly = process.argv.includes('--pdf-pages');
 const previewPort = Number(process.env.E2E_PREVIEW_PORT || (browserName === 'Edge' ? 4332 : 4331));
 const debugPort = Number(process.env.E2E_DEBUG_PORT || (browserName === 'Edge' ? 9232 : 9231));
 const baseUrl = `http://127.0.0.1:${previewPort}`;
@@ -26,14 +27,17 @@ const fullTests = [
   'validate-collage-browser.mjs',
   'validate-id-photo-browser.mjs',
   'validate-animation-converter-browser.mjs',
+  'validate-pdf-page-tools-browser.mjs',
 ];
-const tests = animationOnly
-  ? ['validate-animation-converter-browser.mjs']
-  : idPhotoOnly
-    ? ['validate-id-photo-browser.mjs']
-    : smokeOnly
-      ? ['validate-converter-browser.mjs', 'validate-responsive-accessibility-browser.mjs']
-      : fullTests;
+const tests = pdfPagesOnly
+  ? ['validate-pdf-page-tools-browser.mjs']
+  : animationOnly
+    ? ['validate-animation-converter-browser.mjs']
+    : idPhotoOnly
+      ? ['validate-id-photo-browser.mjs']
+      : smokeOnly
+        ? ['validate-converter-browser.mjs', 'validate-responsive-accessibility-browser.mjs']
+        : fullTests;
 
 function findBrowser() {
   const browserCandidates =
@@ -176,6 +180,14 @@ console.log(
     scripts: tests.length,
     baseUrl,
     browser: browserName,
-    mode: animationOnly ? 'animation' : idPhotoOnly ? 'id-photo' : smokeOnly ? 'smoke' : 'full',
+    mode: pdfPagesOnly
+      ? 'pdf-pages'
+      : animationOnly
+        ? 'animation'
+        : idPhotoOnly
+          ? 'id-photo'
+          : smokeOnly
+            ? 'smoke'
+            : 'full',
   })
 );
