@@ -147,7 +147,7 @@ assert.equal(
 await waitFor(
   `(() => {
     const canvas = document.querySelector('[data-collage-preview]');
-    return canvas?.width === 768 && canvas?.height === 392;
+    return canvas?.width === 768 && canvas?.height === 320;
   })()`,
   'default collage preview'
 );
@@ -155,26 +155,92 @@ assert.equal(
   await evaluate(`document.querySelectorAll('[aria-label="Collage images"] li').length`),
   2
 );
-
-await evaluate(
-  `document.querySelector('#collage-layout').value = 'vertical'; document.querySelector('#collage-layout').dispatchEvent(new Event('change', { bubbles: true }))`
+assert.equal(await evaluate(`document.querySelectorAll('[data-collage-layout]').length`), 4);
+assert.equal(
+  await evaluate(`document.querySelector('.collage-advanced').open`),
+  false,
+  'Advanced settings should stay collapsed in the fast path'
 );
+
+const uiLayouts = [];
+for (const width of [1440, 900, 600, 375]) {
+  await send('Emulation.setDeviceMetricsOverride', {
+    width,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: width <= 600,
+  });
+  const layout = await evaluate(`(() => {
+    const tool = document.querySelector('[data-image-collage]');
+    const editor = document.querySelector('.collage-editor');
+    const controls = document.querySelector('.collage-controls');
+    const preview = document.querySelector('.collage-preview-panel');
+    const controlRect = controls.getBoundingClientRect();
+    const previewRect = preview.getBoundingClientRect();
+    return {
+      width: ${width},
+      fits: tool.scrollWidth <= tool.clientWidth + 1 && editor.scrollWidth <= editor.clientWidth + 1,
+      stacked: controlRect.top >= previewRect.bottom - 1,
+    };
+  })()`);
+  assert.equal(layout.fits, true, `Collage builder should not overflow at ${width}px`);
+  assert.equal(layout.stacked, width <= 900, `Collage editor stack state at ${width}px`);
+  uiLayouts.push(layout);
+}
+
+await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
+await evaluate(
+  `document.querySelector('[data-collage-preview]').scrollIntoView({ block: 'center' })`
+);
+const dragPoints = await evaluate(`(() => {
+  const canvas = document.querySelector('[data-collage-preview]');
+  const bounds = canvas.getBoundingClientRect();
+  return {
+    first: { x: bounds.left + bounds.width * 0.25, y: bounds.top + bounds.height * 0.5 },
+    middle: { x: bounds.left + bounds.width * 0.5, y: bounds.top + bounds.height * 0.5 },
+    second: { x: bounds.left + bounds.width * 0.75, y: bounds.top + bounds.height * 0.5 },
+  };
+})()`);
+await send('Input.dispatchTouchEvent', {
+  type: 'touchStart',
+  touchPoints: [dragPoints.first],
+});
+await send('Input.dispatchTouchEvent', {
+  type: 'touchMove',
+  touchPoints: [dragPoints.middle],
+});
+await send('Input.dispatchTouchEvent', {
+  type: 'touchMove',
+  touchPoints: [dragPoints.second],
+});
+await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+await waitFor(
+  `document.querySelector('[aria-label="Collage images"] li .collage-image-info strong')?.textContent === 'tall.png'`,
+  'mobile preview touch swap'
+);
+const previewTouchDragOrder = await evaluate(
+  `[...document.querySelectorAll('[aria-label="Collage images"] li .collage-image-info strong')].map((item) => item.textContent)`
+);
+assert.deepEqual(previewTouchDragOrder, ['tall.png', 'wide.png']);
+assert.equal(
+  await evaluate(
+    `document.querySelector('.collage-preview-help').textContent.includes('Drag a picture')`
+  ),
+  true
+);
+await send('Emulation.setTouchEmulationEnabled', { enabled: false });
+await send('Emulation.clearDeviceMetricsOverride');
+
+await evaluate(`document.querySelector('[data-collage-layout="vertical"]').click()`);
 await waitFor(
   `(() => {
     const canvas = document.querySelector('[data-collage-preview]');
-    return canvas?.width === 392 && canvas?.height === 768;
+    return canvas?.width === 392 && canvas?.height === 624;
   })()`,
   'vertical collage preview'
 );
 
-await evaluate(`
-  (() => {
-    const layout = document.querySelector('#collage-layout');
-    const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set;
-    setter.call(layout, 'columns');
-    layout.dispatchEvent(new Event('change', { bubbles: true }));
-  })()
-`);
+await evaluate(`document.querySelector('[data-collage-layout="columns"]').click()`);
 await waitFor(`Boolean(document.querySelector('#collage-columns'))`, 'columns control');
 await evaluate(`
   (() => {
@@ -188,7 +254,7 @@ await evaluate(`
 await waitFor(
   `(() => {
     const canvas = document.querySelector('[data-collage-preview]');
-    return canvas?.width === 392 && canvas?.height === 768;
+    return canvas?.width === 392 && canvas?.height === 624;
   })()`,
   'single-column collage preview'
 );
@@ -204,13 +270,17 @@ assert.equal(urlStats.created >= 3, true);
 
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
+await send('Target.closeTarget', { targetId: target.id });
+socket.close();
 
 console.log(
   JSON.stringify({
     status: 'IMAGE_COLLAGE_BROWSER_OK',
     uploaded: 2,
-    defaultSize: { width: 768, height: 392 },
-    verticalSize: { width: 392, height: 768 },
+    defaultSize: { width: 768, height: 320 },
+    verticalSize: { width: 392, height: 624 },
+    uiLayouts,
+    previewTouchDragOrder,
     pngBytes: bytes.length,
     browserErrors: actionableBrowserErrors.length,
   })

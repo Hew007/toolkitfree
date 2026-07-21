@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
-import { calculateCollageLayout, getCollageFilename } from '../src/lib/image-collage.ts';
+import {
+  calculateCollageLayout,
+  getCollageFilename,
+  recommendCollageCellSize,
+} from '../src/lib/image-collage.ts';
 
 const sources = [
   { width: 100, height: 50 },
@@ -94,6 +98,22 @@ const autoGrid = calculateCollageLayout(sources, {
 assert.equal(autoGrid.width, 180);
 assert.equal(autoGrid.height, 180);
 
+assert.deepEqual(
+  recommendCollageCellSize([
+    { width: 1920, height: 1080 },
+    { width: 1280, height: 720 },
+  ]),
+  { width: 360, height: 203 }
+);
+assert.deepEqual(recommendCollageCellSize([{ width: 400, height: 1200 }]), {
+  width: 360,
+  height: 640,
+});
+assert.deepEqual(recommendCollageCellSize([{ width: 3000, height: 500 }]), {
+  width: 360,
+  height: 160,
+});
+
 assert.equal(getCollageFilename('image/png'), 'toolkitfree-collage.png');
 assert.equal(getCollageFilename('image/jpeg'), 'toolkitfree-collage.jpg');
 assert.equal(getCollageFilename('image/webp'), 'toolkitfree-collage.webp');
@@ -114,7 +134,7 @@ assert.throws(() =>
 console.log(
   JSON.stringify({
     status: 'IMAGE_COLLAGE_ALGORITHM_OK',
-    layoutChecks: 5,
+    layoutChecks: 8,
     filenameChecks: 3,
   })
 );

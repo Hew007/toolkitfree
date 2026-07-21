@@ -50,6 +50,21 @@ export const DEFAULT_COLLAGE_OPTIONS: CollageOptions = {
   background: '#ffffff',
 };
 
+export function recommendCollageCellSize(
+  sources: readonly CollageSource[],
+  width = DEFAULT_COLLAGE_OPTIONS.cellWidth
+): { width: number; height: number } {
+  validateSources(sources);
+  const ratios = sources.map((source) => source.width / source.height).sort((a, b) => a - b);
+  const middle = Math.floor(ratios.length / 2);
+  const medianRatio =
+    ratios.length % 2 === 0 ? (ratios[middle - 1] + ratios[middle]) / 2 : ratios[middle];
+  return {
+    width,
+    height: Math.max(160, Math.min(640, Math.round(width / medianRatio))),
+  };
+}
+
 function positiveInteger(value: number, fallback: number): number {
   if (!Number.isFinite(value)) return fallback;
   return Math.max(1, Math.round(value));

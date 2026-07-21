@@ -157,7 +157,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Combine images into a grid or stitched collage.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-07-10',
+    lastModified: '2026-07-22',
     related: [
       'image-cropper',
       'image-resizer',

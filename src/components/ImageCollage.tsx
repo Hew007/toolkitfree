@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import FileUploader from './FileUploader';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
 import {
   calculateCollageLayout,
   DEFAULT_COLLAGE_OPTIONS,
   getCollageFilename,
+  recommendCollageCellSize,
   type CollageFitMode,
+  type CollageLayout,
   type CollageLayoutMode,
   type CollageOptions,
   type CollagePlacement,
@@ -107,6 +110,45 @@ function renderCollage(
   return layout;
 }
 
+function drawDragFeedback(
+  canvas: HTMLCanvasElement,
+  layout: CollageLayout,
+  sourceIndex: number,
+  targetIndex: number | null
+): void {
+  const context = getCanvas2dContext(canvas);
+  const lineWidth = Math.max(3, Math.round(Math.min(canvas.width, canvas.height) / 120));
+
+  const highlight = (index: number, fill: string, dashed: boolean) => {
+    const placement = layout.placements.find((candidate) => candidate.sourceIndex === index);
+    if (!placement) return;
+    const inset = lineWidth / 2;
+    context.save();
+    context.fillStyle = fill;
+    context.fillRect(
+      placement.tile.x,
+      placement.tile.y,
+      placement.tile.width,
+      placement.tile.height
+    );
+    context.strokeStyle = '#2563eb';
+    context.lineWidth = lineWidth;
+    if (dashed) context.setLineDash([lineWidth * 2, lineWidth * 1.5]);
+    context.strokeRect(
+      placement.tile.x + inset,
+      placement.tile.y + inset,
+      placement.tile.width - lineWidth,
+      placement.tile.height - lineWidth
+    );
+    context.restore();
+  };
+
+  highlight(sourceIndex, 'rgb(37 99 235 / 12%)', true);
+  if (targetIndex !== null && targetIndex !== sourceIndex) {
+    highlight(targetIndex, 'rgb(37 99 235 / 22%)', false);
+  }
+}
+
 function NumberControl({
   id,
   label,
@@ -125,7 +167,7 @@ function NumberControl({
   onChange: (value: number) => void;
 }) {
   return (
-    <label style={{ display: 'grid', gap: '0.35rem', fontSize: '0.875rem', fontWeight: 500 }}>
+    <label className="collage-field">
       {label}
       <input
         id={id}
@@ -135,11 +177,42 @@ function NumberControl({
         step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
       />
     </label>
   );
 }
+
+const layoutChoices: readonly {
+  value: LayoutChoice;
+  label: string;
+  description: string;
+  icon: string;
+}[] = [
+  {
+    value: 'auto-grid',
+    label: 'Auto',
+    description: 'Best grid for your image count',
+    icon: '▦',
+  },
+  {
+    value: 'columns',
+    label: 'Grid',
+    description: 'Choose the number of columns',
+    icon: '▥',
+  },
+  {
+    value: 'horizontal',
+    label: 'Side by side',
+    description: 'Place images from left to right',
+    icon: '▤',
+  },
+  {
+    value: 'vertical',
+    label: 'Vertical stitch',
+    description: 'Stack screenshots top to bottom',
+    icon: '▧',
+  },
+];
 
 export default function ImageCollage() {
   const [items, setItems] = useState<CollageItem[]>([]);
@@ -158,11 +231,18 @@ export default function ImageCollage() {
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [layoutSummary, setLayoutSummary] = useState('');
+  const [previewDraggedId, setPreviewDraggedId] = useState<string | null>(null);
+  const [previewTargetId, setPreviewTargetId] = useState<string | null>(null);
+  const [sortAnnouncement, setSortAnnouncement] = useState('');
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
   const loadIdRef = useRef(0);
   const itemIdRef = useRef(0);
+  const previewLayoutRef = useRef<CollageLayout | null>(null);
+  const previewDraggedIdRef = useRef<string | null>(null);
+  const previewTargetIdRef = useRef<string | null>(null);
+  const previewDraggedNameRef = useRef('');
   const urls = useObjectUrlRegistry();
 
   const layoutMode: CollageLayoutMode =
@@ -198,27 +278,40 @@ export default function ImageCollage() {
     ]
   );
 
-  const handleFiles = useCallback(async (newFiles: File[]) => {
-    if (newFiles.length === 0) return;
-    const loadId = ++loadIdRef.current;
-    setLoading(true);
-    setError(null);
-    try {
-      const loaded = await Promise.all(
-        newFiles.map(async (file) => ({
-          id: `collage-${Date.now()}-${itemIdRef.current++}`,
-          file,
-          image: await loadImage(file),
-        }))
-      );
-      if (loadId !== loadIdRef.current) return;
-      setItems((current) => [...current, ...loaded]);
-    } catch (cause) {
-      if (loadId === loadIdRef.current) setError(getImageProcessingErrorMessage(cause));
-    } finally {
-      if (loadId === loadIdRef.current) setLoading(false);
-    }
-  }, []);
+  const handleFiles = useCallback(
+    async (newFiles: File[]) => {
+      if (newFiles.length === 0) return;
+      const loadId = ++loadIdRef.current;
+      setLoading(true);
+      setError(null);
+      try {
+        const loaded = await Promise.all(
+          newFiles.map(async (file) => ({
+            id: `collage-${Date.now()}-${itemIdRef.current++}`,
+            file,
+            image: await loadImage(file),
+          }))
+        );
+        if (loadId !== loadIdRef.current) return;
+        if (items.length === 0) {
+          const recommendedSize = recommendCollageCellSize(
+            loaded.map((item) => ({
+              width: item.image.naturalWidth,
+              height: item.image.naturalHeight,
+            }))
+          );
+          setCellWidth(recommendedSize.width);
+          setCellHeight(recommendedSize.height);
+        }
+        setItems((current) => [...current, ...loaded]);
+      } catch (cause) {
+        if (loadId === loadIdRef.current) setError(getImageProcessingErrorMessage(cause));
+      } finally {
+        if (loadId === loadIdRef.current) setLoading(false);
+      }
+    },
+    [items.length]
+  );
 
   const removeItem = useCallback((id: string) => {
     setItems((current) => current.filter((item) => item.id !== id));
@@ -234,13 +327,110 @@ export default function ImageCollage() {
     });
   }, []);
 
+  const getPreviewItemId = useCallback(
+    (event: ReactPointerEvent<HTMLCanvasElement>) => {
+      const canvas = event.currentTarget;
+      const layout = previewLayoutRef.current;
+      const bounds = canvas.getBoundingClientRect();
+      if (!layout || bounds.width === 0 || bounds.height === 0) return null;
+      const x = (event.clientX - bounds.left) * (canvas.width / bounds.width);
+      const y = (event.clientY - bounds.top) * (canvas.height / bounds.height);
+      const placement = layout.placements.find(
+        ({ tile }) =>
+          x >= tile.x && x <= tile.x + tile.width && y >= tile.y && y <= tile.y + tile.height
+      );
+      return placement ? (items[placement.sourceIndex]?.id ?? null) : null;
+    },
+    [items]
+  );
+
+  const startPreviewDrag = useCallback(
+    (event: ReactPointerEvent<HTMLCanvasElement>) => {
+      if (!event.isPrimary || event.button !== 0) return;
+      const sourceId = getPreviewItemId(event);
+      if (!sourceId) return;
+      const source = items.find((item) => item.id === sourceId);
+      if (!source) return;
+      event.preventDefault();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      previewDraggedIdRef.current = sourceId;
+      previewTargetIdRef.current = sourceId;
+      previewDraggedNameRef.current = source.file.name;
+      setPreviewDraggedId(sourceId);
+      setPreviewTargetId(sourceId);
+      setSortAnnouncement('');
+    },
+    [getPreviewItemId, items]
+  );
+
+  const movePreviewDrag = useCallback(
+    (event: ReactPointerEvent<HTMLCanvasElement>) => {
+      if (!previewDraggedIdRef.current) return;
+      event.preventDefault();
+      const targetId = getPreviewItemId(event);
+      previewTargetIdRef.current = targetId;
+      setPreviewTargetId(targetId);
+    },
+    [getPreviewItemId]
+  );
+
+  const resetPreviewDrag = useCallback(() => {
+    previewDraggedIdRef.current = null;
+    previewTargetIdRef.current = null;
+    previewDraggedNameRef.current = '';
+    setPreviewDraggedId(null);
+    setPreviewTargetId(null);
+  }, []);
+
+  const finishPreviewDrag = useCallback(
+    (event: ReactPointerEvent<HTMLCanvasElement>) => {
+      const sourceId = previewDraggedIdRef.current;
+      const targetId = previewTargetIdRef.current;
+      if (!sourceId) return;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      if (targetId && targetId !== sourceId) {
+        const targetPosition = items.findIndex((item) => item.id === targetId) + 1;
+        setItems((current) => {
+          const sourceIndex = current.findIndex((item) => item.id === sourceId);
+          const targetIndex = current.findIndex((item) => item.id === targetId);
+          if (sourceIndex < 0 || targetIndex < 0) return current;
+          const next = [...current];
+          [next[sourceIndex], next[targetIndex]] = [next[targetIndex], next[sourceIndex]];
+          return next;
+        });
+        if (targetPosition > 0) {
+          setSortAnnouncement(
+            `${previewDraggedNameRef.current} moved to position ${targetPosition}.`
+          );
+        }
+      }
+      resetPreviewDrag();
+    },
+    [items, resetPreviewDrag]
+  );
+
+  const cancelPreviewDrag = useCallback(
+    (event: ReactPointerEvent<HTMLCanvasElement>) => {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      resetPreviewDrag();
+    },
+    [resetPreviewDrag]
+  );
+
   const clearAll = useCallback(() => {
     loadIdRef.current += 1;
     setItems([]);
     setError(null);
     setLayoutSummary('');
+    previewLayoutRef.current = null;
+    resetPreviewDrag();
+    setSortAnnouncement('');
     urls.revokePrefix('collage-');
-  }, [urls]);
+  }, [resetPreviewDrag, urls]);
 
   useEffect(() => {
     cancelAnimationFrame(rafRef.current);
@@ -250,6 +440,16 @@ export default function ImageCollage() {
       if (!canvas) return;
       try {
         const layout = renderCollage(canvas, items, collageOptions);
+        previewLayoutRef.current = layout;
+        if (previewDraggedId) {
+          const sourceIndex = items.findIndex((item) => item.id === previewDraggedId);
+          const targetIndex = previewTargetId
+            ? items.findIndex((item) => item.id === previewTargetId)
+            : -1;
+          if (sourceIndex >= 0) {
+            drawDragFeedback(canvas, layout, sourceIndex, targetIndex >= 0 ? targetIndex : null);
+          }
+        }
         setLayoutSummary(`${layout.width} × ${layout.height}px output`);
         setError(null);
       } catch (cause) {
@@ -257,7 +457,7 @@ export default function ImageCollage() {
       }
     });
     return () => cancelAnimationFrame(rafRef.current);
-  }, [collageOptions, items]);
+  }, [collageOptions, items, previewDraggedId, previewTargetId]);
 
   const handleDownload = useCallback(async () => {
     if (items.length === 0) return;
@@ -282,7 +482,7 @@ export default function ImageCollage() {
   }, [collageOptions, format, items, quality, urls]);
 
   return (
-    <div data-image-collage>
+    <div className="image-collage" data-image-collage>
       <FileUploader
         accept="image/jpeg,image/png,image/webp"
         multiple
@@ -290,78 +490,258 @@ export default function ImageCollage() {
         currentFiles={items.map((item) => item.file)}
         onFilesSelected={handleFiles}
       />
-      {loading && <p role="status">Opening images safely...</p>}
+      {loading && (
+        <p className="collage-loading" role="status">
+          Opening images locally…
+        </p>
+      )}
       {error && (
-        <div className="error-message" role="alert" style={{ marginTop: '1rem' }}>
+        <div className="error-message collage-error" role="alert">
           {error}
         </div>
       )}
 
       {items.length > 0 && (
-        <div style={{ marginTop: '1.5rem' }}>
-          <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
-            <canvas
-              ref={canvasRef}
-              data-collage-preview
-              aria-label="Image collage preview"
-              style={{
-                maxWidth: '100%',
-                height: 'auto',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                background,
-              }}
-            />
-            {layoutSummary && (
-              <p style={{ margin: '0.5rem 0 0', color: '#6b7280', fontSize: '0.875rem' }}>
-                {layoutSummary}
+        <div className="collage-builder">
+          <ol className="collage-flow" aria-label="Collage creation steps">
+            <li className="is-complete">
+              <span>1</span> Images added
+            </li>
+            <li className="is-active">
+              <span>2</span> Choose a layout
+            </li>
+            <li>
+              <span>3</span> Download
+            </li>
+          </ol>
+
+          <div className="collage-editor">
+            <section className="collage-preview-panel" aria-labelledby="collage-preview-title">
+              <div className="collage-panel-heading">
+                <div>
+                  <span className="collage-eyebrow">Live preview</span>
+                  <h2 id="collage-preview-title">Your collage</h2>
+                </div>
+                {layoutSummary && <span className="collage-output-size">{layoutSummary}</span>}
+              </div>
+              <div className="collage-canvas-stage">
+                <canvas
+                  ref={canvasRef}
+                  data-collage-preview
+                  className={previewDraggedId ? 'is-reordering' : undefined}
+                  aria-label="Image collage preview. Drag a picture onto another position to swap them."
+                  onPointerDown={startPreviewDrag}
+                  onPointerMove={movePreviewDrag}
+                  onPointerUp={finishPreviewDrag}
+                  onPointerCancel={cancelPreviewDrag}
+                  style={{ background }}
+                />
+              </div>
+              <p className="collage-preview-help">
+                Drag a picture onto another position to swap them.
               </p>
-            )}
+            </section>
+
+            <aside className="collage-controls" aria-label="Collage settings">
+              <div className="collage-controls-heading">
+                <span className="collage-eyebrow">Layout</span>
+                <h2>Pick the arrangement</h2>
+                <p>Auto is recommended for most collages.</p>
+              </div>
+
+              <div className="collage-layout-choices" role="group" aria-label="Layout">
+                {layoutChoices.map((choice) => (
+                  <button
+                    type="button"
+                    key={choice.value}
+                    className={`collage-layout-choice${layoutChoice === choice.value ? ' is-selected' : ''}`}
+                    data-collage-layout={choice.value}
+                    aria-pressed={layoutChoice === choice.value}
+                    onClick={() => setLayoutChoice(choice.value)}
+                  >
+                    <span className="collage-layout-icon" aria-hidden="true">
+                      {choice.icon}
+                    </span>
+                    <span>
+                      <strong>{choice.label}</strong>
+                      <small>{choice.description}</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {layoutChoice === 'columns' && (
+                <div className="collage-inline-option">
+                  <NumberControl
+                    id="collage-columns"
+                    label="Columns"
+                    min={1}
+                    max={8}
+                    value={columns}
+                    onChange={setColumns}
+                  />
+                </div>
+              )}
+
+              <label className="collage-field collage-format-field">
+                Output format
+                <select
+                  id="collage-format"
+                  value={format}
+                  onChange={(event) => setFormat(event.target.value as ImageOutputMimeType)}
+                >
+                  <option value="image/png">PNG — best quality</option>
+                  <option value="image/jpeg">JPG — smaller file</option>
+                  <option value="image/webp">WebP — modern and compact</option>
+                </select>
+              </label>
+
+              <details className="collage-advanced">
+                <summary>Advanced options</summary>
+                <div className="collage-advanced-grid">
+                  <label className="collage-field">
+                    Image fit
+                    <select
+                      id="collage-fit"
+                      value={fit}
+                      onChange={(event) => setFit(event.target.value as CollageFitMode)}
+                    >
+                      <option value="contain">Show the full image</option>
+                      <option value="cover">Fill each tile</option>
+                      <option value="original">Keep original size</option>
+                    </select>
+                  </label>
+
+                  {fit !== 'original' && (
+                    <>
+                      <NumberControl
+                        id="collage-cell-width"
+                        label="Tile width"
+                        min={80}
+                        max={2400}
+                        value={cellWidth}
+                        onChange={setCellWidth}
+                      />
+                      <NumberControl
+                        id="collage-cell-height"
+                        label="Tile height"
+                        min={80}
+                        max={2400}
+                        value={cellHeight}
+                        onChange={setCellHeight}
+                      />
+                    </>
+                  )}
+                  <NumberControl
+                    id="collage-gap"
+                    label="Gap"
+                    min={0}
+                    max={200}
+                    value={gap}
+                    onChange={setGap}
+                  />
+                  <NumberControl
+                    id="collage-margin"
+                    label="Outer margin"
+                    min={0}
+                    max={240}
+                    value={margin}
+                    onChange={setMargin}
+                  />
+                  <NumberControl
+                    id="collage-radius"
+                    label="Corner radius"
+                    min={0}
+                    max={120}
+                    value={borderRadius}
+                    onChange={setBorderRadius}
+                  />
+                  <label className="collage-field">
+                    Background
+                    <input
+                      id="collage-background"
+                      type="color"
+                      value={background}
+                      onChange={(event) => setBackground(event.target.value)}
+                    />
+                  </label>
+                  {format !== 'image/png' && (
+                    <NumberControl
+                      id="collage-quality"
+                      label="Quality"
+                      min={1}
+                      max={100}
+                      value={quality}
+                      onChange={setQuality}
+                    />
+                  )}
+                </div>
+              </details>
+
+              <div className="collage-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  data-collage-download
+                  onClick={handleDownload}
+                  disabled={downloading}
+                >
+                  {downloading ? 'Preparing download…' : 'Download collage'}
+                </button>
+                <button type="button" className="collage-clear" onClick={clearAll}>
+                  Clear all
+                </button>
+              </div>
+              <p className="collage-local-note">
+                Processed locally. Your images never leave this device.
+              </p>
+            </aside>
           </div>
 
-          <section aria-label="Collage images" style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem' }}>Images</h3>
-            <ol style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '0.5rem' }}>
+          <section className="collage-image-order" aria-label="Collage images">
+            <div className="collage-panel-heading">
+              <div>
+                <span className="collage-eyebrow">Image order</span>
+                <h2>
+                  {items.length} image{items.length === 1 ? '' : 's'}
+                </h2>
+              </div>
+              <span className="collage-order-help">
+                Use the arrows for precise or keyboard-friendly adjustments.
+              </span>
+            </div>
+            <p className="sr-only" aria-live="polite">
+              {sortAnnouncement}
+            </p>
+            <ol>
               {items.map((item, index) => (
-                <li
-                  key={item.id}
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '0.5rem',
-                    padding: '0.75rem',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                  }}
-                >
-                  <span style={{ fontSize: '0.875rem' }}>
-                    {index + 1}. {item.file.name} — {item.image.naturalWidth}×
-                    {item.image.naturalHeight}px, {formatSize(item.file.size)}
+                <li key={item.id}>
+                  <span className="collage-image-number">{index + 1}</span>
+                  <span className="collage-image-info">
+                    <strong>{item.file.name}</strong>
+                    <small>
+                      {item.image.naturalWidth} × {item.image.naturalHeight}px ·{' '}
+                      {formatSize(item.file.size)}
+                    </small>
                   </span>
-                  <span style={{ display: 'flex', gap: '0.35rem' }}>
+                  <span className="collage-image-actions">
                     <button
                       type="button"
-                      className="btn btn-secondary"
+                      aria-label={`Move ${item.file.name} earlier`}
                       onClick={() => moveItem(index, -1)}
                       disabled={index === 0}
                     >
-                      Up
+                      ←
                     </button>
                     <button
                       type="button"
-                      className="btn btn-secondary"
+                      aria-label={`Move ${item.file.name} later`}
                       onClick={() => moveItem(index, 1)}
                       disabled={index === items.length - 1}
                     >
-                      Down
+                      →
                     </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => removeItem(item.id)}
-                    >
+                    <button type="button" className="is-remove" onClick={() => removeItem(item.id)}>
                       Remove
                     </button>
                   </span>
@@ -369,160 +749,6 @@ export default function ImageCollage() {
               ))}
             </ol>
           </section>
-
-          <section
-            aria-label="Collage settings"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-              gap: '1rem',
-              marginBottom: '1.5rem',
-            }}
-          >
-            <label
-              style={{ display: 'grid', gap: '0.35rem', fontSize: '0.875rem', fontWeight: 500 }}
-            >
-              Layout
-              <select
-                id="collage-layout"
-                value={layoutChoice}
-                onChange={(event) => setLayoutChoice(event.target.value as LayoutChoice)}
-                style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              >
-                <option value="auto-grid">Auto grid</option>
-                <option value="columns">Custom columns</option>
-                <option value="horizontal">Horizontal stitch</option>
-                <option value="vertical">Vertical stitch</option>
-              </select>
-            </label>
-
-            {layoutChoice === 'columns' && (
-              <NumberControl
-                id="collage-columns"
-                label="Columns"
-                min={1}
-                max={8}
-                value={columns}
-                onChange={setColumns}
-              />
-            )}
-
-            <label
-              style={{ display: 'grid', gap: '0.35rem', fontSize: '0.875rem', fontWeight: 500 }}
-            >
-              Fit mode
-              <select
-                id="collage-fit"
-                value={fit}
-                onChange={(event) => setFit(event.target.value as CollageFitMode)}
-                style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              >
-                <option value="contain">Contain full image</option>
-                <option value="cover">Cover tile</option>
-                <option value="original">Original size</option>
-              </select>
-            </label>
-
-            {fit !== 'original' && (
-              <>
-                <NumberControl
-                  id="collage-cell-width"
-                  label="Cell width"
-                  min={80}
-                  max={2400}
-                  value={cellWidth}
-                  onChange={setCellWidth}
-                />
-                <NumberControl
-                  id="collage-cell-height"
-                  label="Cell height"
-                  min={80}
-                  max={2400}
-                  value={cellHeight}
-                  onChange={setCellHeight}
-                />
-              </>
-            )}
-
-            <NumberControl
-              id="collage-gap"
-              label="Gap"
-              min={0}
-              max={200}
-              value={gap}
-              onChange={setGap}
-            />
-            <NumberControl
-              id="collage-margin"
-              label="Outer margin"
-              min={0}
-              max={240}
-              value={margin}
-              onChange={setMargin}
-            />
-            <NumberControl
-              id="collage-radius"
-              label="Corner radius"
-              min={0}
-              max={120}
-              value={borderRadius}
-              onChange={setBorderRadius}
-            />
-
-            <label
-              style={{ display: 'grid', gap: '0.35rem', fontSize: '0.875rem', fontWeight: 500 }}
-            >
-              Background
-              <input
-                id="collage-background"
-                type="color"
-                value={background}
-                onChange={(event) => setBackground(event.target.value)}
-                style={{ width: '100%', minHeight: '2.4rem' }}
-              />
-            </label>
-
-            <label
-              style={{ display: 'grid', gap: '0.35rem', fontSize: '0.875rem', fontWeight: 500 }}
-            >
-              Output format
-              <select
-                value={format}
-                onChange={(event) => setFormat(event.target.value as ImageOutputMimeType)}
-                style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              >
-                <option value="image/png">PNG</option>
-                <option value="image/jpeg">JPG</option>
-                <option value="image/webp">WebP</option>
-              </select>
-            </label>
-
-            {format !== 'image/png' && (
-              <NumberControl
-                id="collage-quality"
-                label="Quality"
-                min={1}
-                max={100}
-                value={quality}
-                onChange={setQuality}
-              />
-            )}
-          </section>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <button
-              type="button"
-              className="btn btn-primary"
-              data-collage-download
-              onClick={handleDownload}
-              disabled={items.length === 0 || downloading}
-            >
-              {downloading ? 'Preparing download...' : 'Download Collage'}
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={clearAll}>
-              Clear all
-            </button>
-          </div>
         </div>
       )}
     </div>
