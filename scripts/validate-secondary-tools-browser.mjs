@@ -542,6 +542,49 @@ assert.equal(
 await evaluate(`document.querySelector('button[aria-label="Remove corrupt.png"]').click()`);
 await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, 'background input reset');
 
+await upload([
+  {
+    name: 'cancel-background.png',
+    type: 'image/png',
+    width: 96,
+    height: 96,
+    kind: 'portrait',
+    background: '#f3f4f6',
+  },
+]);
+await waitFor(
+  `document.body.innerText.includes('cancel-background.png')`,
+  'cancel background input'
+);
+await evaluate(
+  `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Remove Background').click()`
+);
+await waitFor(
+  `[...document.querySelectorAll('button')].some((button) => button.textContent.trim() === 'Cancel')`,
+  'background cancel control'
+);
+assert.equal(
+  await evaluate(`document.querySelector('[data-background-stage]').getAttribute('aria-busy')`),
+  'true'
+);
+await evaluate(
+  `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Cancel').click()`
+);
+await waitFor(
+  `document.querySelector('.status-error')?.textContent.includes('canceled')`,
+  'background cancellation recovery'
+);
+assert.equal(
+  await evaluate(
+    `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Remove Background').disabled`
+  ),
+  false
+);
+await evaluate(
+  `document.querySelector('button[aria-label="Remove cancel-background.png"]').click()`
+);
+await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, 'canceled input reset');
+
 const backgroundCases = [
   { name: 'portrait.png', kind: 'portrait', background: '#f3f4f6', color: 'transparent' },
   { name: 'product.png', kind: 'product', background: '#ffffff', color: '#0000ff' },
@@ -585,10 +628,12 @@ for (const definition of backgroundCases) {
     `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Remove Background').click()`
   );
   await waitFor(
-    `Boolean(document.querySelector('[data-background-result]'))`,
-    `${definition.name} background result`,
+    `Boolean(document.querySelector('[data-background-result], .status-error'))`,
+    `${definition.name} background completion`,
     240_000
   );
+  const backgroundError = await evaluate(`document.querySelector('.status-error')?.textContent`);
+  assert.equal(backgroundError, undefined, `${definition.name}: ${backgroundError}`);
   const inspected = await evaluate(`
     (async () => {
       window.__backgroundObserver?.disconnect();

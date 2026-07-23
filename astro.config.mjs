@@ -10,6 +10,9 @@ export default defineConfig({
     optimizeDeps: {
       exclude: ['@ffmpeg/ffmpeg'],
     },
+    worker: {
+      format: 'es',
+    },
   },
   i18n: {
     defaultLocale: 'en',

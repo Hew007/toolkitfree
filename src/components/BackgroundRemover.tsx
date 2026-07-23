@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
 import {
@@ -10,7 +10,7 @@ import {
   loadImage,
   validateImageFile,
 } from '../lib/image-processing';
-import { mapBackgroundProgress, type BackgroundProgress } from '../lib/background-remover';
+import { removeBackgroundInWorker, type BackgroundProgress } from '../lib/background-remover';
 
 interface ProcessedFile {
   name: string;
@@ -33,6 +33,14 @@ export default function BackgroundRemover() {
   const [error, setError] = useState<string | null>(null);
   const [bgColor, setBgColor] = useState('transparent');
   const objectUrls = useObjectUrlRegistry();
+  const processingController = useRef<AbortController | null>(null);
+
+  const cancelProcessing = useCallback(() => {
+    processingController.current?.abort();
+    processingController.current = null;
+  }, []);
+
+  useEffect(() => cancelProcessing, [cancelProcessing]);
 
   const clearResult = useCallback(() => {
     objectUrls.revoke('background:result');
@@ -58,13 +66,14 @@ export default function BackgroundRemover() {
   );
 
   const handleRemove = useCallback(() => {
+    cancelProcessing();
     objectUrls.revokeAll();
     setFile(null);
     setPreviewUrl(null);
     setResult(null);
     setError(null);
     setProgress(null);
-  }, [objectUrls]);
+  }, [cancelProcessing, objectUrls]);
 
   const removeBackground = async () => {
     if (!file) return;
@@ -72,37 +81,44 @@ export default function BackgroundRemover() {
     setError(null);
     clearResult();
     setProgress(INITIAL_PROGRESS);
+    const controller = new AbortController();
+    processingController.current = controller;
 
     try {
-      const { removeBackground: removeBg } = await import('@imgly/background-removal');
       setProgress({ stage: 'model-initialization', label: 'Initializing AI model', percent: null });
+      const removedBlob = await removeBackgroundInWorker(file, setProgress, controller.signal);
 
-      const removedBlob = await removeBg(file, {
-        progress: (key: string, current: number, total: number) => {
-          setProgress(mapBackgroundProgress(key, current, total));
-        },
-      });
-
-      setProgress({ stage: 'model-initialization', label: 'Preparing PNG output', percent: null });
-      const removedFile = new File([removedBlob], 'removed-background.png', {
-        type: removedBlob.type || 'image/png',
-      });
-      const image = await loadImage(removedFile, { allowedTypes: ['image/png'] });
-      const canvas = document.createElement('canvas');
-      canvas.width = image.naturalWidth;
-      canvas.height = image.naturalHeight;
-      const context = getCanvas2dContext(canvas);
+      let finalBlob = removedBlob;
       if (bgColor !== 'transparent') {
+        setProgress({
+          stage: 'model-initialization',
+          label: 'Applying background color',
+          percent: null,
+        });
+        const removedFile = new File([removedBlob], 'removed-background.png', {
+          type: removedBlob.type || 'image/png',
+        });
+        const image = await loadImage(removedFile, { allowedTypes: ['image/png'] });
+        const canvas = document.createElement('canvas');
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = getCanvas2dContext(canvas);
         context.fillStyle = bgColor;
         context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0);
+        finalBlob = await exportCanvas(canvas, 'image/png');
       }
-      context.drawImage(image, 0, 0);
-      const finalBlob = await exportCanvas(canvas, 'image/png');
+
       const url = objectUrls.replace('background:result', finalBlob);
       const baseName = file.name.replace(/\.[^.]+$/, '') || 'image';
       setResult({ name: `${baseName}_no_bg.png`, size: finalBlob.size, url });
       setProgress(null);
     } catch (processingError) {
+      if (processingError instanceof DOMException && processingError.name === 'AbortError') {
+        setError('Background removal was canceled.');
+        setProgress(null);
+        return;
+      }
       const standardMessage = getImageProcessingErrorMessage(processingError);
       setError(
         standardMessage === 'Image processing failed. Please try another file.'
@@ -111,6 +127,7 @@ export default function BackgroundRemover() {
       );
       setProgress(null);
     } finally {
+      if (processingController.current === controller) processingController.current = null;
       setProcessing(false);
     }
   };
@@ -150,6 +167,7 @@ export default function BackgroundRemover() {
               aria-label={`Remove ${file.name}`}
               className="file-item-remove"
               onClick={handleRemove}
+              disabled={processing}
             >
               x
             </button>
@@ -211,6 +229,16 @@ export default function BackgroundRemover() {
           >
             {processing ? 'Processing...' : result ? 'Process Again' : 'Remove Background'}
           </button>
+          {processing && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={cancelProcessing}
+              style={{ fontSize: '1rem', padding: '0.75rem 2rem', marginLeft: '0.5rem' }}
+            >
+              Cancel
+            </button>
+          )}
           <p style={{ marginTop: '0.5rem', color: '#6b7280', fontSize: '0.8125rem' }}>
             First use downloads a sizable AI model and requires a network connection. Later offline
             use depends on whether your browser keeps that model cached. Processing speed and
