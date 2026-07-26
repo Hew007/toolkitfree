@@ -42,7 +42,7 @@ const faqItems = [
   {
     question: 'Are QR codes generated here sent to a server?',
     answer:
-      'No. All QR code generation happens entirely in your browser. No data is ever sent to any server. Your information stays completely private on your device.',
+      'The text, URL, WiFi details, or contact data you enter is encoded into the QR code in your browser and is not sent to ToolkitFree for QR generation. The page still loads normal site and advertising resources.',
   },
   {
     question: 'Do QR codes expire?',
@@ -71,7 +71,7 @@ const structuredData = {
   '@type': 'WebApplication',
   name: 'Free QR Code Generator',
   description:
-    'Generate QR codes for text, URLs, WiFi, vCards, email, phone, and SMS. Add logos, customize colors and dot styles. Download as PNG or SVG. 100% client-side.',
+    'Generate QR codes for text, URLs, WiFi, vCards, email, phone, and SMS in the browser. Add logos, customize styles, and download PNG or SVG.',
   url: 'https://toolkitfree.net/tools/qr-generator',
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Any',
@@ -95,7 +95,7 @@ const breadcrumbSchema = {
 
 <Layout
   title="Free QR Code Generator - URL, WiFi, vCard QR Codes"
-  description="Generate QR codes for text, URLs, WiFi networks, vCards, email, phone, and SMS. Add logos, customize colors. Download as PNG or SVG. 100% free, runs in your browser."
+  description="Generate QR codes for text, URLs, WiFi networks, vCards, email, phone, and SMS in your browser. Customize colors and download PNG or SVG."
   structuredData={[
     structuredData,
     {
@@ -115,7 +115,7 @@ const breadcrumbSchema = {
       <h1>Free QR Code Generator</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
         Create QR codes for URLs, WiFi, vCards, email, phone, and SMS. Add your logo, customize
-        colors and dot styles. 100% client-side — your data never leaves your device.
+        colors and dot styles. The entered QR content is encoded locally in your browser.
       </p>
 
       <QrGenerator client:load />
@@ -141,7 +141,7 @@ const breadcrumbSchema = {
           <li>5 dot styles: Square, Rounded, Dots, Classy, Extra Round</li>
           <li>Download as PNG or SVG</li>
           <li>4 error correction levels for reliability</li>
-          <li>100% client-side — no data uploaded</li>
+          <li>Entered QR content is not uploaded for generation</li>
           <li>Free with no sign-up or watermark</li>
         </ul>
       </section>

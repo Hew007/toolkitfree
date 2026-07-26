@@ -22,7 +22,7 @@ const faqItems = [
   {
     question: 'Can I convert multiple images at once?',
     answer:
-      'Yes! You can upload and convert multiple images simultaneously. All conversions happen in parallel for maximum speed.',
+      'Yes. You can select multiple images and convert them in one browser session. Processing time depends on the number of files, image dimensions, device memory, and browser limits.',
   },
   {
     question: 'How do I download a converted batch?',
@@ -37,17 +37,17 @@ const faqItems = [
   {
     question: 'Is this tool free?',
     answer:
-      'Yes, this tool is completely free to use with no limits. We support the site through non-intrusive ads.',
+      'Yes, the tool is free to use and requires no ToolkitFree account. Browser memory, image dimensions, and device-aware batch safeguards still apply. The site is supported by advertising.',
   },
   {
     question: 'Do you keep a copy of my images?',
     answer:
-      'No. All processing happens in your browser. Your images are never uploaded to any server. When you close the page, all data is gone.',
+      'No image is uploaded to ToolkitFree for conversion or stored by ToolkitFree as a processed file. Conversion uses temporary browser memory and object URLs, while the page still loads normal site and advertising resources.',
   },
   {
     question: 'Can I use this on my phone?',
     answer:
-      'Yes! Our image converter works on any device with a modern browser, including smartphones and tablets.',
+      'The converter is designed for modern mobile browsers as well as desktop browsers. Large images or batches may reach mobile memory and Canvas limits sooner.',
   },
   {
     question: 'What is WebP and why should I use it?',
@@ -123,7 +123,7 @@ const faqStructuredData = {
 
 <Layout
   title="Free Image Converter - JPG, PNG, WebP Batch Convert"
-  description="Convert images between JPG, PNG, and WebP formats instantly in your browser. Batch convert multiple files. No upload needed. 100% free and private."
+  description="Convert JPG, PNG, and WebP images locally in your browser. Batch results can be downloaded individually or as a ZIP, subject to device memory limits."
   structuredData={[structuredData, faqStructuredData, breadcrumbSchema]}
 >
   <div class="tool-layout">
@@ -152,7 +152,7 @@ const faqStructuredData = {
           <li>Convert between JPG, PNG, and WebP</li>
           <li>Batch convert multiple images with one ZIP download</li>
           <li>Adjustable quality for JPG and WebP</li>
-          <li>100% client-side — no uploads required</li>
+          <li>Local conversion — selected images are not uploaded for processing</li>
           <li>Capacity depends on browser memory and Canvas limits</li>
           <li>Free with no watermarks</li>
         </ul>

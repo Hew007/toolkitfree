@@ -1,4 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="6" fill="#2563eb"/>
-  <path d="M8 10h6v6H8zM18 10h6v6h-6zM8 18h6v6H8zM18 18h6v6h-6z" fill="white" opacity="0.9"/>
+  <style>
+    .mark-base { fill: #1f2937; }
+    @media (prefers-color-scheme: dark) {
+      .mark-base { fill: #f8fafc; }
+    }
+  </style>
+  <path class="mark-base" d="M2 3h20v6h-7v21H9V9H2z"/>
+  <rect x="24" y="3" width="6" height="6" rx="1" fill="#2563eb"/>
 </svg>

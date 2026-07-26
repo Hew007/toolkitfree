@@ -7,23 +7,23 @@ const structuredData = {
   '@type': 'WebSite',
   name: 'ToolkitFree',
   description:
-    'Free online image tools. Convert, compress, resize, and edit images in your browser. No uploads needed.',
+    'Free browser tools for images, PDFs, QR codes, ID photos, and animated media with local file-content processing.',
   url: 'https://toolkitfree.net',
 };
 ---
 
 <Layout
   title="Free Online Image Tools - Convert, Compress, Resize"
-  description="Free online image tools. Convert formats, compress file size, resize dimensions, and remove backgrounds. All processing happens in your browser - your files never leave your device."
+  description="Free browser tools for images, PDFs, QR codes, ID photos, and animated media. Selected file contents are processed locally on your device."
   structuredData={structuredData}
 >
   <section class="hero">
     <h1>Free Online Image Tools</h1>
     <p>
       Convert, compress, resize, and edit images directly in your browser. No uploads needed — your
-      files never leave your device.
+      selected file contents are processed on your device.
     </p>
-    <div class="privacy-badge">100% Client-Side Processing</div>
+    <div class="privacy-badge">Local File Processing</div>
   </section>
 
   <section class="tools-grid">
@@ -45,10 +45,10 @@ const structuredData = {
   <section class="features-section">
     <h2>Why ToolkitFree?</h2>
     <ul class="features-list">
-      <li>100% free, no sign-up required</li>
-      <li>Your files never leave your device</li>
-      <li>No server upload limit; browser memory limits still apply</li>
-      <li>Works on any device with a browser</li>
+      <li>Free to use, with no tool account required</li>
+      <li>Selected files are not uploaded for processing</li>
+      <li>Device-aware browser memory and resource safeguards</li>
+      <li>Designed for modern desktop and mobile browsers</li>
       <li>Batch support in converter, compressor, resizer, and image-to-PDF</li>
       <li>No watermarks on output</li>
     </ul>
@@ -57,11 +57,11 @@ const structuredData = {
   <section class="features-section">
     <h2>How ToolkitFree Works</h2>
     <p style="color: var(--color-text-light);">
-      All ToolkitFree tools run entirely in your browser using modern web technologies including the
-      Canvas API and WebAssembly. Your images are processed locally on your device — they are never
-      uploaded to any server. File contents stay local, but capacity depends on device memory and
-      browser Canvas limits. The page still downloads site assets, advertising code, and, for
-      background removal, model files.
+      ToolkitFree processing uses browser technologies including Canvas, client-side JavaScript, and
+      WebAssembly. Selected file contents are processed locally and are not uploaded to ToolkitFree
+      for processing. Capacity depends on device memory, browser limits, and codec support. Pages
+      still download site assets and advertising resources; background removal and video conversion
+      load additional model or runtime resources when needed.
     </p>
   </section>
 

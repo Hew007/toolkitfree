@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="200" viewBox="0 0 720 200" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">ToolkitFree</title>
+  <desc id="desc">ToolkitFree logo with a geometric T and blue module.</desc>
+  <g transform="translate(20 20)">
+    <path d="M0 0h104v32H68v112H36V32H0z" fill="#1f2937"/>
+    <rect x="112" width="32" height="32" rx="5" fill="#2563eb"/>
+  </g>
+  <text x="216" y="128" fill="#1f2937" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif" font-size="64" font-weight="750" letter-spacing="-2.5">ToolkitFree</text>
+</svg>

@@ -285,6 +285,11 @@ textarea {
     font-size: 1.125rem;
   }
 
+  .site-logo img {
+    width: 1.625rem;
+    height: 1.625rem;
+  }
+
   .footer-links {
     flex-direction: column;
   }

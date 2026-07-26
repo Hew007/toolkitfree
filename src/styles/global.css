@@ -88,13 +88,27 @@ button {
 }
 
 .site-logo {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 0.55rem;
+  color: var(--color-text);
   font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-primary);
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  line-height: 1;
   text-decoration: none;
 }
 
+.site-logo img {
+  display: block;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+}
+
 .site-logo:hover {
+  color: var(--color-primary-dark);
   text-decoration: none;
 }
 
