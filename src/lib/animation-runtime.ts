@@ -35,7 +35,9 @@ interface BrowserImageDecoderConstructor {
 const ASSET_BASE = '/generated/ffmpeg/0.12.10';
 const DOWNLOAD_PROGRESS_START = 0.02;
 const DOWNLOAD_PROGRESS_END = 0.2;
-const LOAD_STALL_TIMEOUT_MS = 30_000;
+const DOWNLOAD_CONCURRENCY = 4;
+const DOWNLOAD_RETRY_COUNT = 2;
+const LOAD_STALL_TIMEOUT_MS = 60_000;
 
 async function sha256Hex(bytes: ArrayBuffer | Uint8Array): Promise<string> {
   const value = bytes instanceof Uint8Array ? Uint8Array.from(bytes) : new Uint8Array(bytes);
@@ -74,6 +76,39 @@ async function readResponseBytes(
   return output;
 }
 
+async function waitForRetry(delayMs: number, signal?: AbortSignal): Promise<void> {
+  if (signal?.aborted) throw new DOMException('The operation was aborted.', 'AbortError');
+  await new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      signal?.removeEventListener('abort', handleAbort);
+      resolve();
+    }, delayMs);
+    const handleAbort = () => {
+      window.clearTimeout(timeout);
+      reject(new DOMException('The operation was aborted.', 'AbortError'));
+    };
+    signal?.addEventListener('abort', handleAbort, { once: true });
+  });
+}
+
+async function runWithDownloadRetries<T>(
+  operation: () => Promise<T>,
+  failureMessage: string,
+  signal?: AbortSignal
+): Promise<T> {
+  for (let attempt = 0; attempt <= DOWNLOAD_RETRY_COUNT; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      if (attempt < DOWNLOAD_RETRY_COUNT) {
+        await waitForRetry(500 * (attempt + 1), signal);
+      }
+    }
+  }
+  throw new Error(failureMessage);
+}
+
 async function loadFfmpegAssetUrls(
   signal: AbortSignal | undefined,
   onDownloadProgress: (downloaded: number, total: number) => void
@@ -81,31 +116,76 @@ async function loadFfmpegAssetUrls(
   coreURL: string;
   wasmURL: string;
 }> {
-  const response = await fetch(`${ASSET_BASE}/manifest.json`, { signal });
-  if (!response.ok) throw new Error('The local conversion engine manifest could not be loaded.');
-  const manifest = (await response.json()) as FfmpegAssetManifest;
-  let downloaded = 0;
-  const reportBytes = (bytes: number) => {
-    downloaded += bytes;
-    onDownloadProgress(downloaded, manifest.totalSize);
+  const manifest = await runWithDownloadRetries(
+    async () => {
+      const response = await fetch(`${ASSET_BASE}/manifest.json`, { signal });
+      if (!response.ok) throw new Error(`The server returned ${response.status}.`);
+      return (await response.json()) as FfmpegAssetManifest;
+    },
+    'The local conversion engine manifest failed after three download attempts.',
+    signal
+  );
+  const partProgress = manifest.parts.map(() => 0);
+  const reportPartProgress = (index: number, bytes: number) => {
+    partProgress[index] = Math.max(partProgress[index], bytes);
+    onDownloadProgress(
+      partProgress.reduce((total, value) => total + value, 0),
+      manifest.totalSize
+    );
   };
-  const [coreResponse, chunks] = await Promise.all([
-    fetch(`${ASSET_BASE}/${manifest.coreFile}`, { signal }),
-    Promise.all(
-      manifest.parts.map(async (part) => {
-        const chunkResponse = await fetch(`${ASSET_BASE}/${part.file}`, { signal });
-        if (!chunkResponse.ok)
-          throw new Error('A local conversion engine part could not be loaded.');
-        const bytes = await readResponseBytes(chunkResponse, part.size, reportBytes);
-        if (bytes.byteLength !== part.size || (await sha256Hex(bytes)) !== part.sha256) {
-          throw new Error('A local conversion engine part failed its integrity check.');
+
+  const chunks = new Array<Uint8Array>(manifest.parts.length);
+  let nextPartIndex = 0;
+  const downloadWorker = async () => {
+    while (nextPartIndex < manifest.parts.length) {
+      const index = nextPartIndex++;
+      const part = manifest.parts[index];
+      let lastError: unknown;
+      for (let attempt = 0; attempt <= DOWNLOAD_RETRY_COUNT; attempt += 1) {
+        let attemptBytes = 0;
+        try {
+          const chunkResponse = await fetch(`${ASSET_BASE}/${part.file}`, { signal });
+          if (!chunkResponse.ok) {
+            throw new Error(`The server returned ${chunkResponse.status}.`);
+          }
+          const bytes = await readResponseBytes(chunkResponse, part.size, (bytesRead) => {
+            attemptBytes += bytesRead;
+            reportPartProgress(index, attemptBytes);
+          });
+          if (bytes.byteLength !== part.size || (await sha256Hex(bytes)) !== part.sha256) {
+            throw new Error('The downloaded part failed its integrity check.');
+          }
+          chunks[index] = bytes;
+          lastError = undefined;
+          break;
+        } catch (error) {
+          lastError = error;
+          if (signal?.aborted) throw error;
+          if (attempt < DOWNLOAD_RETRY_COUNT) {
+            await waitForRetry(500 * (attempt + 1), signal);
+          }
         }
-        return bytes;
-      })
+      }
+      if (lastError) {
+        throw new Error('A local conversion engine part failed after three download attempts.');
+      }
+    }
+  };
+
+  const [coreScript] = await Promise.all([
+    runWithDownloadRetries(
+      async () => {
+        const response = await fetch(`${ASSET_BASE}/${manifest.coreFile}`, { signal });
+        if (!response.ok) throw new Error(`The server returned ${response.status}.`);
+        return response.arrayBuffer();
+      },
+      'The local conversion engine script failed after three download attempts.',
+      signal
+    ),
+    Promise.all(
+      Array.from({ length: Math.min(DOWNLOAD_CONCURRENCY, manifest.parts.length) }, downloadWorker)
     ),
   ]);
-  if (!coreResponse.ok) throw new Error('The local conversion engine script could not be loaded.');
-  const coreScript = await coreResponse.arrayBuffer();
   const wasm = new Uint8Array(manifest.totalSize);
   let offset = 0;
   for (const chunk of chunks) {
@@ -202,10 +282,11 @@ export class AnimationFfmpegRuntime {
       this.ffmpeg = ffmpeg;
       return ffmpeg;
     } catch (error) {
+      loadController.abort();
       if (loadingFfmpeg && !loadingFfmpeg.loaded) loadingFfmpeg.terminate();
       if (stalled) {
         throw new Error(
-          'The conversion engine download made no progress for 30 seconds. Check your connection and try again.'
+          'The conversion engine download made no progress for 60 seconds. Check your connection and try again.'
         );
       }
       if (error instanceof DOMException && error.name === 'AbortError' && !signal?.aborted) {
