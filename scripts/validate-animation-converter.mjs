@@ -93,7 +93,7 @@ if (fs.existsSync(manifestPath)) {
 const staticHeaders = fs.readFileSync(path.resolve('public/_headers'), 'utf8');
 assert.match(staticHeaders, /\/_astro\/\*/);
 assert.match(staticHeaders, /\/generated\/ffmpeg\/0\.12\.10\/\*\.bin/);
-assert.match(staticHeaders, /\/generated\/ffmpeg\/0\.12\.10\/\*\.bin\.gzipdata/);
+assert.match(staticHeaders, /\/generated\/ffmpeg\/0\.12\.10\/\*\.gzipdata/);
 assert.match(staticHeaders, /Cache-Control: public, max-age=31556952, immutable/);
 
 console.log(JSON.stringify({ status: 'ANIMATION_CONVERTER_VALIDATION_OK' }));
