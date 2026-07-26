@@ -3,3 +3,6 @@
 
 /generated/ffmpeg/0.12.10/*.bin
   Cache-Control: public, max-age=31556952, immutable
+
+/generated/ffmpeg/0.12.10/*.bin.gzipdata
+  Cache-Control: public, max-age=31556952, immutable

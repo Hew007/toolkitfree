@@ -6,7 +6,14 @@ interface FfmpegAssetManifest {
   totalSize: number;
   sha256: string;
   coreFile: string;
-  parts: Array<{ file: string; size: number; sha256: string }>;
+  parts: Array<{
+    file: string;
+    size: number;
+    sha256: string;
+    gzipFile?: string;
+    gzipSize?: number;
+    gzipSha256?: string;
+  }>;
 }
 
 interface ImageDecoderFrame {
@@ -76,6 +83,15 @@ async function readResponseBytes(
   return output;
 }
 
+async function decompressGzip(bytes: Uint8Array): Promise<Uint8Array> {
+  const buffer = bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength
+  ) as ArrayBuffer;
+  const stream = new Blob([buffer]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
 async function waitForRetry(delayMs: number, signal?: AbortSignal): Promise<void> {
   if (signal?.aborted) throw new DOMException('The operation was aborted.', 'AbortError');
   await new Promise<void>((resolve, reject) => {
@@ -125,12 +141,19 @@ async function loadFfmpegAssetUrls(
     'The local conversion engine manifest failed after three download attempts.',
     signal
   );
+  const useGzip =
+    typeof DecompressionStream !== 'undefined' &&
+    manifest.parts.every((part) => part.gzipFile && part.gzipSize !== undefined && part.gzipSha256);
+  const downloadTotal = manifest.parts.reduce(
+    (total, part) => total + (useGzip ? (part.gzipSize ?? part.size) : part.size),
+    0
+  );
   const partProgress = manifest.parts.map(() => 0);
   const reportPartProgress = (index: number, bytes: number) => {
     partProgress[index] = Math.max(partProgress[index], bytes);
     onDownloadProgress(
       partProgress.reduce((total, value) => total + value, 0),
-      manifest.totalSize
+      downloadTotal
     );
   };
 
@@ -140,20 +163,34 @@ async function loadFfmpegAssetUrls(
     while (nextPartIndex < manifest.parts.length) {
       const index = nextPartIndex++;
       const part = manifest.parts[index];
+      const downloadFile = useGzip ? (part.gzipFile ?? part.file) : part.file;
+      const downloadSize = useGzip ? (part.gzipSize ?? part.size) : part.size;
+      const downloadSha256 = useGzip ? (part.gzipSha256 ?? part.sha256) : part.sha256;
       let lastError: unknown;
       for (let attempt = 0; attempt <= DOWNLOAD_RETRY_COUNT; attempt += 1) {
         let attemptBytes = 0;
         try {
-          const chunkResponse = await fetch(`${ASSET_BASE}/${part.file}`, { signal });
+          const chunkResponse = await fetch(`${ASSET_BASE}/${downloadFile}`, { signal });
           if (!chunkResponse.ok) {
             throw new Error(`The server returned ${chunkResponse.status}.`);
           }
-          const bytes = await readResponseBytes(chunkResponse, part.size, (bytesRead) => {
-            attemptBytes += bytesRead;
-            reportPartProgress(index, attemptBytes);
-          });
+          const downloadedBytes = await readResponseBytes(
+            chunkResponse,
+            downloadSize,
+            (bytesRead) => {
+              attemptBytes += bytesRead;
+              reportPartProgress(index, attemptBytes);
+            }
+          );
+          if (
+            downloadedBytes.byteLength !== downloadSize ||
+            (await sha256Hex(downloadedBytes)) !== downloadSha256
+          ) {
+            throw new Error('The downloaded part failed its transfer integrity check.');
+          }
+          const bytes = useGzip ? await decompressGzip(downloadedBytes) : downloadedBytes;
           if (bytes.byteLength !== part.size || (await sha256Hex(bytes)) !== part.sha256) {
-            throw new Error('The downloaded part failed its integrity check.');
+            throw new Error('The downloaded part failed its content integrity check.');
           }
           chunks[index] = bytes;
           lastError = undefined;
