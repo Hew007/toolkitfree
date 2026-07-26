@@ -6,13 +6,15 @@ interface FfmpegAssetManifest {
   totalSize: number;
   sha256: string;
   coreFile: string;
+  gzipBundle?: {
+    file: string;
+    size: number;
+    sha256: string;
+  };
   parts: Array<{
     file: string;
     size: number;
     sha256: string;
-    gzipFile?: string;
-    gzipSize?: number;
-    gzipSha256?: string;
   }>;
 }
 
@@ -141,13 +143,10 @@ async function loadFfmpegAssetUrls(
     'The local conversion engine manifest failed after three download attempts.',
     signal
   );
-  const useGzip =
-    typeof DecompressionStream !== 'undefined' &&
-    manifest.parts.every((part) => part.gzipFile && part.gzipSize !== undefined && part.gzipSha256);
-  const downloadTotal = manifest.parts.reduce(
-    (total, part) => total + (useGzip ? (part.gzipSize ?? part.size) : part.size),
-    0
-  );
+  const useGzipBundle = typeof DecompressionStream !== 'undefined' && Boolean(manifest.gzipBundle);
+  const downloadTotal = useGzipBundle
+    ? (manifest.gzipBundle?.size ?? manifest.totalSize)
+    : manifest.parts.reduce((total, part) => total + part.size, 0);
   const partProgress = manifest.parts.map(() => 0);
   const reportPartProgress = (index: number, bytes: number) => {
     partProgress[index] = Math.max(partProgress[index], bytes);
@@ -163,36 +162,25 @@ async function loadFfmpegAssetUrls(
     while (nextPartIndex < manifest.parts.length) {
       const index = nextPartIndex++;
       const part = manifest.parts[index];
-      const downloadFile = useGzip ? (part.gzipFile ?? part.file) : part.file;
-      const downloadSize = useGzip ? (part.gzipSize ?? part.size) : part.size;
-      const downloadSha256 = useGzip ? (part.gzipSha256 ?? part.sha256) : part.sha256;
       let lastError: unknown;
       for (let attempt = 0; attempt <= DOWNLOAD_RETRY_COUNT; attempt += 1) {
         let attemptBytes = 0;
         try {
-          const chunkResponse = await fetch(`${ASSET_BASE}/${downloadFile}`, { signal });
+          const chunkResponse = await fetch(`${ASSET_BASE}/${part.file}`, { signal });
           if (!chunkResponse.ok) {
             throw new Error(`The server returned ${chunkResponse.status}.`);
           }
-          const downloadedBytes = await readResponseBytes(
-            chunkResponse,
-            downloadSize,
-            (bytesRead) => {
-              attemptBytes += bytesRead;
-              reportPartProgress(index, attemptBytes);
-            }
-          );
+          const downloadedBytes = await readResponseBytes(chunkResponse, part.size, (bytesRead) => {
+            attemptBytes += bytesRead;
+            reportPartProgress(index, attemptBytes);
+          });
           if (
-            downloadedBytes.byteLength !== downloadSize ||
-            (await sha256Hex(downloadedBytes)) !== downloadSha256
+            downloadedBytes.byteLength !== part.size ||
+            (await sha256Hex(downloadedBytes)) !== part.sha256
           ) {
             throw new Error('The downloaded part failed its transfer integrity check.');
           }
-          const bytes = useGzip ? await decompressGzip(downloadedBytes) : downloadedBytes;
-          if (bytes.byteLength !== part.size || (await sha256Hex(bytes)) !== part.sha256) {
-            throw new Error('The downloaded part failed its content integrity check.');
-          }
-          chunks[index] = bytes;
+          chunks[index] = downloadedBytes;
           lastError = undefined;
           break;
         } catch (error) {
@@ -209,7 +197,48 @@ async function loadFfmpegAssetUrls(
     }
   };
 
-  const [coreScript] = await Promise.all([
+  const rawPartsPromise = async () => {
+    await Promise.all(
+      Array.from({ length: Math.min(DOWNLOAD_CONCURRENCY, manifest.parts.length) }, downloadWorker)
+    );
+    const wasm = new Uint8Array(manifest.totalSize);
+    let offset = 0;
+    for (const chunk of chunks) {
+      wasm.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    if (offset !== manifest.totalSize || (await sha256Hex(wasm)) !== manifest.sha256) {
+      throw new Error('The local conversion engine failed its integrity check.');
+    }
+    return wasm;
+  };
+  const gzipBundlePromise = async () => {
+    const bundle = manifest.gzipBundle;
+    if (!bundle) throw new Error('The compressed conversion engine bundle is unavailable.');
+    return runWithDownloadRetries(
+      async () => {
+        let attemptBytes = 0;
+        const response = await fetch(`${ASSET_BASE}/${bundle.file}`, { signal });
+        if (!response.ok) throw new Error(`The server returned ${response.status}.`);
+        const downloaded = await readResponseBytes(response, bundle.size, (bytesRead) => {
+          attemptBytes += bytesRead;
+          reportPartProgress(0, attemptBytes);
+        });
+        if ((await sha256Hex(downloaded)) !== bundle.sha256) {
+          throw new Error('The compressed conversion engine failed its transfer integrity check.');
+        }
+        const wasm = await decompressGzip(downloaded);
+        if (wasm.byteLength !== manifest.totalSize || (await sha256Hex(wasm)) !== manifest.sha256) {
+          throw new Error('The local conversion engine failed its integrity check.');
+        }
+        return wasm;
+      },
+      'The compressed conversion engine failed after three download attempts.',
+      signal
+    );
+  };
+
+  const [coreScript, wasm] = await Promise.all([
     runWithDownloadRetries(
       async () => {
         const response = await fetch(`${ASSET_BASE}/${manifest.coreFile}`, { signal });
@@ -219,22 +248,11 @@ async function loadFfmpegAssetUrls(
       'The local conversion engine script failed after three download attempts.',
       signal
     ),
-    Promise.all(
-      Array.from({ length: Math.min(DOWNLOAD_CONCURRENCY, manifest.parts.length) }, downloadWorker)
-    ),
+    useGzipBundle ? gzipBundlePromise() : rawPartsPromise(),
   ]);
-  const wasm = new Uint8Array(manifest.totalSize);
-  let offset = 0;
-  for (const chunk of chunks) {
-    wasm.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  if (offset !== manifest.totalSize || (await sha256Hex(wasm)) !== manifest.sha256) {
-    throw new Error('The local conversion engine failed its integrity check.');
-  }
   return {
     coreURL: URL.createObjectURL(new Blob([coreScript], { type: 'text/javascript' })),
-    wasmURL: URL.createObjectURL(new Blob([wasm], { type: 'application/wasm' })),
+    wasmURL: URL.createObjectURL(new Blob([Uint8Array.from(wasm)], { type: 'application/wasm' })),
   };
 }
 

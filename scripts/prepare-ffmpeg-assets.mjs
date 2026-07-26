@@ -20,27 +20,24 @@ fs.mkdirSync(outputDirectory, { recursive: true });
 
 const wasm = fs.readFileSync(wasmSource);
 const wasmHash = createHash('sha256').update(wasm).digest('hex');
+const gzipBundle = gzipSync(wasm, { level: 9 });
+const gzipBundleHash = createHash('sha256').update(gzipBundle).digest('hex');
+const gzipBundleFile = `ffmpeg-core-${gzipBundleHash.slice(0, 12)}.wasm.gzipdata`;
 const parts = [];
 
 for (let offset = 0, index = 0; offset < wasm.length; offset += chunkSize, index += 1) {
   const chunk = wasm.subarray(offset, Math.min(offset + chunkSize, wasm.length));
   const chunkHash = createHash('sha256').update(chunk).digest('hex');
   const file = `ffmpeg-core-${chunkHash.slice(0, 12)}.part${index}.bin`;
-  const gzip = gzipSync(chunk, { level: 9 });
-  const gzipHash = createHash('sha256').update(gzip).digest('hex');
-  const gzipFile = `${file}.gzipdata`;
   fs.writeFileSync(path.join(outputDirectory, file), chunk);
-  fs.writeFileSync(path.join(outputDirectory, gzipFile), gzip);
   parts.push({
     file,
     size: chunk.length,
     sha256: chunkHash,
-    gzipFile,
-    gzipSize: gzip.length,
-    gzipSha256: gzipHash,
   });
 }
 
+fs.writeFileSync(path.join(outputDirectory, gzipBundleFile), gzipBundle);
 fs.copyFileSync(coreSource, path.join(outputDirectory, 'ffmpeg-core.js'));
 fs.writeFileSync(
   path.join(outputDirectory, 'manifest.json'),
@@ -50,6 +47,11 @@ fs.writeFileSync(
       totalSize: wasm.length,
       sha256: wasmHash,
       coreFile: 'ffmpeg-core.js',
+      gzipBundle: {
+        file: gzipBundleFile,
+        size: gzipBundle.length,
+        sha256: gzipBundleHash,
+      },
       parts,
     },
     null,
@@ -63,6 +65,6 @@ console.log(
     version,
     bytes: wasm.length,
     parts: parts.length,
-    gzipBytes: parts.reduce((total, part) => total + part.gzipSize, 0),
+    gzipBytes: gzipBundle.length,
   })
 );

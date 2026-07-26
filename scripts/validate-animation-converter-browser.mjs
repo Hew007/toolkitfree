@@ -232,7 +232,7 @@ assert.equal(
   assetEntries.some((entry) => entry.endsWith('manifest.json')),
   true
 );
-assert.equal(assetEntries.filter((entry) => entry.includes('.bin.gzipdata')).length, 8);
+assert.equal(assetEntries.filter((entry) => entry.includes('.wasm.gzipdata')).length, 1);
 
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);

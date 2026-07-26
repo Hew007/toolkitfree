@@ -85,9 +85,9 @@ if (fs.existsSync(manifestPath)) {
   assert.equal(manifest.totalSize, 32_232_419);
   assert.equal(manifest.parts.length, Math.ceil(manifest.totalSize / (4 * 1024 * 1024)));
   assert.ok(manifest.parts.every((part) => part.size <= 4 * 1024 * 1024));
-  assert.ok(manifest.parts.every((part) => part.gzipSize < part.size));
-  assert.ok(manifest.parts.every((part) => part.gzipFile.endsWith('.bin.gzipdata')));
-  assert.ok(manifest.parts.reduce((total, part) => total + part.gzipSize, 0) < 11 * 1024 * 1024);
+  assert.ok(manifest.gzipBundle.file.endsWith('.wasm.gzipdata'));
+  assert.ok(manifest.gzipBundle.size < 11 * 1024 * 1024);
+  assert.match(manifest.gzipBundle.sha256, /^[a-f0-9]{64}$/);
 }
 
 const staticHeaders = fs.readFileSync(path.resolve('public/_headers'), 'utf8');
