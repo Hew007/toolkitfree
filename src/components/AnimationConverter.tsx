@@ -255,7 +255,7 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
     setError('');
     setConverting(true);
     setProgress(0.01);
-    setStatus('Loading the local conversion engine (usually 5–30 seconds)…');
+    setStatus('Downloading the local conversion engine (about 31 MB on first use)…');
     const controller = new AbortController();
     abortRef.current = controller;
     let ffmpeg: NonNullable<AnimationFfmpegRuntime['ffmpeg']> | null = null;

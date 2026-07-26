@@ -33,6 +33,9 @@ interface BrowserImageDecoderConstructor {
 }
 
 const ASSET_BASE = '/generated/ffmpeg/0.12.10';
+const DOWNLOAD_PROGRESS_START = 0.02;
+const DOWNLOAD_PROGRESS_END = 0.2;
+const LOAD_STALL_TIMEOUT_MS = 30_000;
 
 async function sha256Hex(bytes: ArrayBuffer | Uint8Array): Promise<string> {
   const value = bytes instanceof Uint8Array ? Uint8Array.from(bytes) : new Uint8Array(bytes);
@@ -40,13 +43,52 @@ async function sha256Hex(bytes: ArrayBuffer | Uint8Array): Promise<string> {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-async function loadFfmpegAssetUrls(signal?: AbortSignal): Promise<{
+async function readResponseBytes(
+  response: Response,
+  expectedSize: number,
+  onBytesRead: (bytes: number) => void
+): Promise<Uint8Array> {
+  if (!response.body) {
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    onBytesRead(bytes.byteLength);
+    return bytes;
+  }
+
+  const output = new Uint8Array(expectedSize);
+  const reader = response.body.getReader();
+  let offset = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (offset + value.byteLength > output.byteLength) {
+      await reader.cancel();
+      throw new Error('A local conversion engine part exceeded its declared size.');
+    }
+    output.set(value, offset);
+    offset += value.byteLength;
+    onBytesRead(value.byteLength);
+  }
+  if (offset !== expectedSize) {
+    throw new Error('A local conversion engine part was downloaded incompletely.');
+  }
+  return output;
+}
+
+async function loadFfmpegAssetUrls(
+  signal: AbortSignal | undefined,
+  onDownloadProgress: (downloaded: number, total: number) => void
+): Promise<{
   coreURL: string;
   wasmURL: string;
 }> {
   const response = await fetch(`${ASSET_BASE}/manifest.json`, { signal });
   if (!response.ok) throw new Error('The local conversion engine manifest could not be loaded.');
   const manifest = (await response.json()) as FfmpegAssetManifest;
+  let downloaded = 0;
+  const reportBytes = (bytes: number) => {
+    downloaded += bytes;
+    onDownloadProgress(downloaded, manifest.totalSize);
+  };
   const [coreResponse, chunks] = await Promise.all([
     fetch(`${ASSET_BASE}/${manifest.coreFile}`, { signal }),
     Promise.all(
@@ -54,7 +96,7 @@ async function loadFfmpegAssetUrls(signal?: AbortSignal): Promise<{
         const chunkResponse = await fetch(`${ASSET_BASE}/${part.file}`, { signal });
         if (!chunkResponse.ok)
           throw new Error('A local conversion engine part could not be loaded.');
-        const bytes = new Uint8Array(await chunkResponse.arrayBuffer());
+        const bytes = await readResponseBytes(chunkResponse, part.size, reportBytes);
         if (bytes.byteLength !== part.size || (await sha256Hex(bytes)) !== part.sha256) {
           throw new Error('A local conversion engine part failed its integrity check.');
         }
@@ -117,43 +159,63 @@ export class AnimationFfmpegRuntime {
   ): Promise<FFmpeg> {
     if (this.ffmpeg?.loaded) return this.ffmpeg;
     const loadController = new AbortController();
-    let timedOut = false;
+    let stalled = false;
+    let stallTimeout = 0;
+    let loadingFfmpeg: FFmpeg | null = null;
     const forwardAbort = () => loadController.abort();
+    const abortForStall = () => {
+      stalled = true;
+      loadController.abort();
+    };
+    const armStallTimeout = () => {
+      window.clearTimeout(stallTimeout);
+      stallTimeout = window.setTimeout(abortForStall, LOAD_STALL_TIMEOUT_MS);
+    };
     if (signal?.aborted) loadController.abort();
     else signal?.addEventListener('abort', forwardAbort, { once: true });
-    const timeout = window.setTimeout(() => {
-      timedOut = true;
-      loadController.abort();
-    }, 45_000);
-    onProgress(0.02);
+    armStallTimeout();
+    onProgress(DOWNLOAD_PROGRESS_START);
     try {
       const [{ FFmpeg }, urls] = await Promise.all([
         import('@ffmpeg/ffmpeg'),
-        loadFfmpegAssetUrls(loadController.signal),
+        loadFfmpegAssetUrls(loadController.signal, (downloaded, total) => {
+          armStallTimeout();
+          const ratio = total > 0 ? Math.min(1, downloaded / total) : 0;
+          onProgress(
+            DOWNLOAD_PROGRESS_START + ratio * (DOWNLOAD_PROGRESS_END - DOWNLOAD_PROGRESS_START)
+          );
+        }),
       ]);
+      window.clearTimeout(stallTimeout);
       onProgress(0.22);
       const ffmpeg = new FFmpeg();
+      loadingFfmpeg = ffmpeg;
       try {
         await ffmpeg.load(
           { coreURL: urls.coreURL, wasmURL: urls.wasmURL },
           { signal: loadController.signal }
         );
-      } catch (error) {
-        ffmpeg.terminate();
-        if (timedOut) {
-          throw new Error(
-            'The conversion engine did not start within 45 seconds. Refresh the page and try again.'
-          );
-        }
-        throw error;
       } finally {
         URL.revokeObjectURL(urls.coreURL);
         URL.revokeObjectURL(urls.wasmURL);
       }
       this.ffmpeg = ffmpeg;
       return ffmpeg;
+    } catch (error) {
+      if (loadingFfmpeg && !loadingFfmpeg.loaded) loadingFfmpeg.terminate();
+      if (stalled) {
+        throw new Error(
+          'The conversion engine download made no progress for 30 seconds. Check your connection and try again.'
+        );
+      }
+      if (error instanceof DOMException && error.name === 'AbortError' && !signal?.aborted) {
+        throw new Error(
+          'The conversion engine download was interrupted. Check your connection and try again.'
+        );
+      }
+      throw error;
     } finally {
-      window.clearTimeout(timeout);
+      window.clearTimeout(stallTimeout);
       signal?.removeEventListener('abort', forwardAbort);
     }
   }

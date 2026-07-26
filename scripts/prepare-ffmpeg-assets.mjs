@@ -4,7 +4,7 @@ import path from 'node:path';
 
 const root = process.cwd();
 const version = '0.12.10';
-const chunkSize = 16 * 1024 * 1024;
+const chunkSize = 1024 * 1024;
 const sourceDirectory = path.join(root, 'node_modules', '@ffmpeg', 'core', 'dist', 'esm');
 const outputDirectory = path.join(root, 'public', 'generated', 'ffmpeg', version);
 const wasmSource = path.join(sourceDirectory, 'ffmpeg-core.wasm');

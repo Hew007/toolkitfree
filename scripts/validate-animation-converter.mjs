@@ -83,8 +83,13 @@ const manifestPath = path.resolve('public/generated/ffmpeg/0.12.10/manifest.json
 if (fs.existsSync(manifestPath)) {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   assert.equal(manifest.totalSize, 32_232_419);
-  assert.ok(manifest.parts.length >= 2);
-  assert.ok(manifest.parts.every((part) => part.size <= 20 * 1024 * 1024));
+  assert.equal(manifest.parts.length, Math.ceil(manifest.totalSize / (1024 * 1024)));
+  assert.ok(manifest.parts.every((part) => part.size <= 1024 * 1024));
 }
+
+const staticHeaders = fs.readFileSync(path.resolve('public/_headers'), 'utf8');
+assert.match(staticHeaders, /\/_astro\/\*/);
+assert.match(staticHeaders, /\/generated\/ffmpeg\/0\.12\.10\/\*\.bin/);
+assert.match(staticHeaders, /Cache-Control: public, max-age=31556952, immutable/);
 
 console.log(JSON.stringify({ status: 'ANIMATION_CONVERTER_VALIDATION_OK' }));
