@@ -10,7 +10,17 @@ import {
   loadImage,
   validateImageFile,
 } from '../lib/image-processing';
-import { removeBackgroundInWorker, type BackgroundProgress } from '../lib/background-remover';
+import {
+  BACKGROUND_PRESETS,
+  TRANSPARENT_BACKGROUND,
+  backgroundLabelColor,
+  normalizeHexColor,
+  removeBackgroundInWorker,
+  type BackgroundProgress,
+} from '../lib/background-remover';
+
+const CHECKERBOARD =
+  'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)';
 
 interface ProcessedFile {
   name: string;
@@ -31,7 +41,9 @@ export default function BackgroundRemover() {
   const [progress, setProgress] = useState<BackgroundProgress | null>(null);
   const [result, setResult] = useState<ProcessedFile | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [bgColor, setBgColor] = useState('transparent');
+  const [bgColor, setBgColor] = useState(TRANSPARENT_BACKGROUND);
+  const [hexDraft, setHexDraft] = useState('');
+  const [hexError, setHexError] = useState<string | null>(null);
   const objectUrls = useObjectUrlRegistry();
   const processingController = useRef<AbortController | null>(null);
 
@@ -65,6 +77,29 @@ export default function BackgroundRemover() {
     [clearResult, objectUrls]
   );
 
+  const applyColor = useCallback(
+    (value: string) => {
+      setBgColor(value);
+      setHexError(null);
+      setHexDraft(value === TRANSPARENT_BACKGROUND ? '' : value);
+      clearResult();
+    },
+    [clearResult]
+  );
+
+  const commitHex = useCallback(() => {
+    if (hexDraft.trim() === '') {
+      setHexError(null);
+      return;
+    }
+    const normalized = normalizeHexColor(hexDraft);
+    if (!normalized) {
+      setHexError('Enter a colour like #ff7a45.');
+      return;
+    }
+    applyColor(normalized);
+  }, [applyColor, hexDraft]);
+
   const handleRemove = useCallback(() => {
     cancelProcessing();
     objectUrls.revokeAll();
@@ -85,11 +120,13 @@ export default function BackgroundRemover() {
     processingController.current = controller;
 
     try {
-      setProgress({ stage: 'model-initialization', label: 'Initializing AI model', percent: null });
+      // The 'runtime' stage above must stay visible until the worker reports its
+      // first progress event. Overwriting it here batched into the same render,
+      // so the user never saw it and it never reached the DOM.
       const removedBlob = await removeBackgroundInWorker(file, setProgress, controller.signal);
 
       let finalBlob = removedBlob;
-      if (bgColor !== 'transparent') {
+      if (bgColor !== TRANSPARENT_BACKGROUND) {
         setProgress({
           stage: 'model-initialization',
           label: 'Applying background color',
@@ -141,8 +178,18 @@ export default function BackgroundRemover() {
     }
   };
 
+  const isCustomColor =
+    bgColor !== TRANSPARENT_BACKGROUND &&
+    !BACKGROUND_PRESETS.some((preset) => preset.value === bgColor);
+
   return (
-    <div data-background-stage={progress?.stage ?? 'idle'} aria-busy={processing}>
+    // `data-active-background` intentionally differs from the presets' `data-background-color`
+    // so a selector for a preset swatch never matches this wrapper instead.
+    <div
+      data-background-stage={progress?.stage ?? 'idle'}
+      data-active-background={bgColor}
+      aria-busy={processing}
+    >
       {!file ? (
         <FileUploader
           accept="image/jpeg,image/png,image/webp"
@@ -184,40 +231,105 @@ export default function BackgroundRemover() {
             >
               Background Color
             </span>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {[
-                { value: 'transparent', label: 'Transparent', color: '#fff' },
-                { value: '#ffffff', label: 'White', color: '#ffffff' },
-                { value: '#ff0000', label: 'Red', color: '#ff0000' },
-                { value: '#0000ff', label: 'Blue', color: '#0000ff' },
-                { value: '#008000', label: 'Green', color: '#008000' },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  data-background-color={option.value}
-                  aria-pressed={bgColor === option.value}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              {BACKGROUND_PRESETS.map((option) => {
+                const selected = bgColor === option.value;
+                const isTransparent = option.value === TRANSPARENT_BACKGROUND;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    data-background-color={option.value}
+                    aria-pressed={selected}
+                    disabled={processing}
+                    onClick={() => applyColor(option.value)}
+                    style={{
+                      padding: '0.375rem 1rem',
+                      borderRadius: 6,
+                      border: selected ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                      background: isTransparent ? CHECKERBOARD : option.swatch,
+                      backgroundSize: isTransparent ? '12px 12px' : undefined,
+                      backgroundPosition: isTransparent
+                        ? '0 0, 0 6px, 6px -6px, -6px 0px'
+                        : undefined,
+                      cursor: processing ? 'not-allowed' : 'pointer',
+                      fontSize: '0.8rem',
+                      color: backgroundLabelColor(option.swatch),
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+
+              <span aria-hidden="true" style={{ color: '#d1d5db' }}>
+                |
+              </span>
+
+              <label
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.375rem',
+                  fontSize: '0.8rem',
+                }}
+              >
+                <span>Custom</span>
+                <input
+                  type="color"
+                  data-testid="bg-color-picker"
+                  value={isCustomColor ? bgColor : '#3b82f6'}
                   disabled={processing}
-                  onClick={() => {
-                    setBgColor(option.value);
-                    clearResult();
-                  }}
+                  onChange={(event) => applyColor(event.target.value)}
                   style={{
-                    padding: '0.375rem 1rem',
+                    width: 36,
+                    height: 30,
+                    padding: 2,
+                    border: isCustomColor ? '2px solid #2563eb' : '1px solid #d1d5db',
                     borderRadius: 6,
-                    border: bgColor === option.value ? '2px solid #2563eb' : '1px solid #e5e7eb',
-                    background: option.color,
                     cursor: processing ? 'not-allowed' : 'pointer',
-                    fontSize: '0.8rem',
-                    color: ['#0000ff', '#008000', '#ff0000'].includes(option.value)
-                      ? '#fff'
-                      : '#1f2937',
+                    background: 'none',
                   }}
-                >
-                  {option.label}
-                </button>
-              ))}
+                />
+              </label>
+
+              <input
+                type="text"
+                data-testid="bg-color-hex"
+                aria-label="Background colour hex value"
+                aria-invalid={hexError !== null}
+                placeholder="#ff7a45"
+                value={hexDraft}
+                disabled={processing}
+                maxLength={7}
+                onChange={(event) => {
+                  setHexDraft(event.target.value);
+                  setHexError(null);
+                }}
+                onBlur={commitHex}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter') return;
+                  event.preventDefault();
+                  commitHex();
+                }}
+                style={{
+                  width: '7.5rem',
+                  padding: '0.375rem 0.5rem',
+                  borderRadius: 6,
+                  border: hexError ? '1px solid #ef4444' : '1px solid #d1d5db',
+                  fontSize: '0.8rem',
+                  fontFamily: 'ui-monospace, monospace',
+                }}
+              />
             </div>
+            {hexError && (
+              <p
+                role="alert"
+                style={{ margin: '0.375rem 0 0', color: '#ef4444', fontSize: '0.75rem' }}
+              >
+                {hexError}
+              </p>
+            )}
           </div>
 
           <button
@@ -297,10 +409,7 @@ export default function BackgroundRemover() {
                   maxHeight: 200,
                   borderRadius: 4,
                   border: '1px solid #e5e7eb',
-                  backgroundImage:
-                    bgColor === 'transparent'
-                      ? 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)'
-                      : undefined,
+                  backgroundImage: bgColor === TRANSPARENT_BACKGROUND ? CHECKERBOARD : undefined,
                   backgroundSize: '16px 16px',
                   backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
                 }}
