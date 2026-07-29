@@ -7,7 +7,22 @@ const faqItems = [
   {
     question: 'How do I convert images to PDF?',
     answer:
-      'Upload one or more images, choose page size (A4, Letter, or fit to image), set orientation and margins, then click "Convert to PDF." Your PDF is ready to download.',
+      'Upload one or more images and each becomes a page you can see immediately. Choose page size (A4, Letter, or fit to image), set orientation and margins, adjust any image on its page, then click "Create PDF." The downloaded file matches the preview exactly.',
+  },
+  {
+    question: 'Can I move, resize, or rotate an image before converting?',
+    answer:
+      'Yes. Drag an image to reposition it on its page, drag a corner handle to resize it, and use the rotate buttons for 90-degree turns. Fit page, Fill page, and Actual size shortcuts are also available, and Reset layout returns every image to the automatic arrangement.',
+  },
+  {
+    question: 'Can I put more than one image on the same page?',
+    answer:
+      'Yes. Drag an image onto another page and both are arranged on that page automatically. Each image can then be moved and resized independently. By default every image gets its own page.',
+  },
+  {
+    question: 'Can I use the editor without a mouse?',
+    answer:
+      'Yes. Focus an image and use the arrow keys to move it, Alt plus the arrow keys to resize it, the bracket keys to rotate it, Ctrl plus the arrow keys to reorder it on the page, and Alt plus PageUp or PageDown to move it to another page. Hold Shift for larger steps.',
   },
   {
     question: 'Is this image to PDF converter free?',
@@ -22,7 +37,7 @@ const faqItems = [
   {
     question: 'Can I combine multiple images into one PDF?',
     answer:
-      'Yes. Upload multiple images and they will be combined into a single multi-page PDF, with each image on its own page.',
+      'Yes. Upload multiple images and they are combined into a single multi-page PDF. Each image starts on its own page, and you can drop images together to share a page.',
   },
   {
     question: 'What page sizes are supported?',
@@ -75,7 +90,7 @@ const breadcrumbSchema = {
 
 <Layout
   title="Image to PDF — Convert Images Online Free | ToolkitFree"
-  description="Convert images to PDF online. Supports JPG, PNG, WebP. Combine multiple images into one PDF. A4, Letter, or fit-to-image page sizes. Free, no upload needed."
+  description="Convert images to PDF online with a live page editor. Move, resize, and rotate each image, or place several on one page. JPG, PNG, WebP. Free, no upload needed."
   structuredData={[
     structuredData,
     {
@@ -94,8 +109,9 @@ const breadcrumbSchema = {
     <div class="tool-content">
       <h1>Free Online Image to PDF Converter</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
-        Convert JPG, PNG, and WebP images to PDF. Combine multiple images into one PDF. A4, Letter,
-        or fit-to-image. All processing in your browser.
+        Convert JPG, PNG, and WebP images to PDF and see every page before you export it. Move,
+        resize, and rotate each image, or drop several onto one page. All processing in your
+        browser.
       </p>
 
       <div class="privacy-badge">
@@ -107,22 +123,23 @@ const breadcrumbSchema = {
       <section class="howto-section">
         <h2>How to Convert Images to PDF</h2>
         <ol class="howto-steps">
-          <li>Upload one or more images</li>
-          <li>Choose page size (A4, Letter, or Fit to Image)</li>
-          <li>Set orientation and margins</li>
-          <li>Click "Convert to PDF"</li>
-          <li>Download your PDF</li>
+          <li>Upload one or more images — each one becomes a page you can see straight away</li>
+          <li>Choose page size (A4, Letter, or Fit to Image), orientation, and margins</li>
+          <li>Drag an image to move it, drag a corner to resize it, or rotate it 90&deg;</li>
+          <li>Drop an image onto another page to put several images on one page</li>
+          <li>Click "Create PDF" and download — the file matches the preview exactly</li>
         </ol>
       </section>
 
       <section class="features-section">
         <h2>Features</h2>
         <ul class="features-list">
-          <li>Combine multiple images into one PDF</li>
-          <li>A4 and US Letter page sizes</li>
-          <li>Fit-to-image mode for exact dimensions</li>
-          <li>Portrait and landscape orientation</li>
-          <li>Adjustable margins (0-30mm)</li>
+          <li>Live page preview — what you see is what gets exported</li>
+          <li>Move, resize, and rotate each image on its page</li>
+          <li>Put several images on a single page, or one per page</li>
+          <li>Full keyboard control for every editing action</li>
+          <li>A4 and US Letter page sizes, plus fit-to-image for exact dimensions</li>
+          <li>Portrait and landscape orientation, adjustable margins (0-30mm)</li>
           <li>Supports JPG, PNG, and WebP inputs</li>
           <li>100% client-side — your images never leave your device</li>
         </ul>

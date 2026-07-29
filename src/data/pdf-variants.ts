@@ -18,7 +18,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'How to convert JPG to PDF?',
         answer:
-          'Upload your JPG file(s), choose page size and orientation, and click "Convert to PDF." Your PDF is ready to download in seconds.',
+          'Upload your JPG file(s), choose page size and orientation, and click "Create PDF." Your PDF is ready to download in seconds.',
       },
       {
         question: 'Can I convert multiple JPGs to one PDF?',
@@ -45,7 +45,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'How to convert PNG to PDF?',
         answer:
-          'Upload your PNG file(s), set your preferred page size and orientation, and click "Convert to PDF." Download your PDF instantly.',
+          'Upload your PNG file(s), set your preferred page size and orientation, and click "Create PDF." Download your PDF instantly.',
       },
       {
         question: 'What happens to transparent PNGs?',
@@ -82,12 +82,12 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'Can I fit multiple images on one A4 page?',
         answer:
-          'Currently each image gets its own A4 page. For multiple images per page, you can use our Image Resizer to create a collage first.',
+          'Yes. Each image starts on its own A4 page, but you can drag one onto another page and both are arranged on it automatically. You can then move and resize each image independently.',
       },
       {
         question: 'Will the image fill the entire A4 page?',
         answer:
-          'The image is scaled to fit the page while maintaining its aspect ratio. You can adjust margins to control how much of the page the image fills.',
+          'By default the image is scaled to fit the page while maintaining its aspect ratio. Use the Fill page button to cover the whole page instead, drag a corner handle to size it yourself, or adjust the margin.',
       },
     ],
   },
@@ -99,7 +99,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'How to combine multiple images into one PDF?',
         answer:
-          'Upload all your images at once. They will be arranged in the order you uploaded them, with each image on its own page. Click "Convert to PDF" and download.',
+          'Upload all your images at once. They are arranged in the order you uploaded them, with each image on its own page, and every page is previewed immediately. Click "Create PDF" and download.',
       },
       {
         question: 'How many images can I combine?',
@@ -109,7 +109,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'Can I reorder the images?',
         answer:
-          'Yes. Use the Up and Down buttons beside each uploaded image. The numbered order shown in the tool is the page order used in the PDF.',
+          'Yes. Drag an image onto another page to move it there, or focus it and press Alt with PageUp or PageDown. Within a page, Ctrl with the arrow keys changes the order. The page order shown in the preview is the order used in the PDF.',
       },
       {
         question: 'What image formats are supported?',
