@@ -200,25 +200,65 @@ await upload([
   },
   { name: 'broken.png', type: 'image/png', corrupt: true },
 ]);
-await waitFor(`document.querySelectorAll('[data-pdf-file]').length === 3`, 'three PDF inputs');
-await evaluate(`document.querySelector('button[aria-label="Move second.png up"]').click()`);
-await waitFor(
-  `document.querySelector('[data-pdf-file]')?.dataset.pdfFile === 'second.png'`,
-  'PDF reorder'
-);
-await evaluate(`
-  [...document.querySelectorAll('button')]
-    .find((button) => button.textContent.trim() === 'Convert 3 images to PDF')
-    .click()
-`);
-await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'partial PDF result');
+// Two decodable images become two pages; the corrupt one is reported immediately
+// rather than being held back until the convert click.
+await waitFor(`document.querySelectorAll('[data-pdf-page]').length === 2`, 'two PDF pages');
 assert.equal(
   await evaluate(`Boolean(document.querySelector('[data-pdf-error="broken.png"]'))`),
-  true
+  true,
+  'a corrupt file is flagged as soon as it is added'
+);
+assert.equal(await evaluate(`document.querySelectorAll('[data-pdf-file]').length`), 2);
+
+// The editor is driven from the keyboard: it is the accessible path and, unlike
+// synthetic pointer drags, it is reliable over CDP.
+const pressOnImage = (name, key, modifiers = {}) => `
+  (async () => {
+    const box = document.querySelector('[data-pdf-file="${name}"]');
+    box.focus();
+    box.dispatchEvent(new KeyboardEvent('keydown', {
+      key: ${JSON.stringify(key)}, bubbles: true, cancelable: true, ...${JSON.stringify(modifiers)}
+    }));
+    // React commits the state update asynchronously; wait for it to paint.
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    return document.querySelector('[data-pdf-file="${name}"]')?.dataset.pdfPlacement;
+  })()
+`;
+
+const placementBefore = await evaluate(
+  `document.querySelector('[data-pdf-file="first.png"]').dataset.pdfPlacement`
+);
+const placementAfterMove = await evaluate(pressOnImage('first.png', 'ArrowRight'));
+assert.notEqual(placementAfterMove, placementBefore, 'arrow keys must move the image');
+assert.equal(
+  Number(placementAfterMove.split(',')[0]) - Number(placementBefore.split(',')[0]),
+  1,
+  'one arrow press moves exactly 1mm'
+);
+
+const placementAfterRotate = await evaluate(pressOnImage('first.png', ']'));
+assert.equal(placementAfterRotate.split(',')[4], '90', 'the bracket key rotates a quarter turn');
+// A quarter turn swaps the footprint.
+assert.equal(placementAfterRotate.split(',')[2], placementAfterMove.split(',')[3]);
+assert.equal(placementAfterRotate.split(',')[3], placementAfterMove.split(',')[2]);
+
+// Alt+PageUp merges the second image onto the first page — the keyboard equivalent
+// of dragging it there, and the way a user puts several images on one page.
+await evaluate(pressOnImage('second.png', 'PageUp', { altKey: true }));
+await waitFor(
+  `document.querySelectorAll('[data-pdf-page]').length === 1`,
+  'images merged onto one page'
 );
 assert.equal(
+  await evaluate(`document.querySelector('[data-pdf-page-count]').dataset.pdfPageCount`),
+  '1'
+);
+
+await evaluate(`document.querySelector('[data-testid="pdf-convert"]').click()`);
+await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'partial PDF result');
+assert.equal(
   await evaluate(`Number(document.querySelector('[data-pdf-result]').dataset.pages)`),
-  2
+  1
 );
 const pdfBase64 = await evaluate(`
   (async () => {
@@ -234,19 +274,16 @@ const pdfBuffer = Buffer.from(pdfBase64, 'base64');
 const pdfText = pdfBuffer.toString('latin1');
 assert.equal(pdfText.startsWith('%PDF-'), true);
 assert.equal(pdfText.trimEnd().endsWith('%%EOF'), true);
-assert.equal((pdfText.match(/\/Type \/Page\b/g) || []).length, 2);
-assert.equal((pdfText.match(/\/MediaBox/g) || []).length >= 2, true);
+// Both images were merged onto a single page, so the PDF holds exactly one.
+assert.equal((pdfText.match(/\/Type \/Page\b/g) || []).length, 1);
+assert.equal((pdfText.match(/\/MediaBox/g) || []).length >= 1, true);
 const pdfStats = await evaluate(`window.__objectUrlStats()`);
 assert.equal(pdfStats.active, 4, 'Three previews plus one PDF result should remain active');
 
 await navigate('/tools/image-to-pdf/image-to-pdf-no-margin/');
 await upload([{ name: 'wide.png', type: 'image/png', width: 400, height: 200 }]);
 await waitFor(`Boolean(document.querySelector('[data-pdf-file]'))`, 'fit PDF input');
-await evaluate(`
-  [...document.querySelectorAll('button')]
-    .find((button) => button.textContent.trim() === 'Convert 1 image to PDF')
-    .click()
-`);
+await evaluate(`document.querySelector('[data-testid="pdf-convert"]').click()`);
 await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'fit PDF result');
 const fitPdfBase64 = await evaluate(`
   (async () => {
@@ -262,6 +299,20 @@ const fitPdfText = Buffer.from(fitPdfBase64, 'base64').toString('latin1');
 const mediaBox = /\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/.exec(fitPdfText);
 assert.ok(mediaBox, 'Fit PDF must include a MediaBox');
 assert.equal(Math.abs(Number(mediaBox[1]) / Number(mediaBox[2]) - 2) < 0.01, true);
+
+// The "what you see is what you export" guarantee: jsPDF records each image as a
+// `width 0 0 height x y cm` matrix. In fit mode the preview shows the image
+// covering the whole page, so the drawn box must equal the MediaBox.
+const drawMatrix = /([\d.]+) 0 0 ([\d.]+) [\d.-]+ [\d.-]+ cm/.exec(fitPdfText);
+assert.ok(drawMatrix, 'Fit PDF must place the image with a transform matrix');
+assert.ok(
+  Math.abs(Number(drawMatrix[1]) - Number(mediaBox[1])) < 0.5,
+  `Drawn width ${drawMatrix[1]} should fill the page width ${mediaBox[1]}`
+);
+assert.ok(
+  Math.abs(Number(drawMatrix[2]) - Number(mediaBox[2])) < 0.5,
+  `Drawn height ${drawMatrix[2]} should fill the page height ${mediaBox[2]}`
+);
 
 await navigate('/tools/favicon-generator/');
 await upload([
@@ -589,6 +640,8 @@ const backgroundCases = [
   { name: 'portrait.png', kind: 'portrait', background: '#f3f4f6', color: 'transparent' },
   { name: 'product.png', kind: 'product', background: '#ffffff', color: '#0000ff' },
   { name: 'transparent.png', kind: 'product', transparent: true, color: 'transparent' },
+  // A colour reachable only through the hex field, not through any preset swatch.
+  { name: 'custom.png', kind: 'product', background: '#ffffff', color: '#7a45ff', viaHex: true },
 ];
 const backgroundResults = [];
 const backgroundCleanupStats = [];
@@ -608,7 +661,44 @@ for (const definition of backgroundCases) {
     `document.body.innerText.includes('${definition.name}')`,
     `${definition.name} input`
   );
-  if (definition.color !== 'transparent') {
+  if (definition.viaHex) {
+    // React controlled inputs only see a change when the native setter is used.
+    const typeHex = (value) => `
+      (async () => {
+        const input = document.querySelector('[data-testid="bg-color-hex"]');
+        const setter = Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype, 'value'
+        ).set;
+        setter.call(input, ${JSON.stringify(value)});
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new KeyboardEvent('keydown', {
+          key: 'Enter', bubbles: true, cancelable: true
+        }));
+        // React commits the state update asynchronously; wait for it to paint.
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        return document.querySelector('[data-active-background]').dataset.activeBackground;
+      })()
+    `;
+    // An invalid hex must be rejected in place rather than reaching fillStyle,
+    // where it would silently paint the previous colour instead. The colour
+    // carries over between files, so compare against whatever is active now.
+    const colorBeforeInvalid = await evaluate(
+      `document.querySelector('[data-active-background]').dataset.activeBackground`
+    );
+    assert.equal(
+      await evaluate(typeHex('#12')),
+      colorBeforeInvalid,
+      'invalid hex must not change the active colour'
+    );
+    assert.equal(
+      await evaluate(
+        `Boolean(document.querySelector('[data-testid="bg-color-hex"][aria-invalid="true"]'))`
+      ),
+      true,
+      'invalid hex must be flagged'
+    );
+    assert.equal(await evaluate(typeHex(definition.color)), definition.color);
+  } else if (definition.color !== 'transparent') {
     await evaluate(
       `document.querySelector('[data-background-color="${definition.color}"]').click()`
     );
@@ -673,6 +763,12 @@ for (const definition of backgroundCases) {
     );
     assert.equal(inspected.corner[3], 255);
   }
+  if (definition.viaHex) {
+    // #7a45ff -> blue channel highest, then red, then green.
+    const [red, green, blue, alpha] = inspected.corner;
+    assert.equal(blue > red && red > green, true, `Custom hex background, got ${inspected.corner}`);
+    assert.equal(alpha, 255);
+  }
   backgroundResults.push(inspected);
   await evaluate(
     `document.querySelector('button[aria-label="Remove ${definition.name}"]').click()`
@@ -706,7 +802,7 @@ console.log(
     pdf: {
       variants: pdfVariants.length,
       bytes: pdfBuffer.length,
-      pages: 2,
+      pages: (pdfText.match(/\/Type \/Page\b/g) || []).length,
       fitMediaBox: mediaBox.slice(1),
     },
     favicon: { icons: faviconResults.length, zipNames, paddingPixels },

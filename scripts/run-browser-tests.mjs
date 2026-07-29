@@ -12,6 +12,7 @@ const animationOnly = process.argv.includes('--animation');
 const pdfPagesOnly = process.argv.includes('--pdf-pages');
 const collageOnly = process.argv.includes('--collage');
 const secondaryOnly = process.argv.includes('--secondary');
+const performanceOnly = process.argv.includes('--performance');
 const previewPort = Number(process.env.E2E_PREVIEW_PORT || (browserName === 'Edge' ? 4332 : 4331));
 const debugPort = Number(process.env.E2E_DEBUG_PORT || (browserName === 'Edge' ? 9232 : 9231));
 const baseUrl = `http://127.0.0.1:${previewPort}`;
@@ -33,17 +34,19 @@ const fullTests = [
 ];
 const tests = secondaryOnly
   ? ['validate-secondary-tools-browser.mjs']
-  : collageOnly
-    ? ['validate-collage-browser.mjs']
-    : pdfPagesOnly
-      ? ['validate-pdf-page-tools-browser.mjs']
-      : animationOnly
-        ? ['validate-animation-converter-browser.mjs']
-        : idPhotoOnly
-          ? ['validate-id-photo-browser.mjs']
-          : smokeOnly
-            ? ['validate-converter-browser.mjs', 'validate-responsive-accessibility-browser.mjs']
-            : fullTests;
+  : performanceOnly
+    ? ['validate-performance-browser.mjs']
+    : collageOnly
+      ? ['validate-collage-browser.mjs']
+      : pdfPagesOnly
+        ? ['validate-pdf-page-tools-browser.mjs']
+        : animationOnly
+          ? ['validate-animation-converter-browser.mjs']
+          : idPhotoOnly
+            ? ['validate-id-photo-browser.mjs']
+            : smokeOnly
+              ? ['validate-converter-browser.mjs', 'validate-responsive-accessibility-browser.mjs']
+              : fullTests;
 
 function findBrowser() {
   const browserCandidates =
@@ -188,16 +191,18 @@ console.log(
     browser: browserName,
     mode: secondaryOnly
       ? 'secondary'
-      : collageOnly
-        ? 'collage'
-        : pdfPagesOnly
-          ? 'pdf-pages'
-          : animationOnly
-            ? 'animation'
-            : idPhotoOnly
-              ? 'id-photo'
-              : smokeOnly
-                ? 'smoke'
-                : 'full',
+      : performanceOnly
+        ? 'performance'
+        : collageOnly
+          ? 'collage'
+          : pdfPagesOnly
+            ? 'pdf-pages'
+            : animationOnly
+              ? 'animation'
+              : idPhotoOnly
+                ? 'id-photo'
+                : smokeOnly
+                  ? 'smoke'
+                  : 'full',
   })
 );
