@@ -1,5 +1,55 @@
+import { colorContrastRatio } from './qr-data.ts';
+
 export type BackgroundProgressStage =
   'runtime' | 'model-download' | 'model-initialization' | 'inference';
+
+export interface BackgroundPreset {
+  /** Canvas fillStyle value, or the `transparent` sentinel. */
+  value: string;
+  label: string;
+  /** Colour painted on the swatch itself; differs from `value` only for transparent. */
+  swatch: string;
+}
+
+export const TRANSPARENT_BACKGROUND = 'transparent';
+
+export const BACKGROUND_PRESETS: readonly BackgroundPreset[] = [
+  { value: TRANSPARENT_BACKGROUND, label: 'Transparent', swatch: '#ffffff' },
+  { value: '#ffffff', label: 'White', swatch: '#ffffff' },
+  { value: '#ff0000', label: 'Red', swatch: '#ff0000' },
+  { value: '#0000ff', label: 'Blue', swatch: '#0000ff' },
+  { value: '#008000', label: 'Green', swatch: '#008000' },
+];
+
+/**
+ * Accepts `abc`, `#abc`, `aabbcc`, `#AABBCC` and returns lowercase `#rrggbb`.
+ * Returns null for anything else — the caller must never pass an unvalidated
+ * string to `context.fillStyle`, which silently keeps the previous value.
+ */
+export function normalizeHexColor(input: string): string | null {
+  const digits = input.trim().replace(/^#/, '');
+  if (/^[0-9a-f]{3}$/i.test(digits)) {
+    return `#${digits
+      .toLowerCase()
+      .split('')
+      .map((digit) => digit + digit)
+      .join('')}`;
+  }
+  if (/^[0-9a-f]{6}$/i.test(digits)) return `#${digits.toLowerCase()}`;
+  return null;
+}
+
+const LIGHT_LABEL = '#ffffff';
+const DARK_LABEL = '#1f2937';
+
+/** Picks whichever label colour reads better on the given swatch. */
+export function backgroundLabelColor(swatch: string): string {
+  const normalized = normalizeHexColor(swatch);
+  if (!normalized) return DARK_LABEL;
+  return colorContrastRatio(LIGHT_LABEL, normalized) >= colorContrastRatio(DARK_LABEL, normalized)
+    ? LIGHT_LABEL
+    : DARK_LABEL;
+}
 
 export interface BackgroundProgress {
   stage: BackgroundProgressStage;

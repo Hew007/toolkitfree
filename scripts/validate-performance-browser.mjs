@@ -24,7 +24,10 @@ const heavyAssets = {
   jszip: findAsset('jszip.min.'),
   jspdf: findAsset('jspdf.es.min.'),
   qr: findAsset('qr-code-styling.'),
-  background: findAsset('index.re'),
+  // The background remover's heavy chunk is its worker bundle. Match the name
+  // prefix Astro derives from the source file, not a content hash — a hash
+  // prefix breaks on any unrelated code change.
+  background: findAssetMatching(/^background-removal\.worker/, 'background removal worker'),
   pdfjs: findAssetMatching(/^pdf\.[^.]+\.js$/, 'PDF.js'),
   pdfWorker: 'pdf.worker.min.',
 };
@@ -235,11 +238,7 @@ await navigate('/tools/image-to-pdf/');
 await uploadGeneratedPng({ name: 'page.png', width: 96, height: 64 });
 await waitFor(`Boolean(document.querySelector('[data-pdf-file]'))`, 'PDF file');
 assert.equal(requested(heavyAssets.jspdf), false);
-await evaluate(`
-  [...document.querySelectorAll('button')]
-    .find((button) => button.textContent.includes('to PDF'))
-    .click()
-`);
+await evaluate(`document.querySelector('[data-testid="pdf-convert"]').click()`);
 await waitForRequest(heavyAssets.jspdf, 'jsPDF dynamic request');
 await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'PDF result');
 

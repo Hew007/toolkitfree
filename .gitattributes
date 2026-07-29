@@ -1,0 +1,27 @@
+# Store and check out all text files with LF endings.
+#
+# Prettier writes LF, so on Windows (core.autocrlf=true) every formatted file
+# would otherwise show up as modified even when its content is unchanged.
+* text=auto eol=lf
+
+# Binary assets must never be line-ending converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.avif binary
+*.svg text eol=lf
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.wasm binary
+*.mp4 binary
+*.webm binary
+*.zip binary
+*.gz binary
+*.br binary
