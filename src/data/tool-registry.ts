@@ -216,11 +216,11 @@ export const toolRegistry: readonly ToolDefinition[] = [
     navLabel: 'Background Remover',
     href: '/tools/background-remover',
     description:
-      'Remove one image background locally after downloading the browser AI model and runtime.',
+      'Remove one image background locally after downloading the browser AI model and runtime, then keep it transparent or replace it with any colour.',
     shortDescription: 'Remove image backgrounds with a local browser model.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-07-04',
+    lastModified: '2026-07-29',
     related: [
       'image-cropper',
       'image-resizer',
@@ -258,11 +258,11 @@ export const toolRegistry: readonly ToolDefinition[] = [
     navLabel: 'Image to PDF',
     href: '/tools/image-to-pdf',
     description:
-      'Combine ordered JPG, PNG, or WebP images into a PDF with page size, orientation, and margin controls.',
-    shortDescription: 'Combine images into a configurable PDF.',
+      'Combine JPG, PNG, or WebP images into a PDF using a live page editor: move, resize, and rotate each image, and place several images on one page.',
+    shortDescription: 'Lay images out on PDF pages and export what you see.',
     category: 'create-export',
     status: 'public',
-    lastModified: '2026-07-04',
+    lastModified: '2026-07-29',
     related: [
       'pdf-splitter',
       'image-converter',
