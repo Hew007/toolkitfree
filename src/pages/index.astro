@@ -1,6 +1,8 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import ImageConverter from '../components/ImageConverter';
+import ToolIcon from '../components/ToolIcon.astro';
 import { toPublicPath, toolRegistry } from '../data/tool-registry';
+import Layout from '../layouts/Layout.astro';
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -13,81 +15,132 @@ const structuredData = {
 ---
 
 <Layout
-  title="Free Online Image Tools - Convert, Compress, Resize"
+  title="Free Browser Tools for Images, PDFs, QR Codes & More"
   description="Free browser tools for images, PDFs, QR codes, ID photos, and animated media. Selected file contents are processed locally on your device."
   structuredData={structuredData}
 >
-  <section class="hero">
-    <h1>Free Online Image Tools</h1>
-    <p>
-      Convert, compress, resize, and edit images directly in your browser. No uploads needed — your
-      selected file contents are processed on your device.
-    </p>
-    <div class="privacy-badge">Local File Processing</div>
-  </section>
+  <section class="home-hero">
+    <div class="home-hero-copy">
+      <p class="hero-kicker">Free / local-first / no account</p>
+      <h1>Work with files. Keep them private.</h1>
+      <p class="hero-summary">
+        Convert images, prepare PDFs, create QR codes, size ID photos, and export animated media.
+        Your selected files stay on your device while you work.
+      </p>
+      <div class="hero-proof" aria-label="ToolkitFree benefits">
+        <span>13 focused tools</span><span>No watermark</span><span>Local processing</span>
+      </div>
+    </div>
 
-  <section class="tools-grid">
-    {
-      toolRegistry.map((tool) => (
-        <a href={toPublicPath(tool.href)} class="tool-card" data-tool-id={tool.id}>
-          <h3>{tool.name}</h3>
-          <p>{tool.description}</p>
-        </a>
-      ))
-    }
-  </section>
-
-  <section class="features-section">
-    <h2>Why ToolkitFree?</h2>
-    <ul class="features-list">
-      <li>Free to use, with no tool account required</li>
-      <li>Selected files are not uploaded for processing</li>
-      <li>Device-aware browser memory and resource safeguards</li>
-      <li>Designed for modern desktop and mobile browsers</li>
-      <li>Batch support in converter, compressor, resizer, and image-to-PDF</li>
-      <li>No watermarks on output</li>
-    </ul>
-  </section>
-
-  <section class="features-section">
-    <h2>How ToolkitFree Works</h2>
-    <p style="color: var(--color-text-light);">
-      ToolkitFree processing uses browser technologies including Canvas, client-side JavaScript, and
-      WebAssembly. Selected file contents are processed locally and are not uploaded to ToolkitFree
-      for processing. Capacity depends on device memory, browser limits, and codec support. Pages
-      still download site assets; background removal and video conversion load additional model or
-      runtime resources when needed.
-    </p>
-  </section>
-
-  <section class="features-section">
-    <h2>Who Is This For?</h2>
-    <ul class="features-list">
-      <li>Bloggers and content creators optimizing images for the web</li>
-      <li>Social media managers resizing images for Instagram, Facebook, Twitter, YouTube</li>
-      <li>E-commerce sellers preparing product photos</li>
-      <li>Anyone who needs quick image edits without installing software</li>
-    </ul>
-  </section>
-
-  <section class="features-section">
-    <h2>Popular Tools</h2>
-    <div class="related-tools-grid">
-      <a href="/tools/image-converter/jpg-to-png/" class="tool-card"><h3>JPG to PNG</h3></a>
-      <a href="/tools/image-converter/png-to-jpg/" class="tool-card"><h3>PNG to JPG</h3></a>
-      <a href="/tools/image-converter/jpg-to-webp/" class="tool-card"><h3>JPG to WebP</h3></a>
-      <a href="/tools/image-compressor/compress-for-web/" class="tool-card"
-        ><h3>Compress for Web</h3></a
+    <section class="hero-tool-panel" aria-labelledby="start-converting">
+      <div class="hero-tool-heading">
+        <div>
+          <p class="section-index">Start here / Image converter</p>
+          <h2 id="start-converting">Convert an image</h2>
+        </div>
+        <span class="hero-tool-format">JPG / PNG / WebP</span>
+      </div>
+      <ImageConverter client:load />
+      <div class="hero-privacy-note">
+        <span class="privacy-signal" aria-hidden="true"></span>
+        <p>
+          <strong>Processed on your device.</strong> Normal site assets still load from the network.
+        </p>
+      </div>
+      <a href="/tools/image-converter/" class="text-link"
+        >Open the full converter <span aria-hidden="true">&rarr;</span></a
       >
-      <a href="/tools/image-resizer/resize-for-instagram/" class="tool-card"
-        ><h3>Resize for Instagram</h3></a
-      >
-      <a href="/tools/image-cropper/crop-to-square/" class="tool-card"><h3>Crop to Square</h3></a>
-      <a href="/tools/image-to-pdf/jpg-to-pdf/" class="tool-card"><h3>JPG to PDF</h3></a>
-      <a href="/tools/favicon-generator/png-to-favicon/" class="tool-card"
-        ><h3>PNG to Favicon</h3></a
-      >
-      <a href="/tools/background-remover/" class="tool-card"><h3>Remove Background</h3></a>
+    </section>
+  </section>
+
+  <section class="tool-directory-section" aria-labelledby="all-tools">
+    <div class="section-heading-row">
+      <div>
+        <p class="section-index">13 focused utilities</p>
+        <h2 id="all-tools">Choose the job you need</h2>
+      </div>
+      <p>Images, documents, codes, photos, and motion. One clear tool at a time.</p>
+    </div>
+    <section class="tools-grid">
+      {
+        toolRegistry.map((tool, index) => (
+          <a href={toPublicPath(tool.href)} class="tool-card" data-tool-id={tool.id}>
+            <div class="tool-card-topline">
+              <ToolIcon toolId={tool.id} />
+              <span class="tool-card-number">{String(index + 1).padStart(2, '0')}</span>
+            </div>
+            <h3>{tool.name}</h3>
+            <p>{tool.description}</p>
+            <span class="tool-card-action">
+              Use tool <span aria-hidden="true">&rarr;</span>
+            </span>
+          </a>
+        ))
+      }
+    </section>
+  </section>
+
+  <section class="home-info-grid">
+    <article>
+      <p class="section-index">Why ToolkitFree</p>
+      <h2>Useful constraints, stated plainly.</h2>
+      <ul class="features-list">
+        <li>Free to use, with no tool account required</li>
+        <li>Selected files are not uploaded for processing</li>
+        <li>Device-aware browser memory and resource safeguards</li>
+        <li>No watermarks on output</li>
+      </ul>
+    </article>
+    <article>
+      <p class="section-index">How it works</p>
+      <h2>Your browser does the work.</h2>
+      <p>
+        ToolkitFree uses Canvas, client-side JavaScript, and WebAssembly. Capacity depends on device
+        memory, browser limits, and codec support. Background removal and video conversion load
+        additional model or runtime resources when needed.
+      </p>
+    </article>
+  </section>
+
+  <section class="popular-paths" aria-labelledby="popular-paths-heading">
+    <div class="section-heading-row">
+      <div>
+        <p class="section-index">Quick paths</p>
+        <h2 id="popular-paths-heading">Popular starting points</h2>
+      </div>
+      <p>Go straight to a common format or outcome.</p>
+    </div>
+    <div class="popular-paths-grid">
+      <a href="/tools/image-converter/jpg-to-png/">
+        <span>JPG to PNG</span><small>Convert for compatibility</small><b aria-hidden="true"
+          >&rarr;</b
+        >
+      </a>
+      <a href="/tools/image-compressor/compress-for-web/">
+        <span>Compress for web</span><small>Reduce and compare file size</small><b
+          aria-hidden="true">&rarr;</b
+        >
+      </a>
+      <a href="/tools/image-resizer/resize-for-instagram/">
+        <span>Resize for Instagram</span><small>Use ready-made dimensions</small><b
+          aria-hidden="true">&rarr;</b
+        >
+      </a>
+      <a href="/tools/image-cropper/crop-to-square/">
+        <span>Crop to square</span><small>Frame a clean 1:1 image</small><b aria-hidden="true"
+          >&rarr;</b
+        >
+      </a>
+      <a href="/tools/image-to-pdf/jpg-to-pdf/">
+        <span>JPG to PDF</span><small>Combine images into a PDF</small><b aria-hidden="true"
+          >&rarr;</b
+        >
+      </a>
+      <a href="/tools/background-remover/">
+        <span>Remove background</span><small>Create a transparent image</small><b aria-hidden="true"
+          >&rarr;</b
+        >
+      </a>
     </div>
   </section>
 </Layout>

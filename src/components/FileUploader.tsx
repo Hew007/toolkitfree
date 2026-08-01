@@ -129,7 +129,7 @@ export default function FileUploader({
           <p>or</p>
           <button
             type="button"
-            className="btn btn-secondary"
+            className="btn btn-primary"
             onClick={() => inputRef.current?.click()}
             disabled={reviewing}
           >

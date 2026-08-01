@@ -1,0 +1,38 @@
+<section class="spec-section" aria-labelledby="processing-limits">
+  <div class="section-heading-row compact">
+    <div>
+      <p class="section-index">Practical limits</p>
+      <h2 id="processing-limits">Browser processing safeguards</h2>
+    </div>
+    <p>
+      These are ToolkitFree screening thresholds, not promises that every browser can reach them.
+    </p>
+  </div>
+  <div class="table-scroll" tabindex="0" aria-label="Scrollable processing limits table">
+    <table class="spec-table">
+      <thead>
+        <tr
+          ><th scope="col">Safeguard</th><th scope="col">Desktop</th><th scope="col">Mobile</th></tr
+        >
+      </thead>
+      <tbody>
+        <tr
+          ><th scope="row">Single image</th><td>Blocked above 100 MP</td><td
+            >Blocked above 100 MP</td
+          ></tr
+        >
+        <tr><th scope="row">Batch size warning</th><td>20 files</td><td>10 files</td></tr>
+        <tr><th scope="row">Batch size block</th><td>50 files</td><td>25 files</td></tr>
+        <tr><th scope="row">Encoded input warning</th><td>100 MiB</td><td>40 MiB</td></tr>
+        <tr
+          ><th scope="row">Parallel processing</th><td>Up to 2 images</td><td>Up to 2 images</td
+          ></tr
+        >
+      </tbody>
+    </table>
+  </div>
+  <p class="spec-note">
+    Large dimensions can exhaust browser memory before encoded file size looks large. ToolkitFree
+    checks dimensions and estimated working memory before processing.
+  </p>
+</section>

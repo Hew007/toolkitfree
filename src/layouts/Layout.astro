@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import '../styles/responsive-accessibility.css';
+import { guideRegistry } from '../data/guide-registry';
 import {
   navigationGroups,
   SITE_LOCALE,
@@ -29,6 +30,45 @@ const canonicalUrl = canonicalTarget.toString();
 const socialImageUrl = new URL(ogImage ?? '/social/toolkitfree-default.png', SITE_URL).toString();
 const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
 const isCurrent = (href: string) => currentPath === href || currentPath.startsWith(`${href}/`);
+const currentTool = toolRegistry.find(
+  (tool) => currentPath === tool.href || currentPath.startsWith(`${tool.href}/`)
+);
+const currentVariant = currentTool?.variants.find(
+  (variant) => currentPath === `${currentTool.href}/${variant.slug}`
+);
+const currentGuide = guideRegistry.find((guide) => currentPath === guide.href);
+const staticPageLabels: Record<string, string> = {
+  '/about': 'About',
+  '/contact': 'Contact',
+  '/guides': 'Guides',
+  '/privacy-policy': 'Privacy Policy',
+  '/terms': 'Terms',
+};
+const breadcrumbs =
+  currentPath === '/'
+    ? []
+    : currentTool
+      ? [
+          { label: 'Home', href: '/' },
+          { label: currentTool.name, href: toPublicPath(currentTool.href) },
+          ...(currentVariant ? [{ label: currentVariant.label }] : []),
+        ]
+      : currentGuide
+        ? [
+            { label: 'Home', href: '/' },
+            { label: 'Guides', href: '/guides/' },
+            { label: currentGuide.title },
+          ]
+        : [{ label: 'Home', href: '/' }, { label: staticPageLabels[currentPath] ?? title }];
+const pageLastModified = currentTool?.lastModified ?? currentGuide?.lastModified;
+const freshnessSchema = pageLastModified
+  ? {
+      '@context': 'https://schema.org',
+      '@type': currentGuide ? 'Article' : 'WebPage',
+      url: canonicalUrl,
+      dateModified: pageLastModified,
+    }
+  : undefined;
 
 const normalizeStructuredUrls = (value: unknown): unknown => {
   if (Array.isArray(value)) return value.map(normalizeStructuredUrls);
@@ -99,6 +139,11 @@ const orgSchema = {
         <script type="application/ld+json" set:html={JSON.stringify(normalizedStructuredData)} />
       )
     }
+    {
+      freshnessSchema && (
+        <script type="application/ld+json" set:html={JSON.stringify(freshnessSchema)} />
+      )
+    }
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -142,7 +187,31 @@ const orgSchema = {
 
     <main id="main-content" class="site-main" tabindex="-1">
       <div class="container">
+        {
+          breadcrumbs.length > 0 && (
+            <nav class="breadcrumbs" aria-label="Breadcrumb">
+              <ol>
+                {breadcrumbs.map((item, index) => (
+                  <li>
+                    {'href' in item && item.href && index < breadcrumbs.length - 1 ? (
+                      <a href={item.href}>{item.label}</a>
+                    ) : (
+                      <span aria-current="page">{item.label}</span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )
+        }
         <slot />
+        {
+          pageLastModified && (
+            <p class="page-updated">
+              Last reviewed <time datetime={pageLastModified}>{pageLastModified}</time>
+            </p>
+          )
+        }
       </div>
     </main>
 
