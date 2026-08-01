@@ -22,6 +22,7 @@ workerScope.addEventListener('message', async (event: MessageEvent<BackgroundWor
     const blob = await removeBackground(event.data.file, {
       // The quantized model halves the initial download and substantially reduces peak memory.
       // Keeping all inference inside this worker prevents it from freezing the page UI.
+      publicPath: new URL('/generated/background-removal/1.7.0/', self.location.origin).href,
       model: 'isnet_quint8',
       progress: (key: string, current: number, total: number) => {
         post({ type: 'progress', key, current, total });

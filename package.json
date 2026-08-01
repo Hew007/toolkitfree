@@ -4,9 +4,11 @@
   "version": "0.1.0",
   "scripts": {
     "prepare:ffmpeg": "node scripts/prepare-ffmpeg-assets.mjs",
-    "predev": "npm run prepare:ffmpeg",
+    "prepare:background-removal": "node scripts/prepare-background-removal-assets.mjs",
+    "prepare:assets": "node scripts/prepare-assets.mjs",
+    "predev": "npm run prepare:assets",
     "dev": "astro dev",
-    "prebuild": "npm run prepare:ffmpeg",
+    "prebuild": "npm run prepare:assets",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",

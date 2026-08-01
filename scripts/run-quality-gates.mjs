@@ -20,8 +20,8 @@ const steps = [
     args: ['node_modules/prettier/bin/prettier.cjs', '--check', ...prettierTargets],
   },
   {
-    name: 'FFmpeg static assets',
-    args: ['scripts/prepare-ffmpeg-assets.mjs'],
+    name: 'Static runtime assets',
+    args: ['scripts/prepare-assets.mjs'],
   },
   {
     name: 'Production build',

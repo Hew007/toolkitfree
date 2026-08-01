@@ -133,7 +133,7 @@ async function removeTempRoot() {
 }
 
 if (process.env.SKIP_BUILD !== '1' && !process.argv.includes('--skip-build')) {
-  await runNode(['scripts/prepare-ffmpeg-assets.mjs']);
+  await runNode(['scripts/prepare-assets.mjs']);
   await runNode(['node_modules/astro/astro.js', 'build']);
 }
 
