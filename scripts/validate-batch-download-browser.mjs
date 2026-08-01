@@ -220,9 +220,9 @@ assert.equal(
 );
 reports.push(await downloadAndInspectZip('toolkitfree-converted-images.zip', converterResults));
 assert.deepEqual(await evaluate(`window.__objectUrlStats()`), {
-  created: 5,
+  created: 7,
   revoked: 2,
-  active: 3,
+  active: 5,
 });
 
 await evaluate(`
@@ -232,7 +232,7 @@ await evaluate(`
     select.dispatchEvent(new Event('change', { bubbles: true }));
   })()
 `);
-await waitFor(`window.__objectUrlStats().active === 0`, 'old converter URLs cleanup');
+await waitFor(`window.__objectUrlStats().active === 2`, 'old converter result URLs cleanup');
 
 await navigate('/tools/image-compressor/');
 await setFiles([path.join(fixtures, 'photo.jpg'), path.join(fixtures, 'sample.webp')]);

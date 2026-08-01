@@ -54,7 +54,7 @@ body {
 }
 
 .nav-menu-group summary::after {
-  content: "";
+  content: '';
   width: 0.45rem;
   height: 0.45rem;
   margin-left: 0.5rem;
@@ -90,7 +90,7 @@ body {
 }
 
 .nav-menu-panel a:hover,
-.nav-menu-panel a[aria-current="page"] {
+.nav-menu-panel a[aria-current='page'] {
   color: var(--color-primary);
   background: #eff6ff;
   text-decoration: none;
@@ -268,7 +268,17 @@ textarea {
   }
 
   .file-item-size {
-    margin-left: auto;
+    margin-left: 0;
+  }
+
+  .file-item-thumbnail {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+  }
+
+  .segmented-control {
+    width: 100%;
   }
 }
 

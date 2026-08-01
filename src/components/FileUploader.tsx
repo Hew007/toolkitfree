@@ -29,7 +29,6 @@ export default function FileUploader({
   const [reviewing, setReviewing] = useState(false);
   const [assessment, setAssessment] = useState<ImageBudgetAssessment | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-  const inputRef = useRef<HTMLInputElement>(null);
   const reviewIdRef = useRef(0);
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
@@ -128,23 +127,20 @@ export default function FileUploader({
                   : 'Drag and drop files here'}
           </p>
           {!compact && <p>or</p>}
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => inputRef.current?.click()}
-            disabled={reviewing}
-          >
-            {compact ? 'Choose more' : `Choose ${multiple ? 'images' : singleFileLabel}`}
-          </button>
-          <input
-            ref={inputRef}
-            className="visually-hidden"
-            type="file"
-            aria-label={multiple ? 'Choose images' : `Choose ${singleFileLabel}`}
-            accept={accept}
-            multiple={multiple}
-            onChange={handleChange}
-          />
+          <label className={`btn btn-primary file-picker${reviewing ? ' is-disabled' : ''}`}>
+            <span>
+              {compact ? 'Choose more' : `Choose ${multiple ? 'images' : singleFileLabel}`}
+            </span>
+            <input
+              className="file-picker-input"
+              type="file"
+              aria-label={multiple ? 'Choose images' : `Choose ${singleFileLabel}`}
+              accept={accept}
+              multiple={multiple}
+              disabled={reviewing}
+              onChange={handleChange}
+            />
+          </label>
         </div>
       </div>
 

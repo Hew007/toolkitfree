@@ -300,31 +300,31 @@ export default function ImageCompressor({
         Accepted input: {inputFormat.hint}
       </p>
 
-      <div style={{ marginTop: '1rem' }}>
-        <label
-          htmlFor="compressor-mode"
-          style={{
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            display: 'block',
-            marginBottom: '0.25rem',
-          }}
-        >
-          Compression Mode
-        </label>
-        <select
-          id="compressor-mode"
-          aria-label="Compression Mode"
-          value={mode}
-          onChange={(event) => {
-            clearResults();
-            setMode(event.target.value as CompressionMode);
-          }}
-        >
-          <option value="quality">Quality and dimensions</option>
-          <option value="target">Target file size</option>
-        </select>
-      </div>
+      <fieldset className="segmented-fieldset" style={{ marginTop: '1rem' }}>
+        <legend>Compression Mode</legend>
+        <div className="segmented-control">
+          {(
+            [
+              ['quality', 'Quality and dimensions'],
+              ['target', 'Target file size'],
+            ] as const
+          ).map(([value, label]) => (
+            <label key={value}>
+              <input
+                type="radio"
+                name="compressor-mode"
+                value={value}
+                checked={mode === value}
+                onChange={() => {
+                  clearResults();
+                  setMode(value as CompressionMode);
+                }}
+              />
+              <span>{label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <FileList files={files.map(({ file }) => file)} onRemove={handleRemove} />
 

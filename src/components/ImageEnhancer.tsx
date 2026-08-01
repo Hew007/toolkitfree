@@ -178,17 +178,12 @@ export default function ImageEnhancer() {
         </>
       ) : (
         <div>
-          <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
+          <div className="enhancer-preview-stage">
             <canvas
               ref={canvasRef}
               data-enhancer-preview
               aria-label="Enhanced image preview"
-              style={{
-                maxWidth: '100%',
-                height: 'auto',
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-              }}
+              className="enhancer-preview-canvas"
             />
           </div>
 

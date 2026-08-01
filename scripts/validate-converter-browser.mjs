@@ -315,9 +315,9 @@ if (runExtended) {
     true
   );
   assert.deepEqual(await evaluate(`window.__objectUrlStats()`), {
-    created: 4,
+    created: 6,
     revoked: 2,
-    active: 2,
+    active: 4,
   });
 
   await evaluate(`document.querySelector('.result-item a[download]').click()`);

@@ -142,8 +142,10 @@ await send('Page.addScriptToEvaluateOnNewDocument', {
 
 await navigate(targetUrl);
 assert.equal(
-  await evaluate(`document.querySelector('select[aria-label="Compression Mode"]').value`),
-  'target'
+  await evaluate(
+    `document.querySelector('input[name="compressor-mode"][value="target"]')?.checked`
+  ),
+  true
 );
 assert.equal(
   await evaluate(`Boolean(document.querySelector('meta[name="robots"]'))`),
@@ -200,7 +202,7 @@ assert.equal(byName['complex.png'].text.includes('Target not met'), true);
 assert.equal(byName['complex.png'].type, 'image/png');
 
 const targetStats = await evaluate(`window.__objectUrlStats()`);
-assert.deepEqual(targetStats, { created: 9, revoked: 5, active: 4 });
+assert.deepEqual(targetStats, { created: 14, revoked: 5, active: 9 });
 
 const attempts = targetResults.flatMap(({ text }) =>
   [...text.matchAll(/\| (\d+) attempts?/g)].map((match) => Number(match[1]))
@@ -214,8 +216,10 @@ assert.equal(
 
 await navigate(qualityUrl);
 assert.equal(
-  await evaluate(`document.querySelector('select[aria-label="Compression Mode"]').value`),
-  'quality'
+  await evaluate(
+    `document.querySelector('input[name="compressor-mode"][value="quality"]')?.checked`
+  ),
+  true
 );
 const tinyInputSize = await evaluate(`
   (async () => {

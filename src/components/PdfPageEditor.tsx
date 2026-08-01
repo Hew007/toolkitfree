@@ -255,7 +255,7 @@ export default function PdfPageEditor({
         {pages.map((page, pageIndex) => {
           const isDropTarget = dropTarget === pageIndex;
           return (
-            <div key={pageIndex}>
+            <div key={pageIndex} className="pdf-page-shell">
               <div
                 style={{
                   fontSize: '0.75rem',
@@ -279,13 +279,13 @@ export default function PdfPageEditor({
                   else pageRefs.current.delete(pageIndex);
                 }}
                 data-pdf-page={pageIndex + 1}
+                className="pdf-page-canvas"
                 onPointerMove={(event) => continueDrag(event, page.geometry)}
                 onPointerUp={endDrag}
                 onPointerCancel={endDrag}
                 style={{
                   position: 'relative',
                   width: '100%',
-                  maxWidth: 480,
                   aspectRatio: `${page.geometry.width} / ${page.geometry.height}`,
                   background: '#ffffff',
                   border: isDropTarget ? '2px solid #2563eb' : '1px solid #d1d5db',

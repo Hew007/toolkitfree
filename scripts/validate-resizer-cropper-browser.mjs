@@ -206,6 +206,10 @@ await waitFor(
   `Boolean(document.querySelector('[data-testid="resize-width"]'))`,
   'custom resizer controls'
 );
+await waitFor(
+  `Boolean(document.querySelector('[data-testid="resize-live-preview"]'))`,
+  'live resize preview'
+);
 assert.deepEqual(
   await evaluate(`({
     preset: document.querySelector('[data-testid="resize-preset"]').value,
@@ -214,6 +218,70 @@ assert.deepEqual(
     maintainRatio: document.querySelector('[data-testid="resize-maintain-ratio"]').checked,
   })`),
   { preset: 'custom', width: 800, height: 600, maintainRatio: true }
+);
+const previewHandle = await evaluate(`(() => {
+  const frame = document.querySelector('[data-testid="resize-live-preview"]');
+  const handle = document.querySelector('.resizer-preview-handle');
+  handle.scrollIntoView({ block: 'center' });
+  const rect = handle.getBoundingClientRect();
+  const frameRect = frame.getBoundingClientRect();
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2,
+    frameWidth: frameRect.width,
+    frameHeight: frameRect.height,
+  };
+})()`);
+await send('Input.dispatchMouseEvent', {
+  type: 'mousePressed',
+  x: previewHandle.x,
+  y: previewHandle.y,
+  button: 'left',
+  clickCount: 1,
+});
+await send('Input.dispatchMouseEvent', {
+  type: 'mouseMoved',
+  x: previewHandle.x + 60,
+  y: previewHandle.y + 45,
+  button: 'left',
+  buttons: 1,
+});
+await send('Input.dispatchMouseEvent', {
+  type: 'mouseReleased',
+  x: previewHandle.x + 60,
+  y: previewHandle.y + 45,
+  button: 'left',
+  clickCount: 1,
+});
+await waitFor(
+  `Number(document.querySelector('[data-testid="resize-width"]').value) > 800 && Number(document.querySelector('[data-testid="resize-height"]').value) > 600`,
+  'direct resize handle'
+);
+const resizedPreviewFrame = await evaluate(`(() => {
+  const rect = document.querySelector('[data-testid="resize-live-preview"]').getBoundingClientRect();
+  return { width: rect.width, height: rect.height };
+})()`);
+assert.ok(
+  resizedPreviewFrame.width > previewHandle.frameWidth + 20,
+  `preview frame should visibly widen while dragging (${previewHandle.frameWidth} -> ${resizedPreviewFrame.width})`
+);
+assert.ok(
+  resizedPreviewFrame.height > previewHandle.frameHeight + 15,
+  `preview frame should visibly grow while dragging (${previewHandle.frameHeight} -> ${resizedPreviewFrame.height})`
+);
+await evaluate(`
+  (() => {
+    const setInputValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    for (const [selector, value] of [['[data-testid="resize-width"]', '800'], ['[data-testid="resize-height"]', '600']]) {
+      const input = document.querySelector(selector);
+      setInputValue.call(input, value);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  })()
+`);
+await waitFor(
+  `document.querySelector('[data-testid="resize-width"]').value === '800' && document.querySelector('[data-testid="resize-height"]').value === '600'`,
+  'reset custom resize dimensions'
 );
 await evaluate(`
   const format = document.querySelector('[data-testid="resize-format"]');
@@ -282,8 +350,8 @@ assert.deepEqual(
   { width: 1920, height: 1080 }
 );
 const resizerUrlStats = await evaluate(`window.__objectUrlStats()`);
-assert.equal(resizerUrlStats.active, 1);
-assert.equal(resizerUrlStats.created - resizerUrlStats.revoked, 1);
+assert.equal(resizerUrlStats.active, 3);
+assert.equal(resizerUrlStats.created - resizerUrlStats.revoked, 3);
 
 const cropperVariants = [
   ['crop-to-square', 'square', 1],
@@ -344,6 +412,24 @@ for (const [slug, preset, ratio] of cropperVariants) {
 await navigate('/tools/image-cropper/crop-to-16-9/');
 await uploadGenerated({ name: 'drag.png', width: 1200, height: 800 });
 await waitFor(`Boolean(document.querySelector('[data-crop-handle="se"]'))`, 'desktop crop handles');
+const zoomStart = await evaluate(`(() => {
+  const scroll = document.querySelector('.cropper-preview-scroll');
+  return { width: scroll.scrollWidth, height: scroll.scrollHeight };
+})()`);
+await evaluate(`
+  [...document.querySelectorAll('button')]
+    .find((button) => button.getAttribute('aria-label') === 'Zoom in')
+    .click()
+`);
+await waitFor(
+  `document.querySelector('.cropper-zoom-control output').textContent.trim() === '110%'`,
+  'cropper preview zoom'
+);
+const zoomedSize = await evaluate(`(() => {
+  const scroll = document.querySelector('.cropper-preview-scroll');
+  return { width: scroll.scrollWidth, height: scroll.scrollHeight };
+})()`);
+assert.equal(zoomedSize.width > zoomStart.width || zoomedSize.height > zoomStart.height, true);
 const keyboardStart = await evaluate(`(() => {
   const box = document.querySelector('[data-testid="crop-box"]');
   return { y: Number(box.dataset.cropY), width: Number(box.dataset.cropWidth) };

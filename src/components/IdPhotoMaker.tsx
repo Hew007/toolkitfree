@@ -274,54 +274,53 @@ export default function IdPhotoMaker() {
         />
       ) : (
         <>
-          <div className="privacy-badge" style={{ marginBottom: '1rem' }}>
-            <span style={{ color: '#047857', fontWeight: 600 }}>
-              Original-photo mode: this tool only crops, scales, and lays out your image locally.
-            </span>
-          </div>
-          <div className="status status-warning" style={{ marginBottom: '1rem' }}>
-            {preset.warning}
-          </div>
-          <IdPhotoEditor
-            imageUrl={imageUrl}
-            source={source}
-            crop={crop}
-            ratio={ratio}
-            headHeightRange={headHeightRange}
-            onCropChange={(next) => {
-              setCrop(next);
-              clearResults();
-            }}
-          />
-          <IdPhotoOptions
-            presets={getSelectableIdPhotoPresets()}
-            settings={settings}
-            onChange={handleSettings}
-          />
-          {pixelSize ? (
-            <p data-testid="id-photo-output-size" style={{ margin: '0 0 1rem', color: '#4b5563' }}>
-              Digital photo output:{' '}
-              <strong>
-                {pixelSize.width} × {pixelSize.height}px
-              </strong>{' '}
-              at {settings.dpi} DPI. The print sheet is a PNG; choose matching paper and scaling
-              settings in your print dialog.
-            </p>
-          ) : (
-            <p className="status status-error">Enter positive width, height, and DPI values.</p>
-          )}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={generate}
-              disabled={processing || !pixelSize}
-            >
-              {processing ? 'Preparing files...' : 'Prepare photo and print sheet'}
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={reset}>
-              Choose another photo
-            </button>
+          <div className="id-photo-workspace">
+            <div className="id-photo-editor-panel">
+              <IdPhotoEditor
+                imageUrl={imageUrl}
+                source={source}
+                crop={crop}
+                ratio={ratio}
+                headHeightRange={headHeightRange}
+                onCropChange={(next) => {
+                  setCrop(next);
+                  clearResults();
+                }}
+              />
+            </div>
+            <div className="id-photo-settings-panel">
+              <div className="status status-warning">{preset.warning}</div>
+              <IdPhotoOptions
+                presets={getSelectableIdPhotoPresets()}
+                settings={settings}
+                onChange={handleSettings}
+              />
+              {pixelSize ? (
+                <p data-testid="id-photo-output-size" style={{ margin: 0, color: '#4b5563' }}>
+                  Digital photo output:{' '}
+                  <strong>
+                    {pixelSize.width} × {pixelSize.height}px
+                  </strong>{' '}
+                  at {settings.dpi} DPI. The print sheet is a PNG; choose matching paper and scaling
+                  settings in your print dialog.
+                </p>
+              ) : (
+                <p className="status status-error">Enter positive width, height, and DPI values.</p>
+              )}
+              <div className="id-photo-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={generate}
+                  disabled={processing || !pixelSize}
+                >
+                  {processing ? 'Preparing files...' : 'Prepare photo and print sheet'}
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={reset}>
+                  Choose another photo
+                </button>
+              </div>
+            </div>
           </div>
         </>
       )}

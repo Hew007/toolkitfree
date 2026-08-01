@@ -219,8 +219,8 @@ export default function IdPhotoEditor({
         id="id-photo-position-help"
         style={{ margin: '0.6rem 0 0', color: '#4b5563', fontSize: '0.875rem' }}
       >
-        Drag to position. Use the buttons or + / − keys to zoom; arrow keys move the photo. The
-        centre and amber lines are manual framing guides, not face detection.
+        Drag to position. Use the buttons or + / − to zoom; arrow keys move. Lines are manual
+        framing guides, not face detection.
       </p>
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
         <button type="button" className="btn btn-secondary" onClick={() => zoom(1.1)}>
