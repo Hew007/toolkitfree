@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import RelatedGuides from '../../components/RelatedGuides.astro';
 import ToolDirectory from '../../components/ToolDirectory.astro';
 import ImageCropper from '../../components/ImageCropper';
 import { allVariants, variantData } from '../../data/cropper-variants';
@@ -87,6 +88,7 @@ const breadcrumbSchema = {
 <Layout
   title="Crop Image Online — Free Image Cropper | ToolkitFree"
   description="Crop images online for free with a visual drag-and-drop cropper. Choose square, 16:9, 4:3, 3:2, or any custom area. Private browser-based processing."
+  ogImage="/social/image-cropper.png"
   structuredData={[
     structuredData,
     {
@@ -157,9 +159,7 @@ const breadcrumbSchema = {
         </ul>
       </section>
 
-      <div style="margin: 2rem 0;">
-        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
-      </div>
+      <RelatedGuides toolId="image-cropper" />
 
       <section class="faq-section">
         <h2>Frequently Asked Questions</h2>
@@ -178,7 +178,6 @@ const breadcrumbSchema = {
       <ToolDirectory currentId="image-cropper" mode="related" />
     </div>
     <aside class="tool-sidebar">
-      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
       <ToolDirectory currentId="image-cropper" mode="sidebar" />
     </aside>
   </div>

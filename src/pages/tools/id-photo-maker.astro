@@ -1,4 +1,4 @@
-﻿---
+---
 import Layout from '../../layouts/Layout.astro';
 import IdPhotoMaker from '../../components/IdPhotoMaker';
 import ToolDirectory from '../../components/ToolDirectory.astro';
@@ -109,9 +109,6 @@ const breadcrumbSchema = {
           </li><li>100% browser-based processing with no photo upload</li>
         </ul>
       </section>
-      <div style="margin: 2rem 0;">
-        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
-      </div>
       <section class="faq-section">
         <h2>Frequently Asked Questions</h2>{
           faqItems.map((item) => (
@@ -129,10 +126,7 @@ const breadcrumbSchema = {
       <ToolDirectory currentId="id-photo-maker" mode="related" />
     </div>
     <aside class="tool-sidebar">
-      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div><ToolDirectory
-        currentId="id-photo-maker"
-        mode="sidebar"
-      />
+      <ToolDirectory currentId="id-photo-maker" mode="sidebar" />
     </aside>
   </div>
 </Layout>

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { getGuidePublicUrl, guideRegistry } from '../src/data/guide-registry.ts';
 import {
   getIndexableToolPaths,
   SITE_LOCALE,
@@ -19,9 +20,8 @@ const staticPaths = [
   '/terms',
   '/privacy-policy',
   '/contact',
-  '/guides/image-format-comparison',
-  '/guides/reduce-image-size',
-  '/guides/social-media-image-sizes',
+  '/guides',
+  ...guideRegistry.map((guide) => guide.href),
 ];
 
 function unique(values, label) {
@@ -102,6 +102,9 @@ for (const file of ['public/llms.txt', 'public/llms-full.txt']) {
   for (const tool of toolRegistry) {
     assert.equal(content.includes(toPublicUrl(tool.href)), true, `${file} includes ${tool.id}`);
   }
+  for (const guide of guideRegistry) {
+    assert.equal(content.includes(getGuidePublicUrl(guide)), true, `${file} includes ${guide.id}`);
+  }
 }
 
 assert.equal(fs.existsSync(dist), true, 'Run the production build before SEO validation');
@@ -140,6 +143,12 @@ for (const { route, html } of pages) {
   assert.equal(title.length > 0 && title.length <= 70, true, `${route} title length`);
   assert.equal(/hreflang=/i.test(html), false, `${route} must not publish unavailable locales`);
   assert.equal(html.includes(`<html lang="${SITE_LOCALE}">`), true, `${route} language`);
+  assert.equal(html.includes('pagead2.googlesyndication.com'), false, `${route} no AdSense`);
+  assert.equal(html.includes('ad-placeholder'), false, `${route} no dead ad placeholders`);
+  const ogImage = html.match(/<meta property="og:image" content="([^"]+)"\s*\/?>/)?.[1];
+  assert.ok(ogImage, `${route} Open Graph image`);
+  const ogImageUrl = new URL(ogImage);
+  assert.equal(ogImageUrl.origin, SITE_URL, `${route} Open Graph image origin`);
 
   const schemas = [
     ...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g),
@@ -205,6 +214,15 @@ for (const tool of toolRegistry) {
   assert.equal(nav.includes(publicHref), true, `Navigation link for ${tool.id}`);
   assert.equal(footer.includes(publicHref), true, `Footer link for ${tool.id}`);
 }
+
+for (const guide of guideRegistry) {
+  const href = `href="${toPublicPath(guide.href)}"`;
+  const inboundRoutes = pages
+    .filter(({ route, html }) => route !== guide.href && route !== '/guides' && html.includes(href))
+    .map(({ route }) => route);
+  assert.equal(inboundRoutes.length >= 2, true, `${guide.id} contextual inbound links`);
+}
+assert.equal(layoutSample.includes('href="/guides/"'), true, 'Footer Guides link');
 
 console.log(
   JSON.stringify({

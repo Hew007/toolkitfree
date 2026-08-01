@@ -76,7 +76,7 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
     {
       question: 'How to convert JPG to PNG?',
       answer:
-        'Upload your JPG file, select PNG as the output format, and click Convert. The conversion is lossless — you get a full-quality PNG file instantly.',
+        'Upload your JPG file, select PNG as the output format, and click Convert. The PNG output uses lossless encoding for the decoded pixels, but existing JPG compression artifacts and lost detail remain.',
     },
     {
       question: 'Is JPG to PNG conversion lossless?',
@@ -86,7 +86,7 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
     {
       question: 'Can I convert multiple JPGs to PNG at once?',
       answer:
-        'Yes, you can upload and convert multiple JPG files simultaneously. All conversions happen in parallel for maximum speed.',
+        'Yes. You can upload multiple JPG files, and the converter processes up to two files concurrently to balance speed with browser memory use.',
     },
     {
       question: 'What is the difference between JPG and PNG?',

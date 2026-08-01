@@ -1428,6 +1428,97 @@ button {
   gap: 1rem;
 }
 
+/* Guides */
+.related-guides {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  background: #f8fbff;
+}
+
+.related-guides h2 {
+  margin-bottom: 0.9rem;
+  font-size: 1.25rem;
+}
+
+.related-guides-grid,
+.guide-index-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 0.9rem;
+}
+
+.guide-card,
+.guide-index-card {
+  display: block;
+  padding: 1rem;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.guide-card:hover,
+.guide-index-card:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 8px 20px rgb(37 99 235 / 8%);
+}
+
+.guide-card h3,
+.guide-index-card h2 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 1rem;
+}
+
+.guide-card p,
+.guide-index-card p {
+  margin: 0.45rem 0 0;
+  color: var(--color-text-light);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.guide-index {
+  padding: clamp(2rem, 6vw, 4.5rem) 0;
+}
+
+.guide-index-intro {
+  max-width: 46rem;
+  margin-bottom: 2rem;
+}
+
+.guide-index-eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.guide-index-intro h1 {
+  margin-bottom: 0.85rem;
+}
+
+.guide-index-intro > p:last-child {
+  color: var(--color-text-light);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.guide-index-card h2 a {
+  color: inherit;
+}
+
+.guide-index-link {
+  display: inline-block;
+  margin-top: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 /* Footer */
 .site-footer {
   background: var(--color-bg-secondary);
@@ -1457,29 +1548,6 @@ button {
 .footer-copy {
   color: var(--color-text-light);
   font-size: 0.875rem;
-}
-
-/* Ad placeholder */
-.ad-placeholder {
-  background: var(--color-bg-secondary);
-  border: 1px dashed var(--color-border);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-light);
-  font-size: 0.75rem;
-  min-height: 90px;
-}
-
-.ad-banner {
-  width: 100%;
-  height: 90px;
-}
-
-.ad-sidebar {
-  width: 300px;
-  height: 250px;
 }
 
 /* Select / Dropdown */

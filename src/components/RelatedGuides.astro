@@ -1,0 +1,27 @@
+---
+import { getGuidePublicPath, getGuidesForTool } from '../data/guide-registry';
+import type { ToolId } from '../data/tool-registry';
+
+interface Props {
+  toolId: ToolId;
+}
+
+const { toolId } = Astro.props;
+const guides = getGuidesForTool(toolId);
+---
+
+{
+  guides.length > 0 && (
+    <section class="related-guides" aria-labelledby={`related-guides-${toolId}`}>
+      <h2 id={`related-guides-${toolId}`}>Helpful Guides</h2>
+      <div class="related-guides-grid">
+        {guides.map((guide) => (
+          <a href={getGuidePublicPath(guide)} class="guide-card">
+            <h3>{guide.title}</h3>
+            <p>{guide.description}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  )
+}

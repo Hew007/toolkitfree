@@ -2,7 +2,7 @@
 
 ToolkitFree is a static Astro site with React interactive tools. Image processing runs in the browser. The selected file content is not sent to ToolkitFree for processing.
 
-The local-file statement does not mean the page makes no network requests. Pages load site assets and Google AdSense. Background Remover downloads WebAssembly and model resources before local inference.
+The local-file statement does not mean the page makes no network requests. Pages load site assets. Background Remover downloads WebAssembly and model resources before local inference, and video conversion loads a site-hosted runtime when needed. Advertising scripts are not currently loaded.
 
 ## Shared limits
 
@@ -24,6 +24,13 @@ There is no server upload-size quota because files are not uploaded for processi
 - [PDF Splitter & Page Extractor](https://toolkitfree.net/tools/pdf-splitter/): Extract, split, reorder, rotate, or remove PDF pages locally and export one PDF or separate page files.
 - [Favicon Generator](https://toolkitfree.net/tools/favicon-generator/): Generate five PNG favicon sizes and a site.webmanifest from one image.
 - [QR Code Generator](https://toolkitfree.net/tools/qr-generator/): Create PNG or SVG QR codes for text, URLs, WiFi, and vCards with contrast-aware downloads.
+
+## Guide registry
+
+<!-- Generated from src/data/guide-registry.ts by scripts/sync-llms-registry.mjs. -->
+- [JPG vs PNG vs WebP](https://toolkitfree.net/guides/image-format-comparison/): Compare common image formats and choose the right balance of quality and size.
+- [How to Reduce Image File Size](https://toolkitfree.net/guides/reduce-image-size/): Learn practical ways to reduce image size while controlling the quality tradeoff.
+- [Social Media Image Sizes](https://toolkitfree.net/guides/social-media-image-sizes/): Find practical image dimensions for major social platforms and common placements.
 
 ## Image Converter
 

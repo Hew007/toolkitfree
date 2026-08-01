@@ -12,7 +12,7 @@
 - Batch processing is available in Converter, Compressor, Resizer, and Image to PDF. Cropper, Favicon Generator, and Background Remover process one image at a time.
 - Converter batches keep successful outputs when individual files fail and de-duplicate output filenames.
 - Converter, Compressor, and Resizer show per-file failures and can download successful results individually or in one locally generated ZIP.
-- File contents stay on the device. The site still requests normal site assets and advertising resources. Background Remover also downloads model files.
+- File contents stay on the device. The site still requests normal site assets. Background Remover also downloads model files, and video conversion loads a site-hosted runtime when needed.
 
 ## Navigation
 
@@ -46,7 +46,9 @@
 
 ## Guides and policies
 
-- [Image Format Comparison](https://toolkitfree.net/guides/image-format-comparison/)
-- [Reduce Image Size](https://toolkitfree.net/guides/reduce-image-size/)
+<!-- Generated guide links from src/data/guide-registry.ts. -->
+- [JPG vs PNG vs WebP](https://toolkitfree.net/guides/image-format-comparison/): Compare common image formats and choose the right balance of quality and size.
+- [How to Reduce Image File Size](https://toolkitfree.net/guides/reduce-image-size/): Learn practical ways to reduce image size while controlling the quality tradeoff.
+- [Social Media Image Sizes](https://toolkitfree.net/guides/social-media-image-sizes/): Find practical image dimensions for major social platforms and common placements.
 - [Privacy Policy](https://toolkitfree.net/privacy-policy/)
 - [About](https://toolkitfree.net/about/)

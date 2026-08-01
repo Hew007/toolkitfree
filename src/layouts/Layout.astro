@@ -26,6 +26,7 @@ const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
 const canonicalTarget = new URL(canonical ?? Astro.url.pathname, SITE_URL);
 canonicalTarget.pathname = toPublicPath(canonicalTarget.pathname);
 const canonicalUrl = canonicalTarget.toString();
+const socialImageUrl = new URL(ogImage ?? '/social/toolkitfree-default.png', SITE_URL).toString();
 const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
 const isCurrent = (href: string) => currentPath === href || currentPath.startsWith(`${href}/`);
 
@@ -77,12 +78,16 @@ const orgSchema = {
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={siteName} />
     <meta property="og:url" content={canonicalUrl} />
-    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta property="og:image" content={socialImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${siteName} — ${title}`} />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
-    {ogImage && <meta name="twitter:image" content={ogImage} />}
+    <meta name="twitter:image" content={socialImageUrl} />
+    <meta name="twitter:image:alt" content={`${siteName} — ${title}`} />
 
     <meta name="yandex-verification" content="a605e0322d8c1403" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -94,11 +99,6 @@ const orgSchema = {
         <script type="application/ld+json" set:html={JSON.stringify(normalizedStructuredData)} />
       )
     }
-
-    <script
-      async
-      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6148409427275044"
-      crossorigin="anonymous"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -159,6 +159,7 @@ const orgSchema = {
             }
           </div>
           <div class="footer-links">
+            <a href="/guides/">Guides</a>
             <a href="/about/">About</a>
             <a href="/terms/">Terms</a>
             <a href="/privacy-policy/">Privacy</a>

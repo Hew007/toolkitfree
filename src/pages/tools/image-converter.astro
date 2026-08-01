@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import RelatedGuides from '../../components/RelatedGuides.astro';
 import ToolDirectory from '../../components/ToolDirectory.astro';
 import ImageConverter from '../../components/ImageConverter';
 
@@ -37,12 +38,12 @@ const faqItems = [
   {
     question: 'Is this tool free?',
     answer:
-      'Yes, the tool is free to use and requires no ToolkitFree account. Browser memory, image dimensions, and device-aware batch safeguards still apply. The site is supported by advertising.',
+      'Yes, the tool is free to use and requires no ToolkitFree account. Browser memory, image dimensions, and device-aware batch safeguards still apply.',
   },
   {
     question: 'Do you keep a copy of my images?',
     answer:
-      'No image is uploaded to ToolkitFree for conversion or stored by ToolkitFree as a processed file. Conversion uses temporary browser memory and object URLs, while the page still loads normal site and advertising resources.',
+      'No image is uploaded to ToolkitFree for conversion or stored by ToolkitFree as a processed file. Conversion uses temporary browser memory and object URLs, while the page still loads normal site resources.',
   },
   {
     question: 'Can I use this on my phone?',
@@ -124,6 +125,7 @@ const faqStructuredData = {
 <Layout
   title="Free Image Converter - JPG, PNG, WebP Batch Convert"
   description="Convert JPG, PNG, and WebP images locally in your browser. Batch results can be downloaded individually or as a ZIP, subject to device memory limits."
+  ogImage="/social/image-converter.png"
   structuredData={[structuredData, faqStructuredData, breadcrumbSchema]}
 >
   <div class="tool-layout">
@@ -158,10 +160,7 @@ const faqStructuredData = {
         </ul>
       </section>
 
-      <!-- Ad Placeholder -->
-      <div style="margin: 2rem 0;">
-        <div class="ad-placeholder ad-banner">Ad Space (728x90)</div>
-      </div>
+      <RelatedGuides toolId="image-converter" />
 
       <section class="faq-section">
         <h2>Frequently Asked Questions</h2>
@@ -181,9 +180,6 @@ const faqStructuredData = {
     </div>
 
     <aside class="tool-sidebar">
-      <!-- Ad Placeholder: Sidebar -->
-      <div class="ad-placeholder ad-sidebar">Ad Space (300x250)</div>
-
       <div style="margin-top: 2rem;">
         <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">Supported Formats</h3>
         <ul style="font-size: 0.875rem; color: var(--color-text-light); list-style: none;">

@@ -1,0 +1,51 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getGuidePublicPath, guideRegistry } from '../../data/guide-registry';
+import { toPublicUrl } from '../../data/tool-registry';
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'ToolkitFree Guides',
+  description: 'Practical guides for image formats, file size, and social media dimensions.',
+  url: toPublicUrl('/guides'),
+  hasPart: guideRegistry.map((guide) => ({
+    '@type': 'Article',
+    name: guide.title,
+    url: toPublicUrl(guide.href),
+  })),
+};
+---
+
+<Layout
+  title="Practical Image Guides"
+  description="Practical guides for choosing image formats, reducing file size, and preparing social media images."
+  structuredData={structuredData}
+>
+  <section class="guide-index">
+    <div class="guide-index-intro">
+      <p class="guide-index-eyebrow">ToolkitFree Guides</p>
+      <h1>Practical image answers, without the guesswork.</h1>
+      <p>
+        Learn which format to use, how to reduce file size, and which dimensions fit common social
+        platforms. Each guide links directly to the relevant browser-based tools.
+      </p>
+    </div>
+
+    <div class="guide-index-grid">
+      {
+        guideRegistry.map((guide) => (
+          <article class="guide-index-card">
+            <h2>
+              <a href={getGuidePublicPath(guide)}>{guide.title}</a>
+            </h2>
+            <p>{guide.description}</p>
+            <a class="guide-index-link" href={getGuidePublicPath(guide)}>
+              Read guide
+            </a>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+</Layout>

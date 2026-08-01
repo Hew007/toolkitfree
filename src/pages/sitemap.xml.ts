@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { guideSitemapEntries } from '../data/guide-registry';
 import { getIndexableToolPaths, toPublicUrl } from '../data/tool-registry';
 
 const staticPages = [
@@ -7,9 +8,8 @@ const staticPages = [
   { path: '/terms', lastModified: '2026-05-22' },
   { path: '/privacy-policy', lastModified: '2026-05-20' },
   { path: '/contact', lastModified: '2026-05-22' },
-  { path: '/guides/image-format-comparison', lastModified: '2026-05-20' },
-  { path: '/guides/reduce-image-size', lastModified: '2026-05-20' },
-  { path: '/guides/social-media-image-sizes', lastModified: '2026-05-20' },
+  { path: '/guides', lastModified: '2026-08-01' },
+  ...guideSitemapEntries,
 ];
 
 export const GET: APIRoute = () => {

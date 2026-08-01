@@ -158,10 +158,6 @@ button:disabled {
   flex-wrap: wrap;
 }
 
-.ad-placeholder {
-  display: none !important;
-}
-
 input,
 select,
 textarea {
