@@ -65,6 +65,21 @@ export function recommendCollageCellSize(
   };
 }
 
+export function recommendCollageLayout(sources: readonly CollageSource[]): CollageLayoutMode {
+  validateSources(sources);
+  if (sources.length === 1) return 'grid';
+
+  const portraitCount = sources.filter((source) => source.height / source.width >= 1.35).length;
+  const similarWidths =
+    Math.max(...sources.map((source) => source.width)) /
+      Math.min(...sources.map((source) => source.width)) <=
+    1.2;
+
+  if (portraitCount === sources.length && similarWidths) return 'vertical';
+  if (sources.length === 2) return 'horizontal';
+  return 'grid';
+}
+
 function positiveInteger(value: number, fallback: number): number {
   if (!Number.isFinite(value)) return fallback;
   return Math.max(1, Math.round(value));

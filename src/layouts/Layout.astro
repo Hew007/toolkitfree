@@ -61,14 +61,15 @@ const breadcrumbs =
           ]
         : [{ label: 'Home', href: '/' }, { label: staticPageLabels[currentPath] ?? title }];
 const pageLastModified = currentTool?.lastModified ?? currentGuide?.lastModified;
-const freshnessSchema = pageLastModified
-  ? {
-      '@context': 'https://schema.org',
-      '@type': currentGuide ? 'Article' : 'WebPage',
-      url: canonicalUrl,
-      dateModified: pageLastModified,
-    }
-  : undefined;
+const freshnessSchema =
+  pageLastModified && !currentGuide
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        url: canonicalUrl,
+        dateModified: pageLastModified,
+      }
+    : undefined;
 
 const normalizeStructuredUrls = (value: unknown): unknown => {
   if (Array.isArray(value)) return value.map(normalizeStructuredUrls);
@@ -89,7 +90,26 @@ const normalizeStructuredUrls = (value: unknown): unknown => {
     })
   );
 };
-const normalizedStructuredData = normalizeStructuredUrls(structuredData);
+const enrichGuideArticle = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(enrichGuideArticle);
+  if (!value || typeof value !== 'object') return value;
+
+  const entry = value as Record<string, unknown>;
+  const nested = Object.fromEntries(
+    Object.entries(entry).map(([key, child]) => [key, enrichGuideArticle(child)])
+  );
+  if (currentGuide && entry['@type'] === 'Article') {
+    return {
+      ...nested,
+      dateModified: currentGuide.lastModified,
+      image: socialImageUrl,
+      author: { '@type': 'Organization', name: siteName, url: toPublicUrl('/about') },
+      publisher: { '@type': 'Organization', name: siteName, url: toPublicUrl('/') },
+    };
+  }
+  return nested;
+};
+const normalizedStructuredData = enrichGuideArticle(normalizeStructuredUrls(structuredData));
 
 const orgSchema = {
   '@context': 'https://schema.org',

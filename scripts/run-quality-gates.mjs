@@ -40,6 +40,10 @@ const steps = [
     args: ['scripts/validate-seo-registry.mjs'],
   },
   {
+    name: 'Content freshness',
+    args: ['scripts/validate-content-freshness.mjs'],
+  },
+  {
     name: 'Site integrity',
     args: ['scripts/validate-site-integrity.mjs'],
   },

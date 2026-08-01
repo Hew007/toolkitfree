@@ -13,6 +13,7 @@ interface FileUploaderProps {
   budgetProfile?: ImageBudgetProfile;
   currentFiles?: readonly File[];
   singleFileLabel?: string;
+  compact?: boolean;
 }
 
 export default function FileUploader({
@@ -22,6 +23,7 @@ export default function FileUploader({
   budgetProfile,
   currentFiles = [],
   singleFileLabel = 'an image',
+  compact = false,
 }: FileUploaderProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [reviewing, setReviewing] = useState(false);
@@ -108,7 +110,7 @@ export default function FileUploader({
   return (
     <>
       <div
-        className={`tool-area ${isDragOver ? 'drag-over' : ''}`}
+        className={`tool-area${compact ? ' is-compact' : ''}${isDragOver ? ' drag-over' : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -116,29 +118,29 @@ export default function FileUploader({
         aria-busy={reviewing}
       >
         <div className="drop-zone">
-          <p
-            aria-live="polite"
-            style={{ fontSize: '1rem', fontWeight: 500, color: '#1f2937', marginTop: 0 }}
-          >
+          <p className="drop-zone-title" aria-live="polite">
             {reviewing
               ? 'Checking image size and memory needs'
               : isDragOver
                 ? 'Drop files here'
-                : 'Drag and drop files here'}
+                : compact
+                  ? 'Add more images'
+                  : 'Drag and drop files here'}
           </p>
-          <p>or</p>
+          {!compact && <p>or</p>}
           <button
             type="button"
             className="btn btn-primary"
             onClick={() => inputRef.current?.click()}
             disabled={reviewing}
           >
-            Choose {multiple ? 'images' : singleFileLabel}
+            {compact ? 'Choose more' : `Choose ${multiple ? 'images' : singleFileLabel}`}
           </button>
           <input
             ref={inputRef}
-            style={{ display: 'none' }}
+            className="visually-hidden"
             type="file"
+            aria-label={multiple ? 'Choose images' : `Choose ${singleFileLabel}`}
             accept={accept}
             multiple={multiple}
             onChange={handleChange}

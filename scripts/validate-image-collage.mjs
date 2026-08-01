@@ -3,6 +3,7 @@ import {
   calculateCollageLayout,
   getCollageFilename,
   recommendCollageCellSize,
+  recommendCollageLayout,
 } from '../src/lib/image-collage.ts';
 
 const sources = [
@@ -113,6 +114,22 @@ assert.deepEqual(recommendCollageCellSize([{ width: 3000, height: 500 }]), {
   width: 360,
   height: 160,
 });
+
+assert.equal(
+  recommendCollageLayout([
+    { width: 1200, height: 800 },
+    { width: 800, height: 1200 },
+  ]),
+  'horizontal'
+);
+assert.equal(
+  recommendCollageLayout([
+    { width: 1080, height: 2400 },
+    { width: 1080, height: 2200 },
+  ]),
+  'vertical'
+);
+assert.equal(recommendCollageLayout(sources), 'grid');
 
 assert.equal(getCollageFilename('image/png'), 'toolkitfree-collage.png');
 assert.equal(getCollageFilename('image/jpeg'), 'toolkitfree-collage.jpg');

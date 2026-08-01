@@ -251,6 +251,37 @@ li {
   font-size: 0.875rem;
 }
 
+.drop-zone .drop-zone-title {
+  margin-top: 0;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.tool-area.is-compact {
+  padding: 0.75rem 1rem;
+  border-style: solid;
+  background: #f8fbff;
+}
+
+.tool-area.is-compact .drop-zone {
+  display: flex;
+  min-height: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.tool-area.is-compact .drop-zone p {
+  margin: 0;
+}
+
+.tool-area.is-compact .btn {
+  min-height: 2.5rem;
+  padding: 0.55rem 0.9rem;
+  box-shadow: none;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -779,6 +810,31 @@ li {
   margin-top: 1.5rem;
 }
 
+.collage-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+  padding: 0 0.2rem;
+}
+
+.collage-status-bar p {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.collage-status-bar strong {
+  font-size: 0.9rem;
+}
+
+.collage-status-bar span {
+  color: var(--color-text-light);
+  font-size: 0.75rem;
+}
+
 .collage-flow {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1044,16 +1100,22 @@ li {
 }
 
 .collage-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
+  display: grid;
+  gap: 0.45rem;
   margin-top: 1rem;
 }
 
 .collage-actions .btn-primary {
   min-height: 2.75rem;
   justify-content: center;
-  flex: 1;
+  width: 100%;
+}
+
+.collage-download-meta {
+  color: var(--color-text-light);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
 .collage-clear {
@@ -1079,6 +1141,36 @@ li {
   border: 1px solid var(--color-border);
   border-radius: 10px;
   background: #fff;
+}
+
+.collage-image-order > summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.collage-image-order > summary::-webkit-details-marker {
+  display: none;
+}
+
+.collage-image-order > summary span {
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+
+.collage-image-order > summary small {
+  color: var(--color-text-light);
+  font-size: 0.72rem;
+}
+
+.collage-image-order[open] > summary {
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .collage-image-order ol {
@@ -1190,6 +1282,31 @@ li {
 }
 
 @media (max-width: 560px) {
+  .tool-area.is-compact .drop-zone {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.65rem;
+    text-align: left;
+  }
+
+  .collage-status-bar,
+  .collage-status-bar p {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .collage-status-bar {
+    position: relative;
+    padding-right: 5rem;
+  }
+
+  .collage-status-bar .collage-clear {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
   .collage-flow {
     font-size: 0.6875rem;
   }
@@ -1227,6 +1344,12 @@ li {
 
   .collage-image-order li {
     grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .collage-image-order > summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.2rem;
   }
 
   .collage-image-actions {
@@ -1877,11 +2000,6 @@ input[type='range'] {
     transform 220ms ease;
 }
 
-.tool-directory-section .tool-card:nth-child(1),
-.tool-directory-section .tool-card:nth-child(8) {
-  grid-column: span 8;
-}
-
 .tool-directory-section .tool-card:hover {
   background: #f2f6fd;
   box-shadow: none;
@@ -2041,9 +2159,7 @@ input[type='range'] {
     gap: 2.25rem;
   }
 
-  .tool-directory-section .tool-card,
-  .tool-directory-section .tool-card:nth-child(1),
-  .tool-directory-section .tool-card:nth-child(8) {
+  .tool-directory-section .tool-card {
     grid-column: span 6;
   }
 }
@@ -2084,9 +2200,7 @@ input[type='range'] {
     grid-template-columns: 1fr;
   }
 
-  .tool-directory-section .tool-card,
-  .tool-directory-section .tool-card:nth-child(1),
-  .tool-directory-section .tool-card:nth-child(8) {
+  .tool-directory-section .tool-card {
     grid-column: auto;
     min-height: 13rem;
     padding-inline: 0.25rem;
@@ -2117,7 +2231,7 @@ input[type='range'] {
 }
 
 .home-hero h1 {
-  max-width: 10ch;
+  max-width: 13ch;
   font-size: clamp(3.25rem, 5.1vw, 5rem);
   line-height: 0.98;
 }
@@ -2190,7 +2304,7 @@ input[type='range'] {
   }
 
   .home-hero h1 {
-    max-width: 12ch;
+    max-width: 13ch;
   }
 }
 
@@ -2201,7 +2315,7 @@ input[type='range'] {
   }
 
   .home-hero h1 {
-    max-width: 11ch;
+    max-width: 13ch;
     font-size: clamp(2.45rem, 11.5vw, 3.1rem);
     line-height: 0.98;
   }

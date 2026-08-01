@@ -22,7 +22,7 @@ const structuredData = {
   <section class="home-hero">
     <div class="home-hero-copy">
       <p class="hero-kicker">Free / local-first / no account</p>
-      <h1>Work with files. Keep them private.</h1>
+      <h1>Free, private browser tools.</h1>
       <p class="hero-summary">
         Convert images, prepare PDFs, create QR codes, size ID photos, and export animated media.
         Your selected files stay on your device while you work.
@@ -40,7 +40,7 @@ const structuredData = {
         </div>
         <span class="hero-tool-format">JPG / PNG / WebP</span>
       </div>
-      <ImageConverter client:load />
+      <ImageConverter client:idle={{ timeout: 800 }} />
       <div class="hero-privacy-note">
         <span class="privacy-signal" aria-hidden="true"></span>
         <p>

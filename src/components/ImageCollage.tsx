@@ -7,6 +7,7 @@ import {
   DEFAULT_COLLAGE_OPTIONS,
   getCollageFilename,
   recommendCollageCellSize,
+  recommendCollageLayout,
   type CollageFitMode,
   type CollageLayout,
   type CollageLayoutMode,
@@ -245,12 +246,31 @@ export default function ImageCollage() {
   const previewDraggedNameRef = useRef('');
   const urls = useObjectUrlRegistry();
 
+  const collageSources = useMemo(
+    () =>
+      items.map((item) => ({ width: item.image.naturalWidth, height: item.image.naturalHeight })),
+    [items]
+  );
+  const recommendedLayoutMode = useMemo(
+    () => (collageSources.length > 0 ? recommendCollageLayout(collageSources) : 'grid'),
+    [collageSources]
+  );
+
   const layoutMode: CollageLayoutMode =
     layoutChoice === 'horizontal'
       ? 'horizontal'
       : layoutChoice === 'vertical'
         ? 'vertical'
-        : 'grid';
+        : layoutChoice === 'auto-grid'
+          ? recommendedLayoutMode
+          : 'grid';
+
+  const recommendedLayoutLabel =
+    recommendedLayoutMode === 'horizontal'
+      ? 'Side by side'
+      : recommendedLayoutMode === 'vertical'
+        ? 'Vertical stitch'
+        : 'Grid';
 
   const collageOptions = useMemo<CollageOptions>(
     () => ({
@@ -489,6 +509,7 @@ export default function ImageCollage() {
         budgetProfile="collage"
         currentFiles={items.map((item) => item.file)}
         onFilesSelected={handleFiles}
+        compact={items.length > 0}
       />
       {loading && (
         <p className="collage-loading" role="status">
@@ -503,17 +524,15 @@ export default function ImageCollage() {
 
       {items.length > 0 && (
         <div className="collage-builder">
-          <ol className="collage-flow" aria-label="Collage creation steps">
-            <li className="is-complete">
-              <span>1</span> Images added
-            </li>
-            <li className="is-active">
-              <span>2</span> Choose a layout
-            </li>
-            <li>
-              <span>3</span> Download
-            </li>
-          </ol>
+          <div className="collage-status-bar">
+            <p>
+              <strong>{items.length} images ready</strong>
+              <span>Auto recommends {recommendedLayoutLabel.toLowerCase()}.</span>
+            </p>
+            <button type="button" className="collage-clear" onClick={clearAll}>
+              Start over
+            </button>
+          </div>
 
           <div className="collage-editor">
             <section className="collage-preview-panel" aria-labelledby="collage-preview-title">
@@ -546,7 +565,7 @@ export default function ImageCollage() {
               <div className="collage-controls-heading">
                 <span className="collage-eyebrow">Layout</span>
                 <h2>Pick the arrangement</h2>
-                <p>Auto is recommended for most collages.</p>
+                <p>Auto currently selects {recommendedLayoutLabel.toLowerCase()}.</p>
               </div>
 
               <div className="collage-layout-choices" role="group" aria-label="Layout">
@@ -560,11 +579,21 @@ export default function ImageCollage() {
                     onClick={() => setLayoutChoice(choice.value)}
                   >
                     <span className="collage-layout-icon" aria-hidden="true">
-                      {choice.icon}
+                      {choice.value === 'auto-grid'
+                        ? recommendedLayoutMode === 'horizontal'
+                          ? '▤'
+                          : recommendedLayoutMode === 'vertical'
+                            ? '▧'
+                            : '▦'
+                        : choice.icon}
                     </span>
                     <span>
                       <strong>{choice.label}</strong>
-                      <small>{choice.description}</small>
+                      <small>
+                        {choice.value === 'auto-grid'
+                          ? `Recommended: ${recommendedLayoutLabel}`
+                          : choice.description}
+                      </small>
                     </span>
                   </button>
                 ))}
@@ -583,22 +612,37 @@ export default function ImageCollage() {
                 </div>
               )}
 
-              <label className="collage-field collage-format-field">
-                Output format
-                <select
-                  id="collage-format"
-                  value={format}
-                  onChange={(event) => setFormat(event.target.value as ImageOutputMimeType)}
+              <div className="collage-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  data-collage-download
+                  onClick={handleDownload}
+                  disabled={downloading}
                 >
-                  <option value="image/png">PNG — best quality</option>
-                  <option value="image/jpeg">JPG — smaller file</option>
-                  <option value="image/webp">WebP — modern and compact</option>
-                </select>
-              </label>
+                  {downloading ? 'Preparing download…' : 'Download collage'}
+                </button>
+                <span className="collage-download-meta">
+                  {format === 'image/png' ? 'PNG' : format === 'image/jpeg' ? 'JPG' : 'WebP'} ·{' '}
+                  {layoutSummary || 'Ready locally'}
+                </span>
+              </div>
 
               <details className="collage-advanced">
-                <summary>Advanced options</summary>
+                <summary>Format and advanced options</summary>
                 <div className="collage-advanced-grid">
+                  <label className="collage-field collage-format-field">
+                    Output format
+                    <select
+                      id="collage-format"
+                      value={format}
+                      onChange={(event) => setFormat(event.target.value as ImageOutputMimeType)}
+                    >
+                      <option value="image/png">PNG — best quality</option>
+                      <option value="image/jpeg">JPG — smaller file</option>
+                      <option value="image/webp">WebP — modern and compact</option>
+                    </select>
+                  </label>
                   <label className="collage-field">
                     Image fit
                     <select
@@ -678,38 +722,17 @@ export default function ImageCollage() {
                 </div>
               </details>
 
-              <div className="collage-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  data-collage-download
-                  onClick={handleDownload}
-                  disabled={downloading}
-                >
-                  {downloading ? 'Preparing download…' : 'Download collage'}
-                </button>
-                <button type="button" className="collage-clear" onClick={clearAll}>
-                  Clear all
-                </button>
-              </div>
               <p className="collage-local-note">
                 Processed locally. Your images never leave this device.
               </p>
             </aside>
           </div>
 
-          <section className="collage-image-order" aria-label="Collage images">
-            <div className="collage-panel-heading">
-              <div>
-                <span className="collage-eyebrow">Image order</span>
-                <h2>
-                  {items.length} image{items.length === 1 ? '' : 's'}
-                </h2>
-              </div>
-              <span className="collage-order-help">
-                Use the arrows for precise or keyboard-friendly adjustments.
-              </span>
-            </div>
+          <details className="collage-image-order" aria-label="Collage images">
+            <summary>
+              <span>Reorder or remove images</span>
+              <small>Optional · drag directly on the preview for a quick swap</small>
+            </summary>
             <p className="sr-only" aria-live="polite">
               {sortAnnouncement}
             </p>
@@ -748,7 +771,7 @@ export default function ImageCollage() {
                 </li>
               ))}
             </ol>
-          </section>
+          </details>
         </div>
       )}
     </div>

@@ -155,6 +155,16 @@ for (const { route, html } of pages) {
   ].map((match) => JSON.parse(match[1]));
   jsonLdBlocks += schemas.length;
   const flattened = schemas.flatMap((schema) => (Array.isArray(schema) ? schema : [schema]));
+  if (route.startsWith('/guides/') && route !== '/guides') {
+    const articles = flattened.filter((schema) => schema?.['@type'] === 'Article');
+    assert.equal(articles.length, 1, `${route} has one primary Article`);
+    const article = articles[0];
+    for (const property of ['headline', 'description', 'url', 'dateModified', 'image']) {
+      assert.equal(Boolean(article[property]), true, `${route} Article ${property}`);
+    }
+    assert.equal(article.author?.['@type'], 'Organization', `${route} Article author`);
+    assert.equal(article.publisher?.['@type'], 'Organization', `${route} Article publisher`);
+  }
   for (const webApp of flattened.filter((schema) => schema?.['@type'] === 'WebApplication')) {
     webApplications += 1;
     assert.equal(

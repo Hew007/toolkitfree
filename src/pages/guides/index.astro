@@ -10,7 +10,7 @@ const structuredData = {
   description: 'Practical guides for image formats, file size, and social media dimensions.',
   url: toPublicUrl('/guides'),
   hasPart: guideRegistry.map((guide) => ({
-    '@type': 'Article',
+    '@type': 'WebPage',
     name: guide.title,
     url: toPublicUrl(guide.href),
   })),

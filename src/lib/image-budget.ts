@@ -43,7 +43,7 @@ export interface ImageBudgetAssessment {
   issues: ImageBudgetIssue[];
 }
 
-interface BudgetLimits {
+export interface ImageBudgetLimits {
   warningFiles: number;
   blockedFiles: number;
   warningEncodedBytes: number;
@@ -55,10 +55,10 @@ interface BudgetLimits {
 }
 
 const MEBIBYTE = 1024 * 1024;
-const MAX_SINGLE_IMAGE_PIXELS = 100_000_000;
+export const MAX_SINGLE_IMAGE_PIXELS = 100_000_000;
 const HEADER_BYTES = 64 * 1024;
 
-const LIMITS: Record<ImageBudgetDevice, BudgetLimits> = {
+export const IMAGE_BUDGET_LIMITS: Record<ImageBudgetDevice, ImageBudgetLimits> = {
   desktop: {
     warningFiles: 20,
     blockedFiles: 50,
@@ -231,7 +231,7 @@ export function assessImageBudget(
   profile: ImageBudgetProfile,
   device: ImageBudgetDevice
 ): ImageBudgetAssessment {
-  const limits = LIMITS[device];
+  const limits = IMAGE_BUDGET_LIMITS[device];
   const totals: ImageBudgetTotals = {
     files: metadata.length,
     encodedBytes: metadata.reduce((sum, file) => sum + file.size, 0),

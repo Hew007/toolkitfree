@@ -1,3 +1,15 @@
+---
+import { IMAGE_BUDGET_LIMITS, MAX_SINGLE_IMAGE_PIXELS } from '../lib/image-budget';
+
+const desktop = IMAGE_BUDGET_LIMITS.desktop;
+const mobile = IMAGE_BUDGET_LIMITS.mobile;
+const asMegapixels = (value: number) => `${value / 1_000_000} MP`;
+const asMemory = (value: number) =>
+  value >= 1024 * 1024 * 1024
+    ? `${value / (1024 * 1024 * 1024)} GiB`
+    : `${value / (1024 * 1024)} MiB`;
+---
+
 <section class="spec-section" aria-labelledby="processing-limits">
   <div class="section-heading-row compact">
     <div>
@@ -16,14 +28,49 @@
         >
       </thead>
       <tbody>
+        <tr>
+          <th scope="row">Single-image hard cap</th><td>{asMegapixels(MAX_SINGLE_IMAGE_PIXELS)}</td
+          ><td
+            >{asMegapixels(MAX_SINGLE_IMAGE_PIXELS)}; the {asMegapixels(mobile.blockedPixels)} total cap
+            can block first</td
+          >
+        </tr>
         <tr
-          ><th scope="row">Single image</th><td>Blocked above 100 MP</td><td
-            >Blocked above 100 MP</td
+          ><th scope="row">Batch size warning</th><td>{desktop.warningFiles} files</td><td
+            >{mobile.warningFiles} files</td
           ></tr
         >
-        <tr><th scope="row">Batch size warning</th><td>20 files</td><td>10 files</td></tr>
-        <tr><th scope="row">Batch size block</th><td>50 files</td><td>25 files</td></tr>
-        <tr><th scope="row">Encoded input warning</th><td>100 MiB</td><td>40 MiB</td></tr>
+        <tr
+          ><th scope="row">Batch size block</th><td>{desktop.blockedFiles} files</td><td
+            >{mobile.blockedFiles} files</td
+          ></tr
+        >
+        <tr
+          ><th scope="row">Encoded input warning</th><td>{asMemory(desktop.warningEncodedBytes)}</td
+          ><td>{asMemory(mobile.warningEncodedBytes)}</td></tr
+        >
+        <tr
+          ><th scope="row">Encoded input block</th><td>{asMemory(desktop.blockedEncodedBytes)}</td
+          ><td>{asMemory(mobile.blockedEncodedBytes)}</td></tr
+        >
+        <tr
+          ><th scope="row">Total pixels warning</th><td>{asMegapixels(desktop.warningPixels)}</td
+          ><td>{asMegapixels(mobile.warningPixels)}</td></tr
+        >
+        <tr
+          ><th scope="row">Total pixels block</th><td>{asMegapixels(desktop.blockedPixels)}</td><td
+            >{asMegapixels(mobile.blockedPixels)}</td
+          ></tr
+        >
+        <tr
+          ><th scope="row">Working memory warning</th><td
+            >{asMemory(desktop.warningWorkingBytes)}</td
+          ><td>{asMemory(mobile.warningWorkingBytes)}</td></tr
+        >
+        <tr
+          ><th scope="row">Working memory block</th><td>{asMemory(desktop.blockedWorkingBytes)}</td
+          ><td>{asMemory(mobile.blockedWorkingBytes)}</td></tr
+        >
         <tr
           ><th scope="row">Parallel processing</th><td>Up to 2 images</td><td>Up to 2 images</td
           ></tr

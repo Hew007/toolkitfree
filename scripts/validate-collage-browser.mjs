@@ -6,6 +6,8 @@ import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9227';
 const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
 const downloadPath = process.env.BROWSER_DOWNLOAD_DIR || 'C:\\tmp\\toolkitfree-collage-downloads';
+const screenshotPath = process.env.COLLAGE_SCREENSHOT_PATH;
+const mobileScreenshotPath = process.env.COLLAGE_MOBILE_SCREENSHOT_PATH;
 fs.rmSync(downloadPath, { recursive: true, force: true });
 fs.mkdirSync(downloadPath, { recursive: true });
 
@@ -185,6 +187,22 @@ for (const width of [1440, 900, 600, 375]) {
   })()`);
   assert.equal(layout.fits, true, `Collage builder should not overflow at ${width}px`);
   assert.equal(layout.stacked, width <= 900, `Collage editor stack state at ${width}px`);
+  if (width === 1440 && screenshotPath) {
+    await evaluate(
+      `document.querySelector('.collage-status-bar').scrollIntoView({ block: 'start' })`
+    );
+    const screenshot = await send('Page.captureScreenshot', { format: 'png' });
+    fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
+    fs.writeFileSync(screenshotPath, Buffer.from(screenshot.data, 'base64'));
+  }
+  if (width === 375 && mobileScreenshotPath) {
+    await evaluate(
+      `document.querySelector('.collage-status-bar').scrollIntoView({ block: 'start' })`
+    );
+    const screenshot = await send('Page.captureScreenshot', { format: 'png' });
+    fs.mkdirSync(path.dirname(mobileScreenshotPath), { recursive: true });
+    fs.writeFileSync(mobileScreenshotPath, Buffer.from(screenshot.data, 'base64'));
+  }
   uiLayouts.push(layout);
 }
 
@@ -270,7 +288,10 @@ assert.equal(urlStats.created >= 3, true);
 
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
-await send('Target.closeTarget', { targetId: target.id });
+await Promise.race([
+  send('Target.closeTarget', { targetId: target.id }),
+  new Promise((resolve) => setTimeout(resolve, 1_000)),
+]);
 socket.close();
 
 console.log(
