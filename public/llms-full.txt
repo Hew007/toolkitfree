@@ -16,6 +16,7 @@ There is no server upload-size quota because files are not uploaded for processi
 - [Image Resizer](https://toolkitfree.net/tools/image-resizer/): Resize images to custom dimensions or verified platform presets while controlling aspect ratio.
 - [Image Enhancer](https://toolkitfree.net/tools/image-enhancer/): Adjust brightness, contrast, saturation, sharpness, blur, and grayscale locally with a live preview.
 - [Image Collage Maker](https://toolkitfree.net/tools/image-collage/): Combine JPG, PNG, or WebP images into a grid, side-by-side stitch, or vertical collage locally in your browser.
+- [Image Splitter](https://toolkitfree.net/tools/image-splitter/): Cut one image into equal pieces — a 2×2 grid, an Instagram grid, or any row and column count — locally in your browser.
 - [ID Photo Size & Print Tool](https://toolkitfree.net/tools/id-photo-maker/): Manually position an original photo, export a selected ID photo size, and make a local print sheet without claiming government approval.
 - [Image Cropper](https://toolkitfree.net/tools/image-cropper/): Crop one JPG, PNG, or WebP with visual, touch, and keyboard controls.
 - [Background Remover](https://toolkitfree.net/tools/background-remover/): Remove one image background locally after downloading the browser AI model and runtime, then keep it transparent or replace it with any colour.
@@ -24,6 +25,69 @@ There is no server upload-size quota because files are not uploaded for processi
 - [PDF Splitter & Page Extractor](https://toolkitfree.net/tools/pdf-splitter/): Extract, split, reorder, rotate, or remove PDF pages locally and export one PDF or separate page files.
 - [Favicon Generator](https://toolkitfree.net/tools/favicon-generator/): Generate five PNG favicon sizes and a site.webmanifest from one image.
 - [QR Code Generator](https://toolkitfree.net/tools/qr-generator/): Create PNG or SVG QR codes for text, URLs, WiFi, and vCards with contrast-aware downloads.
+
+## Variant pages
+
+<!-- Generated from src/data/tool-registry.ts by scripts/sync-llms-registry.mjs. -->
+### Image Converter
+- [JPG to PNG](https://toolkitfree.net/tools/image-converter/jpg-to-png/)
+- [PNG to JPG](https://toolkitfree.net/tools/image-converter/png-to-jpg/)
+- [WebP to JPG](https://toolkitfree.net/tools/image-converter/webp-to-jpg/)
+- [JPG to WebP](https://toolkitfree.net/tools/image-converter/jpg-to-webp/)
+- [PNG to WebP](https://toolkitfree.net/tools/image-converter/png-to-webp/)
+- [WebP to PNG](https://toolkitfree.net/tools/image-converter/webp-to-png/)
+
+### Image Compressor
+- [Compress PNG Images Online Free](https://toolkitfree.net/tools/image-compressor/compress-png/)
+- [Compress JPG Images Online Free](https://toolkitfree.net/tools/image-compressor/compress-jpg/)
+- [Compress Images for Email Attachment](https://toolkitfree.net/tools/image-compressor/compress-for-email/)
+- [Compress Images for Web - Optimize for Fast Loading](https://toolkitfree.net/tools/image-compressor/compress-for-web/)
+- [Compress Images for WhatsApp - Control File Size](https://toolkitfree.net/tools/image-compressor/compress-for-whatsapp/)
+- [Compress Image to 100KB - Verified Target Size](https://toolkitfree.net/tools/image-compressor/compress-to-100kb/)
+
+### Image Resizer
+- [Resize for Instagram](https://toolkitfree.net/tools/image-resizer/resize-for-instagram/)
+- [Resize for Facebook](https://toolkitfree.net/tools/image-resizer/resize-for-facebook/)
+- [Resize for Twitter/X](https://toolkitfree.net/tools/image-resizer/resize-for-twitter/)
+- [Resize for YouTube](https://toolkitfree.net/tools/image-resizer/resize-for-youtube/)
+- [Resize for LinkedIn](https://toolkitfree.net/tools/image-resizer/resize-for-linkedin/)
+- [Resize for TikTok](https://toolkitfree.net/tools/image-resizer/resize-for-tiktok/)
+- [Resize to 1920x1080](https://toolkitfree.net/tools/image-resizer/resize-to-1920x1080/)
+
+### Image Splitter
+- [Split in Half](https://toolkitfree.net/tools/image-splitter/split-into-2/)
+- [Split Into 4](https://toolkitfree.net/tools/image-splitter/split-into-4/)
+- [Instagram Grid](https://toolkitfree.net/tools/image-splitter/instagram-grid/)
+- [Split for Printing](https://toolkitfree.net/tools/image-splitter/split-for-printing/)
+
+### Image Cropper
+- [Crop to Square](https://toolkitfree.net/tools/image-cropper/crop-to-square/)
+- [Crop to 16:9](https://toolkitfree.net/tools/image-cropper/crop-to-16-9/)
+- [Crop to 4:3](https://toolkitfree.net/tools/image-cropper/crop-to-4-3/)
+- [Crop to 3:2](https://toolkitfree.net/tools/image-cropper/crop-to-3-2/)
+- [Free Crop](https://toolkitfree.net/tools/image-cropper/free-crop/)
+
+### Video to GIF, WebP & APNG
+- [Video to Animated WebP](https://toolkitfree.net/tools/video-to-gif/video-to-webp/)
+- [Video to APNG](https://toolkitfree.net/tools/video-to-gif/video-to-apng/)
+
+### Image to PDF
+- [JPG to PDF](https://toolkitfree.net/tools/image-to-pdf/jpg-to-pdf/)
+- [PNG to PDF](https://toolkitfree.net/tools/image-to-pdf/png-to-pdf/)
+- [Image to A4 PDF](https://toolkitfree.net/tools/image-to-pdf/image-to-a4-pdf/)
+- [Multiple Images to PDF](https://toolkitfree.net/tools/image-to-pdf/multiple-images-to-pdf/)
+- [Image to PDF without Margin](https://toolkitfree.net/tools/image-to-pdf/image-to-pdf-no-margin/)
+- [Photo to PDF](https://toolkitfree.net/tools/image-to-pdf/photo-to-pdf/)
+
+### PDF Splitter & Page Extractor
+- [Extract Pages from PDF](https://toolkitfree.net/tools/pdf-splitter/extract-pages-from-pdf/)
+- [Split PDF into Pages](https://toolkitfree.net/tools/pdf-splitter/split-pdf-into-pages/)
+
+### Favicon Generator
+- [PNG to Favicon](https://toolkitfree.net/tools/favicon-generator/png-to-favicon/)
+- [JPG to Favicon](https://toolkitfree.net/tools/favicon-generator/jpg-to-favicon/)
+- [Logo to Favicon](https://toolkitfree.net/tools/favicon-generator/logo-to-favicon/)
+- [Favicon for WordPress](https://toolkitfree.net/tools/favicon-generator/favicon-for-wordpress/)
 
 ## Guide registry
 

@@ -1,6 +1,14 @@
 ---
 import { IMAGE_BUDGET_LIMITS, MAX_SINGLE_IMAGE_PIXELS } from '../lib/image-budget';
+import { MAX_SPLIT_TILES } from '../lib/image-splitter';
 
+interface Props {
+  /** `batch` covers the multi-file tools; `splitter` takes one image and emits many pieces. */
+  profile?: 'batch' | 'splitter';
+}
+
+const { profile = 'batch' } = Astro.props;
+const isSplitter = profile === 'splitter';
 const desktop = IMAGE_BUDGET_LIMITS.desktop;
 const mobile = IMAGE_BUDGET_LIMITS.mobile;
 const asMegapixels = (value: number) => `${value / 1_000_000} MP`;
@@ -35,16 +43,33 @@ const asMemory = (value: number) =>
             can block first</td
           >
         </tr>
-        <tr
-          ><th scope="row">Batch size warning</th><td>{desktop.warningFiles} files</td><td
-            >{mobile.warningFiles} files</td
-          ></tr
-        >
-        <tr
-          ><th scope="row">Batch size block</th><td>{desktop.blockedFiles} files</td><td
-            >{mobile.blockedFiles} files</td
-          ></tr
-        >
+        {
+          !isSplitter && (
+            <tr>
+              <th scope="row">Batch size warning</th>
+              <td>{desktop.warningFiles} files</td>
+              <td>{mobile.warningFiles} files</td>
+            </tr>
+          )
+        }
+        {
+          !isSplitter && (
+            <tr>
+              <th scope="row">Batch size block</th>
+              <td>{desktop.blockedFiles} files</td>
+              <td>{mobile.blockedFiles} files</td>
+            </tr>
+          )
+        }
+        {
+          isSplitter && (
+            <tr>
+              <th scope="row">Pieces per split</th>
+              <td>Up to {MAX_SPLIT_TILES}</td>
+              <td>Up to {MAX_SPLIT_TILES}</td>
+            </tr>
+          )
+        }
         <tr
           ><th scope="row">Encoded input warning</th><td>{asMemory(desktop.warningEncodedBytes)}</td
           ><td>{asMemory(mobile.warningEncodedBytes)}</td></tr
@@ -71,10 +96,11 @@ const asMemory = (value: number) =>
           ><th scope="row">Working memory block</th><td>{asMemory(desktop.blockedWorkingBytes)}</td
           ><td>{asMemory(mobile.blockedWorkingBytes)}</td></tr
         >
-        <tr
-          ><th scope="row">Parallel processing</th><td>Up to 2 images</td><td>Up to 2 images</td
-          ></tr
-        >
+        <tr>
+          <th scope="row">Parallel processing</th>
+          <td>Up to 2 {isSplitter ? 'pieces' : 'images'}</td>
+          <td>Up to 2 {isSplitter ? 'pieces' : 'images'}</td>
+        </tr>
       </tbody>
     </table>
   </div>

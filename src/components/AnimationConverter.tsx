@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import FileList from './FileList';
 import DownloadResult from './DownloadResult';
+import { useNumberDraft } from '../hooks/useNumberDraft';
 import { formatSize } from '../lib/image-processing';
 import {
   ANIMATION_PRESETS,
@@ -156,6 +157,21 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
   const [result, setResult] = useState<ConversionResult | null>(null);
   const runtimeRef = useRef(new AnimationFfmpegRuntime());
   const abortRef = useRef<AbortController | null>(null);
+  const startSecondsMax = Math.max(0, (metadata?.durationSeconds || 300) - 0.1);
+  const startSecondsProps = useNumberDraft({
+    value: settings.startSeconds,
+    min: 0,
+    max: startSecondsMax,
+    step: 0.1,
+    onCommit: (startSeconds) => setSettings((previous) => ({ ...previous, startSeconds })),
+  });
+  const durationSecondsProps = useNumberDraft({
+    value: settings.durationSeconds,
+    min: 0.1,
+    max: 20,
+    step: 0.1,
+    onCommit: (durationSeconds) => setSettings((previous) => ({ ...previous, durationSeconds })),
+  });
   const resultUrlRef = useRef<string | null>(null);
   const budget = useMemo(() => getAnimationBudget(isMobileDevice()), []);
 
@@ -436,33 +452,23 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
             <label>
               Start time (seconds)
               <input
+                className="field-input"
                 type="number"
                 min="0"
-                max={Math.max(0, (metadata?.durationSeconds || 300) - 0.1)}
+                max={startSecondsMax}
                 step="0.1"
-                value={settings.startSeconds}
-                onChange={(event) =>
-                  setSettings((previous) => ({
-                    ...previous,
-                    startSeconds: Number(event.target.value) || 0,
-                  }))
-                }
+                {...startSecondsProps}
               />
             </label>
             <label>
               Maximum duration (seconds)
               <input
+                className="field-input"
                 type="number"
                 min="0.1"
                 max="20"
                 step="0.1"
-                value={settings.durationSeconds}
-                onChange={(event) =>
-                  setSettings((previous) => ({
-                    ...previous,
-                    durationSeconds: Number(event.target.value) || 0.1,
-                  }))
-                }
+                {...durationSecondsProps}
               />
             </label>
             <label>

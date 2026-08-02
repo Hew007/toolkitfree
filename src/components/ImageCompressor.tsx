@@ -4,6 +4,7 @@ import { mapWithConcurrency } from '../lib/async-pool';
 import FileList from './FileList';
 import BatchResultsSummary from './BatchResultsSummary';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
+import { useNumberDraft } from '../hooks/useNumberDraft';
 import {
   exportCanvas,
   formatSize,
@@ -102,6 +103,16 @@ export default function ImageCompressor({
     setResults([]);
     setFailures([]);
   }, [objectUrls]);
+
+  const targetKBProps = useNumberDraft({
+    value: targetKB,
+    min: 1,
+    max: 10000,
+    onCommit: (next) => {
+      clearResults();
+      setTargetKB(next);
+    },
+  });
 
   const handleFiles = useCallback(
     (newFiles: File[]) => {
@@ -382,17 +393,14 @@ export default function ImageCompressor({
                   Target Size (KB)
                 </label>
                 <input
+                  className="field-input"
                   id="compressor-target-size"
                   aria-label="Target Size (KB)"
                   type="number"
                   min="1"
                   max="10000"
                   step="1"
-                  value={targetKB}
-                  onChange={(event) => {
-                    clearResults();
-                    setTargetKB(Math.max(1, Number(event.target.value) || 1));
-                  }}
+                  {...targetKBProps}
                   style={{ width: '120px' }}
                 />
               </div>

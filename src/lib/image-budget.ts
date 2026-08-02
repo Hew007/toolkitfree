@@ -5,6 +5,7 @@ export type ImageBudgetProfile =
   | 'enhancer'
   | 'collage'
   | 'cropper'
+  | 'splitter'
   | 'pdf'
   | 'favicon'
   | 'background';
@@ -88,6 +89,8 @@ const RGBA_SURFACES: Record<ImageBudgetProfile, number> = {
   enhancer: 4,
   collage: 3,
   cropper: 2,
+  // The source stays decoded while one tile is encoded at a time.
+  splitter: 2,
   pdf: 3.5,
   favicon: 2,
   background: 4,

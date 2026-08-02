@@ -37,3 +37,6 @@ docs/
 
 # local one-off backups
 .local-backups/
+
+# browser validator scratch directories (fallback when BROWSER_TEMP_DIR is unset)
+.tmp-*/

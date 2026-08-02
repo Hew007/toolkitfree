@@ -104,6 +104,42 @@ Important directories:
   - sitemap and LLM registry coverage.
 - Prefer long-tail, practical tools over broad all-in-one editors.
 
+## Checklist: Adding a Tool or Variant Page
+
+SEO and GEO coverage is registry-driven. Work through this list whenever a public
+page is added, renamed, or removed — several items fail the build rather than
+degrade silently, and the rest are easy to forget.
+
+1. `src/data/tool-registry.ts` — add the `ToolId`, the definition, and `lastModified`.
+   Add the new id to the `related` array of at least four existing tools so the
+   internal linking is bidirectional; the validator only checks that ids exist.
+2. `src/components/ToolIcon.astro` — add the icon path. The `Record<ToolId, …>` map
+   has no runtime fallback, so a missing key fails the production build.
+3. Variant pages — add `src/data/<tool>-variants.ts` plus
+   `src/pages/tools/<tool>/[variant].astro`, and point the registry `variants` at it.
+   Give every variant its own title, description and FAQ; never template-fill.
+4. Open Graph — add `public/social/<tool>.png` at exactly 1200×630 and pass
+   `ogImage` from the page. Every route must resolve an image; the default is a
+   fallback, not a target.
+5. `src/components/ProcessingLimits.astro` — pick the right `profile`, or add one.
+   Never mount a limits table whose rows do not apply to the tool.
+6. `src/data/guide-registry.ts` — add the tool to `relatedTools` of any guide it
+   belongs with, so `RelatedGuides` renders and the guide gains an inbound link.
+7. Run `npm run sync:llms`. It regenerates the tool list, the grouped variant list
+   and the guide list in `llms.txt` and `llms-full.txt`. Never hand-edit those
+   sections. Non-indexable variants are excluded on purpose.
+8. `scripts/validate-site-integrity.mjs` — update the static HTML page count. It is
+   a deliberate tripwire so page-count changes are acknowledged, not a nuisance.
+9. FAQ — the visible `<summary class="faq-question">` list and the `FAQPage`
+   JSON-LD must match in the same order. Render both from one array.
+10. `lastModified` must not predate the page source's last commit date, or
+    `validate-content-freshness` fails.
+
+Enforced automatically: llms coverage of every indexable route, sitemap parity,
+canonical form, title length, Open Graph presence, FAQ/JSON-LD parity, tool
+directory ordering, broken links, content freshness. Not enforced, so confirm by
+hand: bidirectional `related`, and copy that is accurate rather than merely present.
+
 ## Quality Expectations
 
 Before committing meaningful product changes, run checks proportional to the risk. For most tool work, prefer:
