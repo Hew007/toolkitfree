@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import FileUploader from './FileUploader';
+import { useNumberDraft } from '../hooks/useNumberDraft';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
 import {
   calculateCollageLayout,
@@ -167,18 +168,11 @@ function NumberControl({
   step?: number;
   onChange: (value: number) => void;
 }) {
+  const draftProps = useNumberDraft({ value, min, max, step, onCommit: onChange });
   return (
     <label className="collage-field">
       {label}
-      <input
-        id={id}
-        type="number"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-      />
+      <input id={id} type="number" min={min} max={max} step={step} {...draftProps} />
     </label>
   );
 }

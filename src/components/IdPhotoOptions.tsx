@@ -1,3 +1,4 @@
+import { useNumberDraft } from '../hooks/useNumberDraft';
 import type { IdPhotoPreset, IdPhotoPresetId } from '../data/id-photo-presets';
 import type { ImageOutputMimeType } from '../lib/image-processing';
 
@@ -36,6 +37,7 @@ function NumberField({
   step?: number;
   onChange: (value: number) => void;
 }) {
+  const draftProps = useNumberDraft({ value, min, max, step, onCommit: onChange });
   return (
     <label className="id-photo-field">
       {label}
@@ -45,8 +47,7 @@ function NumberField({
         min={min}
         max={max}
         step={step}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
+        {...draftProps}
       />
     </label>
   );

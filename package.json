@@ -15,6 +15,8 @@
     "validate:processing": "node scripts/validate-image-processing.mjs",
     "validate:enhancer": "node scripts/validate-image-enhancer.mjs",
     "validate:collage": "node scripts/validate-image-collage.mjs",
+    "validate:splitter": "node scripts/validate-image-splitter.mjs",
+    "validate:splitter:browser": "node scripts/validate-image-splitter-browser.mjs",
     "validate:converter": "node scripts/validate-image-converter.mjs",
     "validate:compressor": "node scripts/validate-image-compressor.mjs",
     "validate:resizer-cropper": "node scripts/validate-resizer-cropper.mjs",
@@ -27,6 +29,7 @@
     "sync:llms": "node scripts/sync-llms-registry.mjs",
     "validate:seo": "node scripts/validate-seo-registry.mjs",
     "typecheck": "tsc --noEmit",
+    "typecheck:astro": "astro check",
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write \"src/**/*.{ts,tsx,astro}\" \"scripts/*.mjs\" \"*.{json,mjs,js}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,astro}\" \"scripts/*.mjs\" \"*.{json,mjs,js}\"",
@@ -56,6 +59,7 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.10",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
     "eslint": "^9.39.4",

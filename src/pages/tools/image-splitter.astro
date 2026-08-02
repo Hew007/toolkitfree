@@ -1,0 +1,210 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ToolDirectory from '../../components/ToolDirectory.astro';
+import ProcessingLimits from '../../components/ProcessingLimits.astro';
+import RelatedGuides from '../../components/RelatedGuides.astro';
+import ImageSplitter from '../../components/ImageSplitter';
+import { allVariants } from '../../data/splitter-variants';
+import { toPublicUrl } from '../../data/tool-registry';
+
+const pageUrl = toPublicUrl('/tools/image-splitter');
+
+const faqItems = [
+  {
+    question: 'How does the image splitter work?',
+    answer:
+      'The splitter measures your image in the browser, cuts it along the split lines you set, and redraws each piece onto its own canvas. The image is never uploaded for processing.',
+  },
+  {
+    question: 'Can I split a picture into pieces that are not the same size?',
+    answer:
+      'Yes. Start from an even grid, then drag any split line to a new position, or type an exact pixel position for it. You can also add and remove individual lines, so a composite made of differently sized pictures can be cut exactly along its real edges.',
+  },
+  {
+    question: 'How do I place a split line precisely?',
+    answer:
+      'Every line has a pixel input beside the preview, so you can type an exact position. You can also focus a line and nudge it with the arrow keys, one pixel at a time, or ten pixels while holding Shift. Dragging snaps to the evenly spaced position when you come close to it.',
+  },
+  {
+    question: 'What happens when the size does not divide evenly?',
+    answer:
+      'A 1000px wide image divided into 3 leaves one extra pixel. The even grid spreads any leftover pixels across the leading pieces, so no two pieces differ by more than one pixel. If you need exact sizes instead, set each split line position yourself.',
+  },
+  {
+    question: 'Can I split an image that already has gaps between the pictures?',
+    answer:
+      'Yes. Set the outer margin to skip a border, and set the discard width so each split line drops a band of pixels instead of cutting at a single point. The pieces are then taken from the content between those bands. Automatic seam detection is not part of this version.',
+  },
+  {
+    question: 'How many pieces can I create?',
+    answer:
+      'Up to 144 pieces, which is a 12 by 12 grid. Larger grids are rejected because the browser has to hold every piece in memory before you download them.',
+  },
+  {
+    question: 'Does splitting reduce image quality?',
+    answer:
+      'PNG and WebP output keep the decoded pixels of each piece. Choosing JPG output re-encodes each piece, which adds a second round of lossy compression on top of whatever the source already had. Keeping the input format avoids that when the source is PNG or WebP.',
+  },
+  {
+    question: 'How do I split an image for an Instagram grid?',
+    answer:
+      'Upload the image, choose 3 rows and 3 columns, then split. The pieces are named by row and column so you can post them in the correct order. Instagram fills a profile grid from the top left, so post the last piece first if you want the grid to read normally.',
+  },
+  {
+    question: 'What are the downloaded files named?',
+    answer:
+      'Grid pieces are named after the source file with a row and column suffix, such as photo-r1-c1.png. When you split into a single row or a single column the pieces are numbered in order instead, such as banner-1.png.',
+  },
+  {
+    question: 'Can I download all the pieces at once?',
+    answer:
+      'Yes. Each piece has its own download link, and Download all as ZIP builds a single archive in your browser. The ZIP is created locally, so nothing is sent to a server.',
+  },
+  {
+    question: 'Can I split a PDF or a video with this tool?',
+    answer:
+      'No. This tool splits a single JPG, PNG, or WebP image. Use the PDF Splitter for PDF pages, and the Video to GIF converter for short video files.',
+  },
+  {
+    question: 'Is there a file size limit?',
+    answer:
+      'There is no upload limit because nothing is uploaded, but browser memory and Canvas limits still apply. Very large images or very large grids can be slow or can fail, especially on phones.',
+  },
+];
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Free Image Splitter',
+  url: pageUrl,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0' },
+  description:
+    'Split one image into pieces in your browser. Start from an even grid, then drag or type the exact position of every split line, and download the pieces individually or as a ZIP.',
+};
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: toPublicUrl('/') },
+    { '@type': 'ListItem', position: 2, name: 'Image Splitter', item: pageUrl },
+  ],
+};
+
+const faqStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })),
+};
+---
+
+<Layout
+  title="Image Splitter - Cut an Image Into Custom Pieces"
+  description="Split an image in your browser. Start from an even grid, then drag or type the exact position of each split line. Uneven pieces supported. Nothing is uploaded."
+  ogImage="/social/image-splitter.png"
+  structuredData={[structuredData, faqStructuredData, breadcrumbSchema]}
+>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>Free Image Splitter</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 0.5rem;">
+        Cut one image into pieces. Start from an even grid, then drag each split line or type its
+        exact pixel position — so a stitched collage can be cut along its real edges, not just into
+        equal parts. Everything runs in your browser, so the image is never uploaded.
+      </p>
+      <div class="privacy-badge">Image processing stays on this device</div>
+
+      <div style="margin-top: 1.5rem;">
+        <ImageSplitter client:load />
+      </div>
+
+      <section class="howto-section">
+        <h2>How to Split an Image</h2>
+        <ol class="howto-steps">
+          <li>Upload a JPG, PNG, or WebP image by dragging & dropping or clicking to browse</li>
+          <li>Pick a common split, or set your own row and column count to lay out the lines</li>
+          <li>
+            Drag any split line to move it, or type its exact pixel position — add and remove lines
+            as needed
+          </li>
+          <li>Click "Split", then download the pieces individually or once as a ZIP</li>
+        </ol>
+      </section>
+
+      <section class="features-section">
+        <h2>Features</h2>
+        <ul class="features-list">
+          <li>Drag each split line, or type its exact pixel position</li>
+          <li>Uneven pieces — cut a stitched collage along its real edges</li>
+          <li>Add or remove individual lines, up to 144 pieces</li>
+          <li>Even-grid presets and one-click redistribute as a starting point</li>
+          <li>Skip existing borders and seams with margin and discard controls</li>
+          <li>Pieces named by row and column so the order survives the download</li>
+        </ul>
+      </section>
+
+      <section class="features-section">
+        <h2>Splitting and Combining</h2>
+        <p style="color: var(--color-text-light);">
+          This tool is the reverse of the <a href="/tools/image-collage/">Image Collage Maker</a>.
+          Splitting a collage that was built as an even grid returns the original pieces, and
+          combining those pieces rebuilds the collage. If you want to cut one freehand region
+          instead of an even grid, use the <a href="/tools/image-cropper/">Image Cropper</a>.
+        </p>
+      </section>
+
+      <section class="related-tools">
+        <h2>Common Splits</h2>
+        <div class="related-tools-grid">
+          {
+            allVariants.map((variant) => (
+              <a href={`/tools/image-splitter/${variant.slug}/`} class="tool-card">
+                <h3>{variant.label}</h3>
+              </a>
+            ))
+          }
+        </div>
+      </section>
+
+      <RelatedGuides toolId="image-splitter" />
+
+      <ProcessingLimits profile="splitter" />
+
+      <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        {
+          faqItems.map((item) => (
+            <div class="faq-item">
+              <details>
+                <summary class="faq-question">{item.question}</summary>
+                <div class="faq-answer">{item.answer}</div>
+              </details>
+            </div>
+          ))
+        }
+      </section>
+
+      <ToolDirectory currentId="image-splitter" mode="related" />
+    </div>
+
+    <aside class="tool-sidebar">
+      <div>
+        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">Common Splits</h3>
+        <ul style="font-size: 0.875rem; color: var(--color-text-light); list-style: none;">
+          <li style="padding: 0.25rem 0;">2 across or 2 down</li>
+          <li style="padding: 0.25rem 0;">2 × 2 quarters</li>
+          <li style="padding: 0.25rem 0;">3 × 3 Instagram grid</li>
+          <li style="padding: 0.25rem 0;">Custom lines, uneven pieces</li>
+        </ul>
+      </div>
+
+      <ToolDirectory currentId="image-splitter" mode="sidebar" />
+    </aside>
+  </div>
+</Layout>

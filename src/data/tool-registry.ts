@@ -5,6 +5,7 @@ import { allVariants as faviconVariants } from './favicon-variants.ts';
 import { allVariants as pdfVariants } from './pdf-variants.ts';
 import { allVariants as pdfPageVariants } from './pdf-page-variants.ts';
 import { allVariants as resizerVariants } from './resizer-variants.ts';
+import { allVariants as splitterVariants } from './splitter-variants.ts';
 import { allVariants as animationVariants } from './animation-variants.ts';
 import type { ToolVariantSummary } from './content-types.ts';
 
@@ -29,6 +30,7 @@ export type ToolId =
   | 'image-resizer'
   | 'image-enhancer'
   | 'image-collage'
+  | 'image-splitter'
   | 'id-photo-maker'
   | 'image-cropper'
   | 'background-remover'
@@ -122,6 +124,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
       'image-enhancer',
       'image-compressor',
       'image-converter',
+      'image-splitter',
       'background-remover',
       'qr-generator',
     ],
@@ -164,10 +167,32 @@ export const toolRegistry: readonly ToolDefinition[] = [
       'image-enhancer',
       'image-compressor',
       'image-converter',
+      'image-splitter',
       'image-to-pdf',
       'pdf-splitter',
     ],
     variants: [],
+  },
+  {
+    id: 'image-splitter',
+    name: 'Image Splitter',
+    navLabel: 'Splitter',
+    href: '/tools/image-splitter',
+    description:
+      'Cut one image into equal pieces — a 2×2 grid, an Instagram grid, or any row and column count — locally in your browser.',
+    shortDescription: 'Cut one image into equal pieces.',
+    category: 'image-tools',
+    status: 'public',
+    lastModified: '2026-08-02',
+    related: [
+      'image-collage',
+      'image-cropper',
+      'image-resizer',
+      'image-to-pdf',
+      'image-converter',
+      'image-compressor',
+    ],
+    variants: splitterVariants,
   },
   {
     id: 'id-photo-maker',
@@ -204,6 +229,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
       'image-enhancer',
       'image-converter',
       'image-compressor',
+      'image-splitter',
       'image-to-pdf',
       'background-remover',
       'id-photo-maker',
@@ -269,6 +295,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
       'image-compressor',
       'image-cropper',
       'image-resizer',
+      'image-splitter',
       'favicon-generator',
     ],
     variants: pdfVariants,

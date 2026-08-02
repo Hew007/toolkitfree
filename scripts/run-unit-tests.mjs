@@ -4,6 +4,7 @@ const tests = [
   'validate-image-processing.mjs',
   'validate-image-enhancer.mjs',
   'validate-image-collage.mjs',
+  'validate-image-splitter.mjs',
   'validate-image-converter.mjs',
   'validate-image-compressor.mjs',
   'validate-resizer-cropper.mjs',

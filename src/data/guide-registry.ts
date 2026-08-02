@@ -36,7 +36,7 @@ export const guideRegistry: readonly GuideDefinition[] = [
     description:
       'Find practical image dimensions for major social platforms and common placements.',
     lastModified: '2026-08-01',
-    relatedTools: ['image-resizer', 'image-cropper'],
+    relatedTools: ['image-resizer', 'image-cropper', 'image-splitter'],
   },
 ];
 

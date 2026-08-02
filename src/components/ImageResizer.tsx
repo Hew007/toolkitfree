@@ -4,6 +4,7 @@ import { mapSettledWithConcurrency } from '../lib/async-pool';
 import FileList from './FileList';
 import BatchResultsSummary from './BatchResultsSummary';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
+import { useNumberDraft } from '../hooks/useNumberDraft';
 import {
   exportCanvas,
   formatSize,
@@ -136,6 +137,19 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
     setPreset('custom');
     clearResults();
   };
+
+  const widthProps = useNumberDraft({
+    value: width,
+    min: 1,
+    max: 10000,
+    onCommit: handleWidthChange,
+  });
+  const heightProps = useNumberDraft({
+    value: height,
+    min: 1,
+    max: 10000,
+    onCommit: handleHeightChange,
+  });
 
   const previewDimensions = useMemo(() => {
     if (previewSource.width < 1 || previewSource.height < 1 || width < 1 || height < 1) return null;
@@ -399,20 +413,13 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                   {preset === 'custom' && maintainRatio ? 'Max width (px)' : 'Width (px)'}
                 </label>
                 <input
+                  className="field-input"
                   id="resize-width"
                   data-testid="resize-width"
                   type="number"
-                  value={width}
-                  onChange={(event) => handleWidthChange(Number(event.target.value))}
                   min={1}
                   max={10000}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '6px',
-                    fontSize: '0.875rem',
-                  }}
+                  {...widthProps}
                 />
               </div>
               <div>
@@ -428,20 +435,13 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                   {preset === 'custom' && maintainRatio ? 'Max height (px)' : 'Height (px)'}
                 </label>
                 <input
+                  className="field-input"
                   id="resize-height"
                   data-testid="resize-height"
                   type="number"
-                  value={height}
-                  onChange={(event) => handleHeightChange(Number(event.target.value))}
                   min={1}
                   max={10000}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '6px',
-                    fontSize: '0.875rem',
-                  }}
+                  {...heightProps}
                 />
               </div>
               <div>

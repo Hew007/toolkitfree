@@ -99,8 +99,10 @@ unique(indexableToolPaths, 'Indexable tool paths');
 
 for (const file of ['public/llms.txt', 'public/llms-full.txt']) {
   const content = fs.readFileSync(path.join(root, file), 'utf8');
-  for (const tool of toolRegistry) {
-    assert.equal(content.includes(toPublicUrl(tool.href)), true, `${file} includes ${tool.id}`);
+  // Every page a search or answer engine may index must also be discoverable in the
+  // machine-readable registries. Run `npm run sync:llms` after changing the registries.
+  for (const route of indexableToolPaths) {
+    assert.equal(content.includes(toPublicUrl(route)), true, `${file} includes ${route}`);
   }
   for (const guide of guideRegistry) {
     assert.equal(content.includes(getGuidePublicUrl(guide)), true, `${file} includes ${guide.id}`);

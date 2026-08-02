@@ -28,6 +28,7 @@ const fullTests = [
   'validate-responsive-accessibility-browser.mjs',
   'validate-performance-browser.mjs',
   'validate-collage-browser.mjs',
+  'validate-image-splitter-browser.mjs',
   'validate-id-photo-browser.mjs',
   'validate-animation-converter-browser.mjs',
   'validate-pdf-page-tools-browser.mjs',

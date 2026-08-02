@@ -12,6 +12,11 @@ const steps = [
     args: ['node_modules/typescript/bin/tsc', '--noEmit'],
   },
   {
+    // tsc does not read .astro frontmatter; this catches type errors inside Astro components.
+    name: 'Astro check',
+    args: ['node_modules/astro/astro.js', 'check'],
+  },
+  {
     name: 'ESLint',
     args: ['node_modules/eslint/bin/eslint.js', '.', '--max-warnings=0'],
   },
