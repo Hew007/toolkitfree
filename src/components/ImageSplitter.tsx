@@ -14,6 +14,7 @@ import {
   loadImage,
   type ImageOutputMimeType,
 } from '../lib/image-processing';
+import { detectSeams, type GrayscaleBuffer } from '../lib/image-seam-detection';
 import {
   DEFAULT_SPLIT_OPTIONS,
   MAX_SPLIT_TILES,
@@ -60,6 +61,38 @@ const OUTPUT_FORMATS = [
 type OutputFormat = (typeof OUTPUT_FORMATS)[number]['value'];
 
 /**
+ * Detection reads the whole image at once, so very large sources are sampled down
+ * first. Four megapixels keeps a stitched screenshot close to its native size while
+ * bounding the temporary buffers on a phone.
+ */
+const MAX_DETECTION_PIXELS = 4_000_000;
+
+function sampleGrayscale(image: HTMLImageElement, width: number, height: number): GrayscaleBuffer {
+  const scale = Math.min(1, Math.sqrt(MAX_DETECTION_PIXELS / (width * height)));
+  const sampleWidth = Math.max(1, Math.round(width * scale));
+  const sampleHeight = Math.max(1, Math.round(height * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = sampleWidth;
+  canvas.height = sampleHeight;
+  const context = getCanvas2dContext(canvas);
+  context.drawImage(image, 0, 0, sampleWidth, sampleHeight);
+  const { data } = context.getImageData(0, 0, sampleWidth, sampleHeight);
+
+  const gray = new Uint8Array(sampleWidth * sampleHeight);
+  for (let index = 0; index < gray.length; index += 1) {
+    const offset = index * 4;
+    // Rec. 601 luma. A seam only has to read as one flat value, so the exact
+    // weighting matters less than staying cheap over several million pixels.
+    gray[index] = (data[offset] * 299 + data[offset + 1] * 587 + data[offset + 2] * 114) / 1000;
+  }
+
+  canvas.width = 0;
+  canvas.height = 0;
+  return { data: gray, width: sampleWidth, height: sampleHeight };
+}
+
+/**
  * Layout failures throw plain errors that already explain how to fix the setting,
  * so they must not be flattened into the generic image-processing message.
  */
@@ -84,15 +117,20 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
   const [margin, setMargin] = useState(DEFAULT_SPLIT_OPTIONS.margin);
   const [outputFormat, setOutputFormat] = useState<OutputFormat>('original');
   const [splitting, setSplitting] = useState(false);
+  const [detecting, setDetecting] = useState(false);
+  const [detection, setDetection] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<SplitResult[]>([]);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const frameRef = useRef<HTMLDivElement | null>(null);
   const objectUrls = useObjectUrlRegistry();
 
+  // Every caller is a change to the configuration, which is exactly when the note
+  // from the last detection stops describing the lines on screen.
   const clearResults = useCallback(() => {
     objectUrls.revokePrefix('tile:');
     setResults([]);
+    setDetection(null);
   }, [objectUrls]);
 
   const preview = useMemo<{ layout: SplitLayout | null; message: string | null }>(() => {
@@ -121,6 +159,54 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
     },
     [clearResults, dimensions, gutter, margin]
   );
+
+  const handleDetect = useCallback(async () => {
+    const image = imageRef.current;
+    if (!image || !dimensions) return;
+
+    setDetecting(true);
+    setError(null);
+    // Yield once so the button shows its working label before the passes begin.
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 0);
+    });
+
+    try {
+      const result = detectSeams(sampleGrayscale(image, dimensions.width, dimensions.height), {
+        sourceWidth: dimensions.width,
+        sourceHeight: dimensions.height,
+      });
+
+      if (result.xCuts.length === 0 && result.yCuts.length === 0) {
+        clearResults();
+        setDetection(
+          'No usable gutter was found. This works on images whose pieces are separated by a ' +
+            'plain strip running the full width or height; place the lines by hand instead.'
+        );
+        return;
+      }
+
+      clearResults();
+      setMargin(result.margin);
+      setGutter(result.gutter);
+      setXCuts(result.xCuts.map((cut) => cut.position));
+      setYCuts(result.yCuts.map((cut) => cut.position));
+
+      const total = result.xCuts.length + result.yCuts.length;
+      setDetection(
+        `Placed ${total} split ${total === 1 ? 'line' : 'lines'}: ` +
+          `${result.xCuts.length} vertical, ${result.yCuts.length} horizontal` +
+          `${result.gutter > 0 ? `, discarding ${result.gutter}px at each` : ''}` +
+          `${result.margin > 0 ? `, inside a ${result.margin}px border` : ''}. ` +
+          'Check them and move any line that sits in the wrong place.'
+      );
+    } catch (detectError) {
+      setDetection(null);
+      setError(describeSplitError(detectError));
+    } finally {
+      setDetecting(false);
+    }
+  }, [clearResults, dimensions]);
 
   const handleFiles = useCallback(
     async (newFiles: File[]) => {
@@ -161,6 +247,7 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
     setYCuts([]);
     setResults([]);
     setError(null);
+    setDetection(null);
   }, [objectUrls]);
 
   const cutsFor = (axis: Axis) => (axis === 'x' ? xCuts : yCuts);
@@ -393,7 +480,7 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
 
   return (
     <div
-      aria-busy={splitting}
+      aria-busy={splitting || detecting}
       data-image-splitter
       data-split-rows={rows}
       data-split-cols={cols}
@@ -474,6 +561,31 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
             Drag a line to move it, or type an exact position below. Arrow keys nudge a focused line
             by one pixel, Shift and an arrow key by ten.
           </p>
+
+          <fieldset className="splitter-fieldset">
+            <legend>Find the pieces automatically</legend>
+            <div className="splitter-preset-row">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleDetect}
+                disabled={detecting || splitting}
+                data-detect-seams
+              >
+                {detecting ? 'Looking for seams...' : 'Detect split lines'}
+              </button>
+            </div>
+            <p className="splitter-hint">
+              Looks for the plain strips that separate the pictures in a stitched image and puts a
+              line in each one. It cannot find a seam that is not there, and every line it places
+              stays editable.
+            </p>
+            {detection && (
+              <p className="splitter-hint" data-seam-detection role="status">
+                {detection}
+              </p>
+            )}
+          </fieldset>
 
           <fieldset className="splitter-fieldset">
             <legend>Start from an even grid</legend>
@@ -601,6 +713,11 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
       {splitting && (
         <div className="visually-hidden" role="status" aria-live="polite">
           Splitting the image.
+        </div>
+      )}
+      {detecting && (
+        <div className="visually-hidden" role="status" aria-live="polite">
+          Looking for the seams.
         </div>
       )}
       {error && (

@@ -33,21 +33,27 @@ const fullTests = [
   'validate-animation-converter-browser.mjs',
   'validate-pdf-page-tools-browser.mjs',
 ];
-const tests = secondaryOnly
-  ? ['validate-secondary-tools-browser.mjs']
-  : performanceOnly
-    ? ['validate-performance-browser.mjs']
-    : collageOnly
-      ? ['validate-collage-browser.mjs']
-      : pdfPagesOnly
-        ? ['validate-pdf-page-tools-browser.mjs']
-        : animationOnly
-          ? ['validate-animation-converter-browser.mjs']
-          : idPhotoOnly
-            ? ['validate-id-photo-browser.mjs']
-            : smokeOnly
-              ? ['validate-converter-browser.mjs', 'validate-responsive-accessibility-browser.mjs']
-              : fullTests;
+const onlyArg = process.argv.find((arg) => arg.startsWith('--only='))?.split('=')[1];
+const tests = onlyArg
+  ? [onlyArg]
+  : secondaryOnly
+    ? ['validate-secondary-tools-browser.mjs']
+    : performanceOnly
+      ? ['validate-performance-browser.mjs']
+      : collageOnly
+        ? ['validate-collage-browser.mjs']
+        : pdfPagesOnly
+          ? ['validate-pdf-page-tools-browser.mjs']
+          : animationOnly
+            ? ['validate-animation-converter-browser.mjs']
+            : idPhotoOnly
+              ? ['validate-id-photo-browser.mjs']
+              : smokeOnly
+                ? [
+                    'validate-converter-browser.mjs',
+                    'validate-responsive-accessibility-browser.mjs',
+                  ]
+                : fullTests;
 
 function findBrowser() {
   const browserCandidates =

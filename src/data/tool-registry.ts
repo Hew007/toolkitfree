@@ -179,11 +179,11 @@ export const toolRegistry: readonly ToolDefinition[] = [
     navLabel: 'Splitter',
     href: '/tools/image-splitter',
     description:
-      'Cut one image into equal pieces — a 2×2 grid, an Instagram grid, or any row and column count — locally in your browser.',
-    shortDescription: 'Cut one image into equal pieces.',
+      'Cut one image into pieces — an even grid, an Instagram grid, or lines detected along the seams of a stitched picture — locally in your browser.',
+    shortDescription: 'Cut one image into pieces, evenly or along its seams.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-02',
+    lastModified: '2026-08-03',
     related: [
       'image-collage',
       'image-cropper',

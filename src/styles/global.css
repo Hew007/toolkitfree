@@ -2188,18 +2188,30 @@ input[type='range'] {
   margin-left: auto;
 }
 
+/*
+ * Only the drag handles suppress touch panning. Putting `touch-action: none` on
+ * the frame stops the page from scrolling anywhere over the preview, which traps
+ * people on a tall image with no way to reach the controls below it.
+ */
 .splitter-frame {
   position: relative;
-  display: inline-block;
+  display: block;
+  width: fit-content;
   max-width: 100%;
-  margin-bottom: 0.75rem;
+  margin: 0 auto 0.75rem;
   line-height: 0;
-  touch-action: none;
 }
 
+/*
+ * The frame shrink-wraps the image, so capping the image height also caps the
+ * frame and keeps the percentage-positioned overlays aligned. Without this a
+ * tall source fills the screen and buries the controls.
+ */
 .splitter-frame img {
   display: block;
   max-width: 100%;
+  max-height: 60vh;
+  width: auto;
   height: auto;
 }
 
@@ -2256,6 +2268,23 @@ input[type='range'] {
 .splitter-handle:hover > span,
 .splitter-handle:focus-visible > span {
   background: #d97706;
+}
+
+/* A finger needs a larger grab area than a cursor. */
+@media (hover: none) and (pointer: coarse) {
+  .splitter-handle-x {
+    width: 32px;
+    transform: translateX(-16px);
+  }
+
+  .splitter-handle-y {
+    height: 32px;
+    transform: translateY(-16px);
+  }
+
+  .splitter-handle-y > span {
+    margin: 14px 0;
+  }
 }
 
 .splitter-hint {

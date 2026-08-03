@@ -73,6 +73,22 @@ fs.writeFileSync(
   })
 );
 
+// The same four pictures, this time butted apart by a plain white gutter. This is
+// what automatic seam detection is for.
+const SEAM_X = 190;
+const SEAM_Y = 140;
+const SEAM_WIDTH = 20;
+const stitched = path.join(tempDir, 'stitched.png');
+fs.writeFileSync(
+  stitched,
+  encodePng(SOURCE_WIDTH, SOURCE_HEIGHT, (x, y) => {
+    const onSeam =
+      (x >= SEAM_X && x < SEAM_X + SEAM_WIDTH) || (y >= SEAM_Y && y < SEAM_Y + SEAM_WIDTH);
+    if (onSeam) return [255, 255, 255];
+    return QUADRANTS[(y < SEAM_Y ? 0 : 2) + (x < SEAM_X ? 0 : 1)].rgb;
+  })
+);
+
 const target = await fetch(`${endpoint}/json/new?${encodeURIComponent('about:blank')}`, {
   method: 'PUT',
 }).then((response) => {
@@ -452,6 +468,73 @@ assert.equal(
 await send('Emulation.setTouchEmulationEnabled', { enabled: false });
 await send('Emulation.clearDeviceMetricsOverride');
 
+// --- Automatic seam detection ------------------------------------------------
+
+// The quadrants are butted straight together, so there is no gutter to find and
+// the tool has to say so instead of inventing lines.
+await evaluate(`document.querySelector('[data-detect-seams]').click()`);
+await waitFor(
+  `document.querySelector('[data-seam-detection]')?.textContent.includes('No usable gutter')`,
+  'an image without a gutter is reported honestly'
+);
+
+await clickButton('Choose a different image');
+await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, 'uploader restored');
+await setFile(stitched);
+await waitFor(`document.getElementById('splitter-x-cut-0')`, 'stitched image ready');
+
+// The even grid opens on 200 and 150; detection has to move both lines onto the
+// real seams and set the discard width to the gutter it measured.
+await evaluate(`document.querySelector('[data-detect-seams]').click()`);
+await waitFor(
+  `document.querySelector('[data-seam-detection]')?.textContent.startsWith('Placed')`,
+  'seams detected'
+);
+const detectionNote = await evaluate(`document.querySelector('[data-seam-detection]').textContent`);
+assert.deepEqual(
+  await evaluate(`(() => {
+    const root = document.querySelector('[data-image-splitter]');
+    return {
+      tiles: root.dataset.splitTileCount,
+      handles: String(document.querySelectorAll('.splitter-handle').length),
+      xCut: document.getElementById('splitter-x-cut-0').value,
+      yCut: document.getElementById('splitter-y-cut-0').value,
+      gutter: document.getElementById('splitter-gutter').value,
+      margin: document.getElementById('splitter-margin').value,
+    };
+  })()`),
+  {
+    tiles: '4',
+    handles: '2',
+    xCut: String(SEAM_X),
+    yCut: String(SEAM_Y),
+    gutter: String(SEAM_WIDTH),
+    margin: '0',
+  },
+  'Detection lands on both gutters and discards their full width'
+);
+
+await clickButtonStartingWith('Split into');
+await waitFor(`document.querySelector('[data-split-results]')`, 'detected split results');
+const detectedPieces = await evaluate(readPieces);
+assert.deepEqual(
+  detectedPieces.map((piece) => `${piece.width}x${piece.height} ${piece.centre}`),
+  [
+    `${SEAM_X}x${SEAM_Y} ${QUADRANTS[0].hex}`,
+    `${SEAM_X}x${SEAM_Y} ${QUADRANTS[1].hex}`,
+    `${SEAM_X}x${SEAM_Y} ${QUADRANTS[2].hex}`,
+    `${SEAM_X}x${SEAM_Y} ${QUADRANTS[3].hex}`,
+  ],
+  'The detected lines drop the gutters and leave the four pictures intact'
+);
+
+// A detected line is a starting point, not a verdict: it still moves.
+assert.equal(await setNumberInput('splitter-x-cut-0', 150), '150');
+await waitFor(
+  `!document.querySelector('[data-seam-detection]')`,
+  'the detection note clears once a line is edited'
+);
+
 // --- Object URL hygiene ------------------------------------------------------
 
 await clickButton('Choose a different image');
@@ -471,6 +554,8 @@ console.log(
     status: 'IMAGE_SPLITTER_BROWSER_VALIDATION_OK',
     fixture: `${SOURCE_WIDTH}x${SOURCE_HEIGHT} generated`,
     evenPieces: evenPieces.length,
+    detectedPieces: detectedPieces.length,
+    detectionNote,
     zipEntries: Object.keys(archive.files).length,
     zipBytes: fs.statSync(downloadPath).size,
     objectUrls: finalStats,
