@@ -33,7 +33,12 @@ const faqItems = [
   {
     question: 'Can I split an image that already has gaps between the pictures?',
     answer:
-      'Yes. Set the outer margin to skip a border, and set the discard width so each split line drops a band of pixels instead of cutting at a single point. The pieces are then taken from the content between those bands. Automatic seam detection is not part of this version.',
+      'Yes, and Detect split lines can find those gaps for you. It reads the image, looks for the plain strips running the full width or the full height, and places a line in each one. Failing that, set the outer margin to skip a border and set the discard width so each line drops a band of pixels instead of cutting at a single point.',
+  },
+  {
+    question: 'When does automatic seam detection fail?',
+    answer:
+      'It only finds a gap that is actually there, plain, and unbroken across the whole image. Pictures butted together with no gap leave nothing to detect, and a gap that matches the pictures around it in colour is skipped on purpose so a plain sky is not mistaken for a seam. A seam that stops partway cannot become a split line either, because a line always runs the full width or height. Detection is a starting point: every line it places can be dragged, typed, added, or removed.',
   },
   {
     question: 'How many pieces can I create?',
@@ -81,7 +86,7 @@ const structuredData = {
   operatingSystem: 'Any',
   offers: { '@type': 'Offer', price: '0' },
   description:
-    'Split one image into pieces in your browser. Start from an even grid, then drag or type the exact position of every split line, and download the pieces individually or as a ZIP.',
+    'Split one image into pieces in your browser. Detect the seams of a stitched picture automatically, or drag and type the exact position of every split line, and download the pieces individually or as a ZIP.',
 };
 
 const breadcrumbSchema = {
@@ -106,7 +111,7 @@ const faqStructuredData = {
 
 <Layout
   title="Image Splitter - Cut an Image Into Custom Pieces"
-  description="Split an image in your browser. Start from an even grid, then drag or type the exact position of each split line. Uneven pieces supported. Nothing is uploaded."
+  description="Split an image in your browser. Detect the seams of a stitched picture, or drag and type the exact position of each split line. Nothing is uploaded."
   ogImage="/social/image-splitter.png"
   structuredData={[structuredData, faqStructuredData, breadcrumbSchema]}
 >
@@ -114,8 +119,8 @@ const faqStructuredData = {
     <div class="tool-content">
       <h1>Free Image Splitter</h1>
       <p style="color: var(--color-text-light); margin-bottom: 0.5rem;">
-        Cut one image into pieces. Drag each split line or type its exact position, so a stitched
-        collage can be cut along its real edges — not just into equal parts.
+        Cut one image into pieces. Detect the seams of a stitched collage, or drag each split line
+        and type its exact position — so the cuts follow the real edges, not just an even grid.
       </p>
       <div class="privacy-badge">Image processing stays on this device</div>
 
@@ -127,7 +132,10 @@ const faqStructuredData = {
         <h2>How to Split an Image</h2>
         <ol class="howto-steps">
           <li>Upload a JPG, PNG, or WebP image by dragging & dropping or clicking to browse</li>
-          <li>Pick a common split, or set your own row and column count to lay out the lines</li>
+          <li>
+            Click "Detect split lines" to find the seams of a stitched image, or pick a common split
+            and set your own row and column count
+          </li>
           <li>
             Drag any split line to move it, or type its exact pixel position — add and remove lines
             as needed
@@ -139,6 +147,7 @@ const faqStructuredData = {
       <section class="features-section">
         <h2>Features</h2>
         <ul class="features-list">
+          <li>Automatic seam detection for stitched images, with every line still editable</li>
           <li>Drag each split line, or type its exact pixel position</li>
           <li>Uneven pieces — cut a stitched collage along its real edges</li>
           <li>Add or remove individual lines, up to 144 pieces</li>
@@ -200,6 +209,7 @@ const faqStructuredData = {
           <li style="padding: 0.25rem 0;">2 × 2 quarters</li>
           <li style="padding: 0.25rem 0;">3 × 3 Instagram grid</li>
           <li style="padding: 0.25rem 0;">Custom lines, uneven pieces</li>
+          <li style="padding: 0.25rem 0;">Seams found automatically</li>
         </ul>
       </div>
 
