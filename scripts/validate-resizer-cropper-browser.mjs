@@ -412,6 +412,13 @@ for (const [slug, preset, ratio] of cropperVariants) {
 await navigate('/tools/image-cropper/crop-to-16-9/');
 await uploadGenerated({ name: 'drag.png', width: 1200, height: 800 });
 await waitFor(`Boolean(document.querySelector('[data-crop-handle="se"]'))`, 'desktop crop handles');
+// The crop box renders as soon as the image loads, but the frame only takes its
+// measured width a frame later. Reading the size before that would compare the
+// zoomed preview against an unmeasured one.
+await waitFor(
+  `Boolean(document.querySelector('.cropper-preview-frame.is-zoomable'))`,
+  'cropper preview measured'
+);
 const zoomStart = await evaluate(`(() => {
   const scroll = document.querySelector('.cropper-preview-scroll');
   return { width: scroll.scrollWidth, height: scroll.scrollHeight };
