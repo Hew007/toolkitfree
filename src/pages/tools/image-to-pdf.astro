@@ -20,9 +20,19 @@ const faqItems = [
       'Yes. Drag an image onto another page and both are arranged on that page automatically. Each image can then be moved and resized independently. By default every image gets its own page.',
   },
   {
+    question: 'How do I undo combining two images onto one page?',
+    answer:
+      'Select the image and click "Move to new page," or drag it into the space between two pages. Either way it gets a page of its own again, at the position you drop it. To change the order of the pages themselves without combining anything, use the up and down arrows in each page heading.',
+  },
+  {
+    question: 'Can I make another PDF without reloading the page?',
+    answer:
+      'Yes. Click "Start new PDF" next to the download button, or "Clear all" below the editor, and every image is removed so you can begin the next document. Download the finished file first, because it is only held in this browser tab.',
+  },
+  {
     question: 'Can I use the editor without a mouse?',
     answer:
-      'Yes. Focus an image and use the arrow keys to move it, Alt plus the arrow keys to resize it, the bracket keys to rotate it, Ctrl plus the arrow keys to reorder it on the page, and Alt plus PageUp or PageDown to move it to another page. Hold Shift for larger steps.',
+      'Yes. Focus an image and use the arrow keys to move it, Alt plus the arrow keys to resize it, the bracket keys to rotate it, Ctrl plus the arrow keys to reorder it on the page, Alt plus PageUp or PageDown to combine it onto the previous or next page, and Alt plus Enter to give it a page of its own. Hold Shift for larger steps.',
   },
   {
     question: 'Is this image to PDF converter free?',
@@ -127,6 +137,10 @@ const breadcrumbSchema = {
           <li>Choose page size (A4, Letter, or Fit to Image), orientation, and margins</li>
           <li>Drag an image to move it, drag a corner to resize it, or rotate it 90&deg;</li>
           <li>Drop an image onto another page to put several images on one page</li>
+          <li>
+            Drop it between two pages to give it a page of its own, or reorder pages with the arrows
+            in each page heading
+          </li>
           <li>Click "Create PDF" and download — the file matches the preview exactly</li>
         </ol>
       </section>

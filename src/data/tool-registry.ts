@@ -183,7 +183,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Cut one image into pieces, evenly or along its seams.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-03',
+    lastModified: '2026-08-04',
     related: [
       'image-collage',
       'image-cropper',
@@ -288,7 +288,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Lay images out on PDF pages and export what you see.',
     category: 'create-export',
     status: 'public',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-04',
     related: [
       'pdf-splitter',
       'image-converter',

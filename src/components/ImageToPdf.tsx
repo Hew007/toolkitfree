@@ -17,8 +17,12 @@ import {
   autoArrangePage,
   derivePdfPages,
   fitPlacement,
+  moveItemToNewPage,
+  moveItemToPage,
+  movePageBy,
   movePlacement,
   pixelsToMillimeters,
+  removeItemFromPages,
   rotatePlacementBy,
   rotatedAspect,
   type PdfFitMode,
@@ -37,6 +41,8 @@ interface PdfItem {
   /** Null when the file could not be decoded; such items never reach a page. */
   naturalWidth: number | null;
   naturalHeight: number | null;
+  /** False for a file that failed to decode, which keeps it off every page. */
+  renderable: boolean;
   decodeError: string | null;
   rotation: PdfPageRotation;
   /** Null means "let auto-layout decide"; any manual edit pins a concrete value. */
@@ -95,6 +101,7 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
             previewUrl: objectUrls.replace(`pdf:preview:${id}`, file),
             naturalWidth: null,
             naturalHeight: null,
+            renderable: false,
             decodeError: getImageProcessingErrorMessage(fileError),
             rotation: 0,
             placement: null,
@@ -120,6 +127,7 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
           previewUrl: objectUrls.replace(`pdf:preview:${id}`, file),
           naturalWidth,
           naturalHeight,
+          renderable: naturalWidth !== null,
           decodeError,
           rotation: 0,
           placement: null,
@@ -137,20 +145,24 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
   const handleRemove = useCallback(
     (id: number) => {
       setItems((current) => {
-        const index = current.findIndex((item) => item.id === id);
-        if (index === -1) return current;
-        objectUrls.revoke(`pdf:preview:${current[index].id}`);
-        const next = current.filter((item) => item.id !== id);
-        if (current[index].startsNewPage && next[index] && !next[index].startsNewPage) {
-          next[index] = { ...next[index], startsNewPage: true };
-        }
-        return next;
+        if (!current.some((item) => item.id === id)) return current;
+        objectUrls.revoke(`pdf:preview:${id}`);
+        return removeItemFromPages(current, id);
       });
       setSelectedId((current) => (current === id ? null : current));
       clearResult();
     },
     [clearResult, objectUrls]
   );
+
+  /** Drops every image and result so the next PDF starts from an empty editor. */
+  const handleStartOver = useCallback(() => {
+    setItems([]);
+    setSelectedId(null);
+    setError(null);
+    clearResult();
+    objectUrls.revokePrefix('pdf:preview:');
+  }, [clearResult, objectUrls]);
 
   const patchItem = useCallback(
     (id: number, patch: Partial<PdfItem>) => {
@@ -180,10 +192,7 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
    * clamped onto the current page so changing page size never strands an image.
    */
   const pages = useMemo<PdfEditorPage[]>(() => {
-    const grouped = derivePdfPages(
-      items.map((item) => ({ ...item, renderable: item.naturalWidth !== null }))
-    );
-    return grouped.map((groupItems) => {
+    return derivePdfPages(items).map((groupItems) => {
       const geometry = pageGeometry(groupItems[0]);
       const aspects = groupItems.map((item) =>
         rotatedAspect(item.naturalWidth!, item.naturalHeight!, item.rotation)
@@ -249,35 +258,43 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
     [effectiveMargin, findContext, items, patchItem]
   );
 
-  /** Moves an image onto another page; `targetPageIndex === pages.length` opens a new one. */
-  const handleMoveToPage = useCallback(
-    (id: number, targetPageIndex: number) => {
-      setItems((current) => {
-        const index = current.findIndex((item) => item.id === id);
-        if (index === -1) return current;
-        const moving = current[index];
-
-        const withoutItem = current.filter((item) => item.id !== id);
-        // Whatever followed the moved image may now need to open its page.
-        if (moving.startsNewPage && withoutItem[index] && !withoutItem[index].startsNewPage) {
-          withoutItem[index] = { ...withoutItem[index], startsNewPage: true };
-        }
-
-        const targetPage = pages[targetPageIndex];
-        if (!targetPage) {
-          // Dropped past the last page: give it a page of its own at the end.
-          return [...withoutItem, { ...moving, startsNewPage: true, placement: null }];
-        }
-
-        const lastOnTarget = targetPage.items[targetPage.items.length - 1];
-        const insertAt = withoutItem.findIndex((item) => item.id === lastOnTarget.id) + 1;
-        const next = [...withoutItem];
-        next.splice(insertAt, 0, { ...moving, startsNewPage: false, placement: null });
-        return next;
-      });
+  /**
+   * Re-pages an image and lets auto-layout place it again, since a placement
+   * pinned to its old page would land arbitrarily on the new one.
+   */
+  const repage = useCallback(
+    (id: number, shuffle: (current: PdfItem[]) => PdfItem[]) => {
+      setItems((current) =>
+        shuffle(current).map((item) => (item.id === id ? { ...item, placement: null } : item))
+      );
       clearResult();
     },
-    [clearResult, pages]
+    [clearResult]
+  );
+
+  /** Combines an image onto another page; `targetPageIndex === pages.length` opens a new one. */
+  const handleMoveToPage = useCallback(
+    (id: number, targetPageIndex: number) => {
+      repage(id, (current) => moveItemToPage(current, id, targetPageIndex));
+    },
+    [repage]
+  );
+
+  /** Splits an image back out onto a page of its own at the given boundary. */
+  const handleMoveToNewPage = useCallback(
+    (id: number, gapIndex: number) => {
+      repage(id, (current) => moveItemToNewPage(current, id, gapIndex));
+    },
+    [repage]
+  );
+
+  /** Reorders whole pages, leaving every placement on them untouched. */
+  const handleMovePage = useCallback(
+    (pageIndex: number, delta: -1 | 1) => {
+      setItems((current) => movePageBy(current, pageIndex, delta));
+      clearResult();
+    },
+    [clearResult]
   );
 
   /** Swaps two neighbours on the same page, leaving page membership untouched. */
@@ -527,6 +544,8 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
             onFit={handleFit}
             onRemove={handleRemove}
             onMoveToPage={handleMoveToPage}
+            onMoveToNewPage={handleMoveToNewPage}
+            onMovePage={handleMovePage}
             onReorderWithinPage={handleReorderWithinPage}
           />
 
@@ -567,6 +586,15 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
               disabled={processing}
             >
               Reset layout
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              data-testid="pdf-clear-all"
+              onClick={handleStartOver}
+              disabled={processing}
+            >
+              Clear all
             </button>
           </div>
           <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.75rem' }}>
@@ -628,10 +656,23 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
                 </div>
               </div>
             </div>
-            <button type="button" onClick={handleDownload} className="btn btn-primary">
-              Download PDF
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button type="button" onClick={handleDownload} className="btn btn-primary">
+                Download PDF
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-testid="pdf-start-over"
+                onClick={handleStartOver}
+              >
+                Start new PDF
+              </button>
+            </div>
           </div>
+          <p style={{ fontSize: '0.8125rem', color: '#6b7280', margin: '0.5rem 0 0' }}>
+            Download it before starting a new PDF — the file is held in this tab only.
+          </p>
         </div>
       )}
     </div>

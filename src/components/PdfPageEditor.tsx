@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import {
   MIN_PLACEMENT_MM,
   movePlacement,
@@ -35,8 +35,11 @@ interface PdfPageEditorProps {
   onRotate: (id: number, delta: -90 | 90) => void;
   onFit: (id: number, mode: PdfFitMode) => void;
   onRemove: (id: number) => void;
-  /** Drops an image onto another page; the target is a 0-based page index. */
+  /** Combines an image onto another page; the target is a 0-based page index. */
   onMoveToPage: (id: number, pageIndex: number) => void;
+  /** Splits an image onto a page of its own at the boundary before `gapIndex`. */
+  onMoveToNewPage: (id: number, gapIndex: number) => void;
+  onMovePage: (pageIndex: number, delta: -1 | 1) => void;
   onReorderWithinPage: (id: number, direction: -1 | 1) => void;
 }
 
@@ -50,6 +53,13 @@ interface DragState {
   aspect: number;
   pageIndex: number;
 }
+
+/**
+ * Where a dragged image would land: onto an existing page, combining it with
+ * what is already there, or into the boundary between two pages, where it
+ * becomes a page of its own.
+ */
+type DropTarget = { kind: 'page'; index: number } | { kind: 'gap'; index: number };
 
 const CORNERS: readonly PdfScaleHandle[] = ['nw', 'ne', 'sw', 'se'];
 
@@ -82,11 +92,15 @@ export default function PdfPageEditor({
   onFit,
   onRemove,
   onMoveToPage,
+  onMoveToNewPage,
+  onMovePage,
   onReorderWithinPage,
 }: PdfPageEditorProps) {
   const dragRef = useRef<DragState | null>(null);
   const pageRefs = useRef(new Map<number, HTMLDivElement>());
-  const [dropTarget, setDropTarget] = useState<number | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
+  const [dragging, setDragging] = useState(false);
   const [announcement, setAnnouncement] = useState('');
 
   /** Millimetres per CSS pixel for a page, read live so resizes need no observer. */
@@ -97,20 +111,45 @@ export default function PdfPageEditor({
     return bounds.width > 0 ? geometry.width / bounds.width : 0;
   };
 
-  /** Which page currently sits under the pointer, if any. */
-  const pageUnderPointer = (clientX: number, clientY: number): number | null => {
-    for (const [index, element] of pageRefs.current) {
-      const bounds = element.getBoundingClientRect();
+  /**
+   * Resolves the pointer to a drop target. Landing inside a page combines the
+   * image with it; landing in the space between pages inserts it as its own
+   * page there. Pointers well outside the list drop nothing at all.
+   */
+  const dropUnderPointer = (clientX: number, clientY: number): DropTarget | null => {
+    const list = listRef.current;
+    if (!list) return null;
+    // A little slack so a drag that overshoots the edge still resolves.
+    const slack = 32;
+    const listBounds = list.getBoundingClientRect();
+    if (
+      clientX < listBounds.left - slack ||
+      clientX > listBounds.right + slack ||
+      clientY < listBounds.top - slack ||
+      clientY > listBounds.bottom + slack
+    ) {
+      return null;
+    }
+
+    const rects = [...pageRefs.current.entries()]
+      .sort(([left], [right]) => left - right)
+      .map(([index, element]) => ({ index, bounds: element.getBoundingClientRect() }));
+
+    for (const { index, bounds } of rects) {
       if (
         clientX >= bounds.left &&
         clientX <= bounds.right &&
         clientY >= bounds.top &&
         clientY <= bounds.bottom
       ) {
-        return index;
+        return { kind: 'page', index };
       }
     }
-    return null;
+
+    // Not on a page: the boundary is the one just above the first page that
+    // still starts below the pointer, or the very last boundary.
+    const next = rects.find(({ bounds }) => clientY < bounds.top);
+    return { kind: 'gap', index: next ? next.index : rects.length };
   };
 
   const beginDrag = (
@@ -123,6 +162,7 @@ export default function PdfPageEditor({
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
     onSelect(item.id);
+    setDragging(handle === 'move');
     dragRef.current = {
       pointerId: event.pointerId,
       itemId: item.id,
@@ -146,8 +186,11 @@ export default function PdfPageEditor({
 
     if (drag.handle === 'move') {
       onPlacementChange(drag.itemId, movePlacement(drag.startPlacement, deltaX, deltaY, geometry));
-      const target = pageUnderPointer(event.clientX, event.clientY);
-      setDropTarget(target !== null && target !== drag.pageIndex ? target : null);
+      const target = dropUnderPointer(event.clientX, event.clientY);
+      // Dropping back onto the page it came from is a plain move, not a re-page.
+      setDropTarget(
+        target && target.kind === 'page' && target.index === drag.pageIndex ? null : target
+      );
       return;
     }
 
@@ -170,11 +213,23 @@ export default function PdfPageEditor({
     dragRef.current = null;
     const target = dropTarget;
     setDropTarget(null);
+    setDragging(false);
     if (!drag || drag.pointerId !== event.pointerId) return;
-    if (drag.handle === 'move' && target !== null && target !== drag.pageIndex) {
-      onMoveToPage(drag.itemId, target);
-      setAnnouncement(`Moved to page ${target + 1}.`);
+    if (drag.handle !== 'move' || target === null) return;
+
+    if (target.kind === 'page') {
+      if (target.index === drag.pageIndex) return;
+      onMoveToPage(drag.itemId, target.index);
+      setAnnouncement(`Combined onto page ${target.index + 1}.`);
+      return;
     }
+    onMoveToNewPage(drag.itemId, target.index);
+    setAnnouncement(`Moved to a new page ${target.index + 1}.`);
+  };
+
+  const splitToNewPage = (id: number, pageIndex: number) => {
+    onMoveToNewPage(id, pageIndex + 1);
+    setAnnouncement('Moved to a page of its own.');
   };
 
   const handleKeyDown = (
@@ -196,12 +251,17 @@ export default function PdfPageEditor({
       onRemove(item.id);
       return;
     }
+    if (event.altKey && event.key === 'Enter') {
+      event.preventDefault();
+      splitToNewPage(item.id, pageIndex);
+      return;
+    }
     if (event.altKey && (event.key === 'PageUp' || event.key === 'PageDown')) {
       event.preventDefault();
       const target = event.key === 'PageUp' ? pageIndex - 1 : pageIndex + 1;
       if (target < 0 || target > pages.length) return;
       onMoveToPage(item.id, target);
-      setAnnouncement(`Moved to page ${target + 1}.`);
+      setAnnouncement(`Combined onto page ${target + 1}.`);
       return;
     }
     if (event.ctrlKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
@@ -243,200 +303,256 @@ export default function PdfPageEditor({
 
   if (pages.length === 0) return null;
 
+  /** The boundary before page `gapIndex`; dropping here makes a page of its own. */
+  const renderGap = (gapIndex: number) => {
+    const active = dropTarget?.kind === 'gap' && dropTarget.index === gapIndex;
+    return (
+      <div
+        className="pdf-page-gap"
+        data-pdf-page-gap={gapIndex}
+        data-visible={dragging ? 'true' : undefined}
+        data-active={active ? 'true' : undefined}
+        aria-hidden="true"
+      >
+        <span>{active ? 'Drop here as its own page' : 'New page'}</span>
+      </div>
+    );
+  };
+
   return (
     <section aria-label="Page layout" data-pdf-page-count={pages.length}>
       <p style={{ margin: '0 0 0.75rem', color: '#6b7280', fontSize: '0.8125rem' }}>
-        Drag an image to move it, drag a corner to resize, and drop it on another page to combine
-        images. With an image focused: arrows move, Alt+arrows resize, <kbd>[</kbd> / <kbd>]</kbd>{' '}
-        rotate, Ctrl+arrows reorder, Alt+PageUp / PageDown change page.
+        Drag an image to move it and drag a corner to resize. Drop it on another page to combine the
+        two, or drop it in the space between pages to give it a page of its own. With an image
+        focused: arrows move, Alt+arrows resize, <kbd>[</kbd> / <kbd>]</kbd> rotate, Ctrl+arrows
+        reorder, Alt+PageUp / PageDown combine onto the previous or next page, Alt+Enter splits it
+        onto a new page.
       </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div className="pdf-page-list" ref={listRef}>
         {pages.map((page, pageIndex) => {
-          const isDropTarget = dropTarget === pageIndex;
+          const isDropTarget = dropTarget?.kind === 'page' && dropTarget.index === pageIndex;
           return (
-            <div key={pageIndex} className="pdf-page-shell">
-              <div
-                style={{
-                  fontSize: '0.75rem',
-                  color: '#6b7280',
-                  marginBottom: '0.375rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <span>
-                  Page {pageIndex + 1} of {pages.length}
-                </span>
-                <span>
-                  {page.geometry.width.toFixed(0)} x {page.geometry.height.toFixed(0)} mm
-                </span>
-              </div>
-
-              <div
-                ref={(element) => {
-                  if (element) pageRefs.current.set(pageIndex, element);
-                  else pageRefs.current.delete(pageIndex);
-                }}
-                data-pdf-page={pageIndex + 1}
-                className="pdf-page-canvas"
-                onPointerMove={(event) => continueDrag(event, page.geometry)}
-                onPointerUp={endDrag}
-                onPointerCancel={endDrag}
-                style={{
-                  position: 'relative',
-                  width: '100%',
-                  aspectRatio: `${page.geometry.width} / ${page.geometry.height}`,
-                  background: '#ffffff',
-                  border: isDropTarget ? '2px solid #2563eb' : '1px solid #d1d5db',
-                  boxShadow: isDropTarget
-                    ? '0 0 0 4px rgba(37,99,235,.15)'
-                    : '0 1px 3px rgba(0,0,0,.1)',
-                  touchAction: 'none',
-                  overflow: 'hidden',
-                }}
-              >
-                {margin > 0 && (
-                  <div
-                    aria-hidden="true"
-                    style={{
-                      position: 'absolute',
-                      left: `${(margin / page.geometry.width) * 100}%`,
-                      right: `${(margin / page.geometry.width) * 100}%`,
-                      top: `${(margin / page.geometry.height) * 100}%`,
-                      bottom: `${(margin / page.geometry.height) * 100}%`,
-                      border: '1px dashed #cbd5e1',
-                      pointerEvents: 'none',
-                    }}
-                  />
-                )}
-
-                {page.items.map((item) => {
-                  const selected = item.id === selectedId;
-                  const quarter = item.rotation % 180 !== 0;
-                  return (
-                    // The image box is a composite control: it is draggable with a pointer and
-                    // fully operable from the keyboard via the handler above.
-                    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-                    <div
-                      key={item.id}
-                      role="group"
-                      tabIndex={disabled ? -1 : 0}
-                      aria-label={`${item.name} on page ${pageIndex + 1}. Arrows move, Alt plus arrows resize, brackets rotate.`}
-                      data-pdf-file={item.name}
-                      data-pdf-placement={formatPlacement(item.placement, item.rotation)}
-                      onFocus={() => onSelect(item.id)}
-                      onKeyDown={(event) => handleKeyDown(event, item, pageIndex, page.geometry)}
-                      onPointerDown={(event) => beginDrag(event, item, pageIndex, 'move')}
-                      style={{
-                        position: 'absolute',
-                        left: `${(item.placement.x / page.geometry.width) * 100}%`,
-                        top: `${(item.placement.y / page.geometry.height) * 100}%`,
-                        width: `${(item.placement.width / page.geometry.width) * 100}%`,
-                        height: `${(item.placement.height / page.geometry.height) * 100}%`,
-                        outline: selected ? '2px solid #2563eb' : '1px solid rgba(0,0,0,.15)',
-                        outlineOffset: 0,
-                        cursor: disabled ? 'default' : 'grab',
-                        touchAction: 'none',
+            <Fragment key={pageIndex}>
+              {renderGap(pageIndex)}
+              <div className="pdf-page-shell">
+                <div className="pdf-page-heading">
+                  <span>
+                    Page {pageIndex + 1} of {pages.length}
+                  </span>
+                  <span className="pdf-page-heading-actions">
+                    <span>
+                      {page.geometry.width.toFixed(0)} x {page.geometry.height.toFixed(0)} mm
+                    </span>
+                    <button
+                      type="button"
+                      className="pdf-page-move"
+                      data-pdf-page-up={pageIndex + 1}
+                      aria-label={`Move page ${pageIndex + 1} earlier`}
+                      disabled={disabled || pageIndex === 0}
+                      onClick={() => {
+                        onMovePage(pageIndex, -1);
+                        setAnnouncement(`Page moved to position ${pageIndex}.`);
                       }}
                     >
-                      <img
-                        src={item.previewUrl}
-                        alt=""
-                        draggable={false}
-                        style={{
-                          position: 'absolute',
-                          left: '50%',
-                          top: '50%',
-                          // A quarter turn swaps the axes, so the pre-rotation box
-                          // must be sized against the opposite edge of its container.
-                          width: quarter
-                            ? `${(item.placement.height / item.placement.width) * 100}%`
-                            : '100%',
-                          height: quarter
-                            ? `${(item.placement.width / item.placement.height) * 100}%`
-                            : '100%',
-                          maxWidth: 'none',
-                          objectFit: 'fill',
-                          transform: `translate(-50%, -50%) rotate(${item.rotation}deg)`,
-                          userSelect: 'none',
-                          pointerEvents: 'none',
-                        }}
-                      />
+                      &uarr;
+                    </button>
+                    <button
+                      type="button"
+                      className="pdf-page-move"
+                      data-pdf-page-down={pageIndex + 1}
+                      aria-label={`Move page ${pageIndex + 1} later`}
+                      disabled={disabled || pageIndex === pages.length - 1}
+                      onClick={() => {
+                        onMovePage(pageIndex, 1);
+                        setAnnouncement(`Page moved to position ${pageIndex + 2}.`);
+                      }}
+                    >
+                      &darr;
+                    </button>
+                  </span>
+                </div>
 
-                      {selected &&
-                        !disabled &&
-                        CORNERS.map((corner) => (
-                          <span
-                            key={corner}
-                            data-pdf-handle={corner}
-                            onPointerDown={(event) => beginDrag(event, item, pageIndex, corner)}
-                            style={{
-                              position: 'absolute',
-                              left: CORNER_STYLE[corner].left,
-                              top: CORNER_STYLE[corner].top,
-                              width: 12,
-                              height: 12,
-                              marginLeft: -6,
-                              marginTop: -6,
-                              background: '#ffffff',
-                              border: '2px solid #2563eb',
-                              borderRadius: 2,
-                              cursor: CORNER_STYLE[corner].cursor,
-                              touchAction: 'none',
-                            }}
-                          />
-                        ))}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {page.items.some((item) => item.id === selectedId) && !disabled && (
                 <div
+                  ref={(element) => {
+                    if (element) pageRefs.current.set(pageIndex, element);
+                    else pageRefs.current.delete(pageIndex);
+                  }}
+                  data-pdf-page={pageIndex + 1}
+                  className="pdf-page-canvas"
+                  onPointerMove={(event) => continueDrag(event, page.geometry)}
+                  onPointerUp={endDrag}
+                  onPointerCancel={endDrag}
                   style={{
-                    display: 'flex',
-                    gap: '0.375rem',
-                    flexWrap: 'wrap',
-                    marginTop: '0.5rem',
+                    position: 'relative',
+                    width: '100%',
+                    aspectRatio: `${page.geometry.width} / ${page.geometry.height}`,
+                    background: '#ffffff',
+                    border: isDropTarget ? '2px solid #2563eb' : '1px solid #d1d5db',
+                    boxShadow: isDropTarget
+                      ? '0 0 0 4px rgba(37,99,235,.15)'
+                      : '0 1px 3px rgba(0,0,0,.1)',
+                    touchAction: 'none',
+                    overflow: 'hidden',
                   }}
                 >
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => onRotate(selectedId!, -90)}
+                  {margin > 0 && (
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        position: 'absolute',
+                        left: `${(margin / page.geometry.width) * 100}%`,
+                        right: `${(margin / page.geometry.width) * 100}%`,
+                        top: `${(margin / page.geometry.height) * 100}%`,
+                        bottom: `${(margin / page.geometry.height) * 100}%`,
+                        border: '1px dashed #cbd5e1',
+                        pointerEvents: 'none',
+                      }}
+                    />
+                  )}
+
+                  {page.items.map((item) => {
+                    const selected = item.id === selectedId;
+                    const quarter = item.rotation % 180 !== 0;
+                    return (
+                      // The image box is a composite control: it is draggable with a pointer and
+                      // fully operable from the keyboard via the handler above.
+                      // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+                      <div
+                        key={item.id}
+                        role="group"
+                        tabIndex={disabled ? -1 : 0}
+                        aria-label={`${item.name} on page ${pageIndex + 1}. Arrows move, Alt plus arrows resize, brackets rotate.`}
+                        data-pdf-file={item.name}
+                        data-pdf-placement={formatPlacement(item.placement, item.rotation)}
+                        onFocus={() => onSelect(item.id)}
+                        onKeyDown={(event) => handleKeyDown(event, item, pageIndex, page.geometry)}
+                        onPointerDown={(event) => beginDrag(event, item, pageIndex, 'move')}
+                        style={{
+                          position: 'absolute',
+                          left: `${(item.placement.x / page.geometry.width) * 100}%`,
+                          top: `${(item.placement.y / page.geometry.height) * 100}%`,
+                          width: `${(item.placement.width / page.geometry.width) * 100}%`,
+                          height: `${(item.placement.height / page.geometry.height) * 100}%`,
+                          outline: selected ? '2px solid #2563eb' : '1px solid rgba(0,0,0,.15)',
+                          outlineOffset: 0,
+                          cursor: disabled ? 'default' : 'grab',
+                          touchAction: 'none',
+                        }}
+                      >
+                        <img
+                          src={item.previewUrl}
+                          alt=""
+                          draggable={false}
+                          style={{
+                            position: 'absolute',
+                            left: '50%',
+                            top: '50%',
+                            // A quarter turn swaps the axes, so the pre-rotation box
+                            // must be sized against the opposite edge of its container.
+                            width: quarter
+                              ? `${(item.placement.height / item.placement.width) * 100}%`
+                              : '100%',
+                            height: quarter
+                              ? `${(item.placement.width / item.placement.height) * 100}%`
+                              : '100%',
+                            maxWidth: 'none',
+                            objectFit: 'fill',
+                            transform: `translate(-50%, -50%) rotate(${item.rotation}deg)`,
+                            userSelect: 'none',
+                            pointerEvents: 'none',
+                          }}
+                        />
+
+                        {selected &&
+                          !disabled &&
+                          CORNERS.map((corner) => (
+                            <span
+                              key={corner}
+                              data-pdf-handle={corner}
+                              onPointerDown={(event) => beginDrag(event, item, pageIndex, corner)}
+                              style={{
+                                position: 'absolute',
+                                left: CORNER_STYLE[corner].left,
+                                top: CORNER_STYLE[corner].top,
+                                width: 12,
+                                height: 12,
+                                marginLeft: -6,
+                                marginTop: -6,
+                                background: '#ffffff',
+                                border: '2px solid #2563eb',
+                                borderRadius: 2,
+                                cursor: CORNER_STYLE[corner].cursor,
+                                touchAction: 'none',
+                              }}
+                            />
+                          ))}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {page.items.some((item) => item.id === selectedId) && !disabled && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '0.375rem',
+                      flexWrap: 'wrap',
+                      marginTop: '0.5rem',
+                    }}
                   >
-                    Rotate left
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => onRotate(selectedId!, 90)}
-                  >
-                    Rotate right
-                  </button>
-                  {(['fit', 'fill', 'actual'] as const).map((mode) => (
                     <button
-                      key={mode}
                       type="button"
                       className="btn btn-secondary"
-                      onClick={() => onFit(selectedId!, mode)}
+                      onClick={() => onRotate(selectedId!, -90)}
                     >
-                      {mode === 'fit' ? 'Fit page' : mode === 'fill' ? 'Fill page' : 'Actual size'}
+                      Rotate left
                     </button>
-                  ))}
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => onRemove(selectedId!)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              )}
-            </div>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => onRotate(selectedId!, 90)}
+                    >
+                      Rotate right
+                    </button>
+                    {(['fit', 'fill', 'actual'] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => onFit(selectedId!, mode)}
+                      >
+                        {mode === 'fit'
+                          ? 'Fit page'
+                          : mode === 'fill'
+                            ? 'Fill page'
+                            : 'Actual size'}
+                      </button>
+                    ))}
+                    {page.items.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-testid="pdf-split-page"
+                        onClick={() => splitToNewPage(selectedId!, pageIndex)}
+                      >
+                        Move to new page
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => onRemove(selectedId!)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            </Fragment>
           );
         })}
+        {renderGap(pages.length)}
       </div>
 
       <p aria-live="polite" className="visually-hidden">

@@ -152,6 +152,123 @@ export function derivePdfPages<T extends { startsNewPage: boolean; renderable: b
   return pages;
 }
 
+/** The shape `derivePdfPages` and the page-shuffling helpers below need. */
+export interface PdfPageMember {
+  id: number;
+  startsNewPage: boolean;
+  renderable: boolean;
+}
+
+/**
+ * Pulls an item out of the list and hands page-opening duty to whatever follows
+ * it, skipping undecodable items because they never reach a page themselves.
+ */
+function detachItem<T extends PdfPageMember>(
+  items: readonly T[],
+  id: number
+): { moving: T; rest: T[] } | null {
+  const index = items.findIndex((item) => item.id === id);
+  if (index === -1) return null;
+  const moving = items[index];
+  const rest = items.filter((item) => item.id !== id);
+  if (moving.startsNewPage) {
+    for (let cursor = index; cursor < rest.length; cursor += 1) {
+      if (!rest[cursor].renderable) continue;
+      if (!rest[cursor].startsNewPage) rest[cursor] = { ...rest[cursor], startsNewPage: true };
+      break;
+    }
+  }
+  return { moving, rest };
+}
+
+function insertAt<T>(items: readonly T[], index: number, entry: T): T[] {
+  return [...items.slice(0, index), entry, ...items.slice(index)];
+}
+
+/** Removes an item, handing page-opening duty to whatever followed it. */
+export function removeItemFromPages<T extends PdfPageMember>(items: readonly T[], id: number): T[] {
+  return detachItem(items, id)?.rest ?? [...items];
+}
+
+/**
+ * Appends an image to the end of an existing page, combining it with whatever is
+ * already there. An out-of-range target gives the image a page of its own at the
+ * end, which is what dropping past the last page means.
+ */
+export function moveItemToPage<T extends PdfPageMember>(
+  items: readonly T[],
+  id: number,
+  targetPageIndex: number
+): T[] {
+  const detached = detachItem(items, id);
+  if (!detached) return [...items];
+  const { moving, rest } = detached;
+
+  const targetPage = derivePdfPages(items)[targetPageIndex];
+  if (!targetPage) return [...rest, { ...moving, startsNewPage: true }];
+
+  // The image may already be the only thing on the target page, in which case
+  // there is nothing to combine it with and the list is left alone.
+  const companions = targetPage.filter((item) => item.id !== id);
+  if (companions.length === 0) return [...items];
+
+  const anchor = companions[companions.length - 1].id;
+  const at = rest.findIndex((item) => item.id === anchor) + 1;
+  return insertAt(rest, at, { ...moving, startsNewPage: false });
+}
+
+/**
+ * Splits an image onto a page of its own, inserted at `gapIndex` — the boundary
+ * before page `gapIndex`, so `0` puts it first and `pages.length` puts it last.
+ * This is the inverse of `moveItemToPage`, and the only way back out of a
+ * combined page.
+ */
+export function moveItemToNewPage<T extends PdfPageMember>(
+  items: readonly T[],
+  id: number,
+  gapIndex: number
+): T[] {
+  const pages = derivePdfPages(items);
+  if (gapIndex < 0 || gapIndex > pages.length) return [...items];
+  // Resolve the boundary against the current layout before the list shifts.
+  const anchor = gapIndex < pages.length ? pages[gapIndex][0].id : null;
+  const originalIndex = items.findIndex((item) => item.id === id);
+
+  const detached = detachItem(items, id);
+  if (!detached) return [...items];
+  const { moving, rest } = detached;
+  const entry = { ...moving, startsNewPage: true };
+
+  if (anchor === null) return [...rest, entry];
+  const at = rest.findIndex((item) => item.id === anchor);
+  // The anchor was the image itself: it already opened that page, so it goes
+  // back exactly where it was and only its page-mates move down.
+  return insertAt(rest, at === -1 ? originalIndex : at, entry);
+}
+
+/** Moves a whole page one step earlier or later, carrying all of its images. */
+export function movePageBy<T extends PdfPageMember>(
+  items: readonly T[],
+  pageIndex: number,
+  delta: -1 | 1
+): T[] {
+  const pages = derivePdfPages(items);
+  const targetIndex = pageIndex + delta;
+  if (!pages[pageIndex] || targetIndex < 0 || targetIndex >= pages.length) return [...items];
+
+  const moving = new Set(pages[pageIndex].map((item) => item.id));
+  const block = items.filter((item) => moving.has(item.id));
+  const rest = items.filter((item) => !moving.has(item.id));
+  block[0] = { ...block[0], startsNewPage: true };
+
+  const neighbour = pages[targetIndex];
+  const at =
+    delta === -1
+      ? rest.findIndex((item) => item.id === neighbour[0].id)
+      : rest.findIndex((item) => item.id === neighbour[neighbour.length - 1].id) + 1;
+  return [...rest.slice(0, at), ...block, ...rest.slice(at)];
+}
+
 /**
  * Default placement for every image on a page. One image reuses the existing
  * contain-and-centre maths; several are packed into a near-square grid, each

@@ -7,8 +7,12 @@ import {
   calculatePdfPlacement,
   derivePdfPages,
   fitPlacement,
+  moveItemToNewPage,
+  moveItemToPage,
+  movePageBy,
   movePlacement,
   pixelsToMillimeters,
+  removeItemFromPages,
   rotatePlacementBy,
   rotatedAspect,
   scalePlacement,
@@ -154,6 +158,58 @@ assert.deepEqual(
 // The first renderable item opens a page even when its flag says otherwise.
 assert.deepEqual(derivePdfPages([{ id: 9, startsNewPage: false, renderable: true }]).length, 1);
 assert.deepEqual(derivePdfPages([]), []);
+
+/* Page shuffling. `layout` names the pages a list groups into, so each case
+ * reads as the before and after the user actually sees in the editor. */
+const layout = (items) => derivePdfPages(items).map((page) => page.map((item) => item.id));
+const singles = (...ids) => ids.map((id) => ({ id, startsNewPage: true, renderable: true }));
+
+// Combining is what dropping an image onto another page does.
+assert.deepEqual(layout(moveItemToPage(singles(1, 2, 3), 3, 0)), [[1, 3], [2]]);
+// ...and splitting it back out again must restore the original layout, which is
+// the round trip that used to be impossible once two images shared a page.
+const combined = moveItemToPage(singles(1, 2, 3), 3, 0);
+assert.deepEqual(layout(moveItemToNewPage(combined, 3, 2)), [[1], [2], [3]]);
+// A boundary of 0 puts the split page first, and one past the end puts it last.
+assert.deepEqual(layout(moveItemToNewPage(combined, 3, 0)), [[3], [1], [2]]);
+assert.deepEqual(layout(moveItemToNewPage(combined, 3, 2)), [[1], [2], [3]]);
+// Splitting the image that opens a multi-image page leaves its page-mates behind.
+const trio = moveItemToPage(moveItemToPage(singles(1, 2, 3), 2, 0), 3, 0);
+assert.deepEqual(layout(trio), [[1, 2, 3]]);
+assert.deepEqual(layout(moveItemToNewPage(trio, 1, 0)), [[1], [2, 3]]);
+// An image that already owns its page cannot be split any further.
+assert.deepEqual(layout(moveItemToNewPage(singles(1, 2), 2, 1)), [[1], [2]]);
+// Combining an image with the page it is alone on is a no-op, not a duplication.
+assert.deepEqual(layout(moveItemToPage(singles(1, 2), 2, 1)), [[1], [2]]);
+// Dropping past the last page opens a page at the end.
+assert.deepEqual(layout(moveItemToPage(singles(1, 2), 1, 5)), [[2], [1]]);
+// An unknown id and an out-of-range boundary both leave the list alone.
+assert.deepEqual(layout(moveItemToPage(singles(1, 2), 99, 0)), [[1], [2]]);
+assert.deepEqual(layout(moveItemToNewPage(singles(1, 2), 1, -1)), [[1], [2]]);
+
+// Page reordering carries every image on the page and never merges them.
+assert.deepEqual(layout(movePageBy(trio.concat(singles(4)), 0, 1)), [[4], [1, 2, 3]]);
+assert.deepEqual(layout(movePageBy(singles(1, 2, 3), 2, -1)), [[1], [3], [2]]);
+assert.deepEqual(layout(movePageBy(singles(1, 2, 3), 0, -1)), [[1], [2], [3]]);
+assert.deepEqual(layout(movePageBy(singles(1, 2, 3), 2, 1)), [[1], [2], [3]]);
+
+// Removing the item that opened a page promotes its successor, skipping files
+// that failed to decode because they never reach a page of their own.
+assert.deepEqual(layout(removeItemFromPages(trio, 1)), [[2, 3]]);
+assert.deepEqual(
+  layout(
+    removeItemFromPages(
+      [
+        { id: 1, startsNewPage: true, renderable: true },
+        { id: 2, startsNewPage: true, renderable: false },
+        { id: 3, startsNewPage: false, renderable: true },
+      ],
+      1
+    )
+  ),
+  [[3]]
+);
+assert.deepEqual(layout(removeItemFromPages(singles(1, 2), 99)), [[1], [2]]);
 
 const a4 = { width: 210, height: 297 };
 

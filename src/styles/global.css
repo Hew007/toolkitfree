@@ -1844,6 +1844,11 @@ li {
   }
 }
 
+.pdf-page-list {
+  display: flex;
+  flex-direction: column;
+}
+
 .pdf-page-shell {
   width: min(100%, 480px);
   margin-inline: auto;
@@ -1852,6 +1857,77 @@ li {
 .pdf-page-canvas {
   max-width: 480px;
   margin-inline: auto;
+}
+
+.pdf-page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.375rem;
+}
+
+.pdf-page-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pdf-page-move {
+  border: 1px solid var(--color-border);
+  background: white;
+  color: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.75rem;
+}
+
+.pdf-page-move:hover:not(:disabled) {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.pdf-page-move:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/*
+ * The boundary between two pages, and a drop target in its own right: an image
+ * dropped here becomes a page of its own. Its height never changes, so starting
+ * a drag cannot shift the pages out from under the pointer.
+ */
+.pdf-page-gap {
+  width: min(100%, 480px);
+  margin-inline: auto;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 2px dashed transparent;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  color: transparent;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+
+.pdf-page-gap[data-visible='true'] {
+  border-top-color: var(--color-border);
+  color: #9ca3af;
+}
+
+.pdf-page-gap[data-active='true'] {
+  border-top-color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-weight: 600;
 }
 
 /* Results */

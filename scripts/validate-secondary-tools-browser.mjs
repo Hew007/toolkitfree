@@ -254,6 +254,46 @@ assert.equal(
   '1'
 );
 
+const pageLayout = `
+  [...document.querySelectorAll('[data-pdf-page]')].map((page) =>
+    [...page.querySelectorAll('[data-pdf-file]')].map((item) => item.dataset.pdfFile)
+  )
+`;
+
+// Alt+Enter splits an image back onto a page of its own. Combining used to be a
+// one-way trip: nothing could undo it, so a mis-drop meant starting over.
+await evaluate(pressOnImage('second.png', 'Enter', { altKey: true }));
+await waitFor(`document.querySelectorAll('[data-pdf-page]').length === 2`, 'image split back out');
+assert.deepEqual(
+  await evaluate(pageLayout),
+  [['first.png'], ['second.png']],
+  'splitting restores one image per page'
+);
+
+// Page order is its own control, so changing it never combines images.
+await evaluate(`document.querySelector('[data-pdf-page-up="2"]').click()`);
+await waitFor(`${pageLayout}[0][0] === 'second.png'`, 'pages reordered');
+assert.deepEqual(
+  await evaluate(pageLayout),
+  [['second.png'], ['first.png']],
+  'moving a page up swaps whole pages instead of merging them'
+);
+assert.equal(
+  await evaluate(`document.querySelector('[data-pdf-page-up="1"]').disabled`),
+  true,
+  'the first page cannot move any earlier'
+);
+
+// Put the order back and combine again so the conversion below still covers a
+// single page holding two images.
+await evaluate(`document.querySelector('[data-pdf-page-up="2"]').click()`);
+await waitFor(`${pageLayout}[0][0] === 'first.png'`, 'pages reordered back');
+await evaluate(pressOnImage('second.png', 'PageUp', { altKey: true }));
+await waitFor(
+  `document.querySelectorAll('[data-pdf-page]').length === 1`,
+  'images merged onto one page again'
+);
+
 await evaluate(`document.querySelector('[data-testid="pdf-convert"]').click()`);
 await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'partial PDF result');
 assert.equal(
@@ -279,6 +319,33 @@ assert.equal((pdfText.match(/\/Type \/Page\b/g) || []).length, 1);
 assert.equal((pdfText.match(/\/MediaBox/g) || []).length >= 1, true);
 const pdfStats = await evaluate(`window.__objectUrlStats()`);
 assert.equal(pdfStats.active, 4, 'Three previews plus one PDF result should remain active');
+
+// Starting the next PDF must not mean removing images one at a time or
+// reloading the page — the result panel offers it directly.
+await evaluate(`document.querySelector('[data-testid="pdf-start-over"]').click()`);
+await waitFor(
+  `document.querySelectorAll('[data-pdf-file]').length === 0`,
+  'editor cleared for the next PDF'
+);
+assert.equal(await evaluate(`Boolean(document.querySelector('[data-pdf-result]'))`), false);
+assert.equal(await evaluate(`Boolean(document.querySelector('[data-pdf-page-count]'))`), false);
+assert.equal(
+  await evaluate(`Boolean(document.querySelector('[data-pdf-error="broken.png"]'))`),
+  false,
+  'the earlier decode failure is cleared along with its file'
+);
+assert.equal(
+  (await evaluate(`window.__objectUrlStats()`)).active,
+  0,
+  'starting over releases every preview and the finished PDF'
+);
+
+// ...and the tool is usable again straight away.
+await upload([{ name: 'third.png', type: 'image/png', width: 300, height: 300 }]);
+await waitFor(
+  `document.querySelectorAll('[data-pdf-file]').length === 1`,
+  'a fresh image after starting over'
+);
 
 await navigate('/tools/image-to-pdf/image-to-pdf-no-margin/');
 await upload([{ name: 'wide.png', type: 'image/png', width: 400, height: 200 }]);
