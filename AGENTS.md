@@ -15,23 +15,25 @@ Most tools run entirely in the browser with Canvas API, WebAssembly, or client-s
 - Image Converter
 - Image Compressor
 - Image Resizer
-- Image Cropper
-- Image to PDF
-- Favicon Generator
-- QR Code Generator
-- Background Remover
 - Image Enhancer
 - Image Collage Maker
+- Image Splitter
+- ID Photo Size & Print Tool
+- Image Cropper
+- Background Remover
+- Video to GIF, WebP & APNG
+- Image to PDF
+- PDF Splitter & Page Extractor
+- Favicon Generator
+- QR Code Generator
 
-In-progress planning:
-
-- ID Photo / Passport Photo size and print-preparation tool
-- Additional PDF utilities
+Additional focused image and PDF utilities remain candidates for future work.
 
 ## Follow-up Backlog
 
-- Simplify Image Collage Maker interactions: reduce configuration up front, make defaults smarter, and optimize for a fast upload → choose simple layout → download flow.
-- After the Image Collage Maker simplification is complete, follow this release and growth sequence without skipping steps:
+- The Image Collage Maker simplification and the original site-wide quality pass are complete.
+- Image Splitter and expanded Image to PDF editing landed afterward, so repeat the release checks for
+  the latest build before promotion. Follow this sequence without skipping steps:
   1. Run automated UI coverage across every public page at desktop, intermediate, tablet, and mobile widths. Check layout overlap and overflow, primary interactions, uploads, downloads, browser errors, accessibility basics, and screenshots for visual review.
   2. Hand the fully tested local or preview build to the project owner for a complete manual verification pass. Do not begin promotion until the owner confirms this pass is complete.
   3. Produce a concrete promotion plan with platform order, content, landing pages, measurement, and feedback checkpoints; then execute it gradually on approved external platforms.
@@ -84,6 +86,14 @@ Important directories:
 
 - Before new implementation work, inspect branch and working tree state.
 - Fetch/pull remote changes first when starting new repository work.
+- Read `PROJECT_STATUS.md` before planning or implementing work. It is the living handoff and the
+  authoritative record of current progress, owner decisions, validation state, and next actions.
+- Update `PROJECT_STATUS.md` in the same change whenever a feature, important behavior change,
+  release step, major decision, deployment, or meaningful validation is completed. Keep the current
+  snapshot and next actions accurate; add a concise dated entry to the recent progress log. Do not
+  create a new handoff document for routine work.
+- Do not mark work complete in `PROJECT_STATUS.md` until the relevant checks have actually passed.
+  If work is partial or blocked, record that state and the exact continuation point.
 - If the branch is dirty, diverged, or conflicted, resolve or report that state before implementing.
 - Keep user changes and unrelated local files intact.
 - Do not push unless the user asks.

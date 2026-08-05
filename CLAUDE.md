@@ -20,6 +20,7 @@ Current public tools:
 - Image Resizer
 - Image Enhancer
 - Image Collage Maker
+- Image Splitter
 - ID Photo Size & Print Tool
 - Image Cropper
 - Background Remover
@@ -66,6 +67,9 @@ available in the shell.
 
 - Inspect the branch and working tree before implementation.
 - Fetch and pull remote changes before new repository work.
+- Read `PROJECT_STATUS.md` before planning or implementation, and update it in the same change after
+  every completed feature, important decision, release step, deployment, or meaningful validation.
+  It is the living handoff; do not create routine one-off handoff files.
 - Preserve unrelated user changes.
 - Do not push unless the project owner asks.
 - Run checks proportional to the change; meaningful UI work requires browser regression.
