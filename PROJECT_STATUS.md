@@ -11,17 +11,16 @@ task.
 
 ## Current Snapshot
 
-- Repository baseline inspected for this handoff: local `master` was clean and synchronized with
-  `origin/master` at `008d2fb` (`refactor(test): 自动生成测试fixtures并提取浏览器查找逻辑`).
-  The intended local changes after that inspection are this file plus the maintenance instructions
-  in `AGENTS.md` and `CLAUDE.md`; inspect `git status` for the live state.
+- Repository baseline: local `master` at `232c857` (`docs: add PROJECT_STATUS.md living handoff and
+  maintenance rules`), one commit ahead of `origin/master` (`008d2fb`), not yet pushed. Product code
+  is identical to `008d2fb`; the extra commit only adds this handoff and its maintenance rules.
 - Product state: the main product-quality redesign and interaction pass is complete. The owner
   manually approved the 2026-08-01 baseline and authorized its push on 2026-08-02.
-- Growth state: external promotion has **not started**. The owner paused further work on 2026-08-05
-  because the current AI quota was exhausted.
-- Release caveat: public product changes landed after the last owner-approved baseline, notably Image
-  Splitter and the expanded Image to PDF editor. Before promotion, rerun the complete current quality
-  and browser suites and hand the latest production build to the owner for a focused manual pass.
+- Growth state: external promotion has **not started**. The owner resumed work on 2026-08-05.
+- Release caveat: Image Splitter and the expanded Image to PDF editor landed after the last
+  owner-approved baseline. The full quality and browser suites were rerun and passed on 2026-08-05
+  (see Validation State), and the production deployment was spot-checked. The remaining blocker
+  before promotion is the owner's focused manual pass on the latest build.
 - Advertising: intentionally disabled. Do not restore AdSense scripts, placeholders, or ad-oriented
   layout without explicit owner approval. Product value and user experience come first.
 - Privacy model: selected file contents are processed locally in the browser. Normal site resources,
@@ -98,38 +97,40 @@ registries and validation scripts described in `AGENTS.md`.
 
 Last fully documented whole-site pass:
 
-- Date: 2026-08-01
-- Quality gates: 11/11 passed.
-- Browser suites: 11/11 passed in Chrome with zero browser errors.
-- Responsive/accessibility sweep: 66 public routes at widths 320, 375, 768, 1024, and 1440;
-  330 screenshots generated.
-- Site integrity at that baseline: 67 HTML pages and 3,766 internal links, with zero broken or
-  redirecting internal links.
-- Owner manually approved that baseline before it was pushed.
+- Date: 2026-08-05, at `232c857` (product code identical to `008d2fb`).
+- Production deployment spot-check: homepage, sitemap, `/tools/image-splitter/`,
+  `/tools/image-to-pdf/`, the Background Remover asset manifest, and the FFmpeg runtime manifest all
+  returned 200 on <https://toolkitfree.net/>; the deployed pages contain the newest Image Splitter
+  seam-detection and Image to PDF split/reorder/clear features.
+- `npm run check`: 12/12 quality gate steps passed, including 46 seam-detection assertions.
+- `npm run test:e2e` (Chrome, full): 12/12 scripts passed with zero browser errors.
+- `npm run test:e2e:edge` (Edge, smoke): 2/2 scripts passed with zero browser errors.
+- Responsive/accessibility sweep: 71 public routes at widths 320, 375, 768, 1024, and 1440;
+  355 checks and 355 screenshots (`docs/ui-regression/2026-08-05T13-48-46.081Z`).
+- Site integrity: 72 HTML pages and 4,292 internal links, with zero broken or redirecting internal
+  links.
 
-This evidence predates Image Splitter and the latest Image to PDF work. The current repository has
-focused tests for those additions, but this file does not claim that a fresh full-suite and owner
-manual pass has been completed at `008d2fb`.
+The owner has **not** yet manually approved this 2026-08-05 build; the 2026-08-01 baseline remains
+the last owner-approved state.
 
-## Current Pause and Exact Resume Point
+## Current State and Exact Next Actions
 
-Do not start external promotion or make speculative product changes while the owner has paused work.
+Steps 1–4 of the previous resume plan were completed on 2026-08-05: the tree was inspected, the
+production deployment was spot-checked, and the full quality plus browser suites passed (see
+Validation State). The remaining sequence is:
 
-When the owner resumes:
-
-1. Fetch/pull and inspect the current branch and working tree.
-2. Confirm the latest commit is deployed successfully to <https://toolkitfree.net/> and that static
-   Background Remover and FFmpeg assets load from the intended site paths.
-3. Run `npm run check`.
-4. Run `npm run test:e2e` and, when relevant, `npm run test:e2e:edge`.
-5. Give the owner a focused manual checklist covering Image Splitter, the expanded Image to PDF
-   editor, uploads/downloads, laptop layout, mobile layout, and Background Remover loading.
-6. Only after the owner approves the latest build, collect a fresh Search Console and Cloudflare Web
+1. `in progress` — The owner performs a focused manual pass on the latest build, covering Image
+   Splitter (including seam detection), the expanded Image to PDF editor, uploads/downloads across
+   tools, laptop layout, mobile layout, and Background Remover loading. A checklist was handed to
+   the owner on 2026-08-05.
+2. Only after the owner approves the latest build, collect a fresh Search Console and Cloudflare Web
    Analytics baseline.
-7. Produce a concrete promotion plan with platform order, content, target landing pages,
+3. Produce a concrete promotion plan with platform order, content, target landing pages,
    measurements, and feedback checkpoints. Obtain approval before posting externally.
-8. Continue technical SEO, content SEO, GEO/answer-engine optimization, internal linking, and
+4. Continue technical SEO, content SEO, GEO/answer-engine optimization, internal linking, and
    relevant non-spammy link acquisition based on measured data.
+
+Do not start external promotion before the owner's approval in step 1.
 
 ## Suggested First Promotion Candidates
 
@@ -159,6 +160,9 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-08-05 — `verified`: reran the full release checks at `232c857` — production deployment
+  spot-check, `npm run check` (12/12), Chrome full e2e (12/12, zero browser errors), and Edge smoke
+  (2/2). Handed the owner a manual checklist; owner approval is still pending.
 - 2026-08-05 — `verified`: synchronized local `master` to `008d2fb`; created this living handoff and
   made its maintenance mandatory in `AGENTS.md`. No product behavior changed.
 - 2026-08-05 — `verified`: test fixtures became generated assets and browser discovery was shared.
