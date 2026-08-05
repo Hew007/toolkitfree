@@ -40,3 +40,6 @@ docs/
 
 # browser validator scratch directories (fallback when BROWSER_TEMP_DIR is unset)
 .tmp-*/
+
+# generated browser-test fixtures (scripts/prepare-test-fixtures.mjs)
+test-fixtures/

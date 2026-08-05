@@ -130,6 +130,12 @@ async function convertTo(format, sourceKey = null) {
 await send('Page.enable');
 await send('Runtime.enable');
 await send('Log.enable');
+// The progress indicator is intentionally still under `prefers-reduced-motion: reduce`, so the
+// motion assertions below only hold when the preference is pinned rather than inherited from the
+// host operating system.
+await send('Emulation.setEmulatedMedia', {
+  features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+});
 await send('Page.navigate', { url: `${baseUrl}/tools/video-to-gif/` });
 await waitFor(
   `document.querySelector('[data-animation-converter] input[type="file"]') && !document.querySelector('astro-island[ssr]')`,

@@ -8,7 +8,7 @@ const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9223';
 const browserName = process.env.BROWSER_NAME || 'Chrome';
 const runExtended = process.env.EXTENDED === '1';
 const baseUrl = `${process.env.BASE_URL || 'http://127.0.0.1:4321'}/tools/image-converter`;
-const fixtures = path.join(root, 'docs/optimization/baseline/fixtures');
+const fixtures = path.join(root, 'test-fixtures');
 const tempDir =
   process.env.BROWSER_TEMP_DIR || path.join(root, `.tmp-opt03-${browserName.toLowerCase()}`);
 const downloadDir = path.join(tempDir, 'downloads');

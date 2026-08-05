@@ -2,6 +2,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { findBrowser } from './find-browser.mjs';
 
 const root = process.cwd();
 const browserArg = process.argv.find((arg) => arg.startsWith('--browser='));
@@ -54,34 +55,6 @@ const tests = onlyArg
                     'validate-responsive-accessibility-browser.mjs',
                   ]
                 : fullTests;
-
-function findBrowser() {
-  const browserCandidates =
-    browserName === 'Edge'
-      ? [
-          'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-          'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-          '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
-          '/usr/bin/microsoft-edge',
-        ]
-      : [
-          'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-          'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-          '/usr/bin/google-chrome',
-          '/usr/bin/chromium',
-        ];
-  const candidates = [
-    process.env.BROWSER_PATH,
-    process.env.CHROME_PATH,
-    ...browserCandidates,
-  ].filter(Boolean);
-  const match = candidates.find((candidate) => fs.existsSync(candidate));
-  if (!match) {
-    throw new Error(`${browserName} was not found. Set BROWSER_PATH to run browser tests.`);
-  }
-  return match;
-}
 
 function runNode(args, env = process.env) {
   return new Promise((resolve, reject) => {
@@ -139,6 +112,8 @@ async function removeTempRoot() {
   }
 }
 
+await runNode(['scripts/prepare-test-fixtures.mjs']);
+
 if (process.env.SKIP_BUILD !== '1' && !process.argv.includes('--skip-build')) {
   await runNode(['scripts/prepare-assets.mjs']);
   await runNode(['node_modules/astro/astro.js', 'build']);
@@ -154,7 +129,7 @@ const preview = spawn(
   }
 );
 const browser = spawn(
-  findBrowser(),
+  findBrowser(browserName),
   [
     '--headless=new',
     '--disable-gpu',

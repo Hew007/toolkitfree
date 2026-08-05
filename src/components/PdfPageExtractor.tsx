@@ -131,9 +131,11 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
       if (!hasPdfSignature(bytes)) throw new Error('The file does not contain a valid PDF header.');
       sourceBytesRef.current = Uint8Array.from(bytes);
 
+      // The default build calls Map.prototype.getOrInsertComputed, which browsers older than
+      // Chrome 141 do not implement. The legacy build ships the polyfill it needs.
       const [pdfjs, workerModule] = await Promise.all([
-        import('pdfjs-dist'),
-        import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+        import('pdfjs-dist/legacy/build/pdf.mjs'),
+        import('pdfjs-dist/legacy/build/pdf.worker.min.mjs?url'),
       ]);
       pdfjs.GlobalWorkerOptions.workerSrc = workerModule.default;
       const loadingTask = pdfjs.getDocument({ data: Uint8Array.from(bytes) });

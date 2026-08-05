@@ -8,7 +8,7 @@ import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
 const root = process.cwd();
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9227';
 const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
-const fixtures = path.join(root, 'docs/optimization/baseline/fixtures');
+const fixtures = path.join(root, 'test-fixtures');
 const tempDir = process.env.BROWSER_TEMP_DIR || path.join(root, '.tmp-opt07-browser');
 const downloadDir = path.join(tempDir, 'downloads');
 const duplicatePng = path.join(tempDir, 'sample.png');

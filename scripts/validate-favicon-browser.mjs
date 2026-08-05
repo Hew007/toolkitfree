@@ -5,8 +5,8 @@ import JSZip from 'jszip';
 import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
 
 const root = process.cwd();
-const fixture = path.join(root, 'docs/optimization/baseline/fixtures/opaque.png');
-const emptyFixture = path.join(root, 'docs/optimization/baseline/fixtures/empty.bin');
+const fixture = path.join(root, 'test-fixtures/opaque.png');
+const emptyFixture = path.join(root, 'test-fixtures/empty.bin');
 const downloadDir = path.join(root, '.tmp-opt02-downloads');
 const downloadPath = path.join(downloadDir, 'favicons.zip');
 const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9222';

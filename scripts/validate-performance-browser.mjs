@@ -88,7 +88,9 @@ async function evaluate(expression) {
     awaitPromise: true,
     returnByValue: true,
   });
-  if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
+  if (result.exceptionDetails) {
+    throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
+  }
   return result.result.value;
 }
 
@@ -244,7 +246,12 @@ await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'PDF resul
 
 await navigate('/tools/favicon-generator/');
 await uploadGeneratedPng({ name: 'favicon.png', width: 96, height: 64 });
-await waitFor(`document.body.innerText.includes('Generate Favicons')`, 'favicon file');
+// The page copy explains the "Generate Favicons" step, so only the button proves the upload
+// has rendered.
+await waitFor(
+  `[...document.querySelectorAll('button')].some((button) => button.textContent.trim() === 'Generate Favicons')`,
+  'favicon generate button'
+);
 assert.equal(requested(heavyAssets.jszip), false);
 await evaluate(`
   [...document.querySelectorAll('button')]
