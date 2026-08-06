@@ -130,18 +130,12 @@ Validation State). The remaining sequence is:
 5. Continue technical SEO, content SEO, GEO/answer-engine optimization, internal linking, and
    relevant non-spammy link acquisition based on measured data.
 
-Promotion plan (adopted 2026-08-07):
-
-- Phase 1 (week 1): submit to free-tool directories (e.g. Uneed, SaaSHub, AlternativeTo). Landing
-  pages: homepage and Image Compressor. Measure referral traffic and Search Console impressions.
-- Phase 2 (weeks 2–3): community posts, at most 1–2 platforms per week — Show HN (angle: local-first
-  processing plus Image Splitter seam detection; landing page: homepage) and Reddit
-  r/InternetIsBeautiful (demo angle: Background Remover or Image Splitter; wording must respect the
-  model-download and edge-accuracy caveats). Review Cloudflare referrers and user feedback within
-  48 hours of each post before continuing.
-- Phase 3 (ongoing): data-driven SEO/GEO — add long-tail variant pages and guides based on actual
-  Search Console queries; review trends every two weeks.
-- All external posts are published from the owner's accounts; the owner sees copy and timing first.
+Promotion plan: the operative playbook is `docs/promotion-execution-plan-2026-08-07.md`
+(stages S0 asset prep → S1 directories → S2 single-community test → S3 Show HN → S4 Product Hunt →
+S5 ongoing SEO/GEO), which supersedes the execution order in `docs/promotion-plan-2026-07-22.md`
+while keeping that document's constraints, claims wording, and work-package definitions normative.
+All external posts are published from the owner's accounts; the owner approves copy and timing for
+every post. Current stage: S0 (asset and copy preparation).
 
 Candidate technical follow-up found during baseline collection (not yet scheduled): the
 `section.howto-section` on tool pages reports CLS 0.123 (17% of CLS samples "needs improvement");
@@ -200,6 +194,11 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-08-07 — `in progress`: wrote the operative promotion execution plan
+  (`docs/promotion-execution-plan-2026-08-07.md`) merging the adopted phase order with the
+  2026-07-22 playbook's constraints and work packages. Stage S0 (demo GIFs, claims-facts refresh,
+  directory copy pack, measurement log) started; owner to review WP-03 assets and fill the account
+  inventory.
 - 2026-08-07 — `verified`: collected the Search Console + Cloudflare Web Analytics baseline
   (1 click / 2 impressions in 28 days; 54 pages indexed; 40 visits in 30 days, mostly self-testing)
   and adopted the phased promotion plan. Found a CLS 0.123 candidate fix on `section.howto-section`.
