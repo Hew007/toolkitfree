@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-08-05
+Last updated: 2026-08-07
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -110,8 +110,7 @@ Last fully documented whole-site pass:
 - Site integrity: 72 HTML pages and 4,292 internal links, with zero broken or redirecting internal
   links.
 
-The owner has **not** yet manually approved this 2026-08-05 build; the 2026-08-01 baseline remains
-the last owner-approved state.
+The owner manually approved this build on 2026-08-07; it is now the last owner-approved state.
 
 ## Current State and Exact Next Actions
 
@@ -119,18 +118,16 @@ Steps 1–4 of the previous resume plan were completed on 2026-08-05: the tree w
 production deployment was spot-checked, and the full quality plus browser suites passed (see
 Validation State). The remaining sequence is:
 
-1. `in progress` — The owner performs a focused manual pass on the latest build, covering Image
-   Splitter (including seam detection), the expanded Image to PDF editor, uploads/downloads across
-   tools, laptop layout, mobile layout, and Background Remover loading. A checklist was handed to
-   the owner on 2026-08-05.
-2. Only after the owner approves the latest build, collect a fresh Search Console and Cloudflare Web
-   Analytics baseline.
-3. Produce a concrete promotion plan with platform order, content, target landing pages,
-   measurements, and feedback checkpoints. Obtain approval before posting externally.
+1. `owner approved` — On 2026-08-07 the owner completed the focused manual pass on the latest build
+   (Image Splitter with seam detection, the expanded Image to PDF editor, uploads/downloads, laptop
+   and mobile layout, Background Remover loading) and approved it.
+2. `in progress` — Collect a fresh Search Console and Cloudflare Web Analytics baseline.
+3. `in progress` — Produce a concrete promotion plan with platform order, content, target landing
+   pages, measurements, and feedback checkpoints. Obtain approval before posting externally.
 4. Continue technical SEO, content SEO, GEO/answer-engine optimization, internal linking, and
    relevant non-spammy link acquisition based on measured data.
 
-Do not start external promotion before the owner's approval in step 1.
+External promotion may begin only after the owner approves the concrete promotion plan in step 3.
 
 ## Suggested First Promotion Candidates
 
@@ -160,6 +157,8 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-08-07 — `owner approved`: the owner completed the manual checklist pass on the 2026-08-05
+  validated build and approved it. Next: analytics baseline and an approved promotion plan.
 - 2026-08-05 — `verified`: reran the full release checks at `232c857` — production deployment
   spot-check, `npm run check` (12/12), Chrome full e2e (12/12, zero browser errors), and Edge smoke
   (2/2). Handed the owner a manual checklist; owner approval is still pending.
