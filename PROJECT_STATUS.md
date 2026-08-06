@@ -121,13 +121,56 @@ Validation State). The remaining sequence is:
 1. `owner approved` — On 2026-08-07 the owner completed the focused manual pass on the latest build
    (Image Splitter with seam detection, the expanded Image to PDF editor, uploads/downloads, laptop
    and mobile layout, Background Remover loading) and approved it.
-2. `in progress` — Collect a fresh Search Console and Cloudflare Web Analytics baseline.
-3. `in progress` — Produce a concrete promotion plan with platform order, content, target landing
-   pages, measurements, and feedback checkpoints. Obtain approval before posting externally.
-4. Continue technical SEO, content SEO, GEO/answer-engine optimization, internal linking, and
+2. `verified` — The Search Console and Cloudflare Web Analytics baseline was collected on
+   2026-08-07 (see Analytics Baseline below).
+3. `owner approved` — The phased promotion plan below was adopted on 2026-08-07; the owner delegated
+   the go/no-go decision and asked to review concrete post copy and timing before anything is
+   published externally.
+4. `planned` — Execute promotion phase 1 (directory submissions) with the owner, then phases 2–3.
+5. Continue technical SEO, content SEO, GEO/answer-engine optimization, internal linking, and
    relevant non-spammy link acquisition based on measured data.
 
-External promotion may begin only after the owner approves the concrete promotion plan in step 3.
+Promotion plan (adopted 2026-08-07):
+
+- Phase 1 (week 1): submit to free-tool directories (e.g. Uneed, SaaSHub, AlternativeTo). Landing
+  pages: homepage and Image Compressor. Measure referral traffic and Search Console impressions.
+- Phase 2 (weeks 2–3): community posts, at most 1–2 platforms per week — Show HN (angle: local-first
+  processing plus Image Splitter seam detection; landing page: homepage) and Reddit
+  r/InternetIsBeautiful (demo angle: Background Remover or Image Splitter; wording must respect the
+  model-download and edge-accuracy caveats). Review Cloudflare referrers and user feedback within
+  48 hours of each post before continuing.
+- Phase 3 (ongoing): data-driven SEO/GEO — add long-tail variant pages and guides based on actual
+  Search Console queries; review trends every two weeks.
+- All external posts are published from the owner's accounts; the owner sees copy and timing first.
+
+Candidate technical follow-up found during baseline collection (not yet scheduled): the
+`section.howto-section` on tool pages reports CLS 0.123 (17% of CLS samples "needs improvement");
+consider reserving space for it to reach 100% good CLS.
+
+## Analytics Baseline (2026-08-07)
+
+Search Console (last 28 days, domain property `sc-domain:toolkitfree.net`):
+
+- Totals: 1 click, 2 impressions, average position 118. Only query: "free online image toolkit".
+- Pages with impressions: homepage (1 click / 2 impressions) plus 9 pages with 1 impression each
+  (/terms, image-converter, qr-generator, image-cropper, image-enhancer, image-compressor,
+  guides/image-format-comparison, image-converter/png-to-webp, image-cropper/crop-to-square).
+- Indexing (last update 2026-07-24): 54 indexed, 40 not indexed — 20 page-with-redirect,
+  7 discovered-not-indexed, 6 alternate-with-canonical, 5 crawled-not-indexed, 1 noindex,
+  1 duplicate-canonical. The redirect and canonical buckets are largely expected
+  (trailing-slash 307s and variants); the 12 discovered/crawled-not-indexed pages are worth
+  rechecking after promotion starts.
+
+Cloudflare Web Analytics (last 30 days, bots excluded):
+
+- 40 visits, 120 page views; much of this is likely the owner's own testing (China 80 page views,
+  referrer toolkitfree.net 80 / direct 40).
+- Top paths: / (50), image-resizer (10), pdf-splitter (10), qr-generator (10), image-collage (10).
+- Countries: China 80, US 20, Canada 10, Japan 10. Devices: desktop 70, mobile 50.
+- Performance: average page load 2,314 ms; Core Web Vitals LCP 100% good, INP 100% good, CLS 83%
+  good / 17% needs improvement (debug element: `section.howto-section`, CLS 0.123).
+
+Treat these numbers as the pre-promotion zero point: effectively no organic search presence yet.
 
 ## Suggested First Promotion Candidates
 
@@ -157,6 +200,9 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-08-07 — `verified`: collected the Search Console + Cloudflare Web Analytics baseline
+  (1 click / 2 impressions in 28 days; 54 pages indexed; 40 visits in 30 days, mostly self-testing)
+  and adopted the phased promotion plan. Found a CLS 0.123 candidate fix on `section.howto-section`.
 - 2026-08-07 — `owner approved`: the owner completed the manual checklist pass on the 2026-08-05
   validated build and approved it. Next: analytics baseline and an approved promotion plan.
 - 2026-08-05 — `verified`: reran the full release checks at `232c857` — production deployment
