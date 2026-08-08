@@ -200,6 +200,11 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-08-08 — `owner approved`: adopted a plan adjustment — register all community accounts now,
+  age them 1–2 weeks with light genuine participation before any community post, and produce a
+  45–60s YouTube demo video during that window as the canonical asset other channels reference
+  (site remains the primary link everywhere; no YouTube embed on the site). Directory submissions
+  proceed without waiting. Script and metadata are in the channel copy pack.
 - 2026-08-08 — `in progress`: promotion stage S0 asset work complete — demo GIFs for Image
   Splitter, Image to PDF, and Background Remover recorded (BR on local preview after the owner
   confirmed production works and the automated-session failures were attributed to Cloudflare bot
