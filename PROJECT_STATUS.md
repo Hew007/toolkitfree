@@ -141,13 +141,11 @@ Candidate technical follow-ups (not yet scheduled):
 
 - The `section.howto-section` on tool pages reports CLS 0.123 (17% of CLS samples "needs
   improvement"); consider reserving space for it to reach 100% good CLS.
-- `blocked` (investigation): on 2026-08-08 the production Background Remover failed twice in a row
-  with "Background removal could not finish" after the model-download progress reached 100%, in an
-  automated Chrome session on the owner's machine. The same flow passes in the local e2e suite, and
-  one earlier page load also hung before `load` while a Cloudflare `challenge-platform` beacon was
-  pending. Possible causes: Cloudflare bot-management interfering with the automated session's
-  worker fetches, or device memory pressure. Needs a manual repro on production in a normal browser
-  session before treating it as a product bug.
+- `verified` (resolved, no product bug): the 2026-08-08 production Background Remover failures
+  occurred only in the automated Chrome session; the owner manually verified the flow works on
+  production in a normal browser session on 2026-08-08. Attributed to Cloudflare bot-management
+  interfering with the automated session. Automated recordings of this tool should use the local
+  preview build instead.
 
 ## Analytics Baseline (2026-08-07)
 
@@ -202,11 +200,13 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
-- 2026-08-08 — `in progress`: promotion stage S0 largely complete — recorded Image Splitter and
-  Image to PDF demo GIFs on production, refreshed the claims-facts sheet to 14 tools / 72 pages,
-  drafted the directory copy pack, and created the measurement log. Outstanding: owner review of
-  WP-03 assets + copy pack, owner account inventory, and the Background Remover production failure
-  noted under candidate follow-ups (its demo GIF is deferred).
+- 2026-08-08 — `in progress`: promotion stage S0 asset work complete — demo GIFs for Image
+  Splitter, Image to PDF, and Background Remover recorded (BR on local preview after the owner
+  confirmed production works and the automated-session failures were attributed to Cloudflare bot
+  management); claims-facts refreshed to 14 tools / 72 pages; directory copy pack approved by the
+  owner; measurement log created. GIFs are step-by-step (6–9 frames) rather than smooth screen
+  recordings — owner may re-record with GifCam for final polish. Outstanding: owner review of
+  WP-03 assets and the account inventory; then S1 directory submissions begin.
 - 2026-08-07 — `in progress`: wrote the operative promotion execution plan
   (`docs/promotion-execution-plan-2026-08-07.md`) merging the adopted phase order with the
   2026-07-22 playbook's constraints and work packages. Stage S0 (demo GIFs, claims-facts refresh,
