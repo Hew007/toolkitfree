@@ -137,9 +137,17 @@ while keeping that document's constraints, claims wording, and work-package defi
 All external posts are published from the owner's accounts; the owner approves copy and timing for
 every post. Current stage: S0 (asset and copy preparation).
 
-Candidate technical follow-up found during baseline collection (not yet scheduled): the
-`section.howto-section` on tool pages reports CLS 0.123 (17% of CLS samples "needs improvement");
-consider reserving space for it to reach 100% good CLS.
+Candidate technical follow-ups (not yet scheduled):
+
+- The `section.howto-section` on tool pages reports CLS 0.123 (17% of CLS samples "needs
+  improvement"); consider reserving space for it to reach 100% good CLS.
+- `blocked` (investigation): on 2026-08-08 the production Background Remover failed twice in a row
+  with "Background removal could not finish" after the model-download progress reached 100%, in an
+  automated Chrome session on the owner's machine. The same flow passes in the local e2e suite, and
+  one earlier page load also hung before `load` while a Cloudflare `challenge-platform` beacon was
+  pending. Possible causes: Cloudflare bot-management interfering with the automated session's
+  worker fetches, or device memory pressure. Needs a manual repro on production in a normal browser
+  session before treating it as a product bug.
 
 ## Analytics Baseline (2026-08-07)
 
@@ -194,6 +202,11 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-08-08 — `in progress`: promotion stage S0 largely complete — recorded Image Splitter and
+  Image to PDF demo GIFs on production, refreshed the claims-facts sheet to 14 tools / 72 pages,
+  drafted the directory copy pack, and created the measurement log. Outstanding: owner review of
+  WP-03 assets + copy pack, owner account inventory, and the Background Remover production failure
+  noted under candidate follow-ups (its demo GIF is deferred).
 - 2026-08-07 — `in progress`: wrote the operative promotion execution plan
   (`docs/promotion-execution-plan-2026-08-07.md`) merging the adopted phase order with the
   2026-07-22 playbook's constraints and work packages. Stage S0 (demo GIFs, claims-facts refresh,
