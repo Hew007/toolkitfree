@@ -200,6 +200,14 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-08-09 — `verified`: reorganized `docs/`. Added `docs/README.md` (folder index and three
+  maintenance rules) and `docs/archive/` for completed or superseded documents, with a README
+  warning that archived status markers are unreliable — notably `id-photo/tasks/` still marks
+  IDP-02…06 as "not started" although the ID Photo tool shipped and passed regression. Removed
+  ~68 MB of intermediate render artifacts from `promotion/assets/wp-03/` (audio/video variants,
+  duplicate renders, contact sheets), keeping the six manifest-listed finals plus the render
+  scripts and production captures. `docs/` went from 618 MB to 55 MB.
+
 - 2026-08-08 — `owner approved`: adopted a plan adjustment — register all community accounts now,
   age them 1–2 weeks with light genuine participation before any community post, and produce a
   45–60s YouTube demo video during that window as the canonical asset other channels reference
