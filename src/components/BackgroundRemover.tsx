@@ -3,17 +3,15 @@ import FileUploader from './FileUploader';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
 import {
   downloadUrl,
-  exportCanvas,
   formatSize,
-  getCanvas2dContext,
   getImageProcessingErrorMessage,
-  loadImage,
   validateImageFile,
 } from '../lib/image-processing';
 import {
   BACKGROUND_PRESETS,
   TRANSPARENT_BACKGROUND,
   backgroundLabelColor,
+  composeBackgroundColor,
   normalizeHexColor,
   removeBackgroundInWorker,
   type BackgroundProgress,
@@ -26,6 +24,19 @@ interface ProcessedFile {
   name: string;
   size: number;
   url: string;
+  /** Background the shown file was composed with, so the preview never lags the swatch. */
+  color: string;
+}
+
+/**
+ * The transparent cutout the model produced, kept so background changes are pure
+ * local recompositions. Only the compressed PNG is cached: a decoded bitmap of a
+ * large photo costs far more memory than re-decoding it for the rare colour
+ * change, and Transparent reuses this blob without decoding at all.
+ */
+interface ForegroundCache {
+  blob: Blob;
+  baseName: string;
 }
 
 const INITIAL_PROGRESS: BackgroundProgress = {
@@ -44,20 +55,65 @@ export default function BackgroundRemover() {
   const [bgColor, setBgColor] = useState(TRANSPARENT_BACKGROUND);
   const [hexDraft, setHexDraft] = useState('');
   const [hexError, setHexError] = useState<string | null>(null);
+  const [composing, setComposing] = useState(false);
+  const [modelRuns, setModelRuns] = useState(0);
   const objectUrls = useObjectUrlRegistry();
   const processingController = useRef<AbortController | null>(null);
+  const foreground = useRef<ForegroundCache | null>(null);
+  // Bumped by every recomposition and by anything that invalidates the cutout,
+  // so a slower earlier composition can never overwrite a newer background.
+  const compositionToken = useRef(0);
 
   const cancelProcessing = useCallback(() => {
     processingController.current?.abort();
     processingController.current = null;
   }, []);
 
+  const releaseForeground = useCallback(() => {
+    compositionToken.current += 1;
+    foreground.current = null;
+    setComposing(false);
+  }, []);
+
   useEffect(() => cancelProcessing, [cancelProcessing]);
+  useEffect(() => releaseForeground, [releaseForeground]);
 
   const clearResult = useCallback(() => {
+    releaseForeground();
     objectUrls.revoke('background:result');
     setResult(null);
-  }, [objectUrls]);
+  }, [objectUrls, releaseForeground]);
+
+  /**
+   * Recomposes the cached cutout onto `color` in the browser. Never touches the
+   * model, and leaves the current result on screen until the new one is ready.
+   * Callers must keep this serialized: only one full-size canvas at a time.
+   */
+  const composeWithColor = useCallback(
+    async (color: string) => {
+      const cache = foreground.current;
+      if (!cache) return;
+      compositionToken.current += 1;
+      const token = compositionToken.current;
+      setComposing(true);
+      try {
+        const blob =
+          color === TRANSPARENT_BACKGROUND
+            ? cache.blob
+            : await composeBackgroundColor(cache.blob, color);
+        if (token !== compositionToken.current) return;
+        const url = objectUrls.replace('background:result', blob);
+        setResult({ name: `${cache.baseName}_no_bg.png`, size: blob.size, url, color });
+        setError(null);
+      } catch (composeError) {
+        if (token !== compositionToken.current) return;
+        setError(getImageProcessingErrorMessage(composeError));
+      } finally {
+        if (token === compositionToken.current) setComposing(false);
+      }
+    },
+    [objectUrls]
+  );
 
   const handleFiles = useCallback(
     (files: File[]) => {
@@ -79,12 +135,18 @@ export default function BackgroundRemover() {
 
   const applyColor = useCallback(
     (value: string) => {
+      // The controls are disabled while a run or a recomposition is in flight,
+      // but the guard has to live here too: keyboard, blur and programmatic
+      // callers must not start a second full-size canvas in parallel.
+      if (processing || composing) return;
       setBgColor(value);
       setHexError(null);
       setHexDraft(value === TRANSPARENT_BACKGROUND ? '' : value);
-      clearResult();
+      // With a cutout in hand this is a local recomposition; the existing result
+      // stays visible and the model is not consulted again.
+      void composeWithColor(value);
     },
-    [clearResult]
+    [composeWithColor, composing, processing]
   );
 
   const commitHex = useCallback(() => {
@@ -102,13 +164,14 @@ export default function BackgroundRemover() {
 
   const handleRemove = useCallback(() => {
     cancelProcessing();
+    releaseForeground();
     objectUrls.revokeAll();
     setFile(null);
     setPreviewUrl(null);
     setResult(null);
     setError(null);
     setProgress(null);
-  }, [cancelProcessing, objectUrls]);
+  }, [cancelProcessing, objectUrls, releaseForeground]);
 
   const removeBackground = async () => {
     if (!file) return;
@@ -124,34 +187,23 @@ export default function BackgroundRemover() {
       // first progress event. Overwriting it here batched into the same render,
       // so the user never saw it and it never reached the DOM.
       const removedBlob = await removeBackgroundInWorker(file, setProgress, controller.signal);
+      setModelRuns((runs) => runs + 1);
 
-      let finalBlob = removedBlob;
-      if (bgColor !== TRANSPARENT_BACKGROUND) {
-        setProgress({
-          stage: 'model-initialization',
-          label: 'Applying background color',
-          percent: null,
-        });
-        const removedFile = new File([removedBlob], 'removed-background.png', {
-          type: removedBlob.type || 'image/png',
-        });
-        const image = await loadImage(removedFile, { allowedTypes: ['image/png'] });
-        const canvas = document.createElement('canvas');
-        canvas.width = image.naturalWidth;
-        canvas.height = image.naturalHeight;
-        const context = getCanvas2dContext(canvas);
-        context.fillStyle = bgColor;
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(image, 0, 0);
-        finalBlob = await exportCanvas(canvas, 'image/png');
-      }
+      // Cache the cutout so later background changes stay local.
+      foreground.current = {
+        blob: removedBlob,
+        baseName: file.name.replace(/\.[^.]+$/, '') || 'image',
+      };
 
-      const url = objectUrls.replace('background:result', finalBlob);
-      const baseName = file.name.replace(/\.[^.]+$/, '') || 'image';
-      setResult({ name: `${baseName}_no_bg.png`, size: finalBlob.size, url });
+      // The remaining paint step reports itself through the composing status.
       setProgress(null);
+      await composeWithColor(bgColor);
+      if (controller.signal.aborted) {
+        throw new DOMException('Background removal was canceled.', 'AbortError');
+      }
     } catch (processingError) {
       if (processingError instanceof DOMException && processingError.name === 'AbortError') {
+        clearResult();
         setError('Background removal was canceled.');
         setProgress(null);
         return;
@@ -169,14 +221,21 @@ export default function BackgroundRemover() {
     }
   };
 
+  // The previous result stays on screen while a new background is painted, so it
+  // must not be downloadable until its bytes match the selected colour.
+  const downloadReady = result !== null && !composing && result.color === bgColor;
+
   const handleDownload = () => {
-    if (!result) return;
+    if (!result || !downloadReady) return;
     try {
       downloadUrl(result.url, result.name);
     } catch (downloadError) {
       setError(getImageProcessingErrorMessage(downloadError));
     }
   };
+
+  // One recomposition at a time: each colour paints a full-size canvas.
+  const colorLocked = processing || composing;
 
   const isCustomColor =
     bgColor !== TRANSPARENT_BACKGROUND &&
@@ -185,10 +244,14 @@ export default function BackgroundRemover() {
   return (
     // `data-active-background` intentionally differs from the presets' `data-background-color`
     // so a selector for a preset swatch never matches this wrapper instead.
+    // `data-background-model-runs` lets the regression prove a colour change
+    // recomposes locally instead of asking the model for another cutout.
     <div
       data-background-stage={progress?.stage ?? 'idle'}
       data-active-background={bgColor}
-      aria-busy={processing}
+      data-background-composing={composing ? 'true' : 'false'}
+      data-background-model-runs={modelRuns}
+      aria-busy={processing || composing}
     >
       {!file ? (
         <FileUploader
@@ -241,7 +304,7 @@ export default function BackgroundRemover() {
                     type="button"
                     data-background-color={option.value}
                     aria-pressed={selected}
-                    disabled={processing}
+                    disabled={colorLocked}
                     onClick={() => applyColor(option.value)}
                     style={{
                       padding: '0.375rem 1rem',
@@ -252,7 +315,7 @@ export default function BackgroundRemover() {
                       backgroundPosition: isTransparent
                         ? '0 0, 0 6px, 6px -6px, -6px 0px'
                         : undefined,
-                      cursor: processing ? 'not-allowed' : 'pointer',
+                      cursor: colorLocked ? 'not-allowed' : 'pointer',
                       fontSize: '0.8rem',
                       color: backgroundLabelColor(option.swatch),
                     }}
@@ -279,7 +342,7 @@ export default function BackgroundRemover() {
                   type="color"
                   data-testid="bg-color-picker"
                   value={isCustomColor ? bgColor : '#3b82f6'}
-                  disabled={processing}
+                  disabled={colorLocked}
                   onChange={(event) => applyColor(event.target.value)}
                   style={{
                     width: 36,
@@ -287,7 +350,7 @@ export default function BackgroundRemover() {
                     padding: 2,
                     border: isCustomColor ? '2px solid #2563eb' : '1px solid #d1d5db',
                     borderRadius: 6,
-                    cursor: processing ? 'not-allowed' : 'pointer',
+                    cursor: colorLocked ? 'not-allowed' : 'pointer',
                     background: 'none',
                   }}
                 />
@@ -300,7 +363,7 @@ export default function BackgroundRemover() {
                 aria-invalid={hexError !== null}
                 placeholder="#ff7a45"
                 value={hexDraft}
-                disabled={processing}
+                disabled={colorLocked}
                 maxLength={7}
                 onChange={(event) => {
                   setHexDraft(event.target.value);
@@ -370,6 +433,11 @@ export default function BackgroundRemover() {
           {progress.percent === null ? '...' : `: ${progress.percent}%`}
         </div>
       )}
+      {composing && (
+        <div className="status status-processing" role="status" aria-live="polite">
+          Applying background color...
+        </div>
+      )}
       {error && (
         <div className="status status-error" role="alert">
           {error}
@@ -409,7 +477,8 @@ export default function BackgroundRemover() {
                   maxHeight: 200,
                   borderRadius: 4,
                   border: '1px solid #e5e7eb',
-                  backgroundImage: bgColor === TRANSPARENT_BACKGROUND ? CHECKERBOARD : undefined,
+                  backgroundImage:
+                    result.color === TRANSPARENT_BACKGROUND ? CHECKERBOARD : undefined,
                   backgroundSize: '16px 16px',
                   backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
                 }}
@@ -423,7 +492,12 @@ export default function BackgroundRemover() {
                 <div className="file-item-size">{formatSize(result.size)}</div>
               </div>
             </div>
-            <button type="button" onClick={handleDownload} className="btn btn-primary">
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="btn btn-primary"
+              disabled={!downloadReady}
+            >
               Download
             </button>
           </div>

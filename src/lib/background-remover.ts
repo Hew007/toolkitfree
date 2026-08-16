@@ -1,3 +1,4 @@
+import { exportCanvas, getCanvas2dContext } from './image-processing.ts';
 import { colorContrastRatio } from './qr-data.ts';
 
 export type BackgroundProgressStage =
@@ -49,6 +50,32 @@ export function backgroundLabelColor(swatch: string): string {
   return colorContrastRatio(LIGHT_LABEL, normalized) >= colorContrastRatio(DARK_LABEL, normalized)
     ? LIGHT_LABEL
     : DARK_LABEL;
+}
+
+/**
+ * Paints `color` behind a transparent cutout and returns a PNG.
+ *
+ * The model run and the background choice are deliberately separate: once the
+ * cutout exists, switching colours only needs this local recomposition, so the
+ * caller must never re-run the model just to change the background. Only the
+ * cutout blob is worth keeping between calls — the decoded bitmap and its
+ * canvas are full-size buffers, so they are created here and released again
+ * before the promise settles.
+ */
+export async function composeBackgroundColor(cutout: Blob, color: string): Promise<Blob> {
+  const bitmap = await createImageBitmap(cutout);
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const context = getCanvas2dContext(canvas);
+    context.fillStyle = color;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(bitmap, 0, 0);
+    return await exportCanvas(canvas, 'image/png');
+  } finally {
+    bitmap.close();
+  }
 }
 
 export interface BackgroundProgress {

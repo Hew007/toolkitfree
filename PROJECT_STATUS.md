@@ -19,8 +19,15 @@ task.
   build on 2026-08-07.
 - Growth state: external promotion has **not started**. On 2026-08-15 the owner approved the WP-03
   thumbnail, all three gallery images, and the poster, but rejected the old MP4 and all three
-  slideshow-like GIFs for publication. Replacement motion recording is now ready to start alongside
-  S0.5 account qualification; S1 directory submissions remain the next external action.
+  slideshow-like GIFs for publication. The 2026-08-16 replacement captures now use the approved
+  self-created source images, and the Image Splitter plus the 21-second homepage take are accepted
+  for post-production. Image to PDF still needs a short editor-action insert, and Background Remover
+  needs a short post-result solid-color insert; neither requires another full recording. The local
+  Background Remover now supports post-result background switching without another model run and
+  has passed its focused browser regression. The owner approved the behavior and authorized the
+  push on 2026-08-16; production deployment verification is the remaining gate before that insert
+  is recorded. S0.5 account qualification can continue in parallel; S1 directory submissions
+  remain the next external action after S0 closes.
 - Release state: `verified`. The owner approved the claims cleanup, commit `1bfca88` was pushed to
   `origin/master`, and the connected Cloudflare deployment served the new copy and asset hashes on
   2026-08-16. Post-deployment checks passed for representative changed pages, sitemap, LLM registry,
@@ -151,13 +158,20 @@ Image Collage interactive UI and updated the affected content dates to 2026-08-1
 Product and measurement gates are complete. The active one-week sequence for 2026-08-12 through
 2026-08-18 is:
 
-1. `in progress` — Close S0 motion assets. Owner recording is ready. Directory copy is approved;
+1. `in progress` — Close S0 motion assets. Directory copy is approved;
    the WP-03 thumbnail, three gallery images, and poster are owner-approved. The old 28.53-second
    MP4 and three step-based GIFs
    are rejected for publication and remain reference-only. Follow
-   `docs/promotion/06-motion-recording-brief.md`: the owner records four real browser-operation
-   clips from the now-published owner-approved build; then Codex edits them into one 45–60 second
-   video and three fluid GIFs.
+   `docs/promotion/06-motion-recording-brief.md`. The 2026-08-16 raw-footage audit selected the
+   21-second `08-18-02` homepage take for trimming and rejected the 6-second `08-21-28` take because
+   it starts mid-list and opens Image Splitter. The `09-08-34` Image Splitter replacement is
+   accepted. The `09-09-33` Image to PDF and `09-10-40` Background Remover replacements use the
+   approved images and are usable as base footage, but the owner still needs two short inserts:
+   show one visible reorder/move-to-new-page editor action for Image to PDF, and show transparent
+   plus one solid-color result state for Background Remover. The latter is now supported by a local,
+   browser-tested feature change that the owner approved for push on 2026-08-16; production
+   deployment verification remains before recording it. Codex then edits the accepted footage into
+   one 45–60 second video and three fluid GIFs.
 2. `in progress` — Complete S0.5 account qualification. Reddit, Hacker News, Product Hunt, DEV, and
    YouTube accounts were registered around 2026-07-26, but profile completion, genuine participation,
    posting access, and YouTube channel/upload readiness still require owner login and confirmation.
@@ -243,6 +257,36 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-08-16 — `owner approved` / `push authorized`: Claude Code implemented post-result
+  Background Remover colour switching. The transparent cutout Blob is cached after one AI run;
+  transparent, preset, and custom colours now recompose the downloadable PNG locally without
+  unmounting the result or rerunning the model. Recomposition locks colour inputs and Download so
+  stale-colour bytes cannot be saved, decodes only a temporary ImageBitmap, revokes replaced object
+  URLs, and guards stale asynchronous results. TypeScript, ESLint, Prettier, all 13 unit/algorithm
+  suites, the 12-step quality gate, and the focused real-Chrome secondary-tools regression passed.
+  The regression observed transparent → red → transparent with unchanged model-run count, stable
+  active object-URL count, and zero browser errors. The owner manually accepted the local behavior
+  and authorized a direct push to `master`; production deployment verification and the final short
+  Background Remover insert follow.
+
+- 2026-08-16 — `partially accepted` / `two short inserts required`: reviewed the owner's three
+  `09:08`–`09:11` replacement recordings using metadata and interval frame sampling. All are
+  readable 1920×1032 H.264 captures at approximately 30 fps and use the approved self-created
+  source images. Accepted Image Splitter: it reaches detected split lines and six successful
+  results. Image to PDF reaches a three-page PDF result but does not visibly demonstrate the
+  required reorder or move-to-new-page editor action. Background Remover reaches the transparent
+  result but then scrolls away without showing a solid-color result. Preserve both base recordings;
+  only those two short missing-action inserts remain before post-production.
+
+- 2026-08-16 — `verified` / `re-recording required`: audited all five files in the owner's Captures
+  folder by metadata plus start/middle/end and interval frame sampling. Every file is readable and
+  approximately 30 fps. Selected the 21-second `08-18-02` homepage take for post-production and
+  rejected the 6-second `08-21-28` take. The three new tool clips demonstrate working results, but
+  they use images other than the approved self-created source set; the Background Remover take also
+  ends before the required transparent/solid-color comparison. Owner re-records those three tool
+  clips; Codex handles all trimming, browser-chrome cropping, silent-audio removal, 30 fps
+  normalization, captions, MP4 assembly, and GIF export afterward.
 
 - 2026-08-16 — `owner approved` / `verified` / `published`: owner manually approved the revised
   public claims copy. Remote reconciliation found local `master` nine commits ahead of

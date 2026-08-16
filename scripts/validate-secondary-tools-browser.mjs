@@ -70,6 +70,21 @@ async function waitFor(expression, label, timeoutMs = 90_000) {
   throw new Error(`Timed out waiting for ${label}`);
 }
 
+/**
+ * `waitFor` wraps its expression in `Boolean(...)`, which is always true for a
+ * promise. Async conditions have to poll the resolved value instead.
+ */
+async function waitForValue(expression, predicate, label, timeoutMs = 90_000) {
+  const started = Date.now();
+  let last;
+  while (Date.now() - started < timeoutMs) {
+    last = await evaluate(expression);
+    if (predicate(last)) return last;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`Timed out waiting for ${label}: ${JSON.stringify(last)}`);
+}
+
 async function waitForFile(filename, timeoutMs = 30_000) {
   const fullPath = path.join(downloadPath, filename);
   const started = Date.now();
@@ -858,6 +873,240 @@ assert.equal(
   'Only model runtime session URLs may remain active'
 );
 
+// Once a cutout exists, changing the background must recompose locally: the
+// result and its "Process Again" state survive, and the model does not re-run.
+const readBackgroundResult = `
+  (async () => {
+    const container = document.querySelector('[data-background-result]');
+    const image = container?.previousElementSibling?.querySelector('img[alt="Result"]');
+    if (!container || !image) return null;
+    // The URL can be replaced between reading it and reading its bytes; that
+    // simply means another poll is needed.
+    const decoded = await (async () => {
+      const blob = await fetch(image.src).then((response) => response.blob());
+      const bitmap = await createImageBitmap(blob);
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const context = canvas.getContext('2d');
+      context.drawImage(bitmap, 0, 0);
+      const corner = [...context.getImageData(0, 0, 1, 1).data];
+      bitmap.close();
+      return { corner, bytes: blob.size };
+    })().catch(() => null);
+    if (!decoded) return null;
+    return {
+      corner: decoded.corner,
+      src: image.src,
+      bytes: decoded.bytes,
+      name: container.dataset.backgroundResult,
+      composing: document.querySelector('[data-background-composing]').dataset.backgroundComposing,
+      downloadDisabled: container.querySelector('button').disabled,
+      modelRuns: Number(document.querySelector('[data-background-model-runs]').dataset.backgroundModelRuns),
+    };
+  })()
+`;
+const watchRecomposition = `
+  (() => {
+    window.__recomposeObserver?.disconnect();
+    window.__recompose = {
+      stages: [],
+      buttons: [],
+      downloadDisabled: [],
+      colorsLocked: [],
+      resultRemovals: 0,
+      resultMissing: false,
+    };
+    const sample = () => {
+      const root = document.querySelector('[data-background-stage]');
+      const stage = root?.dataset.backgroundStage;
+      if (stage && !window.__recompose.stages.includes(stage)) window.__recompose.stages.push(stage);
+      const label = [...document.querySelectorAll('button')]
+        .map((button) => button.textContent.trim())
+        .find((text) => ['Remove Background', 'Process Again', 'Processing...'].includes(text));
+      if (label && !window.__recompose.buttons.includes(label)) window.__recompose.buttons.push(label);
+      const result = document.querySelector('[data-background-result]');
+      if (!result) window.__recompose.resultMissing = true;
+      const download = result?.querySelector('button')?.disabled;
+      const last = window.__recompose.downloadDisabled;
+      if (download !== undefined && last[last.length - 1] !== download) last.push(download);
+      const locked = document.querySelector('[data-background-color="#ff0000"]')?.disabled;
+      const lockedLog = window.__recompose.colorsLocked;
+      if (locked !== undefined && lockedLog[lockedLog.length - 1] !== locked) lockedLog.push(locked);
+    };
+    sample();
+    const observer = new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of record.removedNodes) {
+          if (node.nodeType !== 1) continue;
+          if (node.matches('[data-background-result]') || node.querySelector('[data-background-result]')) {
+            window.__recompose.resultRemovals += 1;
+          }
+        }
+      }
+      sample();
+    });
+    observer.observe(document.body, { subtree: true, attributes: true, childList: true });
+    window.__recomposeObserver = observer;
+  })()
+`;
+
+await upload([
+  {
+    name: 'recompose.png',
+    type: 'image/png',
+    width: 96,
+    height: 96,
+    kind: 'portrait',
+    background: '#f3f4f6',
+  },
+]);
+await waitFor(`document.body.innerText.includes('recompose.png')`, 'recompose input');
+// The colour survives file changes, so the previous case's custom hex would still
+// be selected. Start from Transparent explicitly.
+await evaluate(`document.querySelector('[data-background-color="transparent"]').click()`);
+await waitFor(
+  `document.querySelector('[data-active-background]').dataset.activeBackground === 'transparent'`,
+  'transparent baseline selection'
+);
+// The counter is cumulative for the mounted island, so compare against a baseline.
+const runsBaseline = await evaluate(
+  `Number(document.querySelector('[data-background-model-runs]').dataset.backgroundModelRuns)`
+);
+await evaluate(
+  `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Remove Background').click()`
+);
+await waitFor(
+  `Boolean(document.querySelector('[data-background-result], .status-error'))`,
+  'recompose first result',
+  240_000
+);
+assert.equal(await evaluate(`document.querySelector('.status-error')?.textContent`), undefined);
+const transparentResult = await waitForValue(
+  readBackgroundResult,
+  (state) => state !== null && state.composing === 'false',
+  'transparent recompose baseline'
+);
+assert.equal(
+  transparentResult.corner[3] < 32,
+  true,
+  `Transparent result should have a clear corner, got ${transparentResult.corner}`
+);
+assert.equal(transparentResult.modelRuns, runsBaseline + 1);
+assert.equal(transparentResult.downloadDisabled, false, 'A settled result must be downloadable');
+const urlsBeforeRecompose = await evaluate(`window.__objectUrlStats()`);
+
+await evaluate(watchRecomposition);
+await evaluate(`document.querySelector('[data-background-color="#ff0000"]').click()`);
+const redResult = await waitForValue(
+  readBackgroundResult,
+  (state) => state !== null && state.composing === 'false' && state.corner[3] === 255,
+  'red recomposition'
+);
+const redWatch = await evaluate(`window.__recompose`);
+assert.equal(
+  redResult.corner[0] > 200 && redResult.corner[1] < 80,
+  true,
+  `Red corner ${redResult.corner}`
+);
+assert.equal(
+  redResult.modelRuns,
+  runsBaseline + 1,
+  'Changing the background must not re-run the model'
+);
+assert.deepEqual(redWatch.stages, ['idle'], 'No model stage may appear while recomposing');
+assert.deepEqual(
+  redWatch.buttons,
+  ['Process Again'],
+  'The action button must stay in its processed state'
+);
+assert.equal(redWatch.resultMissing, false, 'The result must stay on screen while recomposing');
+assert.equal(redWatch.resultRemovals, 0, 'The result must not be unmounted while recomposing');
+assert.deepEqual(
+  redWatch.downloadDisabled,
+  [false, true, false],
+  'Download must be blocked while the shown result does not match the chosen colour'
+);
+assert.deepEqual(
+  redWatch.colorsLocked,
+  [false, true, false],
+  'Colour controls must be locked for the duration of a recomposition'
+);
+assert.equal(redResult.downloadDisabled, false, 'Download must return once the colour is applied');
+assert.equal(redResult.name, transparentResult.name);
+assert.notEqual(
+  redResult.src,
+  transparentResult.src,
+  'Recomposition must publish a new object URL'
+);
+
+// Back to Transparent: the cached cutout is reused, still without the model.
+await evaluate(watchRecomposition);
+await evaluate(`document.querySelector('[data-background-color="transparent"]').click()`);
+const backToTransparent = await waitForValue(
+  readBackgroundResult,
+  (state) => state !== null && state.composing === 'false' && state.corner[3] < 32,
+  'transparent recomposition'
+);
+const transparentWatch = await evaluate(`window.__recompose`);
+assert.equal(
+  backToTransparent.modelRuns,
+  runsBaseline + 1,
+  'Returning to transparent must not re-run the model'
+);
+assert.equal(
+  backToTransparent.bytes,
+  transparentResult.bytes,
+  'The cached cutout should be reused'
+);
+assert.deepEqual(transparentWatch.stages, ['idle']);
+assert.deepEqual(transparentWatch.buttons, ['Process Again']);
+assert.equal(transparentWatch.resultRemovals, 0);
+assert.equal(transparentWatch.resultMissing, false);
+// Reusing the cached cutout needs no canvas, so it must end unlocked either way.
+assert.equal(transparentWatch.downloadDisabled.at(-1), false);
+assert.equal(transparentWatch.colorsLocked.at(-1), false);
+assert.equal(backToTransparent.downloadDisabled, false);
+assert.equal(
+  await evaluate(
+    `document.querySelector('[data-active-background]').dataset.activeBackground === 'transparent'`
+  ),
+  true
+);
+const urlsAfterRecompose = await evaluate(`window.__objectUrlStats()`);
+assert.equal(
+  urlsAfterRecompose.active,
+  urlsBeforeRecompose.active,
+  'Each recomposition must revoke the previous result URL'
+);
+assert.equal(
+  urlsAfterRecompose.created > urlsBeforeRecompose.created,
+  true,
+  'Recomposition should publish fresh result URLs'
+);
+
+// Only the explicit action re-runs the model.
+await evaluate(
+  `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Process Again').click()`
+);
+const reprocessed = await waitForValue(
+  readBackgroundResult,
+  (state) => state !== null && state.composing === 'false' && state.modelRuns === runsBaseline + 2,
+  'process again re-runs the model',
+  240_000
+);
+assert.equal(await evaluate(`document.querySelector('.status-error')?.textContent`), undefined);
+assert.equal(reprocessed.corner[3] < 32, true, `Reprocessed corner ${reprocessed.corner}`);
+await evaluate(`window.__recomposeObserver?.disconnect()`);
+await evaluate(`document.querySelector('button[aria-label="Remove recompose.png"]').click()`);
+await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, 'recompose cleanup');
+const recomposeStats = await evaluate(`window.__objectUrlStats()`);
+assert.equal(
+  recomposeStats.active <= backgroundStats.active,
+  true,
+  'Recomposition must not leak object URLs'
+);
+
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
 await send('Target.closeTarget', { targetId: target.id });
@@ -887,6 +1136,20 @@ console.log(
       height,
       stages,
     })),
+    backgroundRecompose: {
+      modelRuns: { baseline: runsBaseline, afterColorChanges: backToTransparent.modelRuns },
+      corners: {
+        transparent: transparentResult.corner,
+        red: redResult.corner,
+        backToTransparent: backToTransparent.corner,
+        reprocessed: reprocessed.corner,
+      },
+      objectUrls: { before: urlsBeforeRecompose, after: urlsAfterRecompose },
+      downloadDisabled: {
+        red: redWatch.downloadDisabled,
+        backToTransparent: transparentWatch.downloadDisabled,
+      },
+    },
     pdfStats,
     backgroundStats,
     backgroundCleanupStats,
