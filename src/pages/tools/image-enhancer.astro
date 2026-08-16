@@ -82,15 +82,15 @@ const faqStructuredData = {
 
 <Layout
   title="Free Image Enhancer - Adjust Photos Online"
-  description="Adjust image brightness, contrast, saturation, sharpness, blur, and grayscale with a private browser-based live preview."
+  description="Adjust image brightness, contrast, saturation, sharpness, blur, and grayscale with a browser-based live preview. Selected image content is processed locally."
   structuredData={[structuredData, faqStructuredData, breadcrumbSchema]}
 >
   <div class="tool-layout">
     <div class="tool-content">
       <h1>Free Online Image Enhancer</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
-        Adjust the appearance of one JPG, PNG, or WebP image with a live preview. Processing stays
-        in your browser, so your file never leaves your device.
+        Adjust the appearance of one JPG, PNG, or WebP image with a live preview. The selected image
+        content is processed locally in your browser.
       </p>
 
       <ImageEnhancer client:load />
@@ -114,7 +114,7 @@ const faqStructuredData = {
           <li>Live preview before export</li>
           <li>PNG, JPG, and WebP output with quality control where supported</li>
           <li>Large-image memory review before processing</li>
-          <li>100% client-side processing with no file upload</li>
+          <li>Selected image contents are processed locally in your browser</li>
         </ul>
       </section>
 

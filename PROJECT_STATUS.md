@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-08-07
+Last updated: 2026-08-16
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -11,16 +11,23 @@ task.
 
 ## Current Snapshot
 
-- Repository baseline: local `master` at `232c857` (`docs: add PROJECT_STATUS.md living handoff and
-  maintenance rules`), one commit ahead of `origin/master` (`008d2fb`), not yet pushed. Product code
-  is identical to `008d2fb`; the extra commit only adds this handoff and its maintenance rules.
-- Product state: the main product-quality redesign and interaction pass is complete. The owner
-  manually approved the 2026-08-01 baseline and authorized its push on 2026-08-02.
-- Growth state: external promotion has **not started**. The owner resumed work on 2026-08-05.
-- Release caveat: Image Splitter and the expanded Image to PDF editor landed after the last
-  owner-approved baseline. The full quality and browser suites were rerun and passed on 2026-08-05
-  (see Validation State), and the production deployment was spot-checked. The remaining blocker
-  before promotion is the owner's focused manual pass on the latest build.
+- Repository baseline: local `master` is at `1dbae14`, nine commits ahead of `origin/master`
+  (`008d2fb`), with no remote-only commits and no uncommitted changes before the 2026-08-12 status
+  refresh. The nine local commits contain project handoff rules and ignored promotion working
+  materials; tracked product code remains identical to the deployed `008d2fb` product baseline.
+- Product state: the main product-quality redesign, Image Splitter, and expanded Image to PDF editor
+  are complete. The full release checks passed on 2026-08-05, and the owner manually approved that
+  build on 2026-08-07.
+- Growth state: external promotion has **not started**. On 2026-08-15 the owner approved the WP-03
+  thumbnail, all three gallery images, and the poster, but rejected the old MP4 and all three
+  slideshow-like GIFs for publication. Replacement motion recording is in progress alongside S0.5
+  account qualification; S1 directory submissions remain the next external action.
+- Release state: the 2026-08-15 local claims-copy cleanup passed the full quality gate and Chrome
+  regression, and the owner manually approved the revised copy on 2026-08-16. Commit, push,
+  Cloudflare publication, and production verification are now in progress. The final 2026-08-16
+  pre-publication rerun passed the quality gate, Chrome full regression, and Edge product assertions.
+  The homepage, Image Splitter, and Image to PDF production routes were last spot-checked on
+  2026-08-12 and returned HTTP 200.
 - Advertising: intentionally disabled. Do not restore AdSense scripts, placeholders, or ad-oriented
   layout without explicit owner approval. Product value and user experience come first.
 - Privacy model: selected file contents are processed locally in the browser. Normal site resources,
@@ -112,30 +119,65 @@ Last fully documented whole-site pass:
 
 The owner manually approved this build on 2026-08-07; it is now the last owner-approved state.
 
+On 2026-08-12, the production homepage, `/tools/image-splitter/`, and `/tools/image-to-pdf/` were
+spot-checked and returned HTTP 200. This was an availability check, not a rerun of the full suite.
+
+On 2026-08-15, before replacement motion recording, public claims were reviewed and qualified across
+the homepage, 13 tool families and two guides. The local result passed `npm run check` equivalently
+through `scripts/run-quality-gates.mjs` (12/12 steps), including 13 unit/algorithm scripts, 72 HTML
+pages, 4,292 internal links, SEO, content freshness, and zero broken links. The full Chrome regression
+also passed 12/12 scripts with zero browser errors. Its responsive/accessibility sweep covered 71
+public routes at widths 320, 375, 768, 1024, and 1440: 355 checks and 355 screenshots under
+`docs/ui-regression/2026-08-15T02-44-15.910Z`. The owner manually approved the revised copy on
+2026-08-16; publication and production verification remain in progress, so do not treat the
+revised local copy as live production copy yet.
+
+The final 2026-08-16 closeout also replaced one remaining absolute local-processing sentence in the
+Image Collage interactive UI and updated the affected content dates to 2026-08-16. After that change:
+
+- the 12-step quality gate passed, including 13 unit/algorithm scripts, SEO, content freshness,
+  72 HTML pages, 4,292 internal links, and zero broken links;
+- the full Chrome suite passed 12/12 scripts with zero browser errors; its responsive sweep passed
+  355/355 route-width checks and saved screenshots under
+  `docs/ui-regression/2026-08-16T00-24-52.197Z`;
+- Edge passed its converter matrix and 355/355 responsive/accessibility assertions with zero browser
+  errors. The test runner then exited nonzero only because Windows kept the isolated Edge profile
+  locked during temporary-directory cleanup; the matching test-only Edge processes and directory
+  were identified and removed without touching the owner's normal browser session.
+
 ## Current State and Exact Next Actions
 
-Steps 1–4 of the previous resume plan were completed on 2026-08-05: the tree was inspected, the
-production deployment was spot-checked, and the full quality plus browser suites passed (see
-Validation State). The remaining sequence is:
+Product and measurement gates are complete. The active one-week sequence for 2026-08-12 through
+2026-08-18 is:
 
-1. `owner approved` — On 2026-08-07 the owner completed the focused manual pass on the latest build
-   (Image Splitter with seam detection, the expanded Image to PDF editor, uploads/downloads, laptop
-   and mobile layout, Background Remover loading) and approved it.
-2. `verified` — The Search Console and Cloudflare Web Analytics baseline was collected on
-   2026-08-07 (see Analytics Baseline below).
-3. `owner approved` — The phased promotion plan below was adopted on 2026-08-07; the owner delegated
-   the go/no-go decision and asked to review concrete post copy and timing before anything is
-   published externally.
-4. `planned` — Execute promotion phase 1 (directory submissions) with the owner, then phases 2–3.
-5. Continue technical SEO, content SEO, GEO/answer-engine optimization, internal linking, and
-   relevant non-spammy link acquisition based on measured data.
+1. `in progress` — Close S0 motion assets. Directory copy is approved; the WP-03 thumbnail, three
+   gallery images, and poster are owner-approved. The old 28.53-second MP4 and three step-based GIFs
+   are rejected for publication and remain reference-only. Follow
+   `docs/promotion/06-motion-recording-brief.md`: the owner records four real browser-operation
+   clips after publication of the owner-approved 2026-08-15 claims cleanup; then Codex edits them
+   into one 45–60 second video and three fluid GIFs.
+2. `in progress` — Complete S0.5 account qualification. Reddit, Hacker News, Product Hunt, DEV, and
+   YouTube accounts were registered around 2026-07-26, but profile completion, genuine participation,
+   posting access, and YouTube channel/upload readiness still require owner login and confirmation.
+3. `planned` — Submit the site to Uneed, SaaSHub, and AlternativeTo in that order. Codex checks the
+   current rules and prepares each field set; the owner logs in, approves, and clicks submit. Record
+   every result in `docs/promotion/04-measurement-log.csv`.
+4. `in progress` — The 55-second YouTube storyboard, captions, title, description, UTM links, tags,
+   and upload checklist are complete. The production approach changed on 2026-08-15: reuse the same
+   four owner-recorded raw clips for the master video and three tool clips for replacement GIFs. Codex handles
+   editing and export; the owner reviews a local cut and uploads an Unlisted copy before deciding
+   whether to make it public.
+5. `planned` — On 2026-08-18, review directory status, Cloudflare referrals, Search Console movement,
+   and feedback, then select the first eligible community test for the following week.
 
 Promotion plan: the operative playbook is `docs/promotion-execution-plan-2026-08-07.md`
 (stages S0 asset prep → S1 directories → S2 single-community test → S3 Show HN → S4 Product Hunt →
 S5 ongoing SEO/GEO), which supersedes the execution order in `docs/promotion-plan-2026-07-22.md`
 while keeping that document's constraints, claims wording, and work-package definitions normative.
 All external posts are published from the owner's accounts; the owner approves copy and timing for
-every post. Current stage: S0 (asset and copy preparation).
+every post. Current stage: S0 closure, with S0.5 and S1 starting in parallel. No Reddit, Show HN, or
+Product Hunt launch should occur until account eligibility and owner response availability are
+confirmed.
 
 Candidate technical follow-ups (not yet scheduled):
 
@@ -199,6 +241,39 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-08-16 — `owner approved` / `verified` / `publication in progress`: owner manually approved the revised
+  public claims copy. Remote reconciliation found local `master` nine commits ahead of
+  `origin/master` with zero remote-only commits. A final assistant review found and corrected one
+  remaining absolute Image Collage sentence and refreshed the affected content dates. The quality
+  gate, Chrome full regression, and Edge product assertions then passed with zero browser errors.
+  Commit, push, Cloudflare publication, and production verification are the next actions; motion
+  recording starts only after the production check passes.
+
+- 2026-08-15 — `verified` / `owner review pending`: qualified absolute and unsupported public claims
+  across the homepage, 13 tool families, variants, and two guides before new motion recording;
+  synchronized the public LLM registries; and passed the 12-step quality gate plus all 12 Chrome
+  browser suites. The responsive sweep passed 355/355 route-width checks with zero browser errors.
+  The copy is local and not deployed; owner manual verification remains the publication gate.
+
+- 2026-08-15 — `owner approved` / `in progress`: owner approved the WP-03 thumbnail, three gallery
+  images, and poster; rejected the old MP4 and three slideshow-like GIFs for all public use. Added a
+  replacement motion-production brief that reduces owner work to four raw browser recordings;
+  Codex will handle the master-video edit, subtitles, encoding, and three GIF exports. The rejected
+  files remain as workflow references only. Account qualification and first directory submissions
+  remain outstanding.
+
+- 2026-08-12 — `in progress`: reconciled the living status and promotion plan with the repository
+  and working materials. Confirmed local `master` is nine documentation commits ahead of
+  `origin/master`, with product code unchanged from the deployed baseline; rechecked three key
+  production routes (HTTP 200); recorded that all five promotion accounts exist but still need
+  profile/eligibility checks; refreshed the privacy gallery to remove the obsolete advertising
+  reference; added the owner review/first-week execution checklist; and completed the 55-second
+  YouTube storyboard and metadata package. Also verified the three official directory entry URLs
+  and prepared the shared submission fields; SaaSHub and AlternativeTo require the owner's normal
+  browser session to pass Cloudflare before their current form fields can be confirmed. Next owner
+  action is the short asset decision pass and account qualification check, followed by S1 directory
+  submissions.
 
 - 2026-08-09 — `verified`: reorganized `docs/`. Added `docs/README.md` (folder index and three
   maintenance rules) and `docs/archive/` for completed or superseded documents, with a README

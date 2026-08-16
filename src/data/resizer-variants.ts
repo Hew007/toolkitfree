@@ -14,7 +14,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
   'resize-for-instagram': {
     title: 'Resize Image for Instagram - Post, Story, Reel Sizes',
     description:
-      'Resize images for Instagram posts (1080x1080), stories (1080x1920), and reels. Free online tool. No upload needed.',
+      'Resize images in your browser for Instagram posts (1080x1080), stories (1080x1920), and reels.',
     faq: [
       {
         question: 'What size should Instagram photos be?',
@@ -136,7 +136,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
   'resize-to-1920x1080': {
     title: 'Resize Image to 1920x1080 - Full HD 1080p',
     description:
-      'Resize images to 1920x1080 pixels (Full HD). Perfect for wallpapers, presentations, and video thumbnails. Free online tool.',
+      'Resize images to 1920x1080 pixels (Full HD) for wallpapers, presentations, and video thumbnails.',
     faq: [
       {
         question: 'Why resize to 1920x1080?',

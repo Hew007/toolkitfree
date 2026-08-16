@@ -17,13 +17,13 @@ export const variantData: Record<string, CropperVariantPageData> = {
   'crop-to-square': {
     title: 'Crop Image to Square Online — Free',
     description:
-      'Crop images to a perfect square (1:1) for social media profiles, Instagram posts, and thumbnails. Free, no upload needed.',
+      'Crop images to a square (1:1) in your browser for social media profiles, Instagram posts, and thumbnails.',
     defaultAspectPreset: 'square',
     faq: [
       {
         question: 'How to crop an image to a square?',
         answer:
-          'Upload your image, select the 1:1 aspect ratio, adjust the crop area by dragging, and click Crop. Download your perfectly squared image.',
+          'Choose your image, select the 1:1 aspect ratio, adjust the crop area by dragging, and click Crop. Then download the square result.',
       },
       {
         question: 'What size is a square image?',
@@ -33,7 +33,7 @@ export const variantData: Record<string, CropperVariantPageData> = {
       {
         question: 'Why crop to a square?',
         answer:
-          'Square images work perfectly as social media profile pictures, Instagram posts, and thumbnails. They display consistently across all platforms without cropping.',
+          "A square crop is commonly used for profile pictures, posts, and thumbnails. Platforms may apply their own display crop, so check the target platform's preview after upload.",
       },
       {
         question: 'Can I choose the output size of the square?',
@@ -45,7 +45,7 @@ export const variantData: Record<string, CropperVariantPageData> = {
   'crop-to-16-9': {
     title: 'Crop Image to 16:9 Online — Free',
     description:
-      'Crop images to 16:9 widescreen ratio for YouTube thumbnails, presentations, and desktop wallpapers. Free, no upload needed.',
+      'Crop images to a 16:9 widescreen ratio in your browser for YouTube thumbnails, presentations, and wallpapers.',
     defaultAspectPreset: 'widescreen',
     faq: [
       {
@@ -68,13 +68,13 @@ export const variantData: Record<string, CropperVariantPageData> = {
   'crop-to-4-3': {
     title: 'Crop Image to 4:3 Online — Free',
     description:
-      'Crop images to 4:3 ratio for presentations, standard photos, and older displays. Free, no upload needed.',
+      'Crop images to a 4:3 ratio in your browser for presentations, standard photos, and older displays.',
     defaultAspectPreset: 'standard',
     faq: [
       {
         question: 'How to crop an image to 4:3?',
         answer:
-          'Upload your image, select the 4:3 aspect ratio, adjust the crop area, and click Crop. Download your cropped image instantly.',
+          'Choose your image, select the 4:3 aspect ratio, adjust the crop area, and click Crop. Download the result when processing finishes.',
       },
       {
         question: 'What is 4:3 used for?',
@@ -91,7 +91,7 @@ export const variantData: Record<string, CropperVariantPageData> = {
   'crop-to-3-2': {
     title: 'Crop Image to 3:2 Online — Free',
     description:
-      'Crop images to 3:2 ratio, the standard for photography prints and DSLR cameras. Free, no upload needed.',
+      'Crop images to a 3:2 ratio in your browser for photography prints and DSLR images.',
     defaultAspectPreset: 'photo',
     faq: [
       {
@@ -114,7 +114,7 @@ export const variantData: Record<string, CropperVariantPageData> = {
   'free-crop': {
     title: 'Free Image Cropper — Crop Any Size Online',
     description:
-      'Crop images to any custom size. Drag to select the area you want to keep. Free, private, runs entirely in your browser.',
+      'Crop images to any custom size. Drag to select the area you want to keep. Selected image content is processed in your browser.',
     defaultAspectPreset: 'free',
     faq: [
       {

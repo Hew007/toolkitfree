@@ -11,7 +11,7 @@ const variants = [
     format: 'PNG',
     title: 'Compress PNG Images Online Free',
     description:
-      'Re-encode PNG images or reduce their dimensions in your browser. A smaller output is not guaranteed. Batch support, no file upload needed.',
+      'Re-encode PNG images or reduce their dimensions in your browser. A smaller output is not guaranteed. Batch processing is supported.',
     faq: [
       {
         question: 'How to compress a PNG file?',
@@ -26,12 +26,12 @@ const variants = [
       {
         question: 'How much can I reduce PNG file size?',
         answer:
-          'By reducing dimensions, you can typically achieve 30-70% size reduction. For example, scaling a 4000px wide image to 1920px can reduce file size by 75% or more.',
+          'Reducing dimensions can lower file size, but the result depends on image content, original encoding, output format, and quality. Compare the displayed output before downloading.',
       },
       {
         question: 'What is the best way to compress PNG for web?',
         answer:
-          'For web use, resize your PNG to the maximum display size needed. A 1920px wide image is usually sufficient. Alternatively, convert to WebP for 25-34% better compression.',
+          'For web use, resize the PNG to the largest dimensions the page actually displays. You can also compare PNG and WebP outputs; the smaller format varies with the image.',
       },
     ],
   },
@@ -40,7 +40,7 @@ const variants = [
     format: 'JPG',
     title: 'Compress JPG Images Online Free',
     description:
-      'Compress JPG images to reduce file size. Adjustable quality from 10-100%. Batch support. Free, no upload needed.',
+      'Compress JPG images in your browser with adjustable quality from 10–100% and batch support.',
     faq: [
       {
         question: 'How to compress a JPG file?',
@@ -50,7 +50,7 @@ const variants = [
       {
         question: 'What quality should I use for JPG compression?',
         answer:
-          'For web use: 75-85%. For email: 60-75%. For archiving: 90-95%. At 80% quality, most people cannot tell the difference from the original.',
+          'Start near the default quality and compare the preview and output size. The useful setting varies by image content and purpose, and lower settings can introduce visible artifacts.',
       },
       {
         question: 'How much can I reduce JPG file size?',
@@ -60,7 +60,7 @@ const variants = [
       {
         question: 'Does JPG compression reduce image quality?',
         answer:
-          'Yes, JPG is a lossy format. Lower quality = smaller file but more visible artifacts. However, at 80%+ quality, the difference is imperceptible for most images.',
+          'Yes. JPG is lossy: lower quality can produce a smaller file and more visible artifacts. Inspect the preview because the result varies by image.',
       },
     ],
   },
@@ -79,7 +79,7 @@ const variants = [
       {
         question: 'How to make a photo smaller for email?',
         answer:
-          'Upload your photo, set quality to 75-80%, set max width to 1280-1920px, and click Compress. This typically reduces photos to under 500KB.',
+          'Choose your photo, try a lower quality or maximum width, and compare the displayed result with your target size. A specific output size is not guaranteed.',
       },
       {
         question: 'Can I compress multiple photos for email at once?',
@@ -91,7 +91,7 @@ const variants = [
   {
     slug: 'compress-for-web',
     format: 'Any',
-    title: 'Compress Images for Web - Optimize for Fast Loading',
+    title: 'Compress Images for Web - Optimize Website Assets',
     description:
       'Compress and optimize images for websites. Faster page load times. Better SEO. Free online image optimizer.',
     faq: [
@@ -108,7 +108,7 @@ const variants = [
       {
         question: 'Should I use JPG or WebP for my website?',
         answer:
-          'WebP is better — 25-34% smaller than JPG at the same quality. However, for maximum compatibility, you can use JPG with a WebP fallback using the <picture> element.',
+          'WebP can be smaller for some images, while JPG may be useful for older software. Compare both outputs at acceptable visual quality before choosing.',
       },
     ],
   },

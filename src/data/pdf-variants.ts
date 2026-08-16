@@ -13,7 +13,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
   'jpg-to-pdf': {
     title: 'JPG to PDF — Convert Images Online Free',
     description:
-      'Convert JPG images to PDF format instantly. Supports multiple JPGs, A4/Letter page sizes, adjustable margins. Free, no upload needed.',
+      'Convert multiple JPG images to PDF in your browser with A4 or Letter page sizes and adjustable margins.',
     faq: [
       {
         question: 'How to convert JPG to PDF?',
@@ -40,12 +40,12 @@ export const variantData: Record<string, ToolVariantPageData> = {
   'png-to-pdf': {
     title: 'PNG to PDF — Convert Images Online Free',
     description:
-      'Convert PNG images to PDF format. Transparent areas are filled with white. Supports multiple files. Free, no upload needed.',
+      'Convert multiple PNG images to PDF in your browser. Transparent areas are filled with white.',
     faq: [
       {
         question: 'How to convert PNG to PDF?',
         answer:
-          'Upload your PNG file(s), set your preferred page size and orientation, and click "Create PDF." Download your PDF instantly.',
+          'Choose your PNG file(s), set the page size and orientation, and click "Create PDF." Download the result when browser processing finishes.',
       },
       {
         question: 'What happens to transparent PNGs?',
@@ -67,7 +67,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
   'image-to-a4-pdf': {
     title: 'Image to A4 PDF — Free Online Converter',
     description:
-      'Convert images to A4-sized PDF pages. Perfect for printing documents and photos. Adjustable margins. Free, no upload needed.',
+      'Convert images to A4-sized PDF pages in your browser with adjustable margins for printing documents and photos.',
     faq: [
       {
         question: 'What is A4 size?',
@@ -94,7 +94,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
   'multiple-images-to-pdf': {
     title: 'Multiple Images to PDF — Combine Photos Online Free',
     description:
-      'Combine multiple images into one PDF file. Each image becomes a page. Supports JPG, PNG, WebP. Free, no upload needed.',
+      'Combine multiple JPG, PNG, or WebP images into one PDF in your browser, with each image on a page.',
     faq: [
       {
         question: 'How to combine multiple images into one PDF?',
@@ -121,7 +121,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
   'image-to-pdf-no-margin': {
     title: 'Image to PDF without Margin — Full-Page Online',
     description:
-      'Convert images to PDF with no margins. Images fill the entire page edge to edge. Free, no upload needed.',
+      'Convert images to a borderless PDF layout in your browser, filling each page edge to edge.',
     faq: [
       {
         question: 'How to convert images to PDF without margins?',
@@ -143,7 +143,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
   'photo-to-pdf': {
     title: 'Photo to PDF — Convert Pictures Online Free',
     description:
-      'Convert photos to PDF format for sharing and printing. Supports iPhone and Android photos. Batch conversion. Free, no upload needed.',
+      'Convert supported iPhone and Android photo files to PDF in your browser for sharing and printing.',
     faq: [
       {
         question: 'How to convert a photo to PDF?',
@@ -158,7 +158,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'Why convert photos to PDF?',
         answer:
-          'PDF is universally compatible, easy to share via email, great for printing, and perfect for archiving. Unlike photos, PDFs preserve layout on any device.',
+          'PDF is widely supported for sharing and printing and preserves a fixed page layout. Rendering can still vary by PDF viewer and printer settings.',
       },
       {
         question: 'Can I combine photos from my phone into one PDF?',

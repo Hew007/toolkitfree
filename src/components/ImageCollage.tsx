@@ -717,7 +717,8 @@ export default function ImageCollage() {
               </details>
 
               <p className="collage-local-note">
-                Processed locally. Your images never leave this device.
+                Selected image content is processed locally and is not sent to ToolkitFree for
+                processing.
               </p>
             </aside>
           </div>

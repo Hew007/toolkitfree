@@ -12,7 +12,7 @@ const faqItems = [
   {
     question: 'What sizes does this tool generate?',
     answer:
-      'We generate all standard sizes: 16x16, 32x32 (favicon), 180x180 (Apple touch icon), 192x192 and 512x512 (Android Chrome), plus a site.webmanifest file.',
+      'The tool generates five common PNG sizes: 16x16, 32x32, 180x180, 192x192, and 512x512, plus a site.webmanifest file. It does not generate an .ico file.',
   },
   {
     question: 'Is this favicon generator free?',
@@ -42,7 +42,7 @@ const faqItems = [
   {
     question: 'Are my images uploaded to a server?',
     answer:
-      'No. All processing happens entirely in your browser using the Canvas API and JSZip library. Your images never leave your device.',
+      'No. Favicon generation uses the Canvas API and JSZip in your browser. The selected image contents are not sent to ToolkitFree for processing.',
   },
   {
     question: 'Can I use any image format?',
@@ -66,7 +66,7 @@ const structuredData = {
   '@type': 'WebApplication',
   name: 'Free Favicon Generator',
   description:
-    'Generate all favicon sizes from one image. Creates 16x16, 32x32, 180x180, 192x192, 512x512 PNG icons plus webmanifest. 100% client-side.',
+    'Generate 16x16, 32x32, 180x180, 192x192, and 512x512 PNG favicons plus a webmanifest in your browser.',
   url: 'https://toolkitfree.net/tools/favicon-generator',
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Any',
@@ -89,8 +89,8 @@ const breadcrumbSchema = {
 ---
 
 <Layout
-  title="Free Favicon Generator — Create All Sizes from One Image"
-  description="Generate all favicon sizes from one image: 16x16, 32x32, Apple touch icon, Android Chrome. Download ZIP with webmanifest. HTML code included. Free, no upload needed."
+  title="Free Favicon Generator — Create Five PNG Sizes"
+  description="Generate five common PNG favicon sizes from one image, including Apple touch and Android Chrome icons. Download a ZIP with webmanifest and HTML code."
   structuredData={[
     structuredData,
     {
@@ -109,12 +109,14 @@ const breadcrumbSchema = {
     <div class="tool-content">
       <h1>Free Online Favicon Generator</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
-        Generate all favicon sizes from one image. Download as ZIP with webmanifest and HTML code.
-        All processing in your browser.
+        Generate five common PNG favicon sizes from one image. Download a ZIP with a webmanifest and
+        HTML code. All processing in your browser.
       </p>
 
       <div class="privacy-badge">
-        <span style="color: #10b981; font-weight: 600;">Your files never leave your device</span>
+        <span style="color: #10b981; font-weight: 600;"
+          >Selected file contents are processed in your browser</span
+        >
       </div>
 
       <FaviconGenerator client:load />
@@ -133,13 +135,13 @@ const breadcrumbSchema = {
       <section class="features-section">
         <h2>Features</h2>
         <ul class="features-list">
-          <li>Generates all standard favicon sizes</li>
+          <li>Generates 16, 32, 180, 192, and 512px PNG icon sizes</li>
           <li>Includes site.webmanifest file</li>
           <li>Ready-to-use HTML code snippet</li>
           <li>Non-square images use transparent padding, never stretching</li>
           <li>PNG output only; no .ico file is generated</li>
           <li>Supports PNG, JPG, WebP, and more</li>
-          <li>100% client-side — your images never leave your device</li>
+          <li>Selected image contents are processed locally in your browser</li>
         </ul>
       </section>
 

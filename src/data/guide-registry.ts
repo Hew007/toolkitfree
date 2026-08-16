@@ -17,7 +17,7 @@ export const guideRegistry: readonly GuideDefinition[] = [
     title: 'JPG vs PNG vs WebP',
     href: '/guides/image-format-comparison',
     description: 'Compare common image formats and choose the right balance of quality and size.',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     relatedTools: ['image-converter', 'image-compressor'],
   },
   {
@@ -26,7 +26,7 @@ export const guideRegistry: readonly GuideDefinition[] = [
     href: '/guides/reduce-image-size',
     description:
       'Learn practical ways to reduce image size while controlling the quality tradeoff.',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     relatedTools: ['image-converter', 'image-compressor', 'image-resizer'],
   },
   {

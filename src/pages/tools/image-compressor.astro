@@ -9,12 +9,12 @@ const faqItems = [
   {
     question: 'How does image compression work?',
     answer:
-      "Our compressor re-encodes your image at a lower quality setting using the browser's built-in Canvas API. For JPEG images, this reduces file size by adjusting the compression level. For PNG, it uses PNG encoding. Your images never leave your device.",
+      "Our compressor re-encodes your image using the browser's Canvas API. For JPEG images, it adjusts the compression level; for PNG, it uses PNG encoding. The selected image contents are not sent to ToolkitFree for compression.",
   },
   {
     question: "What's the difference between quality levels?",
     answer:
-      'At 100% quality, there is virtually no visible difference from the original. At 80% (our default), most people cannot tell the difference, but file sizes drop significantly. Below 60%, you may start to see compression artifacts in photos.',
+      'Visible quality and file-size reduction vary with the source image, dimensions, format, and selected quality. Compare the displayed result before downloading; lower quality settings can introduce visible artifacts.',
   },
   {
     question: 'Can I compress PNG images?',
@@ -24,7 +24,7 @@ const faqItems = [
   {
     question: 'How much can I reduce file size?',
     answer:
-      'Typically 30-70% reduction for JPEG photos at 80% quality. Results vary depending on the original image content — photos with lots of detail compress less than simpler images.',
+      'There is no guaranteed percentage. Results depend on image content, dimensions, original encoding, output format, and the selected quality setting.',
   },
   {
     question: 'Is there a batch compression limit?',
@@ -44,7 +44,7 @@ const faqItems = [
   {
     question: 'How do I make a photo smaller to email?',
     answer:
-      'Upload your photo, set quality to 75-80%, set max width to 1280px, and click Compress. Most phone photos (3-8MB) will compress to under 500KB — small enough for any email provider.',
+      "Choose your photo, try a lower quality or maximum width, and compare the displayed output size with your email provider's attachment limit. A specific output size is not guaranteed.",
   },
   {
     question: 'How do I reduce image file size to under 100KB?',
@@ -58,7 +58,7 @@ const structuredData = {
   '@type': 'WebApplication',
   name: 'Free Image Compressor',
   description:
-    'Compress images online to reduce file size while maintaining quality. Supports JPG, PNG, and WebP. Batch compression. 100% client-side.',
+    'Compress JPG, PNG, and WebP images in your browser with adjustable quality and batch processing.',
   url: 'https://toolkitfree.net/tools/image-compressor',
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Any',
@@ -101,7 +101,7 @@ const faqStructuredData = {
       <h1>Free Online Image Compressor</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
         Reduce image file size while maintaining quality. Adjustable compression level and batch
-        support. All processing in your browser — your files never leave your device.
+        support. Selected image contents are processed locally in your browser.
       </p>
 
       <ImageCompressor client:load />
@@ -124,7 +124,7 @@ const faqStructuredData = {
           <li>Optional starting max width</li>
           <li>Batch compress with one ZIP download</li>
           <li>Shows before/after file sizes</li>
-          <li>100% client-side processing</li>
+          <li>Selected image contents are processed locally in your browser</li>
           <li>Capacity depends on browser memory and Canvas limits</li>
         </ul>
       </section>

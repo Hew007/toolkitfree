@@ -75,7 +75,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Convert between JPG, PNG, and WebP.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     related: [
       'image-compressor',
       'image-resizer',
@@ -96,7 +96,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Reduce quality or dimensions and inspect the result.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     related: [
       'pdf-splitter',
       'image-converter',
@@ -118,7 +118,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Resize images to custom or platform dimensions.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     related: [
       'image-cropper',
       'image-enhancer',
@@ -140,7 +140,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Adjust and preview image appearance locally.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     related: [
       'image-converter',
       'image-compressor',
@@ -160,7 +160,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Combine images into a grid or stitched collage.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     related: [
       'image-cropper',
       'image-resizer',
@@ -183,7 +183,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Cut one image into pieces, evenly or along its seams.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-04',
+    lastModified: '2026-08-16',
     related: [
       'image-collage',
       'image-cropper',
@@ -204,7 +204,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Prepare a custom-size ID photo and print sheet locally.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     related: [
       'image-cropper',
       'image-resizer',
@@ -223,7 +223,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Crop images with bounded visual controls.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     related: [
       'image-resizer',
       'image-enhancer',
@@ -246,7 +246,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Remove image backgrounds with a local browser model.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     related: [
       'image-cropper',
       'image-resizer',
@@ -288,7 +288,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Lay images out on PDF pages and export what you see.',
     category: 'create-export',
     status: 'public',
-    lastModified: '2026-08-04',
+    lastModified: '2026-08-16',
     related: [
       'pdf-splitter',
       'image-converter',
@@ -310,7 +310,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Split, extract, reorder, and rotate PDF pages locally.',
     category: 'create-export',
     status: 'public',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     related: [
       'image-to-pdf',
       'image-converter',
@@ -329,7 +329,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Create standard PNG favicon sizes and a manifest.',
     category: 'create-export',
     status: 'public',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     related: [
       'image-resizer',
       'image-cropper',
@@ -349,7 +349,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Create customizable PNG or SVG QR codes.',
     category: 'create-export',
     status: 'public',
-    lastModified: '2026-08-01',
+    lastModified: '2026-08-16',
     related: [
       'favicon-generator',
       'image-to-pdf',

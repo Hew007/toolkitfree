@@ -9,7 +9,7 @@ const faqItems = [
   {
     question: 'How do I resize an image?',
     answer:
-      'Upload your image, select a preset size or enter custom dimensions, choose the output format, and click Resize. The resized image will be ready to download instantly.',
+      'Choose your image, select a preset size or enter custom dimensions, choose the output format, and click Resize. Download the result when browser processing finishes.',
   },
   {
     question: 'What presets are available?',
@@ -34,7 +34,7 @@ const faqItems = [
   {
     question: 'What output formats are supported?',
     answer:
-      'You can save resized images as JPG, PNG, or WebP. JPG is best for photos, PNG for graphics with transparency, and WebP for the best compression.',
+      'You can save resized images as JPG, PNG, or WebP. PNG supports transparency; JPG and WebP provide adjustable quality. Compare outputs for your use case.',
   },
   {
     question: 'How do I resize a photo for Instagram?',
@@ -53,7 +53,7 @@ const structuredData = {
   '@type': 'WebApplication',
   name: 'Free Image Resizer',
   description:
-    'Resize images online to any dimension. Presets for Instagram, Facebook, Twitter, YouTube. Crop, scale, and batch resize. 100% client-side.',
+    'Resize images in your browser with presets for Instagram, Facebook, Twitter, and YouTube. Crop, scale, and batch resize.',
   url: 'https://toolkitfree.net/tools/image-resizer',
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Any',
@@ -77,7 +77,7 @@ const breadcrumbSchema = {
 
 <Layout
   title="Free Image Resizer - Resize Images to Any Size"
-  description="Resize and crop images online to any dimension. Presets for Instagram, Facebook, Twitter, YouTube. Change dimensions, maintain aspect ratio. Batch resize. Free, no upload needed."
+  description="Resize and crop images in your browser with presets for Instagram, Facebook, Twitter, and YouTube. Change dimensions, preserve aspect ratio, or batch resize."
   structuredData={[
     structuredData,
     {
@@ -120,7 +120,7 @@ const breadcrumbSchema = {
           <li>Maintain aspect ratio option</li>
           <li>Output as JPG, PNG, or WebP</li>
           <li>Batch resize with one ZIP download</li>
-          <li>100% client-side processing</li>
+          <li>Selected image contents are processed locally in your browser</li>
         </ul>
       </section>
 

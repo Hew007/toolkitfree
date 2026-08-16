@@ -27,7 +27,7 @@ const faqItems = [
   {
     question: 'How can I reduce image size without losing quality?',
     answer:
-      'The best way is to convert to WebP format, which is 25-34% smaller than JPG at equivalent quality. If you need to keep the same format, compress at 85% quality — the difference is imperceptible.',
+      'Try reducing dimensions or quality, or compare a WebP output with the original format. File size and visible quality vary by image, so inspect the preview and measured result.',
   },
   {
     question: 'Why is my image file so large?',
@@ -35,9 +35,9 @@ const faqItems = [
       'Large images usually come from high-resolution cameras (20-50MP). A single photo can be 5-15MB. The resolution (pixel dimensions) is the biggest factor in file size.',
   },
   {
-    question: 'What is the best free image compressor?',
+    question: 'What should I look for in a free image compressor?',
     answer:
-      'Our browser-based compressor processes images locally — no uploads needed. It supports JPG, PNG, and WebP with adjustable quality and batch compression. Try our Image Compressor tool.',
+      'Our browser-based compressor processes selected image contents locally. It supports JPG, PNG, and WebP with adjustable quality and batch compression. Try our Image Compressor tool.',
   },
 ];
 
@@ -68,8 +68,8 @@ const faqStructuredData = {
       <section class="howto-section">
         <h2>Method 1: Compress with Quality Control</h2>
         <p>
-          The simplest method. Lower the JPEG quality from 100% to 80-85%. At this level, the
-          quality difference is invisible to the eye, but file sizes drop by 40-60%.
+          Start near the default JPEG quality, lower it gradually, and compare the preview with the
+          measured output size. Visible quality and savings vary by image.
         </p>
         <p><a href="/tools/image-compressor/">Try Image Compressor</a></p>
       </section>
@@ -77,9 +77,8 @@ const faqStructuredData = {
       <section class="howto-section">
         <h2>Method 2: Resize Dimensions</h2>
         <p>
-          A 4000px wide photo on a website that only displays at 1200px is wasting bandwidth. Resize
-          to the actual display size for massive savings. A 4000px photo resized to 1920px reduces
-          file size by ~75%.
+          A photo that is much wider than its display area uses unnecessary bytes. Resize to the
+          largest dimensions the page actually displays, then compare the measured output size.
         </p>
         <p><a href="/tools/image-resizer/">Try Image Resizer</a></p>
       </section>
@@ -87,8 +86,8 @@ const faqStructuredData = {
       <section class="howto-section">
         <h2>Method 3: Convert to WebP</h2>
         <p>
-          WebP is a modern format that's 25-34% smaller than JPG and PNG at equivalent quality.
-          Converting your images to WebP is one of the easiest ways to reduce file size.
+          WebP is a modern format that can reduce file size for some images. Compare the WebP output
+          with JPG or PNG at acceptable visual quality before choosing a format.
         </p>
         <p>
           <a href="/tools/image-converter/jpg-to-webp/">Convert JPG to WebP</a> | <a

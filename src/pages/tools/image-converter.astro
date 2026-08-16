@@ -9,7 +9,7 @@ const faqItems = [
   {
     question: 'How does the image converter work?',
     answer:
-      'Our image converter runs entirely in your browser using the Canvas API. When you upload an image, it is loaded into a hidden canvas element, then re-exported in your chosen format. Your files never leave your device.',
+      'Our image converter uses the Canvas API in your browser. When you choose an image, it is loaded into a hidden canvas element and re-exported in your chosen format without sending the selected file content to ToolkitFree for conversion.',
   },
   {
     question: 'What image formats are supported?',
@@ -54,7 +54,7 @@ const faqItems = [
   {
     question: 'What is WebP and why should I use it?',
     answer:
-      'WebP is a modern image format developed by Google that provides superior lossless and lossy compression for images on the web. WebP images are typically 25-34% smaller than comparable JPEG or PNG images.',
+      'WebP is a modern image format that supports lossy and lossless compression plus transparency. Output size varies by image content, dimensions, format, and quality, so compare the actual result before downloading.',
   },
   {
     question: 'How do I convert JPG to PNG?',
@@ -77,9 +77,9 @@ const faqItems = [
       'Simply drag your JPG file onto the converter, select PNG from the output format dropdown, and click Convert. Your PNG will use lossless encoding for the decoded pixels, while existing JPG artifacts remain.',
   },
   {
-    question: 'What is the best free image converter online?',
+    question: "What can ToolkitFree's image converter do?",
     answer:
-      "ToolkitFree's image converter runs entirely in your browser — no uploads, no sign-ups, no watermarks. It supports JPG, PNG, and WebP with batch conversion and adjustable quality.",
+      "ToolkitFree's image converter supports JPG, PNG, and WebP, with batch conversion and adjustable quality. Selected image content is processed in your browser and is not sent to ToolkitFree for conversion. No account is required and the tool adds no watermark.",
   },
 ];
 
@@ -92,7 +92,7 @@ const structuredData = {
   operatingSystem: 'Any',
   offers: { '@type': 'Offer', price: '0' },
   description:
-    'Convert images between JPG, PNG, and WebP formats instantly in your browser. Free, no upload needed.',
+    'Convert images between JPG, PNG, and WebP formats in your browser. Free, with no ToolkitFree account required.',
 };
 
 const breadcrumbSchema = {
@@ -133,8 +133,8 @@ const faqStructuredData = {
     <div class="tool-content">
       <h1>Free Online Image Converter</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
-        Convert images between JPG, PNG, and WebP formats instantly. Batch support. No upload needed
-        — your files stay on your device.
+        Convert images between JPG, PNG, and WebP formats in your browser with batch support. The
+        selected file contents are not sent to ToolkitFree for conversion.
       </p>
 
       <ImageConverter client:load />

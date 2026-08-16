@@ -7,7 +7,7 @@ const faqItems = [
   {
     question: 'How do I convert images to PDF?',
     answer:
-      'Upload one or more images and each becomes a page you can see immediately. Choose page size (A4, Letter, or fit to image), set orientation and margins, adjust any image on its page, then click "Create PDF." The downloaded file matches the preview exactly.',
+      'Choose one or more images and arrange them in the page editor. Set the page size (A4, Letter, or fit to image), orientation, and margins, adjust each image, then click "Create PDF." The generated PDF uses the layout and page settings shown in the editor.',
   },
   {
     question: 'Can I move, resize, or rotate an image before converting?',
@@ -42,7 +42,7 @@ const faqItems = [
   {
     question: 'Are my images uploaded to a server?',
     answer:
-      'No. All PDF generation happens entirely in your browser using the jsPDF library. Your images never leave your device.',
+      'No. PDF generation uses the jsPDF library in your browser. The selected image contents are not sent to ToolkitFree for conversion; normal site resources still load over the network.',
   },
   {
     question: 'Can I combine multiple images into one PDF?',
@@ -76,7 +76,7 @@ const structuredData = {
   '@type': 'WebApplication',
   name: 'Free Image to PDF Converter',
   description:
-    'Convert images to PDF online. Supports JPG, PNG, WebP. Combine multiple images into one PDF. A4, Letter, custom page sizes. 100% client-side.',
+    'Convert JPG, PNG, and WebP images to PDF in your browser. Combine multiple images with A4, Letter, or custom page sizes.',
   url: 'https://toolkitfree.net/tools/image-to-pdf',
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Any',
@@ -100,7 +100,7 @@ const breadcrumbSchema = {
 
 <Layout
   title="Image to PDF — Convert Images Online Free | ToolkitFree"
-  description="Convert images to PDF online with a live page editor. Move, resize, and rotate each image, or place several on one page. JPG, PNG, WebP. Free, no upload needed."
+  description="Convert JPG, PNG, and WebP images to PDF in your browser. Use the live page editor to move, resize, rotate, and arrange multiple images."
   structuredData={[
     structuredData,
     {
@@ -125,7 +125,9 @@ const breadcrumbSchema = {
       </p>
 
       <div class="privacy-badge">
-        <span style="color: #10b981; font-weight: 600;">Your files never leave your device</span>
+        <span style="color: #10b981; font-weight: 600;"
+          >Selected file contents are processed in your browser</span
+        >
       </div>
 
       <ImageToPdf client:load />
@@ -141,7 +143,7 @@ const breadcrumbSchema = {
             Drop it between two pages to give it a page of its own, or reorder pages with the arrows
             in each page heading
           </li>
-          <li>Click "Create PDF" and download — the file matches the preview exactly</li>
+          <li>Click "Create PDF" — the generated file uses the layout shown in the editor</li>
         </ol>
       </section>
 
@@ -155,7 +157,7 @@ const breadcrumbSchema = {
           <li>A4 and US Letter page sizes, plus fit-to-image for exact dimensions</li>
           <li>Portrait and landscape orientation, adjustable margins (0-30mm)</li>
           <li>Supports JPG, PNG, and WebP inputs</li>
-          <li>100% client-side — your images never leave your device</li>
+          <li>Selected image contents are processed locally in your browser</li>
         </ul>
       </section>
 

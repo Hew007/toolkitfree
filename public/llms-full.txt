@@ -41,7 +41,7 @@ There is no server upload-size quota because files are not uploaded for processi
 - [Compress PNG Images Online Free](https://toolkitfree.net/tools/image-compressor/compress-png/)
 - [Compress JPG Images Online Free](https://toolkitfree.net/tools/image-compressor/compress-jpg/)
 - [Compress Images for Email Attachment](https://toolkitfree.net/tools/image-compressor/compress-for-email/)
-- [Compress Images for Web - Optimize for Fast Loading](https://toolkitfree.net/tools/image-compressor/compress-for-web/)
+- [Compress Images for Web - Optimize Website Assets](https://toolkitfree.net/tools/image-compressor/compress-for-web/)
 - [Compress Images for WhatsApp - Control File Size](https://toolkitfree.net/tools/image-compressor/compress-for-whatsapp/)
 - [Compress Image to 100KB - Verified Target Size](https://toolkitfree.net/tools/image-compressor/compress-to-100kb/)
 

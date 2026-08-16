@@ -122,7 +122,7 @@ export const variantData: Record<string, SplitterVariantPageData> = {
       {
         question: 'Does this post to Instagram for me?',
         answer:
-          'No. The tool only creates the image pieces in your browser and lets you download them. Nothing is uploaded to ToolkitFree, and no Instagram account or login is involved.',
+          'No. The tool creates the image pieces in your browser and lets you download them. The selected image content is not sent to ToolkitFree for processing, and no Instagram account or login is involved.',
       },
       {
         question: 'Can I use a different grid than 3 by 3?',

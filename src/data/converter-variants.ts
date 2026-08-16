@@ -118,19 +118,19 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
     {
       question: 'Can I control the JPG quality?',
       answer:
-        'Yes, you can adjust the quality slider from 10% to 100%. Higher quality means larger files. 85-92% is usually the sweet spot for photos.',
+        'Yes. You can adjust the quality slider from 10% to 100%. Higher settings generally produce larger files; compare the preview and output size for your image.',
     },
   ],
   'webp-to-jpg': [
     {
       question: 'How to convert WebP to JPG?',
       answer:
-        'Upload your WebP file, select JPG as the output format, and click Convert. Your converted JPG is ready to download instantly.',
+        'Choose your WebP file, select JPG as the output format, and click Convert. Download the JPG when browser processing finishes.',
     },
     {
       question: 'Why convert WebP to JPG?',
       answer:
-        "Some older applications, websites, and devices don't support WebP. Converting to JPG ensures maximum compatibility across all platforms.",
+        "Some older applications and workflows don't support WebP. JPG is widely supported, but compatibility still depends on the destination software.",
     },
     {
       question: 'Is WebP to JPG conversion lossy?',
@@ -142,12 +142,12 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
     {
       question: 'How to convert JPG to WebP?',
       answer:
-        'Upload your JPG file, select WebP as the output format, adjust quality if desired, and click Convert. WebP files are typically 25-34% smaller.',
+        'Choose your JPG file, select WebP as the output format, adjust quality if desired, and click Convert. Compare the actual output size and preview before downloading.',
     },
     {
       question: 'Why convert JPG to WebP?',
       answer:
-        'WebP offers better compression than JPG, producing 25-34% smaller files at equivalent quality. This means faster page loads and less bandwidth usage.',
+        'WebP can produce a smaller file for some images while maintaining acceptable visual quality. Results vary, so compare the converted output with the original.',
     },
     {
       question: 'Does WebP work in all browsers?',
@@ -169,7 +169,7 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
     {
       question: 'How much smaller is WebP compared to PNG?',
       answer:
-        'WebP lossless images are 26% smaller than PNG. WebP lossy images at equivalent quality are 25-34% smaller than JPG and much smaller than PNG.',
+        'WebP supports both lossless and lossy compression. Whether it is smaller than PNG or JPG depends on image content, dimensions, and quality settings.',
     },
   ],
   'webp-to-png': [

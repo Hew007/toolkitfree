@@ -73,7 +73,7 @@ const faqItems = [
   {
     question: 'Is there a file size limit?',
     answer:
-      'There is no upload limit because nothing is uploaded, but browser memory and Canvas limits still apply. Very large images or very large grids can be slow or can fail, especially on phones.',
+      'There is no server upload quota because selected image contents stay in the browser, but browser memory and Canvas limits still apply. Very large images or grids can be slow or fail, especially on phones.',
   },
 ];
 
@@ -111,7 +111,7 @@ const faqStructuredData = {
 
 <Layout
   title="Image Splitter - Cut an Image Into Custom Pieces"
-  description="Split an image in your browser. Detect the seams of a stitched picture, or drag and type the exact position of each split line. Nothing is uploaded."
+  description="Split an image in your browser. Detect the seams of a stitched picture, or drag and type the exact position of each split line. Selected image content is not sent to ToolkitFree for processing."
   ogImage="/social/image-splitter.png"
   structuredData={[structuredData, faqStructuredData, breadcrumbSchema]}
 >

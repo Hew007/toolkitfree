@@ -9,19 +9,19 @@ export const allVariants: ToolVariantSummary[] = [
 
 export const variantData: Record<string, ToolVariantPageData> = {
   'png-to-favicon': {
-    title: 'PNG to Favicon — Generate All Sizes Free',
+    title: 'PNG to Favicon — Generate Common Sizes Free',
     description:
-      'Convert a PNG image to all favicon sizes (16x16 to 512x512). Download as ZIP with webmanifest. Free, no upload needed.',
+      'Convert a PNG image to favicon sizes from 16x16 to 512x512 in your browser. Download a ZIP with a webmanifest.',
     faq: [
       {
         question: 'How to convert PNG to favicon?',
         answer:
-          'Upload your PNG image, click "Generate Favicons," and download the ZIP file containing all standard favicon sizes plus a webmanifest file.',
+          'Choose your PNG image, click "Generate Favicons," and download the ZIP containing five common PNG icon sizes plus a webmanifest file.',
       },
       {
         question: 'What size should my PNG be?',
         answer:
-          'For best results, use a PNG that is at least 512x512 pixels. Square images work best. The tool will resize it to all required favicon dimensions.',
+          'For best results, use a square PNG that is at least 512x512 pixels. The tool resizes it to 16, 32, 180, 192, and 512px PNG icons.',
       },
       {
         question: 'Does PNG transparency work for favicons?',
@@ -36,14 +36,14 @@ export const variantData: Record<string, ToolVariantPageData> = {
     ],
   },
   'jpg-to-favicon': {
-    title: 'JPG to Favicon — Generate All Sizes Free',
+    title: 'JPG to Favicon — Generate Common Sizes Free',
     description:
-      'Convert a JPG image to all favicon sizes. White background for transparent areas. Download as ZIP. Free, no upload needed.',
+      'Convert a JPG image to favicon sizes in your browser. Use a white background for transparent areas and download a ZIP.',
     faq: [
       {
         question: 'How to convert JPG to favicon?',
         answer:
-          'Upload your JPG image and click "Generate Favicons." The tool creates all standard favicon sizes from your image and packages them in a downloadable ZIP.',
+          'Choose your JPG image and click "Generate Favicons." The tool creates five common PNG icon sizes and packages them in a downloadable ZIP.',
       },
       {
         question: 'Can I use a photo as a favicon?',
@@ -60,12 +60,12 @@ export const variantData: Record<string, ToolVariantPageData> = {
   'logo-to-favicon': {
     title: 'Logo to Favicon — Create Website Icons Free',
     description:
-      'Convert your logo to all favicon sizes needed for a modern website. Includes webmanifest. Free, no upload needed.',
+      'Convert your logo to modern favicon sizes in your browser, including a webmanifest.',
     faq: [
       {
         question: 'How to turn a logo into a favicon?',
         answer:
-          'Upload your logo image (PNG or JPG), click "Generate Favicons," and download the ZIP with all required icon sizes plus the HTML code to add to your site.',
+          'Choose your supported logo image, click "Generate Favicons," and download a ZIP with five PNG icon sizes plus the HTML code to add to your site.',
       },
       {
         question: 'What makes a good favicon from a logo?',
@@ -81,8 +81,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
   },
   'favicon-for-wordpress': {
     title: 'Favicon for WordPress — Generate Site Icons Free',
-    description:
-      'Generate WordPress-compatible favicon and site icon. All required sizes for WordPress. Free, no upload needed.',
+    description: 'Generate WordPress-compatible favicon and site-icon sizes in your browser.',
     faq: [
       {
         question: 'What favicon sizes does WordPress need?',

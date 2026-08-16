@@ -7,7 +7,7 @@ const faqItems = [
   {
     question: 'How does background removal work?',
     answer:
-      'We use an AI model that runs entirely in your browser via WebAssembly. The model detects the subject (person, product, animal, etc.) and removes everything else. No data is sent to any server.',
+      'After the required model and runtime resources load, an AI model processes the selected image in your browser. It attempts to identify the foreground and create a background mask; results vary by image. The selected image content is not sent to ToolkitFree for processing.',
   },
   {
     question: 'What types of images work best?',
@@ -42,7 +42,7 @@ const faqItems = [
   {
     question: 'Is my image uploaded to a server?',
     answer:
-      'No. All processing happens locally in your browser using WebAssembly. Your image never leaves your device.',
+      'No. The selected image content is processed locally in your browser. The page downloads the AI model and runtime files it needs over the network.',
   },
   {
     question: 'How do I remove the background from a picture for free?',
@@ -61,7 +61,7 @@ const structuredData = {
   '@type': 'WebApplication',
   name: 'Free Background Remover',
   description:
-    'Remove image backgrounds instantly using AI. Create transparent backgrounds or replace with a color. Works with portraits, products, and objects. 100% client-side.',
+    'Remove image backgrounds with browser-based AI. Create transparent backgrounds or replace them with a color for portraits, products, and objects.',
   url: 'https://toolkitfree.net/tools/background-remover',
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Any',
@@ -85,7 +85,7 @@ const breadcrumbSchema = {
 
 <Layout
   title="Free Background Remover - Remove BG with AI"
-  description="Remove image backgrounds instantly using AI. Create transparent backgrounds or cut out subjects. Free, runs in your browser. No upload needed. Perfect for product photos, portraits, and e-commerce."
+  description="Remove image backgrounds with browser-based AI. Create transparent backgrounds or cut out subjects for product photos, portraits, and e-commerce."
   structuredData={[
     structuredData,
     {
@@ -104,9 +104,10 @@ const breadcrumbSchema = {
     <div class="tool-content">
       <h1>Free AI Background Remover</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
-        Remove image backgrounds instantly using AI. Choose transparent or colored backgrounds. Your
-        photo stays on your device; first use still downloads the AI model and runtime files. Very
-        large inputs are checked before the model starts to protect the browser tab.
+        Remove image backgrounds with browser-based AI. Choose transparent or colored backgrounds.
+        Selected image contents are processed in your browser; first use still downloads the AI
+        model and runtime files. Very large inputs are checked before the model starts to protect
+        the browser tab.
       </p>
 
       <BackgroundRemover client:load />
