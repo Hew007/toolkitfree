@@ -25,9 +25,10 @@ task.
   needs a short post-result solid-color insert; neither requires another full recording. The local
   Background Remover now supports post-result background switching without another model run and
   has passed its focused browser regression. The owner approved the behavior and authorized the
-  push on 2026-08-16; production deployment verification is the remaining gate before that insert
-  is recorded. S0.5 account qualification can continue in parallel; S1 directory submissions
-  remain the next external action after S0 closes.
+  push on 2026-08-16; commit `e201773` is on `origin/master`, and production serves the verified new
+  client bundle. The short Background Remover colour-switching insert is now ready to record. S0.5
+  account qualification can continue in parallel; S1 directory submissions remain the next
+  external action after S0 closes.
 - Release state: `verified`. The owner approved the claims cleanup, commit `1bfca88` was pushed to
   `origin/master`, and the connected Cloudflare deployment served the new copy and asset hashes on
   2026-08-16. Post-deployment checks passed for representative changed pages, sitemap, LLM registry,
@@ -169,9 +170,9 @@ Product and measurement gates are complete. The active one-week sequence for 202
    approved images and are usable as base footage, but the owner still needs two short inserts:
    show one visible reorder/move-to-new-page editor action for Image to PDF, and show transparent
    plus one solid-color result state for Background Remover. The latter is now supported by a local,
-   browser-tested feature change that the owner approved for push on 2026-08-16; production
-   deployment verification remains before recording it. Codex then edits the accepted footage into
-   one 45–60 second video and three fluid GIFs.
+   browser-tested feature change that the owner approved and published on 2026-08-16; its production
+   bundle has been verified, so the insert can be recorded now. Codex then edits the accepted
+   footage into one 45–60 second video and three fluid GIFs.
 2. `in progress` — Complete S0.5 account qualification. Reddit, Hacker News, Product Hunt, DEV, and
    YouTube accounts were registered around 2026-07-26, but profile completion, genuine participation,
    posting access, and YouTube channel/upload readiness still require owner login and confirmation.
@@ -258,7 +259,7 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
-- 2026-08-16 — `owner approved` / `push authorized`: Claude Code implemented post-result
+- 2026-08-16 — `owner approved` / `verified` / `published`: Claude Code implemented post-result
   Background Remover colour switching. The transparent cutout Blob is cached after one AI run;
   transparent, preset, and custom colours now recompose the downloadable PNG locally without
   unmounting the result or rerunning the model. Recomposition locks colour inputs and Download so
@@ -267,8 +268,10 @@ or `owner approved`. Never infer owner approval.
   suites, the 12-step quality gate, and the focused real-Chrome secondary-tools regression passed.
   The regression observed transparent → red → transparent with unchanged model-run count, stable
   active object-URL count, and zero browser errors. The owner manually accepted the local behavior
-  and authorized a direct push to `master`; production deployment verification and the final short
-  Background Remover insert follow.
+  and authorized a direct push to `master`. Commit `e201773` was pushed to `origin/master`; the
+  connected Cloudflare deployment now serves `BackgroundRemover.PTNqNSl1.js` with HTTP 200, and the
+  published bundle contains the recomposition and model-run guards. The final short Background
+  Remover insert is ready to record.
 
 - 2026-08-16 — `partially accepted` / `two short inserts required`: reviewed the owner's three
   `09:08`–`09:11` replacement recordings using metadata and interval frame sampling. All are
