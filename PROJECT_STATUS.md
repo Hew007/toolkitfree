@@ -162,7 +162,9 @@ route. Validation completed before owner review:
   375, 768, 1024, and 1440 pixels, with screenshots under
   `docs/ui-regression/2026-08-23T23-13-45.428Z`.
 
-This change remains local until owner manual review and explicit push approval.
+The owner manually approved the local preview and authorized publication. Commit `204ffa9` was
+pushed to `origin/master`; the production homepage then served `Crop image online`, linked to
+`/tools/image-cropper/`, and no longer served the old `Crop to square` quick-path entry.
 
 ## Current State and Exact Next Actions
 
@@ -287,14 +289,15 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
-- 2026-08-24 — `verified` / `Image Cropper internal-link consolidation`: the homepage quick path
+- 2026-08-24 — `owner approved` / `verified` / `published` / `Image Cropper internal-link consolidation`: the homepage quick path
   now targets the canonical `/tools/image-cropper/` route with generic crop-intent anchor text; the
   square variant remains public and linked from the cropper page. The 12-step quality gate passed,
   including 72 generated pages, 4,292 internal links, and zero broken or redirecting internal links.
   Chrome smoke regression also passed both scripts: the converter matrix reported zero browser
   errors and the responsive/accessibility sweep passed 355/355 route-width checks across 71 routes
-  at 320, 375, 768, 1024, and 1440 pixels with zero browser errors. Owner manual review and push are
-  still pending.
+  at 320, 375, 768, 1024, and 1440 pixels with zero browser errors. The owner approved the local
+  preview and authorized publication. Commit `204ffa9` was pushed to `origin/master`; production
+  now serves the canonical cropper quick path and no longer serves the old square-crop entry.
 
 - 2026-08-21 — `Cloudflare snapshot collected` / `decision unchanged`: after the owner signed in,
   collected the past-24-hours traffic overview: 847 requests, 97 visits, 20.54% cache hit rate,
