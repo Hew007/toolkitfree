@@ -296,7 +296,7 @@ export default function IdPhotoMaker() {
                 onChange={handleSettings}
               />
               {pixelSize ? (
-                <p data-testid="id-photo-output-size" style={{ margin: 0, color: '#4b5563' }}>
+                <p data-testid="id-photo-output-size" style={{ margin: 0, color: '#4a463e' }}>
                   Digital photo output:{' '}
                   <strong>
                     {pixelSize.width} × {pixelSize.height}px

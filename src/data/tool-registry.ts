@@ -96,7 +96,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Reduce quality or dimensions and inspect the result.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-16',
+    lastModified: '2026-08-29',
     related: [
       'pdf-splitter',
       'image-converter',

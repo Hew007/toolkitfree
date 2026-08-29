@@ -86,7 +86,7 @@ export default function QrPreview({
           minWidth: 280,
           background: bgColor,
           borderRadius: 8,
-          border: '1px solid #e5e7eb',
+          border: '1px solid #e7e3db',
           marginBottom: '1rem',
         }}
       />
@@ -120,7 +120,7 @@ export default function QrPreview({
           <p
             style={{
               fontSize: '0.8rem',
-              color: downloadEnabled ? '#9ca3af' : '#b91c1c',
+              color: downloadEnabled ? '#8a8377' : '#b91c1c',
               margin: 0,
             }}
           >
@@ -131,7 +131,7 @@ export default function QrPreview({
         </>
       )}
       {!data && (
-        <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
+        <p style={{ color: '#8a8377', fontSize: '0.875rem' }}>
           Enter content to generate a QR code
         </p>
       )}

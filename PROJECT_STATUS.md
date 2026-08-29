@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-08-16
+Last updated: 2026-08-29
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -33,6 +33,12 @@ task.
   `origin/master`, and the connected Cloudflare deployment served the new copy and asset hashes on
   2026-08-16. Post-deployment checks passed for representative changed pages, sitemap, LLM registry,
   the Background Remover resource manifest, and the FFmpeg runtime manifest.
+- Design direction: the owner reviewed several UI directions on 2026-08-29 and chose the warm
+  neutral palette with a single indigo accent (option A). Its tokens are now in `global.css`, and
+  the Image Compressor is the first tool rebuilt on the reviewed interaction model (purpose presets,
+  three encoded candidates, no submit step, fine-tune folded but complete). The other thirteen tools
+  are unchanged and still use the previous interaction; they inherit only the new colours. Owner
+  review of the pilot is pending.
 - Advertising: intentionally disabled. Do not restore AdSense scripts, placeholders, or ad-oriented
   layout without explicit owner approval. Product value and user experience come first.
 - Privacy model: selected file contents are processed locally in the browser. Normal site resources,
@@ -258,6 +264,42 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-08-29 — `implemented` / `checks passed, two environment gaps` / `owner review pending`: adopted
+  the warm-neutral palette (option A) as the site's design tokens and rebuilt the Image Compressor
+  interaction as the first pilot of the reviewed UI direction. Palette: `--color-bg-secondary`
+  #faf8f4, borders #e7e3db, text #1b1a17 / #4a463e / #6b665c, accent #2450d0 with soft tint
+  #eef2fe, plus new `--color-surface-sunken` #f0eee9 for work surfaces, `--color-line`, and
+  `--color-caution`; 32 hardcoded cool values in `global.css` and 63 in components were retuned to
+  match. The page ground itself is still white — turning it to #faf8f4 needs a deliberate pass over
+  the panels that currently use `--color-bg-secondary` as their own surface, so it was left out of
+  this change.
+  Compressor interaction: purpose presets (Web page, Email attachment, Chat and messaging, Print,
+  Exact size in KB) replace the raw mode radios; the quality purposes now produce three encoded
+  candidates (Smaller / Balanced / Sharper) whose labels carry the real output size; the submit
+  button is gone, because local processing needs no round trip — results are debounced by 320 ms and
+  a newer change abandons the previous run. Quality and maximum width remain, folded into a
+  Fine-tune disclosure whose closed row still states the current values, with one tap back to the
+  preset. Lossless PNG candidates vary by width instead of quality, since quality does nothing
+  there. Each source file is decoded once and encoded once per candidate. Batches over 6 files or
+  30 MB encode only the selected candidate and offer the others on demand. The exact-size purpose
+  keeps the previous bounded search and its honest target-met / target-not-met wording unchanged.
+  Validation: LLM registry, TypeScript, Astro check, ESLint, Prettier, production build (72 pages),
+  static asset size, all 13 unit suites, SEO registry, content freshness (after bumping the
+  compressor's `lastModified` to 2026-08-29), and site integrity all passed. Chrome browser
+  regression passed for the compressor, batch download, converter, and the full
+  responsive/accessibility sweep (355 checks across 71 routes at 320/375/768/1024/1440, zero
+  browser errors). Two steps could not run in this environment and remain unverified here: the
+  background-removal asset preparation is blocked because `staticimgly.com` returns 403 through the
+  sandbox proxy, so `npm run check` cannot complete its "Static runtime assets" step and the
+  background-remover browser test was not run; the remaining browser suites were run individually
+  with `--skip-build` against the build produced above. Re-run `npm run check` and the full
+  `npm run test:e2e` on a normal network before release. Note for that run: `package-lock.json`
+  resolves 823 packages to `registry.npmmirror.com`, which the sandbox proxy also blocks.
+  Follow-ups the owner should decide on: whether to move encoding into a Web Worker (the pilot
+  recompresses on the main thread, which can stutter while dragging the quality slider on a large
+  batch), whether to apply the warm page ground site-wide, and which tool gets the same treatment
+  next.
 
 - 2026-08-16 — `owner approved` / `verified` / `published`: Claude Code implemented post-result
   Background Remover colour switching. The transparent cutout Blob is cached after one AI run;

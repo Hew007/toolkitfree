@@ -175,14 +175,14 @@ export default function FaviconGenerator() {
                   width: 80,
                   height: 80,
                   objectFit: 'contain',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid #e7e3db',
                   borderRadius: 8,
                 }}
               />
             )}
             <div>
               <div style={{ fontWeight: 500 }}>{file.name}</div>
-              <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>{formatSize(file.size)}</div>
+              <div style={{ fontSize: '0.875rem', color: '#6b665c' }}>{formatSize(file.size)}</div>
             </div>
             <button
               onClick={handleRemove}
@@ -207,7 +207,7 @@ export default function FaviconGenerator() {
           >
             {processing ? 'Generating...' : 'Generate Favicons'}
           </button>
-          <p style={{ marginTop: '0.5rem', color: '#6b7280', fontSize: '0.8125rem' }}>
+          <p style={{ marginTop: '0.5rem', color: '#6b665c', fontSize: '0.8125rem' }}>
             Non-square images are centered with transparent padding. This tool creates PNG icons,
             not an .ico file.
           </p>
@@ -243,12 +243,12 @@ export default function FaviconGenerator() {
                     width: Math.min(icon.size, 80),
                     height: Math.min(icon.size, 80),
                     objectFit: 'contain',
-                    border: '1px solid #e5e7eb',
+                    border: '1px solid #e7e3db',
                     borderRadius: 4,
                     imageRendering: icon.size <= 32 ? 'pixelated' : 'auto',
                   }}
                 />
-                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                <div style={{ fontSize: '0.75rem', color: '#6b665c', marginTop: '0.25rem' }}>
                   {icon.size}x{icon.size}
                 </div>
               </div>
@@ -292,13 +292,13 @@ export default function FaviconGenerator() {
           {/* HTML snippet */}
           <div style={{ marginTop: '1.5rem' }}>
             <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>HTML Code</h3>
-            <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+            <p style={{ fontSize: '0.8125rem', color: '#6b665c', marginBottom: '0.5rem' }}>
               Add this to your <code>&lt;head&gt;</code> section:
             </p>
             <pre
               style={{
-                background: '#f3f4f6',
-                border: '1px solid #e5e7eb',
+                background: '#f4f0e8',
+                border: '1px solid #e7e3db',
                 borderRadius: 8,
                 padding: '1rem',
                 fontSize: '0.8125rem',

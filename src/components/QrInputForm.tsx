@@ -26,7 +26,7 @@ const TABS: { key: QrType; label: string }[] = [
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '0.5rem 0.75rem',
-  border: '1px solid #d1d5db',
+  border: '1px solid #ddd8ce',
   borderRadius: 6,
   fontSize: '0.875rem',
   fontFamily: 'inherit',
@@ -38,7 +38,7 @@ const labelStyle: React.CSSProperties = {
   fontWeight: 500,
   marginBottom: '0.25rem',
   display: 'block',
-  color: '#374151',
+  color: '#3a362f',
 };
 
 const fieldGroup: React.CSSProperties = {
@@ -164,9 +164,9 @@ export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInpu
             style={{
               padding: '0.375rem 0.875rem',
               borderRadius: 6,
-              border: type === tab.key ? '2px solid #2563eb' : '1px solid #d1d5db',
+              border: type === tab.key ? '2px solid #2563eb' : '1px solid #ddd8ce',
               background: type === tab.key ? '#2563eb' : '#fff',
-              color: type === tab.key ? '#fff' : '#374151',
+              color: type === tab.key ? '#fff' : '#3a362f',
               cursor: 'pointer',
               fontSize: '0.8rem',
               fontWeight: 500,
