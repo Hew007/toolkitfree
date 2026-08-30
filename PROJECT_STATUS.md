@@ -34,8 +34,9 @@ task.
   Splitter and Image-to-PDF route families. Controlled upload traces measured Image-to-PDF at
   0.0061 and Image Splitter at 0.0839; supplying the known Splitter preview dimensions reduced it to
   0.0090 (89%). The fix passed the 12-step quality gate and focused browser regressions, and the
-  owner approved the local page on 2026-08-30. Push and production verification are now the release
-  gate before the Reddit feedback test.
+  owner approved the local page on 2026-08-30. Commit `9f758f2` was pushed to `origin/master`; the
+  connected Cloudflare deployment serves the new `ImageSplitter.BR6SFwgQ.js` asset with the fix.
+  The technical release gate is complete before the Reddit feedback test.
 - Release state: `verified`. The owner approved the claims cleanup, commit `1bfca88` was pushed to
   `origin/master`, and the connected Cloudflare deployment served the new copy and asset hashes on
   2026-08-16. Post-deployment checks passed for representative changed pages, sitemap, LLM registry,
@@ -227,8 +228,7 @@ Product and initial measurement gates are complete. The active sequence as of 20
    `https://youtu.be/dk4mtf6H8aA`. Studio confirms the custom thumbnail, English (United States)
    timed subtitles, completed HD processing, and `No issues found` copyright result. The owner
    changed visibility to Public on 2026-08-20.
-5. `owner approved; deployment pending` — Push and verify the fixed Image Splitter production
-   asset, then publish one feedback test in `r/indiehackers` using
+5. `ready for owner publication` — Publish one feedback test in `r/indiehackers` using
    the required `Self Promotion` flair, the approved GIF, one tracked tool link, and the final copy
    in `docs/promotion/07-reddit-indiehackers-package.md`. Record the result and review it after
    24 hours, 7 days, and 14 days before expanding community promotion.
@@ -239,8 +239,8 @@ S5 ongoing SEO/GEO), which supersedes the execution order in `docs/promotion-pla
 while keeping that document's constraints, claims wording, and work-package definitions normative.
 All external posts are published from the owner's accounts; the owner approves copy and timing for
 every post. Current stage: S0 is complete, S1 has executed its first directory set, and the S2
-baseline and focused CLS work are complete. The owner approved the local fix. Reddit publication is
-paused pending deployment verification and owner submission. No Show HN or Product Hunt
+baseline and focused CLS work are complete. The owner approved the local fix and production serves
+the new asset. Reddit publication is pending only the owner submission. No Show HN or Product Hunt
 launch should occur until the Reddit checkpoint evidence, platform eligibility, and owner response
 availability are confirmed.
 
@@ -306,6 +306,12 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-08-30 — `pushed` / `production asset verified` / `Image Splitter CLS fix`: commit `9f758f2`
+  was pushed to `origin/master`. A cache-bypassed production page references
+  `ImageSplitter.BR6SFwgQ.js`; the immutable asset returns HTTP 200 and contains the intrinsic
+  preview width/height output. The normal page briefly returned the previous cached HTML, so later
+  Cloudflare field samples remain the recovery checkpoint, but the deployment gate is complete.
 
 - 2026-08-30 — `owner approved` / `Image Splitter CLS fix`: owner manually checked the fixed local
   Image Splitter and authorized the push. The remaining technical gate is commit, push, connected
