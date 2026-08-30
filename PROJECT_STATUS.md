@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-08-24
+Last updated: 2026-08-30
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -17,7 +17,11 @@ task.
 - Product state: the main product-quality redesign, Image Splitter, and expanded Image to PDF editor
   are complete. The full release checks passed on 2026-08-05, and the owner manually approved that
   build on 2026-08-07.
-- Growth state: external promotion has **not started**. On 2026-08-15 the owner approved the WP-03
+- Growth state: directory and YouTube promotion have started; the first community test has not yet
+  been submitted. Uneed is queued; SaaSHub has at least one verified-alternative discovery surface
+  while direct product-page approval remains unconfirmed; and the approved demo is Public on
+  YouTube. Reddit participation is verified and the final `r/indiehackers` Image Splitter feedback
+  candidate is ready for owner review. On 2026-08-15 the owner approved the WP-03
   thumbnail, all three gallery images, and the poster, but rejected the old MP4 and all three
   slideshow-like GIFs for publication. The 2026-08-16 replacement captures now use the approved
   self-created source images. All four final raw clips are accepted for post-production and copied
@@ -25,8 +29,13 @@ task.
   Background Remover, and the 21-second homepage take. The published Background Remover supports
   post-result background switching without another model run; the final recording demonstrates
   transparent, blue, red, and dark result backgrounds. No further owner recording is required.
-  S0.5 account qualification can continue in parallel; S1 directory submissions remain the next
-  external action after S0 closes.
+  S0.5 qualification for Product Hunt, Hacker News, and DEV can continue in parallel. GSC and
+  Cloudflare pre-Reddit baselines are complete. Cloudflare exposed two CLS 1 samples on the Image
+  Splitter and Image-to-PDF route families. Controlled upload traces measured Image-to-PDF at
+  0.0061 and Image Splitter at 0.0839; supplying the known Splitter preview dimensions reduced it to
+  0.0090 (89%). The fix passed the 12-step quality gate and focused browser regressions, and the
+  owner approved the local page on 2026-08-30. Push and production verification are now the release
+  gate before the Reddit feedback test.
 - Release state: `verified`. The owner approved the claims cleanup, commit `1bfca88` was pushed to
   `origin/master`, and the connected Cloudflare deployment served the new copy and asset hashes on
   2026-08-16. Post-deployment checks passed for representative changed pages, sitemap, LLM registry,
@@ -168,8 +177,7 @@ pushed to `origin/master`; the production homepage then served `Crop image onlin
 
 ## Current State and Exact Next Actions
 
-Product and measurement gates are complete. The active one-week sequence for 2026-08-12 through
-2026-08-18 is:
+Product and initial measurement gates are complete. The active sequence as of 2026-08-30 is:
 
 1. `owner approved` — S0 motion assets are closed. Directory copy is approved;
    the WP-03 thumbnail, three gallery images, and poster are owner-approved. The old 28.53-second
@@ -186,17 +194,22 @@ Product and measurement gates are complete. The active one-week sequence for 202
    the Mixkit Stock Music Free License; the silent master remains a fallback and full provenance is
    in `music-license-record.md`. The approved music master is now Public on YouTube; the silent
    master remains the fallback.
-2. `in progress` — Complete S0.5 account qualification. Reddit, Hacker News, Product Hunt, DEV, and
+2. `in progress` — Complete S0.5 account qualification. Reddit is now qualified through visible,
+   genuine participation. Hacker News, Product Hunt, DEV, and
    YouTube accounts were registered around 2026-07-26. YouTube channel and upload readiness are now
    confirmed; the remaining community profiles still require profile completion, genuine
    participation, and posting-access checks.
 3. `in progress` — Uneed and SaaSHub submissions are complete. ToolkitFree was saved to Uneed's
    free queue on 2026-08-16 and the owner dashboard shows it as `Unpublished`, scheduled for
-   2027-02-08. No paid acceleration was purchased. SaaSHub supports free submission and product
+   2027-02-08. Uneed closed new free-queue entries on 2026-08-17, but its official changelog says
+   products already in line keep their dates. No paid acceleration was purchased. SaaSHub supports free submission and product
    verification. SaaSHub confirmed successful submission on 2026-08-20 and states that the listing
    will appear after approval. The listing is now verified and enriched with its logo, homepage
    screenshot, Free pricing, accurate extended description, and public YouTube demo; SaaSHub's
-   platform approval remains pending with an indicated wait of up to 32 days. AlternativeTo is
+   platform approval remains pending with an indicated wait of up to 32 days. On 2026-08-30, a
+   current search result surfaced ToolkitFree in SaaSHub's `Verified Alternatives` section for
+   TinyWow. This proves a public discovery surface; the direct product page could not be fetched, so
+   full-page approval remains unconfirmed. AlternativeTo is
    removed from execution
    because its official eligibility rules normally exclude converters, PDF tools, QR generators,
    background removers, ID-photo generators, and collections of online tools. The owner approves
@@ -214,17 +227,22 @@ Product and measurement gates are complete. The active one-week sequence for 202
    `https://youtu.be/dk4mtf6H8aA`. Studio confirms the custom thumbnail, English (United States)
    timed subtitles, completed HD processing, and `No issues found` copyright result. The owner
    changed visibility to Public on 2026-08-20.
-5. `planned` — On 2026-08-18, review directory status, Cloudflare referrals, Search Console movement,
-   and feedback, then select the first eligible community test for the following week.
+5. `owner approved; deployment pending` — Push and verify the fixed Image Splitter production
+   asset, then publish one feedback test in `r/indiehackers` using
+   the required `Self Promotion` flair, the approved GIF, one tracked tool link, and the final copy
+   in `docs/promotion/07-reddit-indiehackers-package.md`. Record the result and review it after
+   24 hours, 7 days, and 14 days before expanding community promotion.
 
 Promotion plan: the operative playbook is `docs/promotion-execution-plan-2026-08-07.md`
 (stages S0 asset prep → S1 directories → S2 single-community test → S3 Show HN → S4 Product Hunt →
 S5 ongoing SEO/GEO), which supersedes the execution order in `docs/promotion-plan-2026-07-22.md`
 while keeping that document's constraints, claims wording, and work-package definitions normative.
 All external posts are published from the owner's accounts; the owner approves copy and timing for
-every post. Current stage: S0 closure, with S0.5 and S1 starting in parallel. No Reddit, Show HN, or
-Product Hunt launch should occur until account eligibility and owner response availability are
-confirmed.
+every post. Current stage: S0 is complete, S1 has executed its first directory set, and the S2
+baseline and focused CLS work are complete. The owner approved the local fix. Reddit publication is
+paused pending deployment verification and owner submission. No Show HN or Product Hunt
+launch should occur until the Reddit checkpoint evidence, platform eligibility, and owner response
+availability are confirmed.
 
 Candidate technical follow-ups (not yet scheduled):
 
@@ -288,6 +306,102 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-08-30 — `owner approved` / `Image Splitter CLS fix`: owner manually checked the fixed local
+  Image Splitter and authorized the push. The remaining technical gate is commit, push, connected
+  Cloudflare deployment, and production asset verification before the Reddit submission.
+
+- 2026-08-30 — `Image Splitter CLS fix verified locally` / `owner preview pending`: added intrinsic
+  width and height to the known-dimension Splitter preview so the browser reserves its aspect ratio
+  before image decode. Controlled upload CLS fell from 0.0839 to 0.0090 (89%); Image-to-PDF remained
+  at 0.0061. The performance regression now records layout-shift sources and enforces a 0.05
+  Splitter ceiling. The 12-step quality gate and complete Image Splitter browser workflow passed,
+  including upload, seam detection, four-piece ZIP output, balanced object-URL cleanup, and zero
+  browser errors. The change is local, not owner-approved, committed, pushed, or deployed; owner
+  preview is the next gate.
+
+- 2026-08-30 — `pre-Reddit Cloudflare baseline collected` / `CLS verification gate`: authenticated
+  Cloudflare Web Analytics reported 2 bot-excluded visits and 2 page views for the past 24 hours,
+  one each on Image Splitter and Image-to-PDF no-margin, from Bing and Yahoo. LCP and INP were 100%
+  good on two samples, but both CLS samples scored 1 and were poor, with
+  `#main-content > div.container` as the debug element. Updated the growth report, measurement log,
+  Reddit experiment, and reusable-skill evidence. Because Image Splitter is the planned Reddit
+  landing page, publication is paused until the small-sample signal is reproduced and fixed or
+  disproven.
+
+- 2026-08-30 — `pre-Reddit GSC baseline collected` / `Cloudflare sign-in required`: after the
+  owner foregrounded GSC, a fresh read-only Chrome tab returned the complete three-month Search
+  Console snapshot for 2026-05-28 through 2026-08-27: 2 clicks, 558 impressions, 0.4% CTR, average
+  position 86.7; 54 indexed and 49 not indexed; Sitemap `Success` with 65 discovered pages. Saved
+  `docs/growth-reports/2026-08-30.md` and filled the Reddit experiment baseline. Cloudflare opened
+  its sign-in page in the active Chrome session, so no current visitor/performance value is claimed;
+  owner login is the remaining pre-post measurement gate.
+
+- 2026-08-30 — `pre-Reddit GSC read blocked` / `owner foreground required`: Chrome discovery
+  confirmed an authenticated `Performance on Search results` tab for the `sc-domain:toolkitfree.net`
+  property. A full DOM read and a lighter visible screenshot both timed out before returning any
+  metric, without reloading or modifying the page. Recorded the attempt in the measurement ledger,
+  Reddit experiment report, and reusable-skill evidence log. No current GSC value is claimed; the
+  next attempt requires the owner to place that tab in the foreground.
+
+- 2026-08-30 — `S2 evidence record prepared` / `not posted`: audited promotion measurement
+  readiness and found there was no single report for the planned Reddit checkpoints. Added
+  `docs/promotion/reports/reddit-image-splitter-feedback-2026.md` with the experiment hypothesis,
+  pre-publication GSC/Cloudflare fields, exact publication record, moderation state,
+  24-hour/7-day/14-day checkpoints, feedback coding, attribution-strength rules, and reusable-skill
+  extraction. Updated the owner checklist and docs index to current S2 state and recorded the
+  package as `experiment-ready-not-posted`; no external action occurred.
+
+- 2026-08-30 — `operating documents reconciled` / `S2 remains pending`: corrected the promotion
+  account inventory and operative execution plan, which still described Reddit participation,
+  YouTube upload, directory submission, and the original `r/InternetIsBeautiful` default as future
+  work. They now match observed state: Reddit and YouTube qualified, the demo Public, Uneed queued,
+  SaaSHub publicly discoverable but direct approval unconfirmed, AlternativeTo rejected on fit, and
+  the `r/indiehackers` Image Splitter package ready but not posted. The next sequence is a fresh
+  GSC/Cloudflare baseline, owner publication, then 24-hour/7-day/14-day measurement.
+
+- 2026-08-30 — `directory state rechecked` / `evidence recorded`: current SaaSHub search results
+  surfaced ToolkitFree as a verified TinyWow alternative, establishing at least one public discovery
+  surface while leaving direct-page approval unconfirmed. Uneed's official 2026-08-17 changelog says
+  its free queue is now closed to new products but existing entries keep their assigned dates, so
+  ToolkitFree's earlier 2027-02-08 slot remains the operative state. Added both observations to the
+  measurement log and promotion-skill evidence log with explicit evidence-strength labels.
+
+- 2026-08-30 — `promotion-system capture started` / `long-term goal active`: owner requested that
+  the entire ToolkitFree promotion process become the evidence base for a reusable product-promotion
+  tool or Codex skill after this campaign. Added
+  `docs/promotion/09-promotion-skill-evidence-log.md` with the capture schema, evidence collected so
+  far, provisional workflow, safety guardrails, missing evidence, and final acceptance criteria.
+  `AGENTS.md` now requires promotion state, measurement, and reusable-process evidence to be updated
+  after every meaningful action. No generic skill has been created yet; it will be derived from real
+  outcomes rather than the current plan alone.
+
+- 2026-08-30 — `S2 final candidate prepared` / `owner review required`: revised the first Reddit
+  test from product-collection promotion into a narrow Image Splitter critique request with three
+  concrete questions, one precise local-processing statement, one maker disclosure, and a dedicated
+  `image_splitter_feedback_2026` UTM campaign. Reconfirmed the production landing page returns HTTP
+  200 and the approved 960×540, 13.99-second GIF is 2.52 MiB, contains no browser chrome or personal
+  data, and reaches six downloadable pieces. No Reddit post was submitted.
+
+- 2026-08-30 — `S2 participation verified` / `ready for first feedback post`: owner-provided
+  Reddit profile screenshots verified at least eight visible, non-promotional contributions across
+  `r/indiehackers`, `r/SideProject`, `r/linuxmint`, and `r/Wechat`. Three planned substantive
+  comments are visible, one discussion produced a natural follow-up reply, and the captured items
+  show no removal, collapse, or negative-score signal. Rechecked `r/indiehackers` rules: one
+  self-promotion post is permitted with the `Self Promotion` flair only for feedback and critique,
+  not advertising. The account is now ready for the prepared Image Splitter feedback post; no post
+  has been submitted by Codex.
+
+- 2026-08-24 — `S2 participation plan prepared` / `owner posting`: confirmed the Reddit
+  account is signed in, has a Create Post entry, and is joined to `r/indiehackers`, `r/SideProject`,
+  and `r/isthisAI`. Live rules make `r/InternetIsBeautiful` a poor fit because of its 90/10
+  self-promotion rule and additional collection/business-tool restrictions. Selected
+  `r/indiehackers` conditionally: its rules allow one `Self Promotion` post for feedback and
+  critique rather than advertising. Prepared a narrow Image Splitter feedback package at
+  `docs/promotion/07-reddit-indiehackers-package.md`. The owner confirmed there is no prior
+  non-promotional activity, so prepared a five-comment, seven-day genuine participation sequence at
+  `docs/promotion/08-reddit-participation-plan.md`. No Reddit draft, upload, comment, or post was
+  created by Codex; the owner will post only comments that accurately reflect their own view.
 
 - 2026-08-24 — `owner approved` / `verified` / `published` / `Image Cropper internal-link consolidation`: the homepage quick path
   now targets the canonical `/tools/image-cropper/` route with generic crop-intent anchor text; the

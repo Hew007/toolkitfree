@@ -92,6 +92,14 @@ Important directories:
   release step, major decision, deployment, or meaningful validation is completed. Keep the current
   snapshot and next actions accurate; add a concise dated entry to the recent progress log. Do not
   create a new handoff document for routine work.
+- After every meaningful promotion decision, preparation step, external submission, publication,
+  moderation result, or measurement checkpoint, update all applicable records before moving on:
+  `PROJECT_STATUS.md` for current state, `docs/promotion/04-measurement-log.csv` for comparable
+  outcomes, and `docs/promotion/09-promotion-skill-evidence-log.md` for process evidence and reusable
+  lessons. Distinguish observed facts from inference and classify lessons as general,
+  channel-specific, product-specific, or not yet proven. The eventual generic promotion tool/skill
+  must be derived from this evidence after the ToolkitFree promotion cycle, not designed from the
+  plan alone.
 - Do not mark work complete in `PROJECT_STATUS.md` until the relevant checks have actually passed.
   If work is partial or blocked, record that state and the exact continuation point.
 - If the branch is dirty, diverged, or conflicted, resolve or report that state before implementing.
