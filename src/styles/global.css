@@ -8,10 +8,15 @@
   --color-text: #1b1a17;
   --color-text-light: #4a463e;
   --color-text-muted: #6b665c;
+  /* Three background roles, and each one has exactly one job:
+     --color-bg            the surface of anything raised: cards, panels, header
+     --color-bg-secondary  the page ground the surfaces sit on
+     --color-surface-sunken  anything that reads as recessed: dropzones, control
+       tracks, preview stages, image backings, and full-width bands. It also
+       stays deliberately neutral wherever the user judges their own photo — a
+       tinted backdrop changes how their image reads. */
   --color-bg: #ffffff;
   --color-bg-secondary: #faf8f4;
-  /* Work surfaces stay neutral grey on purpose: a tinted backdrop changes how
-     the user's own photo reads. Used by crop stages and preview areas. */
   --color-surface-sunken: #f0eee9;
   --color-border: #e7e3db;
   --color-line: #f1ede5;
@@ -31,7 +36,7 @@
 html {
   font-family: 'Aptos', 'Segoe UI Variable Text', 'Segoe UI', sans-serif;
   color: var(--color-text);
-  background: var(--color-bg);
+  background: var(--color-bg-secondary);
   line-height: 1.6;
 }
 
@@ -238,7 +243,7 @@ li {
 
 /* Tool interaction area */
 .tool-area {
-  background: var(--color-bg-secondary);
+  background: var(--color-surface-sunken);
   border: 2px dashed var(--color-border);
   border-radius: 8px;
   padding: 2rem;
@@ -271,7 +276,7 @@ li {
 .tool-area.is-compact {
   padding: 0.75rem 1rem;
   border-style: solid;
-  background: #fbfaf7;
+  background: var(--color-bg);
 }
 
 .tool-area.is-compact .drop-zone {
@@ -320,7 +325,7 @@ li {
 }
 
 .btn-secondary:hover {
-  background: var(--color-bg-secondary);
+  background: var(--color-surface-sunken);
 }
 
 /* Video and animated image converter */
@@ -355,7 +360,7 @@ li {
   padding: 1.25rem;
   border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: var(--color-bg-secondary);
+  background: var(--color-bg);
 }
 
 .settings-grid {
@@ -616,7 +621,7 @@ li {
 .pdf-page-toolbar {
   align-items: flex-end;
   margin-top: 1rem;
-  background: var(--color-bg-secondary);
+  background: var(--color-bg);
 }
 
 .pdf-range-field {
@@ -746,7 +751,7 @@ li {
 .pdf-export-panel {
   align-items: flex-end;
   margin-top: 1rem;
-  background: var(--color-bg-secondary);
+  background: var(--color-bg);
 }
 
 .pdf-export-panel fieldset {
@@ -905,7 +910,7 @@ li {
 
 .collage-preview-panel {
   padding: 1.25rem;
-  background: #fbfaf7;
+  background: var(--color-surface-sunken);
 }
 
 .collage-panel-heading {
@@ -1021,7 +1026,7 @@ li {
 
 .collage-layout-choice:hover {
   border-color: #b6c3f2;
-  background: #fbfaf7;
+  background: var(--color-surface-sunken);
   transform: translateY(-1px);
 }
 
@@ -1198,7 +1203,7 @@ li {
   gap: 0.65rem;
   padding: 0.6rem 0.7rem;
   border-radius: 7px;
-  background: #fbfaf7;
+  background: var(--color-surface-sunken);
 }
 
 .collage-image-number {
@@ -1396,7 +1401,7 @@ li {
   object-fit: cover;
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface-sunken);
 }
 
 .file-item-details {
@@ -1483,7 +1488,7 @@ li {
   padding: 3px;
   border: 1px solid var(--color-border);
   border-radius: 9px;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface-sunken);
 }
 
 .segmented-control label {
@@ -1625,7 +1630,7 @@ li {
   padding: 0.75rem;
   overflow: auto;
   border-radius: 8px;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface-sunken);
 }
 
 .resizer-preview-frame {
@@ -1685,7 +1690,7 @@ li {
   place-items: start center;
   overflow: auto;
   border-radius: 8px;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface-sunken);
 }
 
 .cropper-controls-panel {
@@ -1963,7 +1968,7 @@ li {
   height: 48px;
   object-fit: cover;
   border-radius: 4px;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface-sunken);
 }
 
 /* FAQ */
@@ -2101,9 +2106,9 @@ li {
 .related-guides {
   margin-top: 2rem;
   padding: 1.25rem;
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: #fbfaf7;
+  background: var(--color-bg);
 }
 
 .related-guides h2 {
@@ -2190,7 +2195,7 @@ li {
 
 /* Footer */
 .site-footer {
-  background: var(--color-bg-secondary);
+  background: var(--color-surface-sunken);
   border-top: 1px solid var(--color-border);
   padding: 2rem 0;
   margin-top: auto;
@@ -2604,7 +2609,7 @@ input[type='range'] {
   padding: clamp(1.25rem, 3vw, 2rem);
   border: 1px solid var(--color-border);
   border-radius: 0.8rem;
-  background: #fbfaf7;
+  background: var(--color-bg);
 }
 
 .section-heading-row.compact {
@@ -2751,7 +2756,7 @@ input[type='range'] {
   padding: clamp(1.25rem, 3vw, 2.25rem);
   border: 1px solid #ddd8ce;
   border-radius: 1.1rem;
-  background: #fbfaf7;
+  background: var(--color-bg);
   box-shadow: 0 1.5rem 4rem rgba(37, 74, 145, 0.1);
 }
 
@@ -2807,7 +2812,7 @@ input[type='range'] {
 }
 
 .tool-directory-section .tool-card:hover {
-  background: #f6f4ee;
+  background: var(--color-surface-sunken);
   box-shadow: none;
   text-decoration: none;
   transform: translateY(-3px);
@@ -2867,7 +2872,7 @@ input[type='range'] {
   gap: clamp(2rem, 7vw, 7rem);
   margin: clamp(4rem, 8vw, 7rem) 0;
   padding: clamp(2rem, 5vw, 4rem);
-  background: var(--color-bg-secondary);
+  background: var(--color-surface-sunken);
 }
 
 .home-info-grid h2 {
@@ -2907,7 +2912,7 @@ input[type='range'] {
 }
 
 .popular-paths-grid a:hover {
-  background: #f6f4ee;
+  background: var(--color-surface-sunken);
   text-decoration: none;
 }
 
@@ -3083,7 +3088,7 @@ input[type='range'] {
   margin-bottom: 0.65rem;
   padding: clamp(1.4rem, 3vw, 2.2rem) 1rem;
   border-color: #b9c7dd;
-  background: #fbfaf7;
+  background: var(--color-surface-sunken);
 }
 
 .hero-tool-panel .hero-privacy-note {

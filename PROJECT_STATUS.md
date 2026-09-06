@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-08-29
+Last updated: 2026-09-06
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -34,11 +34,12 @@ task.
   2026-08-16. Post-deployment checks passed for representative changed pages, sitemap, LLM registry,
   the Background Remover resource manifest, and the FFmpeg runtime manifest.
 - Design direction: the owner reviewed several UI directions on 2026-08-29 and chose the warm
-  neutral palette with a single indigo accent (option A). Its tokens are now in `global.css`, and
-  the Image Compressor is the first tool rebuilt on the reviewed interaction model (purpose presets,
-  three encoded candidates, no submit step, fine-tune folded but complete). The other thirteen tools
-  are unchanged and still use the previous interaction; they inherit only the new colours. Owner
-  review of the pilot is pending.
+  neutral palette with a single indigo accent (option A). Its tokens are in `global.css` and the
+  warm page ground is now applied site-wide, with the three background roles separated. The Image
+  Compressor is the first tool rebuilt on the reviewed interaction model (purpose presets, three
+  encoded candidates, no submit step, fine-tune folded but complete). The other thirteen tools are
+  unchanged and still use the previous interaction; they inherit only the new surfaces. Owner review
+  of both changes is pending.
 - Advertising: intentionally disabled. Do not restore AdSense scripts, placeholders, or ad-oriented
   layout without explicit owner approval. Product value and user experience come first.
 - Privacy model: selected file contents are processed locally in the browser. Normal site resources,
@@ -264,6 +265,29 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-09-06 — `implemented` / `checks passed, one environment gap` / `owner review pending`:
+  finished applying palette A by moving the page ground to the warm tint site-wide. This needed the
+  background tokens to be separated into three roles, because one token was previously doing three
+  jobs: `--color-bg` is now only the surface of raised things (cards, panels, header),
+  `--color-bg-secondary` is only the page ground (`html`), and `--color-surface-sunken` is only for
+  recessed things. Twenty-one rules were reassigned accordingly. Sunken now: the upload dropzone,
+  secondary-button hover, file and result thumbnails, the segmented-control track, the resizer and
+  cropper preview stages, the collage preview panel and its ordering rows, the homepage info band,
+  the footer, and the tool-card and popular-path hovers. Raised white surfaces now: the animation
+  settings panel, both PDF page panels, the compact dropzone, the related-guides callout, the spec
+  section, and the homepage primary tool panel; the guides callout also lost a leftover cool blue
+  border. Without this split those elements would have matched the new page ground exactly and
+  disappeared — the secondary-button hover in particular would have given no feedback at all.
+  Validation: LLM registry, TypeScript, Astro check, ESLint, Prettier, production build (72 pages),
+  static asset size, all 13 unit suites, SEO registry, content freshness, and site integrity all
+  passed. The Chrome responsive/accessibility sweep passed again after the change (355 checks across
+  71 routes at 320/375/768/1024/1440, zero browser errors). Before/after captures of the homepage,
+  compressor, cropper, and mobile homepage were reviewed. Still unverified in this environment:
+  background-removal asset preparation remains blocked (`staticimgly.com` returns 403 through the
+  sandbox proxy), so `npm run check` cannot finish its "Static runtime assets" step and the
+  background-remover browser test has not run. Re-run `npm run check` and the full `npm run test:e2e`
+  on a normal network before release.
 
 - 2026-08-29 — `implemented` / `checks passed, two environment gaps` / `owner review pending`: adopted
   the warm-neutral palette (option A) as the site's design tokens and rebuilt the Image Compressor
