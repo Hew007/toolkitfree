@@ -228,10 +228,15 @@ Product and initial measurement gates are complete. The active sequence as of 20
    `https://youtu.be/dk4mtf6H8aA`. Studio confirms the custom thumbnail, English (United States)
    timed subtitles, completed HD processing, and `No issues found` copyright result. The owner
    changed visibility to Public on 2026-08-20.
-5. `ready for owner publication` — Publish one feedback test in `r/indiehackers` using
-   the required `Self Promotion` flair, the approved GIF, one tracked tool link, and the final copy
-   in `docs/promotion/07-reddit-indiehackers-package.md`. Record the result and review it after
-   24 hours, 7 days, and 14 days before expanding community promotion.
+5. `Reddit eligibility rebuilding` — The owner submitted the prepared Image Splitter feedback post
+   to `r/indiehackers` with the required `Self Promotion` flair on 2026-08-31. AutoModerator removed
+   <https://www.reddit.com/r/indiehackers/comments/1w2wrjy/> within about one minute because the
+   account has fewer than 10 comment karma in that specific community. Preserve the post; do not
+   delete, appeal, edit, or repost. Continue genuine non-promotional participation until the gate is
+   satisfied. The owner sent modmail on 2026-08-31 asking whether the removed attempt consumed the
+   one-time self-promotion allowance and whether a retry is permitted after meeting the gate;
+   response is pending. The current redesigned profile shows only 2 total site-wide karma and 12
+   contributions; neither is the required community comment-karma value.
 
 Promotion plan: the operative playbook is `docs/promotion-execution-plan-2026-08-07.md`
 (stages S0 asset prep → S1 directories → S2 single-community test → S3 Show HN → S4 Product Hunt →
@@ -240,9 +245,10 @@ while keeping that document's constraints, claims wording, and work-package defi
 All external posts are published from the owner's accounts; the owner approves copy and timing for
 every post. Current stage: S0 is complete, S1 has executed its first directory set, and the S2
 baseline and focused CLS work are complete. The owner approved the local fix and production serves
-the new asset. Reddit publication is pending only the owner submission. No Show HN or Product Hunt
-launch should occur until the Reddit checkpoint evidence, platform eligibility, and owner response
-availability are confirmed.
+the new asset. The first Reddit submission was automatically removed because the account has fewer
+than 10 `r/indiehackers` comment karma. Do not repost or expand to another community while rebuilding
+this explicit eligibility gate. No Show HN or Product Hunt launch should occur until Reddit retry
+eligibility, the one-time allowance, and owner response availability are confirmed.
 
 Candidate technical follow-ups (not yet scheduled):
 
@@ -306,6 +312,38 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-08-31 — `Reddit newcomer research completed`: reviewed current Reddit Help documentation for
+  karma, Poster Eligibility, Post Check, post types, flair, AutoModerator, modmail, spam, vote
+  manipulation, formatting, sorting, account status, and `r/indiehackers`' latest posting guidance.
+  Added `docs/promotion/10-reddit-newcomer-guide.md` with a glossary, safe participation practices,
+  moderation states, self-promotion controls, one-page preflight, and the ToolkitFree-specific
+  recovery plan. The research confirms that Post Check is advisory, eligibility can include
+  subreddit comment karma, and submission success does not prove public visibility.
+
+- 2026-08-31 — `Reddit eligibility screenshot reviewed`: the owner profile shows 2 total Karma and
+  12 Contributions, not 10 `r/indiehackers` comment karma. A newly added community comment showed
+  score 1 and one view, which is not evidence of earned karma. Revised the reusable-process record
+  to distinguish contribution volume, total karma, default self-votes, and subreddit comment karma;
+  future participation must prioritize specific useful replies without links or solicitation.
+
+- 2026-08-31 — `Reddit modmail sent` / `response pending`: owner acknowledged the community-karma
+  rule, stated that no repost would occur before meeting it, and asked whether the automated removal
+  consumed the one-time self-promotion allowance. This is a clarification request, not evidence that
+  the post will be restored. Keep the removed post unchanged while waiting.
+
+- 2026-08-31 — `Reddit removal reason confirmed` / `subreddit karma gate`: the owner found the
+  AutoModerator notification for post `1w2wrjy`. It says the account has fewer than 10 comment karma
+  in `r/indiehackers` and identifies the rule as an anti-spam mechanism. The post URL is preserved.
+  Account age and visible participation were insufficient evidence of eligibility; the next step is
+  genuine community participation, followed by modmail confirmation that a retry is allowed.
+
+- 2026-08-31 — `Reddit submitted` / `removed by moderators` / `reason pending`: owner submitted the
+  prepared Image Splitter feedback post to `r/indiehackers` with `Self Promotion` flair, tracked
+  link, disclosure, feedback questions, and media. Within about one minute the post displayed
+  `Sorry, this post has been removed by the moderators of r/indiehackers.` The screenshot shows
+  score 1 and 0 comments but no reason. Do not delete, edit, appeal, cross-post, or repost until the
+  post URL and any moderator/AutoModerator explanation are captured.
 
 - 2026-08-30 — `pushed` / `production asset verified` / `Image Splitter CLS fix`: commit `9f758f2`
   was pushed to `origin/master`. A cache-bypassed production page references
