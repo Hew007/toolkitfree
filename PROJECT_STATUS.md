@@ -266,6 +266,20 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-06 — `implemented` / `checks passed` / `owner review pending`: lightened the two background
+  fills one step after the owner found the ground too grey and the large recessed blocks too coarse.
+  The page ground moves from #faf8f4 to #fcfbf7 and the sunken tone from #f0eee9 to #f5f2ec; the
+  border stays at #e7e3db on purpose, because on a near-white ground the border is what still
+  separates a white card from the page — lightening it too would undo the hierarchy the warm ground
+  was adopted for. The worst offender was the large upload dropzone, which read as a flat grey slab
+  at the previous sunken value. Roles and rule assignments are unchanged. Validation: all ten
+  runnable gates passed, and the Chrome responsive/accessibility sweep passed again (355 checks
+  across 71 routes at 320/375/768/1024/1440, zero browser errors). Background-removal asset
+  preparation is still blocked in this environment, so `npm run check` cannot finish its
+  "Static runtime assets" step and the background-remover browser test has not run; re-run both on a
+  normal network before release. If the ground still reads grey on the owner's display, the knob is
+  `--color-bg-secondary` alone.
+
 - 2026-09-06 — `implemented` / `checks passed, one environment gap` / `owner review pending`:
   finished applying palette A by moving the page ground to the warm tint site-wide. This needed the
   background tokens to be separated into three roles, because one token was previously doing three
