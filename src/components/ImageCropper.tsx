@@ -512,7 +512,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
           <div className="cropper-controls-panel">
             <p
               id="crop-keyboard-instructions"
-              style={{ fontSize: '0.8125rem', color: '#6b7280', marginBottom: '0.75rem' }}
+              style={{ fontSize: '0.8125rem', color: '#6b665c', marginBottom: '0.75rem' }}
             >
               Arrow keys move the crop. Hold Alt + arrows to resize; Shift uses larger steps.
             </p>
@@ -572,7 +572,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                 marginBottom: '1rem',
               }}
             >
-              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+              <span style={{ fontSize: '0.875rem', color: '#6b665c' }}>
                 {file?.name} - {imageBounds.width}x{imageBounds.height} -{' '}
                 {file ? formatSize(file.size) : ''}
               </span>
@@ -624,9 +624,9 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                       style={{
                         padding: '0.375rem 0.75rem',
                         fontSize: '0.8125rem',
-                        background: aspectPreset === key ? '#2563eb' : '#f3f4f6',
-                        color: aspectPreset === key ? '#fff' : '#374151',
-                        border: `1px solid ${aspectPreset === key ? '#2563eb' : '#e5e7eb'}`,
+                        background: aspectPreset === key ? '#2563eb' : '#f4f0e8',
+                        color: aspectPreset === key ? '#fff' : '#3a362f',
+                        border: `1px solid ${aspectPreset === key ? '#2563eb' : '#e7e3db'}`,
                         borderRadius: 6,
                         cursor: 'pointer',
                       }}
@@ -656,7 +656,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                     setFormat(event.target.value as ImageOutputMimeType);
                     clearResult();
                   }}
-                  style={{ padding: '0.375rem', border: '1px solid #e5e7eb', borderRadius: 6 }}
+                  style={{ padding: '0.375rem', border: '1px solid #e7e3db', borderRadius: 6 }}
                 >
                   {Object.entries(OUTPUT_FORMATS).map(([mimeType, value]) => (
                     <option key={mimeType} value={mimeType}>
@@ -695,7 +695,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
               )}
               <div
                 data-testid="crop-size"
-                style={{ fontSize: '0.8125rem', color: '#6b7280', marginLeft: 'auto' }}
+                style={{ fontSize: '0.8125rem', color: '#6b665c', marginLeft: 'auto' }}
               >
                 Crop: {Math.round(cropRect.width)}x{Math.round(cropRect.height)}
               </div>

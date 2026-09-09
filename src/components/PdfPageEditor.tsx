@@ -321,7 +321,7 @@ export default function PdfPageEditor({
 
   return (
     <section aria-label="Page layout" data-pdf-page-count={pages.length}>
-      <p style={{ margin: '0 0 0.75rem', color: '#6b7280', fontSize: '0.8125rem' }}>
+      <p style={{ margin: '0 0 0.75rem', color: '#6b665c', fontSize: '0.8125rem' }}>
         Drag an image to move it and drag a corner to resize. Drop it on another page to combine the
         two, or drop it in the space between pages to give it a page of its own. With an image
         focused: arrows move, Alt+arrows resize, <kbd>[</kbd> / <kbd>]</kbd> rotate, Ctrl+arrows
@@ -388,7 +388,7 @@ export default function PdfPageEditor({
                     width: '100%',
                     aspectRatio: `${page.geometry.width} / ${page.geometry.height}`,
                     background: '#ffffff',
-                    border: isDropTarget ? '2px solid #2563eb' : '1px solid #d1d5db',
+                    border: isDropTarget ? '2px solid #2563eb' : '1px solid #ddd8ce',
                     boxShadow: isDropTarget
                       ? '0 0 0 4px rgba(37,99,235,.15)'
                       : '0 1px 3px rgba(0,0,0,.1)',

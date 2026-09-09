@@ -143,7 +143,7 @@ await send('Page.addScriptToEvaluateOnNewDocument', {
 await navigate(targetUrl);
 assert.equal(
   await evaluate(
-    `document.querySelector('input[name="compressor-mode"][value="target"]')?.checked`
+    `document.querySelector('input[name="compressor-purpose"][value="exact"]')?.checked`
   ),
   true
 );
@@ -159,13 +159,9 @@ assert.equal(
   await evaluate(`Number(document.querySelector('input[aria-label="Target Size (KB)"]').value)`),
   100
 );
-await evaluate(`
-  [...document.querySelectorAll('button')]
-    .find((button) => button.textContent.trim() === 'Compress 5 images')
-    .click()
-`);
+// No submit step: the exact-size run starts from the selected purpose itself.
 await waitFor(
-  `document.querySelector('[data-batch-success-count="4"][data-batch-failure-count="1"]') && !document.body.innerText.includes('Compressing...')`,
+  `document.querySelector('[data-batch-success-count="4"][data-batch-failure-count="1"]') && !document.body.innerText.includes('Encoding in your browser…')`,
   'mixed target-size results'
 );
 
@@ -217,7 +213,7 @@ assert.equal(
 await navigate(qualityUrl);
 assert.equal(
   await evaluate(
-    `document.querySelector('input[name="compressor-mode"][value="quality"]')?.checked`
+    `document.querySelector('input[name="compressor-purpose"][value="web"]')?.checked`
   ),
   true
 );
@@ -240,11 +236,6 @@ const tinyInputSize = await evaluate(`
   })()
 `);
 await waitFor(`document.querySelectorAll('.file-item').length === 1`, 'tiny JPEG input');
-await evaluate(`
-  [...document.querySelectorAll('button')]
-    .find((button) => button.textContent.trim() === 'Compress 1 image')
-    .click()
-`);
 await waitFor(
   `document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`,
   'quality result'

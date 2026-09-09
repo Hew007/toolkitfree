@@ -59,7 +59,7 @@ export default function QrGenerator() {
     fontWeight: 600,
     marginBottom: '0.5rem',
     display: 'block',
-    color: '#374151',
+    color: '#3a362f',
   };
 
   return (
@@ -72,7 +72,7 @@ export default function QrGenerator() {
       <div className="qr-options-panel">
         <QrInputForm type={qrType} onTypeChange={setQrType} onDataChange={setQrData} />
 
-        <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '1.25rem 0' }} />
+        <hr style={{ border: 'none', borderTop: '1px solid #e7e3db', margin: '1.25rem 0' }} />
 
         {/* Colors */}
         <div style={{ marginBottom: '1rem' }}>
@@ -95,7 +95,7 @@ export default function QrGenerator() {
                 style={{
                   width: 32,
                   height: 32,
-                  border: '1px solid #d1d5db',
+                  border: '1px solid #ddd8ce',
                   borderRadius: 4,
                   cursor: 'pointer',
                   padding: 0,
@@ -119,7 +119,7 @@ export default function QrGenerator() {
                 style={{
                   width: 32,
                   height: 32,
-                  border: '1px solid #d1d5db',
+                  border: '1px solid #ddd8ce',
                   borderRadius: 4,
                   cursor: 'pointer',
                   padding: 0,
@@ -151,9 +151,9 @@ export default function QrGenerator() {
                 style={{
                   padding: '0.25rem 0.75rem',
                   borderRadius: 6,
-                  border: dotStyle === ds.key ? '2px solid #2563eb' : '1px solid #d1d5db',
+                  border: dotStyle === ds.key ? '2px solid #2563eb' : '1px solid #ddd8ce',
                   background: dotStyle === ds.key ? '#2563eb' : '#fff',
-                  color: dotStyle === ds.key ? '#fff' : '#374151',
+                  color: dotStyle === ds.key ? '#fff' : '#3a362f',
                   cursor: 'pointer',
                   fontSize: '0.75rem',
                   fontWeight: 500,
@@ -173,11 +173,11 @@ export default function QrGenerator() {
               style={{
                 display: 'inline-block',
                 padding: '0.375rem 1rem',
-                border: '1px dashed #d1d5db',
+                border: '1px dashed #ddd8ce',
                 borderRadius: 6,
                 fontSize: '0.8rem',
                 cursor: 'pointer',
-                color: '#6b7280',
+                color: '#6b665c',
               }}
             >
               Upload Logo
@@ -198,14 +198,14 @@ export default function QrGenerator() {
                   height: 40,
                   objectFit: 'contain',
                   borderRadius: 4,
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid #e7e3db',
                 }}
               />
               <div style={{ flex: 1 }}>
                 <label
                   style={{
                     fontSize: '0.75rem',
-                    color: '#6b7280',
+                    color: '#6b665c',
                     display: 'block',
                     marginBottom: '0.25rem',
                   }}
@@ -229,7 +229,7 @@ export default function QrGenerator() {
                   border: 'none',
                   cursor: 'pointer',
                   fontSize: '1.25rem',
-                  color: '#9ca3af',
+                  color: '#8a8377',
                   padding: '0.25rem',
                 }}
               >
@@ -250,7 +250,7 @@ export default function QrGenerator() {
           <span style={sectionLabel}>
             Error Correction
             {logoImage && (
-              <span style={{ fontWeight: 400, color: '#6b7280' }}>
+              <span style={{ fontWeight: 400, color: '#6b665c' }}>
                 {' '}
                 (auto-set to High for logo)
               </span>
@@ -265,9 +265,9 @@ export default function QrGenerator() {
                 style={{
                   padding: '0.25rem 0.75rem',
                   borderRadius: 6,
-                  border: errorCorrection === level ? '2px solid #2563eb' : '1px solid #d1d5db',
+                  border: errorCorrection === level ? '2px solid #2563eb' : '1px solid #ddd8ce',
                   background: errorCorrection === level ? '#2563eb' : '#fff',
-                  color: errorCorrection === level ? '#fff' : '#374151',
+                  color: errorCorrection === level ? '#fff' : '#3a362f',
                   cursor: logoImage ? 'not-allowed' : 'pointer',
                   fontSize: '0.75rem',
                   fontWeight: 500,

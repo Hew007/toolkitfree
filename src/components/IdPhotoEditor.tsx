@@ -149,8 +149,8 @@ export default function IdPhotoEditor({
           width: 'min(100%, 420px)',
           aspectRatio: `${ratio}`,
           overflow: 'hidden',
-          background: '#e5e7eb',
-          border: '2px solid #111827',
+          background: '#e7e3db',
+          border: '2px solid #1b1a17',
           borderRadius: '8px',
           cursor: 'grab',
           touchAction: 'none',
@@ -217,7 +217,7 @@ export default function IdPhotoEditor({
       </div>
       <p
         id="id-photo-position-help"
-        style={{ margin: '0.6rem 0 0', color: '#4b5563', fontSize: '0.875rem' }}
+        style={{ margin: '0.6rem 0 0', color: '#4a463e', fontSize: '0.875rem' }}
       >
         Drag to position. Use the buttons or + / − to zoom; arrow keys move. Lines are manual
         framing guides, not face detection.

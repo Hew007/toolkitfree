@@ -237,7 +237,7 @@ await waitFor(`window.__objectUrlStats().active === 2`, 'old converter result UR
 await navigate('/tools/image-compressor/');
 await setFiles([path.join(fixtures, 'photo.jpg'), path.join(fixtures, 'sample.webp')]);
 await waitFor(`document.querySelectorAll('.file-item').length === 2`, 'compressor files');
-await clickAction('Compress 2 images');
+// The compressor has no submit step: results follow the selected purpose.
 await waitFor(
   `Boolean(document.querySelector('[data-batch-success-count="2"][data-batch-failure-count="0"]'))`,
   'compressor results'

@@ -107,7 +107,7 @@ export default function BatchResultsSummary({
             Results: {totals.successCount} succeeded, {totals.failureCount} failed
           </h3>
           {totals.successCount > 0 && (
-            <div style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+            <div style={{ color: '#6b665c', fontSize: '0.875rem', marginTop: '0.25rem' }}>
               {formatSize(totals.originalSize)} to {formatSize(totals.outputSize)}
               {sizeChange !== 0 && ` (${sizeChange > 0 ? '+' : ''}${sizeChange}%)`}
             </div>

@@ -201,7 +201,7 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
         currentFiles={files.map(({ file }) => file)}
         onFilesSelected={handleFiles}
       />
-      <p style={{ marginTop: '0.5rem', fontSize: '0.8125rem', color: '#6b7280' }}>
+      <p style={{ marginTop: '0.5rem', fontSize: '0.8125rem', color: '#6b665c' }}>
         Accepted input: {inputConfig.hint}
       </p>
 

@@ -45,7 +45,7 @@ const variants = [
       {
         question: 'How to compress a JPG file?',
         answer:
-          'Upload your JPG file, set the quality level (80% is a good default), optionally set a max width, and click Compress.',
+          'Choose your JPG file, pick what it is for, then compare the three results and download the one you want. Fine-tune still exposes quality and maximum width.',
       },
       {
         question: 'What quality should I use for JPG compression?',

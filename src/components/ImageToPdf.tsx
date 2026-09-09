@@ -550,7 +550,7 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
           />
 
           {selectedFile && (
-            <p style={{ margin: '0.5rem 0 0', fontSize: '0.8125rem', color: '#6b7280' }}>
+            <p style={{ margin: '0.5rem 0 0', fontSize: '0.8125rem', color: '#6b665c' }}>
               Selected: {selectedFile.file.name} ({formatSize(selectedFile.file.size)})
             </p>
           )}
@@ -597,7 +597,7 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
               Clear all
             </button>
           </div>
-          <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.75rem' }}>
+          <p style={{ fontSize: '0.8125rem', color: '#6b665c', marginTop: '0.75rem' }}>
             The exported PDF matches the preview above. Transparent pixels are placed on white
             before PDF encoding.
           </p>
@@ -670,7 +670,7 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
               </button>
             </div>
           </div>
-          <p style={{ fontSize: '0.8125rem', color: '#6b7280', margin: '0.5rem 0 0' }}>
+          <p style={{ fontSize: '0.8125rem', color: '#6b665c', margin: '0.5rem 0 0' }}>
             Download it before starting a new PDF — the file is held in this tab only.
           </p>
         </div>

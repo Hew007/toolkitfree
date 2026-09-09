@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-08-30
+Last updated: 2026-09-09
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -41,6 +41,13 @@ task.
   `origin/master`, and the connected Cloudflare deployment served the new copy and asset hashes on
   2026-08-16. Post-deployment checks passed for representative changed pages, sitemap, LLM registry,
   the Background Remover resource manifest, and the FFmpeg runtime manifest.
+- Design direction: the owner reviewed several UI directions on 2026-08-29 and chose the warm
+  neutral palette with a single indigo accent (option A). Its tokens are in `global.css` and the
+  warm page ground is now applied site-wide, with the three background roles separated. The Image
+  Compressor is the first tool rebuilt on the reviewed interaction model (purpose presets, three
+  encoded candidates, no submit step, fine-tune folded but complete). The other thirteen tools are
+  unchanged and still use the previous interaction; they inherit only the new surfaces. Owner review
+  of both changes is pending.
 - Advertising: intentionally disabled. Do not restore AdSense scripts, placeholders, or ad-oriented
   layout without explicit owner approval. Product value and user experience come first.
 - Privacy model: selected file contents are processed locally in the browser. Normal site resources,
@@ -313,6 +320,58 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-09 — `merged with master` / `revalidated` / `ready for owner merge`: `origin/master` had
+  moved five commits ahead (Reddit promotion records, the Image Splitter CLS fix, the crop quick
+  path, and an `AGENTS.md` note), so master was merged into the UI branch. Only `PROJECT_STATUS.md`
+  conflicted, because both sides had appended to the same newest-first log; the resolution keeps
+  every entry from both sides in date order — 39 entries in the conflicted stretch, none dropped —
+  and no code file conflicted. Everything was revalidated on the merged tree: all ten runnable gates
+  passed, the Chrome responsive/accessibility sweep passed (355 checks across 71 routes at
+  320/375/768/1024/1440, zero browser errors), and the compressor and performance browser suites
+  passed — the latter confirming master's new layout-shift assertions still hold under the new
+  surfaces (Image to PDF 0.0046, Image Splitter 0.0023). Pull request #11 carries the three UI
+  commits plus this merge. Background-removal asset preparation is still blocked in this environment
+  (`staticimgly.com` returns 403 through the sandbox proxy), so `npm run check` cannot finish its
+  "Static runtime assets" step and the background-remover browser test has not run; both still need
+  a run on a normal network.
+
+- 2026-09-06 — `implemented` / `checks passed` / `owner review pending`: lightened the two background
+  fills one step after the owner found the ground too grey and the large recessed blocks too coarse.
+  The page ground moves from #faf8f4 to #fcfbf7 and the sunken tone from #f0eee9 to #f5f2ec; the
+  border stays at #e7e3db on purpose, because on a near-white ground the border is what still
+  separates a white card from the page — lightening it too would undo the hierarchy the warm ground
+  was adopted for. The worst offender was the large upload dropzone, which read as a flat grey slab
+  at the previous sunken value. Roles and rule assignments are unchanged. Validation: all ten
+  runnable gates passed, and the Chrome responsive/accessibility sweep passed again (355 checks
+  across 71 routes at 320/375/768/1024/1440, zero browser errors). Background-removal asset
+  preparation is still blocked in this environment, so `npm run check` cannot finish its
+  "Static runtime assets" step and the background-remover browser test has not run; re-run both on a
+  normal network before release. If the ground still reads grey on the owner's display, the knob is
+  `--color-bg-secondary` alone.
+
+- 2026-09-06 — `implemented` / `checks passed, one environment gap` / `owner review pending`:
+  finished applying palette A by moving the page ground to the warm tint site-wide. This needed the
+  background tokens to be separated into three roles, because one token was previously doing three
+  jobs: `--color-bg` is now only the surface of raised things (cards, panels, header),
+  `--color-bg-secondary` is only the page ground (`html`), and `--color-surface-sunken` is only for
+  recessed things. Twenty-one rules were reassigned accordingly. Sunken now: the upload dropzone,
+  secondary-button hover, file and result thumbnails, the segmented-control track, the resizer and
+  cropper preview stages, the collage preview panel and its ordering rows, the homepage info band,
+  the footer, and the tool-card and popular-path hovers. Raised white surfaces now: the animation
+  settings panel, both PDF page panels, the compact dropzone, the related-guides callout, the spec
+  section, and the homepage primary tool panel; the guides callout also lost a leftover cool blue
+  border. Without this split those elements would have matched the new page ground exactly and
+  disappeared — the secondary-button hover in particular would have given no feedback at all.
+  Validation: LLM registry, TypeScript, Astro check, ESLint, Prettier, production build (72 pages),
+  static asset size, all 13 unit suites, SEO registry, content freshness, and site integrity all
+  passed. The Chrome responsive/accessibility sweep passed again after the change (355 checks across
+  71 routes at 320/375/768/1024/1440, zero browser errors). Before/after captures of the homepage,
+  compressor, cropper, and mobile homepage were reviewed. Still unverified in this environment:
+  background-removal asset preparation remains blocked (`staticimgly.com` returns 403 through the
+  sandbox proxy), so `npm run check` cannot finish its "Static runtime assets" step and the
+  background-remover browser test has not run. Re-run `npm run check` and the full `npm run test:e2e`
+  on a normal network before release.
+
 - 2026-08-31 — `Reddit newcomer research completed`: reviewed current Reddit Help documentation for
   karma, Poster Eligibility, Post Check, post types, flair, AutoModerator, modmail, spam, vote
   manipulation, formatting, sorting, account status, and `r/indiehackers`' latest posting guidance.
@@ -436,6 +495,42 @@ or `owner approved`. Never infer owner approval.
   not advertising. The account is now ready for the prepared Image Splitter feedback post; no post
   has been submitted by Codex.
 
+- 2026-08-29 — `implemented` / `checks passed, two environment gaps` / `owner review pending`: adopted
+  the warm-neutral palette (option A) as the site's design tokens and rebuilt the Image Compressor
+  interaction as the first pilot of the reviewed UI direction. Palette: `--color-bg-secondary`
+  #faf8f4, borders #e7e3db, text #1b1a17 / #4a463e / #6b665c, accent #2450d0 with soft tint
+  #eef2fe, plus new `--color-surface-sunken` #f0eee9 for work surfaces, `--color-line`, and
+  `--color-caution`; 32 hardcoded cool values in `global.css` and 63 in components were retuned to
+  match. The page ground itself is still white — turning it to #faf8f4 needs a deliberate pass over
+  the panels that currently use `--color-bg-secondary` as their own surface, so it was left out of
+  this change.
+  Compressor interaction: purpose presets (Web page, Email attachment, Chat and messaging, Print,
+  Exact size in KB) replace the raw mode radios; the quality purposes now produce three encoded
+  candidates (Smaller / Balanced / Sharper) whose labels carry the real output size; the submit
+  button is gone, because local processing needs no round trip — results are debounced by 320 ms and
+  a newer change abandons the previous run. Quality and maximum width remain, folded into a
+  Fine-tune disclosure whose closed row still states the current values, with one tap back to the
+  preset. Lossless PNG candidates vary by width instead of quality, since quality does nothing
+  there. Each source file is decoded once and encoded once per candidate. Batches over 6 files or
+  30 MB encode only the selected candidate and offer the others on demand. The exact-size purpose
+  keeps the previous bounded search and its honest target-met / target-not-met wording unchanged.
+  Validation: LLM registry, TypeScript, Astro check, ESLint, Prettier, production build (72 pages),
+  static asset size, all 13 unit suites, SEO registry, content freshness (after bumping the
+  compressor's `lastModified` to 2026-08-29), and site integrity all passed. Chrome browser
+  regression passed for the compressor, batch download, converter, and the full
+  responsive/accessibility sweep (355 checks across 71 routes at 320/375/768/1024/1440, zero
+  browser errors). Two steps could not run in this environment and remain unverified here: the
+  background-removal asset preparation is blocked because `staticimgly.com` returns 403 through the
+  sandbox proxy, so `npm run check` cannot complete its "Static runtime assets" step and the
+  background-remover browser test was not run; the remaining browser suites were run individually
+  with `--skip-build` against the build produced above. Re-run `npm run check` and the full
+  `npm run test:e2e` on a normal network before release. Note for that run: `package-lock.json`
+  resolves 823 packages to `registry.npmmirror.com`, which the sandbox proxy also blocks.
+  Follow-ups the owner should decide on: whether to move encoding into a Web Worker (the pilot
+  recompresses on the main thread, which can stutter while dragging the quality slider on a large
+  batch), whether to apply the warm page ground site-wide, and which tool gets the same treatment
+  next.
+
 - 2026-08-24 — `S2 participation plan prepared` / `owner posting`: confirmed the Reddit
   account is signed in, has a Create Post entry, and is joined to `r/indiehackers`, `r/SideProject`,
   and `r/isthisAI`. Live rules make `r/InternetIsBeautiful` a poor fit because of its 90/10
@@ -497,6 +592,7 @@ or `owner approved`. Never infer owner approval.
   with free product verification, and AlternativeTo is skipped because its current official
   eligibility rules explicitly exclude the principal ToolkitFree product types and online-tool
   collections. No directory submission has been finalized; Uneed is the current action-time gate.
+
 - 2026-08-16 — `S1 Uneed submitted`: owner completed the final Uneed save after the listing fields
   were corrected. The product now appears under `Unpublished (1)` with a scheduled date of
   2027-02-08, confirming entry into the free queue. No paid acceleration was purchased; SaaSHub is

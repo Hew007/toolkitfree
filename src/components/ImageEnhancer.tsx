@@ -197,7 +197,7 @@ export default function ImageEnhancer() {
               marginBottom: '1rem',
             }}
           >
-            <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+            <span style={{ fontSize: '0.875rem', color: '#6b665c' }}>
               {file?.name} - {file ? formatSize(file.size) : ''}
             </span>
             <button type="button" className="btn btn-secondary" onClick={handleRemove}>
@@ -352,7 +352,7 @@ function SliderControl({ id, label, value, min, max, onChange }: SliderControlPr
           {label}
         </label>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <output htmlFor={id} style={{ fontSize: '0.8125rem', color: '#6b7280' }}>
+          <output htmlFor={id} style={{ fontSize: '0.8125rem', color: '#6b665c' }}>
             {value > 0 ? `+${value}` : value}
           </output>
           {value !== 0 && (

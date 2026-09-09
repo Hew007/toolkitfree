@@ -49,7 +49,7 @@ const faqItems = [
   {
     question: 'How do I reduce image file size to under 100KB?',
     answer:
-      'Choose Target file size mode and enter 100KB. The tool uses bounded quality and dimension search, then labels each result Target met only when its actual Blob is 100KB or less.',
+      'Choose the "Exact size in KB" purpose and enter 100. The tool uses bounded quality and dimension search, then labels each result Target met only when its actual Blob is 100KB or less.',
   },
 ];
 
@@ -109,18 +109,22 @@ const faqStructuredData = {
       <section class="howto-section">
         <h2>How to Compress Images</h2>
         <ol class="howto-steps">
-          <li>Upload one or more images (JPG, PNG, WebP)</li>
-          <li>Adjust the quality slider — 80% is a good starting point</li>
-          <li>Optionally set a maximum width to reduce dimensions</li>
-          <li>Click "Compress", then download files individually or once as a ZIP</li>
+          <li>Choose one or more images (JPG, PNG, WebP)</li>
+          <li>Pick what the file is for — the settings follow your choice</li>
+          <li>
+            Compare the three results and their real file sizes, or open Fine-tune to set quality
+            and maximum width yourself
+          </li>
+          <li>Download files individually or once as a ZIP</li>
         </ol>
       </section>
 
       <section class="features-section">
         <h2>Features</h2>
         <ul class="features-list">
-          <li>Adjustable quality from 10% to 100%</li>
-          <li>Quality mode or verified target-size mode</li>
+          <li>Purpose presets, with three finished results to compare</li>
+          <li>Adjustable quality from 10% to 100% under Fine-tune</li>
+          <li>Verified exact-size mode with an honest target status</li>
           <li>Optional starting max width</li>
           <li>Batch compress with one ZIP download</li>
           <li>Shows before/after file sizes</li>

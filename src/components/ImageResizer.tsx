@@ -489,7 +489,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                 />{' '}
                 Maintain aspect ratio
               </label>
-              <div style={{ marginTop: '0.25rem', color: '#6b7280', fontSize: '0.8125rem' }}>
+              <div style={{ marginTop: '0.25rem', color: '#6b665c', fontSize: '0.8125rem' }}>
                 {preset === 'custom' && maintainRatio
                   ? 'Each image fits inside the maximum width and height without stretching.'
                   : preset === 'custom'

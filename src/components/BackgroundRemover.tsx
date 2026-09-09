@@ -309,7 +309,7 @@ export default function BackgroundRemover() {
                     style={{
                       padding: '0.375rem 1rem',
                       borderRadius: 6,
-                      border: selected ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                      border: selected ? '2px solid #2563eb' : '1px solid #e7e3db',
                       background: isTransparent ? CHECKERBOARD : option.swatch,
                       backgroundSize: isTransparent ? '12px 12px' : undefined,
                       backgroundPosition: isTransparent
@@ -325,7 +325,7 @@ export default function BackgroundRemover() {
                 );
               })}
 
-              <span aria-hidden="true" style={{ color: '#d1d5db' }}>
+              <span aria-hidden="true" style={{ color: '#ddd8ce' }}>
                 |
               </span>
 
@@ -348,7 +348,7 @@ export default function BackgroundRemover() {
                     width: 36,
                     height: 30,
                     padding: 2,
-                    border: isCustomColor ? '2px solid #2563eb' : '1px solid #d1d5db',
+                    border: isCustomColor ? '2px solid #2563eb' : '1px solid #ddd8ce',
                     borderRadius: 6,
                     cursor: colorLocked ? 'not-allowed' : 'pointer',
                     background: 'none',
@@ -379,7 +379,7 @@ export default function BackgroundRemover() {
                   width: '7.5rem',
                   padding: '0.375rem 0.5rem',
                   borderRadius: 6,
-                  border: hexError ? '1px solid #ef4444' : '1px solid #d1d5db',
+                  border: hexError ? '1px solid #ef4444' : '1px solid #ddd8ce',
                   fontSize: '0.8rem',
                   fontFamily: 'ui-monospace, monospace',
                 }}
@@ -414,7 +414,7 @@ export default function BackgroundRemover() {
               Cancel
             </button>
           )}
-          <p style={{ marginTop: '0.5rem', color: '#6b7280', fontSize: '0.8125rem' }}>
+          <p style={{ marginTop: '0.5rem', color: '#6b665c', fontSize: '0.8125rem' }}>
             First use downloads a sizable AI model and requires a network connection. Later offline
             use depends on whether your browser keeps that model cached. Processing speed and
             maximum image size depend on device memory.
@@ -450,7 +450,7 @@ export default function BackgroundRemover() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
             {previewUrl && (
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                <div style={{ fontSize: '0.75rem', color: '#6b665c', marginBottom: '0.25rem' }}>
                   Original
                 </div>
                 <img
@@ -460,13 +460,13 @@ export default function BackgroundRemover() {
                     maxWidth: 200,
                     maxHeight: 200,
                     borderRadius: 4,
-                    border: '1px solid #e5e7eb',
+                    border: '1px solid #e7e3db',
                   }}
                 />
               </div>
             )}
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+              <div style={{ fontSize: '0.75rem', color: '#6b665c', marginBottom: '0.25rem' }}>
                 Result
               </div>
               <img
@@ -476,7 +476,7 @@ export default function BackgroundRemover() {
                   maxWidth: 200,
                   maxHeight: 200,
                   borderRadius: 4,
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid #e7e3db',
                   backgroundImage:
                     result.color === TRANSPARENT_BACKGROUND ? CHECKERBOARD : undefined,
                   backgroundSize: '16px 16px',
