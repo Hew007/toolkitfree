@@ -9,3 +9,17 @@
 
 /generated/background-removal/1.7.0/*
   Cache-Control: public, max-age=31556952, immutable
+
+# Background Remover runs ONNX Runtime's WASM build, which asks for one thread
+# per CPU core. Threads need SharedArrayBuffer, which the browser only grants to
+# a cross-origin isolated document — so without these two headers the model runs
+# single-threaded no matter how many cores the visitor has. Scoped to this one
+# route: the page has no cross-origin subresources (the model and runtime are
+# self-hosted), and isolating the whole site would risk third-party embeds.
+/tools/background-remover/
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+
+/tools/background-remover/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
