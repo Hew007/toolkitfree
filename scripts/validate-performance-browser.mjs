@@ -168,11 +168,65 @@ async function uploadGeneratedPng({ name, width, height, headerOnly = false }) {
   `);
 }
 
+async function readLayoutShiftMetrics() {
+  return evaluate(`
+    (() => {
+      const entries = window.__toolkitfreeLayoutShifts || [];
+      return {
+        total: entries.reduce((sum, entry) => sum + entry.value, 0),
+        entries,
+      };
+    })()
+  `);
+}
+
 await send('Page.enable');
 await send('Runtime.enable');
 await send('Network.enable');
 await send('Log.enable');
 await send('Browser.setDownloadBehavior', { behavior: 'deny' });
+await send('Page.addScriptToEvaluateOnNewDocument', {
+  source: `
+    (() => {
+      window.__toolkitfreeLayoutShifts = [];
+      const selectorFor = (node) => {
+        if (!(node instanceof Element)) return null;
+        if (node.id) return '#' + CSS.escape(node.id);
+        const parts = [];
+        let current = node;
+        while (current && current !== document.body && parts.length < 5) {
+          let part = current.tagName.toLowerCase();
+          if (current.classList.length > 0) {
+            part += '.' + [...current.classList].slice(0, 2).map(CSS.escape).join('.');
+          }
+          parts.unshift(part);
+          current = current.parentElement;
+        }
+        return parts.join(' > ');
+      };
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (entry.hadRecentInput) continue;
+          const rectFor = (rect) => ({
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+          });
+          window.__toolkitfreeLayoutShifts.push({
+            value: entry.value,
+            startTime: entry.startTime,
+            sources: (entry.sources || []).map((source) => ({
+              selector: selectorFor(source.node),
+              previousRect: rectFor(source.previousRect),
+              currentRect: rectFor(source.currentRect),
+            })),
+          });
+        }
+      }).observe({ type: 'layout-shift', buffered: true });
+    })();
+  `,
+});
 
 const idle = {};
 for (const [route, forbidden] of [
@@ -193,6 +247,10 @@ for (const [route, forbidden] of [
   ],
   [
     '/tools/image-to-pdf/',
+    [heavyAssets.jspdf, heavyAssets.jszip, heavyAssets.qr, heavyAssets.background],
+  ],
+  [
+    '/tools/image-splitter/',
     [heavyAssets.jspdf, heavyAssets.jszip, heavyAssets.qr, heavyAssets.background],
   ],
   [
@@ -236,13 +294,29 @@ assert.equal(requested(heavyAssets.jszip), false, 'JSZip should remain unloaded 
 await evaluate(`document.querySelector('[data-batch-download]').click()`);
 await waitForRequest(heavyAssets.jszip, 'JSZip dynamic request');
 
-await navigate('/tools/image-to-pdf/');
+await navigate('/tools/image-to-pdf/image-to-pdf-no-margin/');
 await uploadGeneratedPng({ name: 'page.png', width: 96, height: 64 });
 await waitFor(`Boolean(document.querySelector('[data-pdf-file]'))`, 'PDF file');
+await new Promise((resolve) => setTimeout(resolve, 750));
+const imageToPdfLayoutShift = await readLayoutShiftMetrics();
+assert.ok(
+  imageToPdfLayoutShift.total <= 0.1,
+  `Image-to-PDF upload CLS should stay at or below 0.1: ${JSON.stringify(imageToPdfLayoutShift)}`
+);
 assert.equal(requested(heavyAssets.jspdf), false);
 await evaluate(`document.querySelector('[data-testid="pdf-convert"]').click()`);
 await waitForRequest(heavyAssets.jspdf, 'jsPDF dynamic request');
 await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'PDF result');
+
+await navigate('/tools/image-splitter/');
+await uploadGeneratedPng({ name: 'split.png', width: 400, height: 300 });
+await waitFor(`Boolean(document.querySelector('.splitter-frame img'))`, 'splitter preview');
+await new Promise((resolve) => setTimeout(resolve, 750));
+const imageSplitterLayoutShift = await readLayoutShiftMetrics();
+assert.ok(
+  imageSplitterLayoutShift.total <= 0.05,
+  `Image Splitter upload CLS should stay at or below 0.05: ${JSON.stringify(imageSplitterLayoutShift)}`
+);
 
 await navigate('/tools/favicon-generator/');
 await uploadGeneratedPng({ name: 'favicon.png', width: 96, height: 64 });
@@ -330,6 +404,10 @@ console.log(
     budget: {
       warningOverride: true,
       blockedAt120MillionPixels: true,
+    },
+    layoutShift: {
+      imageToPdf: imageToPdfLayoutShift,
+      imageSplitter: imageSplitterLayoutShift,
     },
     browserErrors: actionableBrowserErrors.length,
   })

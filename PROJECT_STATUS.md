@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-09-06
+Last updated: 2026-09-09
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -17,18 +17,26 @@ task.
 - Product state: the main product-quality redesign, Image Splitter, and expanded Image to PDF editor
   are complete. The full release checks passed on 2026-08-05, and the owner manually approved that
   build on 2026-08-07.
-- Growth state: external promotion has **not started**. On 2026-08-15 the owner approved the WP-03
+- Growth state: directory and YouTube promotion have started; the first community test has not yet
+  been submitted. Uneed is queued; SaaSHub has at least one verified-alternative discovery surface
+  while direct product-page approval remains unconfirmed; and the approved demo is Public on
+  YouTube. Reddit participation is verified and the final `r/indiehackers` Image Splitter feedback
+  candidate is ready for owner review. On 2026-08-15 the owner approved the WP-03
   thumbnail, all three gallery images, and the poster, but rejected the old MP4 and all three
   slideshow-like GIFs for publication. The 2026-08-16 replacement captures now use the approved
-  self-created source images, and the Image Splitter plus the 21-second homepage take are accepted
-  for post-production. Image to PDF still needs a short editor-action insert, and Background Remover
-  needs a short post-result solid-color insert; neither requires another full recording. The local
-  Background Remover now supports post-result background switching without another model run and
-  has passed its focused browser regression. The owner approved the behavior and authorized the
-  push on 2026-08-16; commit `e201773` is on `origin/master`, and production serves the verified new
-  client bundle. The short Background Remover colour-switching insert is now ready to record. S0.5
-  account qualification can continue in parallel; S1 directory submissions remain the next
-  external action after S0 closes.
+  self-created source images. All four final raw clips are accepted for post-production and copied
+  under canonical names in `docs/promotion/assets/recording-raw/`: Image Splitter, Image to PDF,
+  Background Remover, and the 21-second homepage take. The published Background Remover supports
+  post-result background switching without another model run; the final recording demonstrates
+  transparent, blue, red, and dark result backgrounds. No further owner recording is required.
+  S0.5 qualification for Product Hunt, Hacker News, and DEV can continue in parallel. GSC and
+  Cloudflare pre-Reddit baselines are complete. Cloudflare exposed two CLS 1 samples on the Image
+  Splitter and Image-to-PDF route families. Controlled upload traces measured Image-to-PDF at
+  0.0061 and Image Splitter at 0.0839; supplying the known Splitter preview dimensions reduced it to
+  0.0090 (89%). The fix passed the 12-step quality gate and focused browser regressions, and the
+  owner approved the local page on 2026-08-30. Commit `9f758f2` was pushed to `origin/master`; the
+  connected Cloudflare deployment serves the new `ImageSplitter.BR6SFwgQ.js` asset with the fix.
+  The technical release gate is complete before the Reddit feedback test.
 - Release state: `verified`. The owner approved the claims cleanup, commit `1bfca88` was pushed to
   `origin/master`, and the connected Cloudflare deployment served the new copy and asset hashes on
   2026-08-16. Post-deployment checks passed for representative changed pages, sitemap, LLM registry,
@@ -161,47 +169,93 @@ Image Collage interactive UI and updated the affected content dates to 2026-08-1
   representative changed pages, sitemap, LLM registry, Background Remover `resources.json`, and
   FFmpeg manifest returned HTTP 200 with their expected current content.
 
+On 2026-08-24, the homepage's generic crop quick path was changed to the canonical Image Cropper
+route. Validation completed before owner review:
+
+- the 12-step quality gate passed with 13 unit/algorithm scripts, 72 generated pages, 4,292 internal
+  links, and zero broken or redirecting internal links;
+- Chrome smoke regression passed 2/2 scripts with zero browser errors;
+- the responsive/accessibility sweep passed 355/355 route-width checks across 71 routes at 320,
+  375, 768, 1024, and 1440 pixels, with screenshots under
+  `docs/ui-regression/2026-08-23T23-13-45.428Z`.
+
+The owner manually approved the local preview and authorized publication. Commit `204ffa9` was
+pushed to `origin/master`; the production homepage then served `Crop image online`, linked to
+`/tools/image-cropper/`, and no longer served the old `Crop to square` quick-path entry.
+
 ## Current State and Exact Next Actions
 
-Product and measurement gates are complete. The active one-week sequence for 2026-08-12 through
-2026-08-18 is:
+Product and initial measurement gates are complete. The active sequence as of 2026-08-30 is:
 
-1. `in progress` — Close S0 motion assets. Directory copy is approved;
+1. `owner approved` — S0 motion assets are closed. Directory copy is approved;
    the WP-03 thumbnail, three gallery images, and poster are owner-approved. The old 28.53-second
    MP4 and three step-based GIFs
    are rejected for publication and remain reference-only. Follow
-   `docs/promotion/06-motion-recording-brief.md`. The 2026-08-16 raw-footage audit selected the
-   21-second `08-18-02` homepage take for trimming and rejected the 6-second `08-21-28` take because
-   it starts mid-list and opens Image Splitter. The `09-08-34` Image Splitter replacement is
-   accepted. The `09-09-33` Image to PDF and `09-10-40` Background Remover replacements use the
-   approved images and are usable as base footage, but the owner still needs two short inserts:
-   show one visible reorder/move-to-new-page editor action for Image to PDF, and show transparent
-   plus one solid-color result state for Background Remover. The latter is now supported by a local,
-   browser-tested feature change that the owner approved and published on 2026-08-16; its production
-   bundle has been verified, so the insert can be recorded now. Codex then edits the accepted
-   footage into one 45–60 second video and three fluid GIFs.
-2. `in progress` — Complete S0.5 account qualification. Reddit, Hacker News, Product Hunt, DEV, and
-   YouTube accounts were registered around 2026-07-26, but profile completion, genuine participation,
-   posting access, and YouTube channel/upload readiness still require owner login and confirmation.
-3. `planned` — Submit the site to Uneed, SaaSHub, and AlternativeTo in that order. Codex checks the
-   current rules and prepares each field set; the owner logs in, approves, and clicks submit. Record
-   every result in `docs/promotion/04-measurement-log.csv`.
-4. `in progress` — The 55-second YouTube storyboard, captions, title, description, UTM links, tags,
-   and upload checklist are complete. The production approach changed on 2026-08-15: reuse the same
-   four owner-recorded raw clips for the master video and three tool clips for replacement GIFs.
-   Codex handles editing and export; the owner reviews a local cut and uploads an Unlisted copy
-   before deciding whether to make it public.
-5. `planned` — On 2026-08-18, review directory status, Cloudflare referrals, Search Console movement,
-   and feedback, then select the first eligible community test for the following week.
+   `docs/promotion/06-motion-recording-brief.md`. The final accepted sources are the `09-08-34`
+   Image Splitter take, `10-06-05` Image to PDF take, `10-07-48` Background Remover take, and
+   `08-18-02` homepage take. Canonical copies are present in
+   `docs/promotion/assets/recording-raw/`. Owner recording is complete. Codex rendered and visually
+   checked the 56.67-second 1080p master plus three fluid GIFs in
+   `docs/promotion/assets/final-motion/`; measured specs and the exact edit list are in
+   `asset-manifest.md`. The owner approved the preferred music version on 2026-08-16; it uses Mixkit
+   `Close Up` by Michael Ramir C. under
+   the Mixkit Stock Music Free License; the silent master remains a fallback and full provenance is
+   in `music-license-record.md`. The approved music master is now Public on YouTube; the silent
+   master remains the fallback.
+2. `in progress` — Complete S0.5 account qualification. Reddit is now qualified through visible,
+   genuine participation. Hacker News, Product Hunt, DEV, and
+   YouTube accounts were registered around 2026-07-26. YouTube channel and upload readiness are now
+   confirmed; the remaining community profiles still require profile completion, genuine
+   participation, and posting-access checks.
+3. `in progress` — Uneed and SaaSHub submissions are complete. ToolkitFree was saved to Uneed's
+   free queue on 2026-08-16 and the owner dashboard shows it as `Unpublished`, scheduled for
+   2027-02-08. Uneed closed new free-queue entries on 2026-08-17, but its official changelog says
+   products already in line keep their dates. No paid acceleration was purchased. SaaSHub supports free submission and product
+   verification. SaaSHub confirmed successful submission on 2026-08-20 and states that the listing
+   will appear after approval. The listing is now verified and enriched with its logo, homepage
+   screenshot, Free pricing, accurate extended description, and public YouTube demo; SaaSHub's
+   platform approval remains pending with an indicated wait of up to 32 days. On 2026-08-30, a
+   current search result surfaced ToolkitFree in SaaSHub's `Verified Alternatives` section for
+   TinyWow. This proves a public discovery surface; the direct product page could not be fetched, so
+   full-page approval remains unconfirmed. AlternativeTo is
+   removed from execution
+   because its official eligibility rules normally exclude converters, PDF tools, QR generators,
+   background removers, ID-photo generators, and collections of online tools. The owner approves
+   each final external submission; record every result in `docs/promotion/04-measurement-log.csv`.
+4. `complete / Public` — The approved 56.67-second music master, three GIFs, final title,
+   description, UTM links, focused tags, 1280×720 three-tool YouTube thumbnail, English SRT, music
+   license record, and upload checklist are complete. The exact copy/paste package is
+   `docs/promotion/assets/youtube-upload/youtube-upload-package.md`. Public visibility requires a
+   separate approval.
+   Owner login succeeded on 2026-08-16. YouTube showed two zero-subscriber channels with the same
+   visible name; the owner identified the existing channel by its ToolkitFree logo. Studio confirmed
+   the target as `ToolkitFree` channel `UCzOeU_EDy79n3dmaHdmya8A`, with zero subscribers, no existing
+   videos, and an available upload entry. After the owner's action-time approval and personal phone
+   verification, the video was saved Unlisted on 2026-08-16 at
+   `https://youtu.be/dk4mtf6H8aA`. Studio confirms the custom thumbnail, English (United States)
+   timed subtitles, completed HD processing, and `No issues found` copyright result. The owner
+   changed visibility to Public on 2026-08-20.
+5. `Reddit eligibility rebuilding` — The owner submitted the prepared Image Splitter feedback post
+   to `r/indiehackers` with the required `Self Promotion` flair on 2026-08-31. AutoModerator removed
+   <https://www.reddit.com/r/indiehackers/comments/1w2wrjy/> within about one minute because the
+   account has fewer than 10 comment karma in that specific community. Preserve the post; do not
+   delete, appeal, edit, or repost. Continue genuine non-promotional participation until the gate is
+   satisfied. The owner sent modmail on 2026-08-31 asking whether the removed attempt consumed the
+   one-time self-promotion allowance and whether a retry is permitted after meeting the gate;
+   response is pending. The current redesigned profile shows only 2 total site-wide karma and 12
+   contributions; neither is the required community comment-karma value.
 
 Promotion plan: the operative playbook is `docs/promotion-execution-plan-2026-08-07.md`
 (stages S0 asset prep → S1 directories → S2 single-community test → S3 Show HN → S4 Product Hunt →
 S5 ongoing SEO/GEO), which supersedes the execution order in `docs/promotion-plan-2026-07-22.md`
 while keeping that document's constraints, claims wording, and work-package definitions normative.
 All external posts are published from the owner's accounts; the owner approves copy and timing for
-every post. Current stage: S0 closure, with S0.5 and S1 starting in parallel. No Reddit, Show HN, or
-Product Hunt launch should occur until account eligibility and owner response availability are
-confirmed.
+every post. Current stage: S0 is complete, S1 has executed its first directory set, and the S2
+baseline and focused CLS work are complete. The owner approved the local fix and production serves
+the new asset. The first Reddit submission was automatically removed because the account has fewer
+than 10 `r/indiehackers` comment karma. Do not repost or expand to another community while rebuilding
+this explicit eligibility gate. No Show HN or Product Hunt launch should occur until Reddit retry
+eligibility, the one-time allowance, and owner response availability are confirmed.
 
 Candidate technical follow-ups (not yet scheduled):
 
@@ -303,6 +357,129 @@ or `owner approved`. Never infer owner approval.
   background-remover browser test has not run. Re-run `npm run check` and the full `npm run test:e2e`
   on a normal network before release.
 
+- 2026-08-31 — `Reddit newcomer research completed`: reviewed current Reddit Help documentation for
+  karma, Poster Eligibility, Post Check, post types, flair, AutoModerator, modmail, spam, vote
+  manipulation, formatting, sorting, account status, and `r/indiehackers`' latest posting guidance.
+  Added `docs/promotion/10-reddit-newcomer-guide.md` with a glossary, safe participation practices,
+  moderation states, self-promotion controls, one-page preflight, and the ToolkitFree-specific
+  recovery plan. The research confirms that Post Check is advisory, eligibility can include
+  subreddit comment karma, and submission success does not prove public visibility.
+
+- 2026-08-31 — `Reddit eligibility screenshot reviewed`: the owner profile shows 2 total Karma and
+  12 Contributions, not 10 `r/indiehackers` comment karma. A newly added community comment showed
+  score 1 and one view, which is not evidence of earned karma. Revised the reusable-process record
+  to distinguish contribution volume, total karma, default self-votes, and subreddit comment karma;
+  future participation must prioritize specific useful replies without links or solicitation.
+
+- 2026-08-31 — `Reddit modmail sent` / `response pending`: owner acknowledged the community-karma
+  rule, stated that no repost would occur before meeting it, and asked whether the automated removal
+  consumed the one-time self-promotion allowance. This is a clarification request, not evidence that
+  the post will be restored. Keep the removed post unchanged while waiting.
+
+- 2026-08-31 — `Reddit removal reason confirmed` / `subreddit karma gate`: the owner found the
+  AutoModerator notification for post `1w2wrjy`. It says the account has fewer than 10 comment karma
+  in `r/indiehackers` and identifies the rule as an anti-spam mechanism. The post URL is preserved.
+  Account age and visible participation were insufficient evidence of eligibility; the next step is
+  genuine community participation, followed by modmail confirmation that a retry is allowed.
+
+- 2026-08-31 — `Reddit submitted` / `removed by moderators` / `reason pending`: owner submitted the
+  prepared Image Splitter feedback post to `r/indiehackers` with `Self Promotion` flair, tracked
+  link, disclosure, feedback questions, and media. Within about one minute the post displayed
+  `Sorry, this post has been removed by the moderators of r/indiehackers.` The screenshot shows
+  score 1 and 0 comments but no reason. Do not delete, edit, appeal, cross-post, or repost until the
+  post URL and any moderator/AutoModerator explanation are captured.
+
+- 2026-08-30 — `pushed` / `production asset verified` / `Image Splitter CLS fix`: commit `9f758f2`
+  was pushed to `origin/master`. A cache-bypassed production page references
+  `ImageSplitter.BR6SFwgQ.js`; the immutable asset returns HTTP 200 and contains the intrinsic
+  preview width/height output. The normal page briefly returned the previous cached HTML, so later
+  Cloudflare field samples remain the recovery checkpoint, but the deployment gate is complete.
+
+- 2026-08-30 — `owner approved` / `Image Splitter CLS fix`: owner manually checked the fixed local
+  Image Splitter and authorized the push. The remaining technical gate is commit, push, connected
+  Cloudflare deployment, and production asset verification before the Reddit submission.
+
+- 2026-08-30 — `Image Splitter CLS fix verified locally` / `owner preview pending`: added intrinsic
+  width and height to the known-dimension Splitter preview so the browser reserves its aspect ratio
+  before image decode. Controlled upload CLS fell from 0.0839 to 0.0090 (89%); Image-to-PDF remained
+  at 0.0061. The performance regression now records layout-shift sources and enforces a 0.05
+  Splitter ceiling. The 12-step quality gate and complete Image Splitter browser workflow passed,
+  including upload, seam detection, four-piece ZIP output, balanced object-URL cleanup, and zero
+  browser errors. The change is local, not owner-approved, committed, pushed, or deployed; owner
+  preview is the next gate.
+
+- 2026-08-30 — `pre-Reddit Cloudflare baseline collected` / `CLS verification gate`: authenticated
+  Cloudflare Web Analytics reported 2 bot-excluded visits and 2 page views for the past 24 hours,
+  one each on Image Splitter and Image-to-PDF no-margin, from Bing and Yahoo. LCP and INP were 100%
+  good on two samples, but both CLS samples scored 1 and were poor, with
+  `#main-content > div.container` as the debug element. Updated the growth report, measurement log,
+  Reddit experiment, and reusable-skill evidence. Because Image Splitter is the planned Reddit
+  landing page, publication is paused until the small-sample signal is reproduced and fixed or
+  disproven.
+
+- 2026-08-30 — `pre-Reddit GSC baseline collected` / `Cloudflare sign-in required`: after the
+  owner foregrounded GSC, a fresh read-only Chrome tab returned the complete three-month Search
+  Console snapshot for 2026-05-28 through 2026-08-27: 2 clicks, 558 impressions, 0.4% CTR, average
+  position 86.7; 54 indexed and 49 not indexed; Sitemap `Success` with 65 discovered pages. Saved
+  `docs/growth-reports/2026-08-30.md` and filled the Reddit experiment baseline. Cloudflare opened
+  its sign-in page in the active Chrome session, so no current visitor/performance value is claimed;
+  owner login is the remaining pre-post measurement gate.
+
+- 2026-08-30 — `pre-Reddit GSC read blocked` / `owner foreground required`: Chrome discovery
+  confirmed an authenticated `Performance on Search results` tab for the `sc-domain:toolkitfree.net`
+  property. A full DOM read and a lighter visible screenshot both timed out before returning any
+  metric, without reloading or modifying the page. Recorded the attempt in the measurement ledger,
+  Reddit experiment report, and reusable-skill evidence log. No current GSC value is claimed; the
+  next attempt requires the owner to place that tab in the foreground.
+
+- 2026-08-30 — `S2 evidence record prepared` / `not posted`: audited promotion measurement
+  readiness and found there was no single report for the planned Reddit checkpoints. Added
+  `docs/promotion/reports/reddit-image-splitter-feedback-2026.md` with the experiment hypothesis,
+  pre-publication GSC/Cloudflare fields, exact publication record, moderation state,
+  24-hour/7-day/14-day checkpoints, feedback coding, attribution-strength rules, and reusable-skill
+  extraction. Updated the owner checklist and docs index to current S2 state and recorded the
+  package as `experiment-ready-not-posted`; no external action occurred.
+
+- 2026-08-30 — `operating documents reconciled` / `S2 remains pending`: corrected the promotion
+  account inventory and operative execution plan, which still described Reddit participation,
+  YouTube upload, directory submission, and the original `r/InternetIsBeautiful` default as future
+  work. They now match observed state: Reddit and YouTube qualified, the demo Public, Uneed queued,
+  SaaSHub publicly discoverable but direct approval unconfirmed, AlternativeTo rejected on fit, and
+  the `r/indiehackers` Image Splitter package ready but not posted. The next sequence is a fresh
+  GSC/Cloudflare baseline, owner publication, then 24-hour/7-day/14-day measurement.
+
+- 2026-08-30 — `directory state rechecked` / `evidence recorded`: current SaaSHub search results
+  surfaced ToolkitFree as a verified TinyWow alternative, establishing at least one public discovery
+  surface while leaving direct-page approval unconfirmed. Uneed's official 2026-08-17 changelog says
+  its free queue is now closed to new products but existing entries keep their assigned dates, so
+  ToolkitFree's earlier 2027-02-08 slot remains the operative state. Added both observations to the
+  measurement log and promotion-skill evidence log with explicit evidence-strength labels.
+
+- 2026-08-30 — `promotion-system capture started` / `long-term goal active`: owner requested that
+  the entire ToolkitFree promotion process become the evidence base for a reusable product-promotion
+  tool or Codex skill after this campaign. Added
+  `docs/promotion/09-promotion-skill-evidence-log.md` with the capture schema, evidence collected so
+  far, provisional workflow, safety guardrails, missing evidence, and final acceptance criteria.
+  `AGENTS.md` now requires promotion state, measurement, and reusable-process evidence to be updated
+  after every meaningful action. No generic skill has been created yet; it will be derived from real
+  outcomes rather than the current plan alone.
+
+- 2026-08-30 — `S2 final candidate prepared` / `owner review required`: revised the first Reddit
+  test from product-collection promotion into a narrow Image Splitter critique request with three
+  concrete questions, one precise local-processing statement, one maker disclosure, and a dedicated
+  `image_splitter_feedback_2026` UTM campaign. Reconfirmed the production landing page returns HTTP
+  200 and the approved 960×540, 13.99-second GIF is 2.52 MiB, contains no browser chrome or personal
+  data, and reaches six downloadable pieces. No Reddit post was submitted.
+
+- 2026-08-30 — `S2 participation verified` / `ready for first feedback post`: owner-provided
+  Reddit profile screenshots verified at least eight visible, non-promotional contributions across
+  `r/indiehackers`, `r/SideProject`, `r/linuxmint`, and `r/Wechat`. Three planned substantive
+  comments are visible, one discussion produced a natural follow-up reply, and the captured items
+  show no removal, collapse, or negative-score signal. Rechecked `r/indiehackers` rules: one
+  self-promotion post is permitted with the `Self Promotion` flair only for feedback and critique,
+  not advertising. The account is now ready for the prepared Image Splitter feedback post; no post
+  has been submitted by Codex.
+
 - 2026-08-29 — `implemented` / `checks passed, two environment gaps` / `owner review pending`: adopted
   the warm-neutral palette (option A) as the site's design tokens and rebuilt the Image Compressor
   interaction as the first pilot of the reviewed UI direction. Palette: `--color-bg-secondary`
@@ -338,6 +515,139 @@ or `owner approved`. Never infer owner approval.
   recompresses on the main thread, which can stutter while dragging the quality slider on a large
   batch), whether to apply the warm page ground site-wide, and which tool gets the same treatment
   next.
+
+- 2026-08-24 — `S2 participation plan prepared` / `owner posting`: confirmed the Reddit
+  account is signed in, has a Create Post entry, and is joined to `r/indiehackers`, `r/SideProject`,
+  and `r/isthisAI`. Live rules make `r/InternetIsBeautiful` a poor fit because of its 90/10
+  self-promotion rule and additional collection/business-tool restrictions. Selected
+  `r/indiehackers` conditionally: its rules allow one `Self Promotion` post for feedback and
+  critique rather than advertising. Prepared a narrow Image Splitter feedback package at
+  `docs/promotion/07-reddit-indiehackers-package.md`. The owner confirmed there is no prior
+  non-promotional activity, so prepared a five-comment, seven-day genuine participation sequence at
+  `docs/promotion/08-reddit-participation-plan.md`. No Reddit draft, upload, comment, or post was
+  created by Codex; the owner will post only comments that accurately reflect their own view.
+
+- 2026-08-24 — `owner approved` / `verified` / `published` / `Image Cropper internal-link consolidation`: the homepage quick path
+  now targets the canonical `/tools/image-cropper/` route with generic crop-intent anchor text; the
+  square variant remains public and linked from the cropper page. The 12-step quality gate passed,
+  including 72 generated pages, 4,292 internal links, and zero broken or redirecting internal links.
+  Chrome smoke regression also passed both scripts: the converter matrix reported zero browser
+  errors and the responsive/accessibility sweep passed 355/355 route-width checks across 71 routes
+  at 320, 375, 768, 1024, and 1440 pixels with zero browser errors. The owner approved the local
+  preview and authorized publication. Commit `204ffa9` was pushed to `origin/master`; production
+  now serves the canonical cropper quick path and no longer serves the old square-crop entry.
+
+- 2026-08-21 — `Cloudflare snapshot collected` / `decision unchanged`: after the owner signed in,
+  collected the past-24-hours traffic overview: 847 requests, 97 visits, 20.54% cache hit rate,
+  1.66 MB served, 201 2xx, 64 3xx, 582 4xx, and zero 5xx. The stream is bot/scanner-heavy—one IP
+  generated 475 requests and leading agents include Amazon, OpenAI, Perplexity, Google-Extended, and
+  Claude bots—so requests are not treated as human traffic. Detailed Web Analytics page views,
+  referrers, and Core Web Vitals remain unavailable because that dashboard page repeatedly timed out.
+  The canonical Image Cropper internal-link hypothesis remains the selected low-risk test.
+
+- 2026-08-20 — `superseded by 2026-08-24 verification` / `Image Cropper internal-link consolidation`: changed
+  the homepage quick path from the square-crop variant to the canonical `/tools/image-cropper/`
+  route with generic crop-intent anchor text. The square variant remains public and linked from the
+  cropper page. The later verification entry records the completed checks.
+
+- 2026-08-20 — `growth report collected` / `next SEO task selected`: archived the first live growth
+  report at `docs/growth-reports/2026-08-20.md`. GSC's 2026-05-19 through 2026-08-18 range reports
+  3 clicks, 950 impressions, 0.3% CTR, and average position 88.2; the canonical Image Cropper page
+  accounts for 642 impressions. Cloudflare was initially unavailable because Chrome was not signed
+  in; the 2026-08-21 supplemental snapshot above now records the available traffic overview.
+  The sole next implementation task is to route the homepage's generic crop quick path to the
+  canonical Image Cropper page, then observe 14–28 days.
+
+- 2026-08-20 — `SaaSHub verified and enriched` / `pending platform approval`: completed the free
+  product verification and saved the approved logo, homepage screenshot, Free pricing, extended
+  description, `Open Source: No`, and the Public YouTube demo. SaaSHub confirms the video in the
+  product's Videos list and indicates platform approval may take up to 32 days. No paid promotion
+  or expert-voting action was taken.
+
+- 2026-08-20 — `S1 SaaSHub submitted` / `pending approval`: SaaSHub confirmed that ToolkitFree was
+  submitted successfully and will appear online after approval. Relevant competitors and categories
+  were assigned during the submission flow. Product verification and listing enrichment remain.
+
+- 2026-08-20 — `YouTube Public` / `owner confirmed`: owner changed the approved ToolkitFree demo
+  at `https://youtu.be/dk4mtf6H8aA` from Unlisted to Public. SaaSHub is the next S1 directory
+  submission.
+
+- 2026-08-16 — `S1 started` / `rules verified`: rechecked official Uneed, SaaSHub, and
+  AlternativeTo submission rules. Uneed remains first via its free queue, SaaSHub remains second
+  with free product verification, and AlternativeTo is skipped because its current official
+  eligibility rules explicitly exclude the principal ToolkitFree product types and online-tool
+  collections. No directory submission has been finalized; Uneed is the current action-time gate.
+
+- 2026-08-16 — `S1 Uneed submitted`: owner completed the final Uneed save after the listing fields
+  were corrected. The product now appears under `Unpublished (1)` with a scheduled date of
+  2027-02-08, confirming entry into the free queue. No paid acceleration was purchased; SaaSHub is
+  the next directory action.
+
+- 2026-08-16 — `published Unlisted` / `verified`: after explicit action-time owner approval, saved
+  the approved 56.67-second music master to the confirmed ToolkitFree channel as Unlisted at
+  `https://youtu.be/dk4mtf6H8aA`. Studio confirms the approved custom thumbnail, English (United
+  States) timed subtitles, completed HD processing, and `No issues found` copyright check. The
+  channel content table reports `Unlisted`; no Public publication occurred.
+
+- 2026-08-16 — `upload in progress` / `owner verification required`: after explicit owner approval,
+  Codex transmitted the approved 56.67-second music master to the confirmed ToolkitFree channel and
+  filled the approved title and 1,405-character description. YouTube assigned video ID
+  `dk4mtf6H8aA` and kept the draft Private. At the latest observed state the transfer was 82% and
+  YouTube required one-time phone verification before accepting the custom thumbnail. Codex stopped
+  before any phone-number or code entry; the owner must complete that verification, after which the
+  exact continuation point is thumbnail, audience, English SRT, checks, and Unlisted visibility.
+
+- 2026-08-16 — `verified` / `ready for Unlisted upload confirmation`: the owner selected the
+  logo-bearing ToolkitFree channel. YouTube Studio confirmed channel ID
+  `UCzOeU_EDy79n3dmaHdmya8A`, zero subscribers, no existing videos, and a working upload entry. The
+  final video, thumbnail, SRT, and field package are ready. No file has been transmitted to YouTube;
+  action-time owner confirmation is required before the Unlisted upload.
+
+- 2026-08-16 — `owner action required`: verified that the owner can sign in to YouTube and that a
+  channel-selection flow is available. The account presents two zero-subscriber channels with the
+  same visible `ToolkitFree` name, and the page exposes no safe readable identifier for choosing
+  between them. No channel was selected and no upload occurred. Owner selection of the intended
+  channel is the exact continuation point.
+
+- 2026-08-16 — `verified` / `ready for owner login`: completed the YouTube upload package for the
+  owner-approved music master. Codex produced a 1280×720, 123,214-byte three-tool thumbnail from the
+  accepted real recordings, an English SRT aligned to the 56.67-second edit, and a final copy/paste
+  field package covering title, description, four UTM links, focused tags, audience, language,
+  category, visibility, music checks, and signed-out review. Current YouTube Help was checked for
+  title/description limits, thumbnail format, upload flow, and Unlisted behavior. No upload occurred;
+  owner login/channel confirmation and the final Unlisted upload action are next.
+
+- 2026-08-16 — `owner approved`: the owner reviewed and approved the 56.67-second master with the
+  low-volume Mixkit `Close Up` soundtrack. This music version is now the publication candidate; the
+  verified silent master remains a fallback. S0 visual and motion asset preparation is complete.
+  No upload or external publishing action has occurred.
+
+- 2026-08-16 — `verified` / `owner review required`: added a licensed music review version of the
+  56.67-second master while preserving the silent cut. The selected track is Mixkit `Close Up` by
+  Michael Ramir C., licensed for online video and advertising under the Mixkit Stock Music Free
+  License. The video stream was copied without re-encoding; the AAC stereo track uses -7 dB gain,
+  1.2-second fade-in, and 2-second fade-out, measuring -24.7 dB mean and -7.0 dB peak. The completed
+  file fully decodes, and source URL, official license, restrictions, and SHA-256 hashes are retained
+  in `docs/promotion/assets/final-motion/music-license-record.md`. No upload occurred.
+
+- 2026-08-16 — `verified` / `owner review required`: Claude Code prepared the repeatable motion
+  post-production pipeline, then Codex recalibrated every cut from dense frame inspection and
+  rendered the accepted footage. The local review package contains a 56.67-second 1920×1080 H.264
+  master with no audio plus 960×540 looping GIFs for Image Splitter (2.52 MiB), Image to PDF
+  (1.81 MiB), and Background Remover (0.99 MiB). Contact-sheet QA confirmed the browser chrome is
+  removed, key controls and results remain visible, captions do not obscure the demonstrations,
+  and the Background Remover sequence shows transparent, blue, and red results without a second
+  model run. No upload or external publishing action was taken; owner approval is the next gate.
+
+- 2026-08-16 — `recording accepted` / `post-production ready`: reviewed the owner's final Image to
+  PDF and Background Remover captures using metadata and interval frame sampling. The PDF capture
+  uses the approved three images, demonstrates the edited page structure and move-to-new-page flow,
+  and reaches a three-page PDF result. The Background Remover capture uses the approved product
+  image and demonstrates transparent, blue, red, and dark backgrounds on one processed cutout with
+  a downloadable result. Both are readable 1920×1032 H.264 recordings at approximately 30 fps.
+  Together with the accepted Image Splitter and homepage takes, all four clips were copied without
+  altering the originals to `docs/promotion/assets/recording-raw/` using the canonical filenames.
+  No further owner recording is required; master-video and GIF editing are next.
 
 - 2026-08-16 — `owner approved` / `verified` / `published`: Claude Code implemented post-result
   Background Remover colour switching. The transparent cutout Blob is cached after one AI run;

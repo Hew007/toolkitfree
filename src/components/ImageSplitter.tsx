@@ -511,7 +511,12 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
 
           {previewUrl && dimensions && (
             <div className="splitter-frame" ref={frameRef}>
-              <img src={previewUrl} alt={`Preview of ${file.name} with split lines`} />
+              <img
+                src={previewUrl}
+                width={dimensions.width}
+                height={dimensions.height}
+                alt={`Preview of ${file.name} with split lines`}
+              />
 
               {layout?.tiles.map((tile) => (
                 <span
