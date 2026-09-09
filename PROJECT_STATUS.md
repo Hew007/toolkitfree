@@ -320,6 +320,21 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-09 — `merged with master` / `revalidated` / `ready for owner merge`: `origin/master` had
+  moved five commits ahead (Reddit promotion records, the Image Splitter CLS fix, the crop quick
+  path, and an `AGENTS.md` note), so master was merged into the UI branch. Only `PROJECT_STATUS.md`
+  conflicted, because both sides had appended to the same newest-first log; the resolution keeps
+  every entry from both sides in date order — 39 entries in the conflicted stretch, none dropped —
+  and no code file conflicted. Everything was revalidated on the merged tree: all ten runnable gates
+  passed, the Chrome responsive/accessibility sweep passed (355 checks across 71 routes at
+  320/375/768/1024/1440, zero browser errors), and the compressor and performance browser suites
+  passed — the latter confirming master's new layout-shift assertions still hold under the new
+  surfaces (Image to PDF 0.0046, Image Splitter 0.0023). Pull request #11 carries the three UI
+  commits plus this merge. Background-removal asset preparation is still blocked in this environment
+  (`staticimgly.com` returns 403 through the sandbox proxy), so `npm run check` cannot finish its
+  "Static runtime assets" step and the background-remover browser test has not run; both still need
+  a run on a normal network.
+
 - 2026-09-06 — `implemented` / `checks passed` / `owner review pending`: lightened the two background
   fills one step after the owner found the ground too grey and the large recessed blocks too coarse.
   The page ground moves from #faf8f4 to #fcfbf7 and the sunken tone from #f0eee9 to #f5f2ec; the
