@@ -320,6 +320,35 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-09 — `merged with master` / `revalidated`: pull request #12 (the Background Remover
+  cross-origin isolation headers) landed on master, so master was merged into the resizer branch.
+  Only `PROJECT_STATUS.md` conflicted — both sides had added a 2026-09-09 log entry — and the
+  resolution keeps both, newest first; `public/_headers` came across cleanly and the built output
+  still carries the four cross-origin header lines. Revalidated on the merged tree: all ten runnable
+  gates passed, the full resizer and cropper Chrome suite passed, and the responsive/accessibility
+  sweep passed (355 checks across 71 routes, zero browser errors in both).
+
+- 2026-09-09 — `implemented` / `checks passed` / `owner review pending`: rebuilt the Image Resizer on
+  the reviewed interaction model, the second tool after the compressor. Unlike compression, resize
+  output is deterministic, so the compressor's three candidates would mean nothing here; the value
+  is instead knowing the real output size before downloading. Changes: a row of fit shortcuts
+  (1920 / 1280 / 800 / 300 px) sets a ratio-keeping bounding box in one click, since "make it fit
+  1920" is the intent most visitors arrive with, while the eleven exact platform presets stay in
+  their select for anyone who needs one; the submit button is gone, with results following the
+  controls debounced by 320 ms and a newer change abandoning the run in flight; output format and
+  quality fold into a Fine-tune disclosure whose closed row still states both; width, height and the
+  aspect-ratio switch stay visible, because they are the tool itself rather than secondary settings;
+  the live preview and its drag handle are unchanged. Compressor-specific chip and status classes
+  were renamed to shared `tool-chip*` / `tool-run-note` so both tools use one set. The browser
+  regression lost its four `Resize 1 image` clicks and now waits on the expected output dimensions
+  rather than on a result merely existing, so a leftover result from previous settings cannot
+  satisfy a wait. Validation: all ten runnable gates passed; the full resizer and cropper Chrome
+  suite passed, covering the seven variant pages' exact dimensions, the drag handle, the bounded
+  1440x1080 case, the exact 1920x1080 case and the WebP case; the responsive/accessibility sweep
+  passed (355 checks across 71 routes at 320/375/768/1024/1440, zero browser errors). Background
+  removal asset preparation stays blocked in this environment, so `npm run check` still cannot
+  finish its "Static runtime assets" step here.
+
 - 2026-09-09 — `implemented` / `mechanism verified locally` / `production effect unmeasured`: the
   owner reported that Background Remover works but feels slow on the live site. Reading the installed
   `@imgly/background-removal@1.7` bundle shows why: it sets

@@ -118,7 +118,7 @@ export const toolRegistry: readonly ToolDefinition[] = [
     shortDescription: 'Resize images to custom or platform dimensions.',
     category: 'image-tools',
     status: 'public',
-    lastModified: '2026-08-16',
+    lastModified: '2026-09-09',
     related: [
       'image-cropper',
       'image-enhancer',

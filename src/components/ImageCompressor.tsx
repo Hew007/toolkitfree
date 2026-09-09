@@ -546,16 +546,16 @@ export default function ImageCompressor({
       <FileList files={files.map(({ file }) => file)} onRemove={handleRemove} />
 
       <div className="compressor-controls">
-        <fieldset className="purpose-fieldset">
+        <fieldset className="tool-chip-group">
           <legend>What is it for?</legend>
-          <p className="purpose-help">
+          <p className="tool-chip-help">
             Choose a purpose and the settings follow. You can still change every value below.
           </p>
-          <div className="purpose-options">
+          <div className="tool-chip-row">
             {PURPOSES.map((entry) => (
               <label
                 key={entry.id}
-                className={`purpose-option${purposeId === entry.id ? ' is-selected' : ''}`}
+                className={`tool-chip${purposeId === entry.id ? ' is-selected' : ''}`}
               >
                 <input
                   type="radio"
@@ -564,8 +564,8 @@ export default function ImageCompressor({
                   checked={purposeId === entry.id}
                   onChange={() => handlePurpose(entry)}
                 />
-                <span className="purpose-option-label">{entry.label}</span>
-                <span className="purpose-option-summary">{entry.summary}</span>
+                <span className="tool-chip-label">{entry.label}</span>
+                <span className="tool-chip-hint">{entry.summary}</span>
               </label>
             ))}
           </div>
@@ -691,7 +691,7 @@ export default function ImageCompressor({
               </div>
             </details>
 
-            <p className="compressor-run-note">
+            <p className="tool-run-note">
               <span className={`run-dot${busy ? ' is-busy' : ''}`} aria-hidden="true" />
               {busy
                 ? 'Encoding in your browser…'

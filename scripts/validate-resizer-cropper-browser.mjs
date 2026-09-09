@@ -186,12 +186,11 @@ for (const [slug, preset, width, height] of resizerVariants) {
     ratioDisabled: true,
   });
 
-  await evaluate(`
-    [...document.querySelectorAll('button')]
-      .find((button) => button.textContent.trim() === 'Resize 1 image')
-      .click()
-  `);
-  await waitFor(`Boolean(document.querySelector('[data-resize-result]'))`, `${slug} result`);
+  // No submit step: the result follows the preset the variant page selected.
+  await waitFor(
+    `Boolean(document.querySelector('[data-resize-result][data-width="${width}"][data-height="${height}"]'))`,
+    `${slug} result`
+  );
   const result = await inspectResult('[data-resize-result]');
   assert.equal(result.width, width, `${slug} bitmap width`);
   assert.equal(result.height, height, `${slug} bitmap height`);
@@ -290,11 +289,13 @@ await evaluate(`
   const quality = document.querySelector('[data-testid="resize-quality"]');
   quality.value = '75';
   quality.dispatchEvent(new Event('change', { bubbles: true }));
-  [...document.querySelectorAll('button')]
-    .find((button) => button.textContent.trim() === 'Resize 1 image')
-    .click();
 `);
-await waitFor(`Boolean(document.querySelector('[data-resize-result]'))`, 'custom WebP result');
+// Waiting on the WebP name rather than on any result, so a leftover JPG result
+// from the previous settings cannot satisfy this.
+await waitFor(
+  `document.querySelector('[data-resize-result]')?.dataset.resizeResult?.endsWith('.webp') === true`,
+  'custom WebP result'
+);
 const customContain = await inspectResult('[data-resize-result]');
 assert.deepEqual(
   { width: customContain.width, height: customContain.height, type: customContain.type },
@@ -314,13 +315,10 @@ await waitFor(
   `document.querySelector('[data-testid="resize-width"]').value === '1920' && document.querySelector('[data-testid="resize-height"]').value === '1080'`,
   'custom resize bounds'
 );
-await new Promise((resolve) => setTimeout(resolve, 100));
-await evaluate(`
-  [...document.querySelectorAll('button')]
-    .find((button) => button.textContent.trim() === 'Resize 1 image')
-    .click()
-`);
-await waitFor(`Boolean(document.querySelector('[data-resize-result]'))`, 'custom contained result');
+await waitFor(
+  `Boolean(document.querySelector('[data-resize-result][data-width="1440"][data-height="1080"]'))`,
+  'custom contained result'
+);
 const boundedResult = await inspectResult('[data-resize-result]');
 assert.deepEqual(
   { width: boundedResult.width, height: boundedResult.height },
@@ -335,11 +333,6 @@ await waitFor(
   `document.querySelector('[data-testid="resize-maintain-ratio"]').checked === false`,
   'custom exact mode'
 );
-await evaluate(`
-  [...document.querySelectorAll('button')]
-    .find((button) => button.textContent.trim() === 'Resize 1 image')
-    .click()
-`);
 await waitFor(
   `document.querySelector('[data-resize-result]')?.dataset.width === '1920'`,
   'custom exact result'
