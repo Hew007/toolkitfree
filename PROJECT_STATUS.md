@@ -320,6 +320,14 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-09 — `merged with master` / `revalidated`: pull request #12 (the Background Remover
+  cross-origin isolation headers) landed on master, so master was merged into the resizer branch.
+  Only `PROJECT_STATUS.md` conflicted — both sides had added a 2026-09-09 log entry — and the
+  resolution keeps both, newest first; `public/_headers` came across cleanly and the built output
+  still carries the four cross-origin header lines. Revalidated on the merged tree: all ten runnable
+  gates passed, the full resizer and cropper Chrome suite passed, and the responsive/accessibility
+  sweep passed (355 checks across 71 routes, zero browser errors in both).
+
 - 2026-09-09 — `implemented` / `checks passed` / `owner review pending`: rebuilt the Image Resizer on
   the reviewed interaction model, the second tool after the compressor. Unlike compression, resize
   output is deterministic, so the compressor's three candidates would mean nothing here; the value
