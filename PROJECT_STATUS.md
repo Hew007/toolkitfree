@@ -320,6 +320,28 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-09 — `implemented` / `mechanism verified locally` / `production effect unmeasured`: the
+  owner reported that Background Remover works but feels slow on the live site. Reading the installed
+  `@imgly/background-removal@1.7` bundle shows why: it sets
+  `ort.env.wasm.numThreads = navigator.hardwareConcurrency`, so it asks ONNX Runtime for one thread
+  per core, but WASM threads need `SharedArrayBuffer`, which a browser only grants to a cross-origin
+  isolated document. The site sent no `Cross-Origin-Opener-Policy` or `Cross-Origin-Embedder-Policy`
+  headers, so inference silently ran single-threaded; the library even carries a matching warning it
+  only prints in debug mode. Added both headers to `public/_headers`, scoped to
+  `/tools/background-remover/` alone — that route has no cross-origin subresources (model and
+  runtime are self-hosted under `/generated/background-removal/1.7.0/`), and it is the only route
+  under that path. Verified locally by serving `dist` with those headers and probing three routes in
+  Chrome: the tool page reports `crossOriginIsolated: true` with `SharedArrayBuffer` available while
+  the compressor and the homepage stay unisolated, and the page renders with zero console errors.
+  All ten runnable gates passed. Not measured: the actual speed-up, because the sandbox cannot
+  download the model (`staticimgly.com` 403) and cannot reach `toolkitfree.net` (the proxy rejects
+  it), so the owner should compare one removal before and after deployment. Watch one thing after
+  deploying: if Cloudflare Web Analytics is auto-injected, `require-corp` can block its beacon on
+  this page only; if that page stops reporting visits, removing the two header lines restores it.
+  WebGPU (`device: 'gpu'`) remains a further option but needs the `.jsep` runtime files added to
+  `scripts/prepare-background-removal-assets.mjs`, which currently fetches only the non-jsep
+  `ort-wasm-simd-threaded` pair.
+
 - 2026-09-09 — `merged with master` / `revalidated` / `ready for owner merge`: `origin/master` had
   moved five commits ahead (Reddit promotion records, the Image Splitter CLS fix, the crop quick
   path, and an `AGENTS.md` note), so master was merged into the UI branch. Only `PROJECT_STATUS.md`
