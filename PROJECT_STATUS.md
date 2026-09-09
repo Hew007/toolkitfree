@@ -320,6 +320,23 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-09 — `implemented` / `checks passed` / `numbers not yet collected`: after the cross-origin
+  isolation headers shipped, the owner reported Background Remover felt slightly faster but could not
+  tell how much. The tool reported progress stages but no durations, so nothing could be compared
+  between runs. Added per-stage timing: each stage the worker reports is closed out when the next one
+  begins, the local composition is timed separately from the model work, and the finished run shows
+  its total in the same one-line form the compressor and resizer use. The full breakdown goes to
+  `console.debug` under `[toolkitfree] background removal timing`, together with
+  `crossOriginIsolated` and `hardwareConcurrency`, so a run can be compared against another machine
+  or another runtime; the stages are also mirrored onto `data-background-timing` for future
+  regressions. This is measurement only — no processing behavior changed. It matters because threads
+  accelerate inference alone, while decoding and the final full-resolution composition stay
+  single-threaded: without the split, a modest total says nothing about whether WebGPU would be worth
+  the extra runtime files. Validation: all ten runnable gates passed and the responsive/accessibility
+  sweep passed (355 checks across 71 routes, zero browser errors). The timings themselves cannot be
+  produced in this environment, since the model still cannot be downloaded here; the owner needs to
+  run one removal and read the console line.
+
 - 2026-09-09 — `merged with master` / `revalidated`: pull request #12 (the Background Remover
   cross-origin isolation headers) landed on master, so master was merged into the resizer branch.
   Only `PROJECT_STATUS.md` conflicted — both sides had added a 2026-09-09 log entry — and the
