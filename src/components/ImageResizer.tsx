@@ -64,6 +64,33 @@ const OUTPUT_FORMATS: Record<ImageOutputMimeType, { label: string; extension: st
   'image/webp': { label: 'WebP', extension: 'webp' },
 };
 
+/**
+ * The named presets are exact platform sizes. Most visitors arrive with a
+ * simpler intent — "make it fit 1920" — which in this tool is a custom bounding
+ * box with the ratio kept, so these shortcuts set exactly that. The full preset
+ * list stays available for anyone who needs a specific platform size.
+ */
+interface FitShortcut {
+  id: string;
+  label: string;
+  hint: string;
+  longestEdge: number;
+}
+
+const FIT_SHORTCUTS: readonly FitShortcut[] = [
+  { id: 'fit-1920', label: 'Fit 1920 px', hint: 'Web pages and large screens', longestEdge: 1920 },
+  { id: 'fit-1280', label: 'Fit 1280 px', hint: 'Blog posts and documents', longestEdge: 1280 },
+  { id: 'fit-800', label: 'Fit 800 px', hint: 'Email and chat', longestEdge: 800 },
+  { id: 'fit-300', label: 'Fit 300 px', hint: 'Thumbnails and avatars', longestEdge: 300 },
+];
+
+/**
+ * Resizing needs no submit step: the output size is known the moment the
+ * numbers change, so the result follows the controls. A newer change abandons
+ * the run in flight rather than queueing behind it.
+ */
+const RESIZE_DELAY_MS = 320;
+
 export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerProps) {
   const initialPreset = RESIZE_PRESETS[defaultPreset];
   const [files, setFiles] = useState<File[]>([]);
@@ -79,8 +106,10 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
   const [processing, setProcessing] = useState(false);
   const [results, setResults] = useState<ResizedFile[]>([]);
   const [failures, setFailures] = useState<ResizeFailure[]>([]);
+  const [elapsedMs, setElapsedMs] = useState<number | null>(null);
   const objectUrls = useObjectUrlRegistry();
   const previewDragRef = useRef<PreviewResizeDrag | null>(null);
+  const runIdRef = useRef(0);
 
   useEffect(() => {
     const firstFile = files[0];
@@ -116,6 +145,14 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
     },
     [clearResults]
   );
+
+  const handleFitShortcut = (shortcut: FitShortcut) => {
+    setPreset('custom');
+    setWidth(shortcut.longestEdge);
+    setHeight(shortcut.longestEdge);
+    setMaintainRatio(true);
+    clearResults();
+  };
 
   const handlePresetChange = (value: ResizePresetKey) => {
     setPreset(value);
@@ -225,71 +262,112 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
     previewDragRef.current = null;
   };
 
-  const resizeImage = async (file: File, index: number): Promise<ResizedFile> => {
-    const image = await loadImage(file);
-    const outputDimensions = calculateResizeDimensions(
-      { width: image.naturalWidth, height: image.naturalHeight },
-      { width, height },
-      preset === 'custom' && maintainRatio
-    );
-    const canvas = document.createElement('canvas');
-    canvas.width = outputDimensions.width;
-    canvas.height = outputDimensions.height;
-    const context = getCanvas2dContext(canvas);
+  const resizeImage = useCallback(
+    async (file: File, index: number): Promise<ResizedFile> => {
+      const image = await loadImage(file);
+      const outputDimensions = calculateResizeDimensions(
+        { width: image.naturalWidth, height: image.naturalHeight },
+        { width, height },
+        preset === 'custom' && maintainRatio
+      );
+      const canvas = document.createElement('canvas');
+      canvas.width = outputDimensions.width;
+      canvas.height = outputDimensions.height;
+      const context = getCanvas2dContext(canvas);
 
-    if (format === 'image/jpeg') {
-      context.fillStyle = '#ffffff';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-    const blob = await exportCanvas(
-      canvas,
-      format,
-      format === 'image/png' ? undefined : quality / 100
-    );
-    const baseName = file.name.replace(/\.[^.]+$/, '') || 'resized-image';
-    const outputName = `${baseName}.${OUTPUT_FORMATS[format].extension}`;
-    const url = objectUrls.replace(`resizer:result:${index}`, blob);
-
-    return {
-      sourceId: `file-${index}`,
-      sourceName: file.name,
-      outputName,
-      name: outputName,
-      originalSize: file.size,
-      outputSize: blob.size,
-      newSize: blob.size,
-      blob,
-      width: canvas.width,
-      height: canvas.height,
-      url,
-    };
-  };
-
-  const handleResize = async () => {
-    if (files.length === 0 || width < 1 || height < 1) return;
-    setProcessing(true);
-    clearResults();
-
-    const settled = await mapSettledWithConcurrency(files, 2, resizeImage);
-    const nextResults: ResizedFile[] = [];
-    const nextFailures: ResizeFailure[] = [];
-    settled.forEach((outcome, index) => {
-      if (outcome.status === 'fulfilled') {
-        nextResults.push(outcome.value);
-      } else {
-        nextFailures.push({
-          sourceId: `file-${index}`,
-          name: files[index].name,
-          message: getImageProcessingErrorMessage(outcome.reason),
-        });
+      if (format === 'image/jpeg') {
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
       }
-    });
-    setResults(nextResults);
-    setFailures(nextFailures);
-    setProcessing(false);
-  };
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+      const blob = await exportCanvas(
+        canvas,
+        format,
+        format === 'image/png' ? undefined : quality / 100
+      );
+      const baseName = file.name.replace(/\.[^.]+$/, '') || 'resized-image';
+      const outputName = `${baseName}.${OUTPUT_FORMATS[format].extension}`;
+      const url = objectUrls.replace(`resizer:result:${index}`, blob);
+
+      return {
+        sourceId: `file-${index}`,
+        sourceName: file.name,
+        outputName,
+        name: outputName,
+        originalSize: file.size,
+        outputSize: blob.size,
+        newSize: blob.size,
+        blob,
+        width: canvas.width,
+        height: canvas.height,
+        url,
+      };
+    },
+    [format, height, maintainRatio, objectUrls, preset, quality, width]
+  );
+
+  /** Any change here invalidates the results on screen. */
+  const settingsKey = useMemo(
+    () =>
+      JSON.stringify({
+        files: files.map((file) => `${file.name}:${file.size}:${file.lastModified}`),
+        width,
+        height,
+        maintainRatio,
+        preset,
+        format,
+        quality,
+      }),
+    [files, format, height, maintainRatio, preset, quality, width]
+  );
+
+  // No submit step: the result follows the controls, debounced, and a newer
+  // change abandons the run in flight instead of queueing behind it.
+  useEffect(() => {
+    runIdRef.current += 1;
+    objectUrls.revokePrefix('resizer:result:');
+    setResults([]);
+    setFailures([]);
+    setElapsedMs(null);
+
+    if (files.length === 0 || width < 1 || height < 1) {
+      setProcessing(false);
+      return;
+    }
+
+    const runId = runIdRef.current;
+    const queued = files;
+
+    const timer = setTimeout(() => {
+      void (async () => {
+        setProcessing(true);
+        const startedAt = performance.now();
+        const settled = await mapSettledWithConcurrency(queued, 2, resizeImage);
+        if (runIdRef.current !== runId) return;
+
+        const nextResults: ResizedFile[] = [];
+        const nextFailures: ResizeFailure[] = [];
+        settled.forEach((outcome, index) => {
+          if (outcome.status === 'fulfilled') {
+            nextResults.push(outcome.value);
+          } else {
+            nextFailures.push({
+              sourceId: `file-${index}`,
+              name: queued[index].name,
+              message: getImageProcessingErrorMessage(outcome.reason),
+            });
+          }
+        });
+        setResults(nextResults);
+        setFailures(nextFailures);
+        setElapsedMs(Math.round(performance.now() - startedAt));
+        setProcessing(false);
+      })();
+    }, RESIZE_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [settingsKey, files, width, height, objectUrls, resizeImage]);
 
   return (
     <div data-resizer-preset={preset} aria-busy={processing}>
@@ -366,32 +444,41 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
           </section>
 
           <div className="resizer-controls-panel">
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                gap: '1rem',
-                marginBottom: '1rem',
-              }}
-            >
+            <div className="tool-chip-group">
+              <p className="tool-chip-help">
+                Common sizes. Each one keeps the aspect ratio and fits the image inside the value.
+              </p>
+              <div className="tool-chip-row">
+                {FIT_SHORTCUTS.map((shortcut) => {
+                  const active =
+                    preset === 'custom' &&
+                    maintainRatio &&
+                    width === shortcut.longestEdge &&
+                    height === shortcut.longestEdge;
+                  return (
+                    <button
+                      type="button"
+                      key={shortcut.id}
+                      className={`tool-chip${active ? ' is-selected' : ''}`}
+                      aria-pressed={active}
+                      onClick={() => handleFitShortcut(shortcut)}
+                    >
+                      <span className="tool-chip-label">{shortcut.label}</span>
+                      <span className="tool-chip-hint">{shortcut.hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="resizer-size-fields">
               <div>
-                <label
-                  htmlFor="resize-preset"
-                  style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    display: 'block',
-                    marginBottom: '0.25rem',
-                  }}
-                >
-                  Preset
-                </label>
+                <label htmlFor="resize-preset">Platform size</label>
                 <select
                   id="resize-preset"
                   data-testid="resize-preset"
                   value={preset}
                   onChange={(event) => handlePresetChange(event.target.value as ResizePresetKey)}
-                  style={{ width: '100%' }}
                 >
                   {Object.entries(RESIZE_PRESETS).map(([key, value]) => (
                     <option key={key} value={key}>
@@ -401,15 +488,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                 </select>
               </div>
               <div>
-                <label
-                  htmlFor="resize-width"
-                  style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    display: 'block',
-                    marginBottom: '0.25rem',
-                  }}
-                >
+                <label htmlFor="resize-width">
                   {preset === 'custom' && maintainRatio ? 'Max width (px)' : 'Width (px)'}
                 </label>
                 <input
@@ -423,15 +502,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                 />
               </div>
               <div>
-                <label
-                  htmlFor="resize-height"
-                  style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    display: 'block',
-                    marginBottom: '0.25rem',
-                  }}
-                >
+                <label htmlFor="resize-height">
                   {preset === 'custom' && maintainRatio ? 'Max height (px)' : 'Height (px)'}
                 </label>
                 <input
@@ -444,39 +515,10 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                   {...heightProps}
                 />
               </div>
-              <div>
-                <label
-                  htmlFor="resize-format"
-                  style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    display: 'block',
-                    marginBottom: '0.25rem',
-                  }}
-                >
-                  Format
-                </label>
-                <select
-                  id="resize-format"
-                  data-testid="resize-format"
-                  value={format}
-                  onChange={(event) => {
-                    setFormat(event.target.value as ImageOutputMimeType);
-                    clearResults();
-                  }}
-                  style={{ width: '100%' }}
-                >
-                  {Object.entries(OUTPUT_FORMATS).map(([mimeType, value]) => (
-                    <option key={mimeType} value={mimeType}>
-                      {value.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ fontSize: '0.875rem' }}>
+            <div className="resizer-ratio-field">
+              <label>
                 <input
                   data-testid="resize-maintain-ratio"
                   type="checkbox"
@@ -489,54 +531,74 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                 />{' '}
                 Maintain aspect ratio
               </label>
-              <div style={{ marginTop: '0.25rem', color: '#6b665c', fontSize: '0.8125rem' }}>
+              <p className="tool-hint">
                 {preset === 'custom' && maintainRatio
                   ? 'Each image fits inside the maximum width and height without stretching.'
                   : preset === 'custom'
                     ? 'The exact width and height are used; the image may be stretched.'
                     : 'Platform presets use their exact width and height.'}
-              </div>
+              </p>
             </div>
 
-            {format !== 'image/png' && (
-              <div style={{ maxWidth: '300px', marginBottom: '1rem' }}>
-                <label
-                  htmlFor="resize-quality"
-                  style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    display: 'block',
-                    marginBottom: '0.25rem',
-                  }}
-                >
-                  Quality: {quality}%
-                </label>
-                <input
-                  id="resize-quality"
-                  data-testid="resize-quality"
-                  type="range"
-                  min="10"
-                  max="100"
-                  value={quality}
-                  onChange={(event) => {
-                    setQuality(Number(event.target.value));
-                    clearResults();
-                  }}
-                />
-              </div>
-            )}
+            <details className="fine-tune">
+              <summary>
+                <span>Fine-tune</span>
+                <span className="fine-tune-summary">
+                  {OUTPUT_FORMATS[format].label}
+                  {format === 'image/png' ? '' : ` · quality ${quality}%`}
+                </span>
+              </summary>
+              <div className="fine-tune-body">
+                <div className="fine-tune-field">
+                  <label htmlFor="resize-format">Output format</label>
+                  <select
+                    id="resize-format"
+                    data-testid="resize-format"
+                    value={format}
+                    onChange={(event) => {
+                      setFormat(event.target.value as ImageOutputMimeType);
+                      clearResults();
+                    }}
+                  >
+                    {Object.entries(OUTPUT_FORMATS).map(([mimeType, value]) => (
+                      <option key={mimeType} value={mimeType}>
+                        {value.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleResize}
-              disabled={processing || width < 1 || height < 1}
-              style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
-            >
+                <div
+                  className="fine-tune-field"
+                  hidden={format === 'image/png'}
+                  aria-hidden={format === 'image/png'}
+                >
+                  <label htmlFor="resize-quality">Quality: {quality}%</label>
+                  <input
+                    id="resize-quality"
+                    data-testid="resize-quality"
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={quality}
+                    onChange={(event) => {
+                      setQuality(Number(event.target.value));
+                      clearResults();
+                    }}
+                  />
+                  <p className="tool-hint">PNG is lossless, so quality does not apply to it.</p>
+                </div>
+              </div>
+            </details>
+
+            <p className="tool-run-note">
+              <span className={`run-dot${processing ? ' is-busy' : ''}`} aria-hidden="true" />
               {processing
-                ? 'Resizing...'
-                : `Resize ${files.length} image${files.length > 1 ? 's' : ''}`}
-            </button>
+                ? 'Resizing in your browser…'
+                : elapsedMs !== null
+                  ? `Resized in your browser in ${(elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
+                  : 'Results follow the settings above. Nothing is uploaded.'}
+            </p>
           </div>
         </div>
       )}
