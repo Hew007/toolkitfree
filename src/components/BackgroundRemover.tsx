@@ -45,6 +45,29 @@ const INITIAL_PROGRESS: BackgroundProgress = {
   percent: null,
 };
 
+/**
+ * Wall-clock time per stage. Threads only accelerate inference, while decoding
+ * and the final full-resolution composition stay single-threaded, so a total on
+ * its own cannot say whether a runtime change helped. The breakdown also goes to
+ * the console, where it can be compared between runs.
+ */
+interface StageTiming {
+  stage: string;
+  ms: number;
+}
+
+interface RunTiming {
+  totalMs: number;
+  stages: StageTiming[];
+}
+
+interface TimingProgress {
+  startedAt: number;
+  stageStartedAt: number;
+  stage: string | null;
+  stages: StageTiming[];
+}
+
 export default function BackgroundRemover() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -57,6 +80,8 @@ export default function BackgroundRemover() {
   const [hexError, setHexError] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
   const [modelRuns, setModelRuns] = useState(0);
+  const [timing, setTiming] = useState<RunTiming | null>(null);
+  const timingRef = useRef<TimingProgress | null>(null);
   const objectUrls = useObjectUrlRegistry();
   const processingController = useRef<AbortController | null>(null);
   const foreground = useRef<ForegroundCache | null>(null);
@@ -162,6 +187,20 @@ export default function BackgroundRemover() {
     applyColor(normalized);
   }, [applyColor, hexDraft]);
 
+  /** Closes the stage that just ended, then records the new one. */
+  const trackProgress = useCallback((next: BackgroundProgress) => {
+    const state = timingRef.current;
+    if (state && next.stage !== state.stage) {
+      const now = performance.now();
+      if (state.stage) {
+        state.stages.push({ stage: state.stage, ms: Math.round(now - state.stageStartedAt) });
+      }
+      state.stage = next.stage;
+      state.stageStartedAt = now;
+    }
+    setProgress(next);
+  }, []);
+
   const handleRemove = useCallback(() => {
     cancelProcessing();
     releaseForeground();
@@ -178,6 +217,14 @@ export default function BackgroundRemover() {
     setProcessing(true);
     setError(null);
     clearResult();
+    setTiming(null);
+    const startedAt = performance.now();
+    timingRef.current = {
+      startedAt,
+      stageStartedAt: startedAt,
+      stage: INITIAL_PROGRESS.stage,
+      stages: [],
+    };
     setProgress(INITIAL_PROGRESS);
     const controller = new AbortController();
     processingController.current = controller;
@@ -186,8 +233,20 @@ export default function BackgroundRemover() {
       // The 'runtime' stage above must stay visible until the worker reports its
       // first progress event. Overwriting it here batched into the same render,
       // so the user never saw it and it never reached the DOM.
-      const removedBlob = await removeBackgroundInWorker(file, setProgress, controller.signal);
+      const removedBlob = await removeBackgroundInWorker(file, trackProgress, controller.signal);
       setModelRuns((runs) => runs + 1);
+
+      // Close the stage the worker finished on, so the model side is fully
+      // accounted for before the composition below is timed separately.
+      const modelDoneAt = performance.now();
+      const tracked = timingRef.current;
+      if (tracked?.stage) {
+        tracked.stages.push({
+          stage: tracked.stage,
+          ms: Math.round(modelDoneAt - tracked.stageStartedAt),
+        });
+        tracked.stage = null;
+      }
 
       // Cache the cutout so later background changes stay local.
       foreground.current = {
@@ -200,6 +259,23 @@ export default function BackgroundRemover() {
       await composeWithColor(bgColor);
       if (controller.signal.aborted) {
         throw new DOMException('Background removal was canceled.', 'AbortError');
+      }
+
+      if (tracked) {
+        const stages = [
+          ...tracked.stages,
+          { stage: 'compose', ms: Math.round(performance.now() - modelDoneAt) },
+        ];
+        const totalMs = Math.round(performance.now() - tracked.startedAt);
+        setTiming({ totalMs, stages });
+        // Threads only speed up inference. Comparing these numbers between runs
+        // is the only way to tell whether a runtime change is worth having.
+        console.debug('[toolkitfree] background removal timing', {
+          totalMs,
+          crossOriginIsolated: self.crossOriginIsolated,
+          hardwareConcurrency: navigator.hardwareConcurrency,
+          stages: Object.fromEntries(stages.map((entry) => [entry.stage, entry.ms])),
+        });
       }
     } catch (processingError) {
       if (processingError instanceof DOMException && processingError.name === 'AbortError') {
@@ -251,6 +327,9 @@ export default function BackgroundRemover() {
       data-active-background={bgColor}
       data-background-composing={composing ? 'true' : 'false'}
       data-background-model-runs={modelRuns}
+      data-background-timing={
+        timing ? timing.stages.map((entry) => `${entry.stage}:${entry.ms}`).join(',') : undefined
+      }
       aria-busy={processing || composing}
     >
       {!file ? (
@@ -432,6 +511,12 @@ export default function BackgroundRemover() {
           {progress.label}
           {progress.percent === null ? '...' : `: ${progress.percent}%`}
         </div>
+      )}
+      {timing && !processing && !composing && (
+        <p className="tool-run-note">
+          <span className="run-dot" aria-hidden="true" />
+          Removed in your browser in {(timing.totalMs / 1000).toFixed(1)}s. Nothing was uploaded.
+        </p>
       )}
       {composing && (
         <div className="status status-processing" role="status" aria-live="polite">
