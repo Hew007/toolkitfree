@@ -320,6 +320,23 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-11 — `root cause found` / `fixed` / `reproduced both ways` / `owner verification pending`:
+  the cross-origin isolation shipped in #12 never took effect, and the timing work explains why. Two
+  machines both reported `crossOriginIsolated: false` — a 4-core machine spent 40.3 s on inference
+  and a 16-core machine 24.2 s, a gap that matches single-core speed rather than core count, so
+  neither was threading. Inspecting the live response showed the headers were in fact being sent,
+  but **twice each**: `public/_headers` carried both `/tools/background-remover/` and
+  `/tools/background-remover/*`, both rules matched the same URL, and a browser joins repeated
+  values into `same-origin, same-origin`, which is not a valid value — so it falls back to
+  unsafe-none and the page is not isolated at all. The headers were present and worthless. This also
+  answers an open question: a static-assets-only Worker does honour `_headers`. Reproduced both
+  directions locally against the same build before changing anything: duplicated headers give
+  `crossOriginIsolated: false`, a single pair gives `true`. The redundant exact-path rule is removed,
+  the wildcard already covers the trailing-slash URL, and the file now carries a comment recording
+  the trap so the rule is not re-added. All ten runnable gates passed. The owner should re-check
+  `crossOriginIsolated` after deployment and re-run the same image: the thread count should finally
+  be in play, and only then is it worth deciding on WebGPU.
+
 - 2026-09-09 — `implemented` / `checks passed` / `numbers not yet collected`: after the cross-origin
   isolation headers shipped, the owner reported Background Remover felt slightly faster but could not
   tell how much. The tool reported progress stages but no durations, so nothing could be compared
