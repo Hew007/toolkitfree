@@ -320,6 +320,32 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-11 — `merged with master` / `revalidated`: pull request #15 (the readable timing log and
+  the summed repeated stages) landed on master, so master was merged into the isolation-fix branch.
+  Only `PROJECT_STATUS.md` conflicted, as before — both sides had appended 2026-09-11 entries — and
+  all three are kept, newest first; `BackgroundRemover.tsx` came across cleanly. Revalidated on the
+  merged tree: the built `_headers` carries exactly one rule for the tool route, the timing line is
+  still logged at `info`, a Chrome probe against the build reports `crossOriginIsolated: true` with
+  `SharedArrayBuffer` available on that route while the compressor and the homepage stay unisolated,
+  and all ten runnable gates passed.
+
+- 2026-09-11 — `root cause found` / `fixed` / `reproduced both ways` / `owner verification pending`:
+  the cross-origin isolation shipped in #12 never took effect, and the timing work explains why. Two
+  machines both reported `crossOriginIsolated: false` — a 4-core machine spent 40.3 s on inference
+  and a 16-core machine 24.2 s, a gap that matches single-core speed rather than core count, so
+  neither was threading. Inspecting the live response showed the headers were in fact being sent,
+  but **twice each**: `public/_headers` carried both `/tools/background-remover/` and
+  `/tools/background-remover/*`, both rules matched the same URL, and a browser joins repeated
+  values into `same-origin, same-origin`, which is not a valid value — so it falls back to
+  unsafe-none and the page is not isolated at all. The headers were present and worthless. This also
+  answers an open question: a static-assets-only Worker does honour `_headers`. Reproduced both
+  directions locally against the same build before changing anything: duplicated headers give
+  `crossOriginIsolated: false`, a single pair gives `true`. The redundant exact-path rule is removed,
+  the wildcard already covers the trailing-slash URL, and the file now carries a comment recording
+  the trap so the rule is not re-added. All ten runnable gates passed. The owner should re-check
+  `crossOriginIsolated` after deployment and re-run the same image: the thread count should finally
+  be in play, and only then is it worth deciding on WebGPU.
+
 - 2026-09-11 — `fixed` / `checks passed`: the timing breakdown added on 2026-09-09 never reached the
   owner, because it was logged with `console.debug`, which Chrome hides behind the Verbose log level
   that is off by default — the same trap the removal library fell into with its own cross-origin

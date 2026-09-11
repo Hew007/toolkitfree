@@ -16,10 +16,12 @@
 # single-threaded no matter how many cores the visitor has. Scoped to this one
 # route: the page has no cross-origin subresources (the model and runtime are
 # self-hosted), and isolating the whole site would risk third-party embeds.
-/tools/background-remover/
-  Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Embedder-Policy: require-corp
-
+#
+# Exactly ONE rule may match this page. An earlier version also listed
+# `/tools/background-remover/` on its own; both rules matched, each policy was
+# sent twice, and a browser joins repeated values into `same-origin, same-origin`
+# — not a valid value, so it falls back to unsafe-none and the page is not
+# isolated at all. The wildcard already covers the trailing-slash URL.
 /tools/background-remover/*
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: require-corp
