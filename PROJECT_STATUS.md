@@ -329,6 +329,20 @@ or `owner approved`. Never infer owner approval.
   `document.querySelector('[data-background-timing]').dataset.backgroundTiming`. All ten runnable
   gates passed.
 
+- 2026-09-11 — `measured` / `direction decided`: the owner ran one real removal and read the stage
+  breakdown off the DOM: runtime 147 ms, model download 1303 ms, model initialisation 76 ms,
+  inference 40342 ms, a second initialisation 137 ms, composition 3 ms — about 42 seconds in total,
+  with inference at 96% of it. That settles the open question: WebGPU is the only lever worth
+  pulling, since optimising everything else could save at most 4%. It also refutes the earlier
+  hypothesis that the full-resolution composition might dominate — it costs 3 ms. The run also
+  exposed a flaw in the instrumentation itself: the worker reports `model-initialization` twice, once
+  on either side of inference, and the console line keyed the stages into an object, so the later
+  entry silently replaced the earlier one. Stage totals are now summed per stage and the raw ordered
+  list is logged alongside them. Still unknown and needed before the WebGPU work: whether
+  `crossOriginIsolated` is actually true on the owner's machine, and how many threads
+  `navigator.hardwareConcurrency` reports — 40 seconds is slow enough to suspect the headers are not
+  reaching the browser at all.
+
 - 2026-09-09 — `implemented` / `checks passed` / `numbers not yet collected`: after the cross-origin
   isolation headers shipped, the owner reported Background Remover felt slightly faster but could not
   tell how much. The tool reported progress stages but no durations, so nothing could be compared
