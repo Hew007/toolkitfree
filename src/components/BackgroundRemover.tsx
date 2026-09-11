@@ -270,11 +270,22 @@ export default function BackgroundRemover() {
         setTiming({ totalMs, stages });
         // Threads only speed up inference. Comparing these numbers between runs
         // is the only way to tell whether a runtime change is worth having.
-        console.debug('[toolkitfree] background removal timing', {
+        // Deliberately `info` rather than `debug`: Chrome hides `debug` behind
+        // the Verbose log level, which is off by default, so a line logged at
+        // that level is one nobody reads — the same trap the removal library
+        // fell into with its own cross-origin warning.
+        console.info('[toolkitfree] background removal timing', {
           totalMs,
           crossOriginIsolated: self.crossOriginIsolated,
           hardwareConcurrency: navigator.hardwareConcurrency,
-          stages: Object.fromEntries(stages.map((entry) => [entry.stage, entry.ms])),
+          // The worker can report a stage more than once — initialisation shows up
+          // again after inference — so the totals are summed per stage. Keying
+          // them directly would let a later entry silently replace an earlier one.
+          stages: stages.reduce<Record<string, number>>((totals, entry) => {
+            totals[entry.stage] = (totals[entry.stage] ?? 0) + entry.ms;
+            return totals;
+          }, {}),
+          order: stages.map((entry) => `${entry.stage}:${entry.ms}`).join(','),
         });
       }
     } catch (processingError) {
