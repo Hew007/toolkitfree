@@ -320,6 +320,15 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-11 — `fixed` / `checks passed`: the timing breakdown added on 2026-09-09 never reached the
+  owner, because it was logged with `console.debug`, which Chrome hides behind the Verbose log level
+  that is off by default — the same trap the removal library fell into with its own cross-origin
+  warning, and the exact mistake that had just been diagnosed. Raised to `console.info`, with a
+  comment recording why so it is not tidied back. No other behavior changed. The already-deployed
+  build can still be read without this fix, since the stages are mirrored onto the DOM:
+  `document.querySelector('[data-background-timing]').dataset.backgroundTiming`. All ten runnable
+  gates passed.
+
 - 2026-09-09 — `implemented` / `checks passed` / `numbers not yet collected`: after the cross-origin
   isolation headers shipped, the owner reported Background Remover felt slightly faster but could not
   tell how much. The tool reported progress stages but no durations, so nothing could be compared

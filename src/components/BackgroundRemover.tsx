@@ -270,7 +270,11 @@ export default function BackgroundRemover() {
         setTiming({ totalMs, stages });
         // Threads only speed up inference. Comparing these numbers between runs
         // is the only way to tell whether a runtime change is worth having.
-        console.debug('[toolkitfree] background removal timing', {
+        // Deliberately `info` rather than `debug`: Chrome hides `debug` behind
+        // the Verbose log level, which is off by default, so a line logged at
+        // that level is one nobody reads — the same trap the removal library
+        // fell into with its own cross-origin warning.
+        console.info('[toolkitfree] background removal timing', {
           totalMs,
           crossOriginIsolated: self.crossOriginIsolated,
           hardwareConcurrency: navigator.hardwareConcurrency,
