@@ -74,7 +74,12 @@ export default function BackgroundRemover() {
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState<BackgroundProgress | null>(null);
   const [result, setResult] = useState<ProcessedFile | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // The headline sentence is written for the visitor; `detail` is the underlying
+  // failure text, shown only when we have nothing more specific to say. Without it
+  // every unexpected failure collapses into the same generic line and the cause is
+  // visible nowhere but the console — which is exactly how the cross-origin
+  // isolation regression reached production undiagnosed.
+  const [error, setError] = useState<{ message: string; detail?: string } | null>(null);
   const [bgColor, setBgColor] = useState(TRANSPARENT_BACKGROUND);
   const [hexDraft, setHexDraft] = useState('');
   const [hexError, setHexError] = useState<string | null>(null);
@@ -132,7 +137,7 @@ export default function BackgroundRemover() {
         setError(null);
       } catch (composeError) {
         if (token !== compositionToken.current) return;
-        setError(getImageProcessingErrorMessage(composeError));
+        setError({ message: getImageProcessingErrorMessage(composeError) });
       } finally {
         if (token === compositionToken.current) setComposing(false);
       }
@@ -152,7 +157,7 @@ export default function BackgroundRemover() {
         setError(null);
         setProgress(null);
       } catch (fileError) {
-        setError(getImageProcessingErrorMessage(fileError));
+        setError({ message: getImageProcessingErrorMessage(fileError) });
       }
     },
     [clearResult, objectUrls]
@@ -291,16 +296,27 @@ export default function BackgroundRemover() {
     } catch (processingError) {
       if (processingError instanceof DOMException && processingError.name === 'AbortError') {
         clearResult();
-        setError('Background removal was canceled.');
+        setError({ message: 'Background removal was canceled.' });
         setProgress(null);
         return;
       }
       const standardMessage = getImageProcessingErrorMessage(processingError);
-      setError(
-        standardMessage === 'Image processing failed. Please try another file.'
+      const unrecognized = standardMessage === 'Image processing failed. Please try another file.';
+      // `error` at the level Chrome shows by default, not `debug`: a failure nobody
+      // can read is a failure nobody can fix.
+      console.error('[toolkitfree] background removal failed', processingError, {
+        crossOriginIsolated: self.crossOriginIsolated,
+        hardwareConcurrency: navigator.hardwareConcurrency,
+      });
+      setError({
+        message: unrecognized
           ? 'Background removal could not finish. On first use, check your connection and available device memory, then retry.'
-          : standardMessage
-      );
+          : standardMessage,
+        detail:
+          unrecognized && processingError instanceof Error && processingError.message
+            ? processingError.message
+            : undefined,
+      });
       setProgress(null);
     } finally {
       if (processingController.current === controller) processingController.current = null;
@@ -317,7 +333,7 @@ export default function BackgroundRemover() {
     try {
       downloadUrl(result.url, result.name);
     } catch (downloadError) {
-      setError(getImageProcessingErrorMessage(downloadError));
+      setError({ message: getImageProcessingErrorMessage(downloadError) });
     }
   };
 
@@ -536,7 +552,19 @@ export default function BackgroundRemover() {
       )}
       {error && (
         <div className="status status-error" role="alert">
-          {error}
+          {error.message}
+          {error.detail && (
+            <span
+              style={{
+                display: 'block',
+                marginTop: '0.35rem',
+                fontSize: '0.8125rem',
+                opacity: 0.85,
+              }}
+            >
+              {error.detail}
+            </span>
+          )}
         </div>
       )}
 
