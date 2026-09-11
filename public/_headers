@@ -21,8 +21,27 @@
 # (an earlier attempt sent each header twice, which browsers reject, so the
 # page was never isolated and the slow single-threaded path kept working), the
 # runtime took its multi-threaded path and background removal started failing
-# outright on real hardware. A slow tool beats a broken one, so the headers are
-# off until the threaded path is reproduced and fixed end to end.
+# outright on real hardware. That failure has still never been reproduced: the
+# threaded path has since been exercised end to end on a four-core Windows
+# Chrome machine with these headers served locally, and it works — correct
+# cutout, and inference roughly twice as fast as one thread. The machine that
+# broke has sixteen cores, and nothing short of that machine has reproduced it.
+#
+# Two things did come out of that run and are now fixed in the code, so a
+# second attempt is not the same attempt:
+#   - Thread count. The library asks ONNX Runtime for one thread per logical
+#     core and exposes no way to override it. Measured on four cores, one image:
+#     17.9s at one thread, 8.8s at two, 11.6s at four, 25.9s at sixteen. So a
+#     sixteen-core visitor was asking for the slowest setting available —
+#     slower than not threading at all. `plannedThreadCount` now caps it.
+#   - No safety net. A threaded attempt that fails for any reason other than the
+#     user canceling is now retried on a single thread automatically, so the
+#     worst case is the speed the tool has today rather than a broken tool.
+#
+# What that does NOT cover is a failure that kills the renderer outright (an
+# out-of-memory tab crash runs no JavaScript, so nothing retries). That is why
+# these stay off until someone runs the tool from upload to output on the
+# sixteen-core machine that broke. `PROJECT_STATUS.md` carries the procedure.
 #
 # If they are restored: exactly ONE rule may match the page. `/tools/background-remover/*`
 # already covers the trailing-slash URL; adding `/tools/background-remover/` as

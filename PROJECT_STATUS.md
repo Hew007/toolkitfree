@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-09-11
+Last updated: 2026-09-12
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -319,6 +319,52 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-09-12 — `threaded inference` / `partially diagnosed` / `verified on four cores` /
+  `headers still off`: the multi-threaded path was finally exercised for real. `npm run build` plus
+  a local static server sending COOP/COEP (the repro in `AGENTS.md`) put Chrome 152 on Windows into
+  `crossOriginIsolated: true` with `SharedArrayBuffer` available, and the tool ran upload-to-output
+  correctly: a clean cutout, fully transparent corners, 37.6% opaque against 60.5% transparent. So
+  on this hardware the threaded path is not broken — it is what it was supposed to be, roughly twice
+  the speed of one thread. **The owner's original failure was not reproduced.** That machine has
+  sixteen cores; the one available here has four, and no amount of forcing the thread count
+  reproduced a failure — only slowness.
+
+  What the run did expose is a real defect that fully explains why sixteen cores would be the worst
+  case. `@imgly/background-removal` sets `ort.env.wasm.numThreads` to
+  `navigator.hardwareConcurrency` itself and exposes no override. Sweeping the thread count against
+  one image on four cores: **1 thread 17.9s, 2 threads 8.8s, 4 threads 11.6s, 8 threads 13.8s,
+  16 threads 25.9s, 32 threads 27.1s.** Past a couple of threads it loses to contention, and at
+  sixteen — exactly what a sixteen-core visitor asks for — it is *slower than not threading at all*.
+  Every count completed; none threw. Control, same build and image without the headers:
+  single-threaded inference 14.0s against 8.8s isolated, which is what proves the threading was
+  genuinely engaging rather than silently falling back.
+
+  Two fixes landed, neither of which is "turn threading off":
+  - `plannedThreadCount` (`src/lib/background-remover.ts`, unit-tested in
+    `validate-secondary-tools.mjs`) asks for half the logical cores, capped at 4 and floored at 2,
+    and says 1 when the document is not isolated, since the runtime is single-threaded there anyway.
+    Four cores now ask for 2 — the measured optimum — and sixteen ask for 4 instead of 16. The
+    worker applies it by redefining `navigator.hardwareConcurrency` on its own scope, which is the
+    only seam the library leaves.
+  - A threaded attempt that fails for anything other than the user canceling is retried
+    automatically on a single thread, and the threaded attempt gets a shorter inference watchdog
+    (90s against 180s) because the library reports `compute:inference` exactly once, so that one
+    timer has to cover the whole inference. Verified by fault injection: with the threaded attempt
+    forced to throw, the retry produced a byte-identical cutout, the user saw no error, and the
+    console carried `background removal failed on 2 threads, retrying single-threaded`. A worker
+    that dies now also reports the `ErrorEvent` message and location instead of only "stopped
+    unexpectedly".
+
+  `public/_headers` still does **not** send COOP/COEP, and that is deliberate. The fallback makes
+  the worst case equal to today's speed rather than a broken tool, but it cannot catch a failure
+  that kills the renderer outright — an out-of-memory tab crash runs no JavaScript. Restoring the
+  headers is therefore `blocked` on one thing: running the repro on the sixteen-core machine that
+  broke, capturing either a success or the real error text, which has never been captured. Procedure
+  for that machine: `npm run build`, serve `dist/` with both headers, confirm `crossOriginIsolated`
+  is `true`, run one photo end to end, and read `[toolkitfree] background removal timing` (success,
+  with the per-stage breakdown) or `[toolkitfree] background removal failed` plus any
+  `retrying single-threaded` warning. WebGPU stays parked until that is settled.
 
 - 2026-09-11 — `production regression` / `reverted` / `diagnosis pending`: with the duplicate-header
   fix (#16) live, cross-origin isolation was genuinely in effect on `/tools/background-remover/` for
