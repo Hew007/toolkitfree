@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-09-09
+Last updated: 2026-09-11
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -319,6 +319,25 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-09-11 — `production regression` / `reverted` / `diagnosis pending`: with the duplicate-header
+  fix (#16) live, cross-origin isolation was genuinely in effect on `/tools/background-remover/` for
+  the first time, and the owner reported the tool failing outright — not slow, unusable. Isolation
+  is what grants `SharedArrayBuffer`, so this was the first run that actually took ONNX Runtime's
+  multi-threaded path; something on that path fails on real hardware. A slow tool beats a broken
+  one, so the two isolation headers are removed from `public/_headers` and the route is back on the
+  single-threaded path that worked. The comment there now records what was tried, that it broke, and
+  the duplicate-rule trap to avoid if it is ever restored.
+
+  The regression was also undiagnosable from the UI, which is its own defect:
+  `getImageProcessingErrorMessage` collapses everything that is not an `ImageProcessingError` into
+  one generic sentence, so the real failure — the worker does forward it — reached nobody. The
+  Background Remover now keeps the friendly headline but shows the underlying message beneath it
+  when it has nothing more specific to say, and logs the error at `console.error` with
+  `crossOriginIsolated` and `hardwareConcurrency` alongside. Next step before any second attempt at
+  threads: get that underlying message from a failing run, since the threaded path cannot be
+  exercised in this sandbox (the IMG.LY model host is unreachable here, so the assets never
+  download). Until then the threading work is parked, and WebGPU stays parked with it.
 
 - 2026-09-11 — `merged with master` / `revalidated`: pull request #15 (the readable timing log and
   the summed repeated stages) landed on master, so master was merged into the isolation-fix branch.

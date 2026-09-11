@@ -10,18 +10,22 @@
 /generated/background-removal/1.7.0/*
   Cache-Control: public, max-age=31556952, immutable
 
-# Background Remover runs ONNX Runtime's WASM build, which asks for one thread
-# per CPU core. Threads need SharedArrayBuffer, which the browser only grants to
-# a cross-origin isolated document — so without these two headers the model runs
-# single-threaded no matter how many cores the visitor has. Scoped to this one
-# route: the page has no cross-origin subresources (the model and runtime are
-# self-hosted), and isolating the whole site would risk third-party embeds.
+# Background Remover deliberately does NOT send Cross-Origin-Opener-Policy and
+# Cross-Origin-Embedder-Policy. Those two headers are what a document needs
+# before the browser hands it SharedArrayBuffer, and without SharedArrayBuffer
+# ONNX Runtime's WASM build falls back to a single thread no matter how many
+# cores the visitor has — so isolating this route is the obvious way to make
+# the model faster.
 #
-# Exactly ONE rule may match this page. An earlier version also listed
-# `/tools/background-remover/` on its own; both rules matched, each policy was
-# sent twice, and a browser joins repeated values into `same-origin, same-origin`
-# — not a valid value, so it falls back to unsafe-none and the page is not
-# isolated at all. The wildcard already covers the trailing-slash URL.
-/tools/background-remover/*
-  Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Embedder-Policy: require-corp
+# It was tried, and it broke the tool. Once isolation was genuinely in effect
+# (an earlier attempt sent each header twice, which browsers reject, so the
+# page was never isolated and the slow single-threaded path kept working), the
+# runtime took its multi-threaded path and background removal started failing
+# outright on real hardware. A slow tool beats a broken one, so the headers are
+# off until the threaded path is reproduced and fixed end to end.
+#
+# If they are restored: exactly ONE rule may match the page. `/tools/background-remover/*`
+# already covers the trailing-slash URL; adding `/tools/background-remover/` as
+# well makes both rules match, each policy is sent twice, and the joined value
+# `same-origin, same-origin` is invalid — the browser then falls back to
+# unsafe-none and the page is not isolated at all.
