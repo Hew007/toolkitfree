@@ -320,6 +320,15 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-11 — `merged with master` / `revalidated`: pull request #15 (the readable timing log and
+  the summed repeated stages) landed on master, so master was merged into the isolation-fix branch.
+  Only `PROJECT_STATUS.md` conflicted, as before — both sides had appended 2026-09-11 entries — and
+  all three are kept, newest first; `BackgroundRemover.tsx` came across cleanly. Revalidated on the
+  merged tree: the built `_headers` carries exactly one rule for the tool route, the timing line is
+  still logged at `info`, a Chrome probe against the build reports `crossOriginIsolated: true` with
+  `SharedArrayBuffer` available on that route while the compressor and the homepage stay unisolated,
+  and all ten runnable gates passed.
+
 - 2026-09-11 — `root cause found` / `fixed` / `reproduced both ways` / `owner verification pending`:
   the cross-origin isolation shipped in #12 never took effect, and the timing work explains why. Two
   machines both reported `crossOriginIsolated: false` — a 4-core machine spent 40.3 s on inference
