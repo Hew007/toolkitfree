@@ -320,6 +320,32 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-12 — `threaded inference` / `verified on the machine that broke` / `headers restored`:
+  the sixteen-core machine that broke under isolation ran the fixed build with COOP/COEP genuinely
+  in effect — `crossOriginIsolated` true, `SharedArrayBuffer` available, `hardwareConcurrency` 16 —
+  and the tool completed upload to output: **inference 5.98s, total 9.4s**, against the **24.2s**
+  inference that same machine recorded single-threaded (`e4bf91a`). Roughly four times faster, and
+  the 5.98s is itself the proof that threading engaged: the single-threaded fallback would have
+  landed near 24s, so it never fired. Stage order was
+  `runtime:808, model-download:2389, model-initialization:90, inference:5984, model-initialization:120, compose:3`.
+
+  That was the one blocker, so `public/_headers` sends the two isolation headers again, on a single
+  `/tools/background-remover/*` rule. The comment there now carries the whole history — duplicate
+  rules, the outright failure, the thread-count defect, and this verification — plus the
+  one-rule-only trap, since that mistake is what hid the real problem the first time.
+
+  Caveat worth keeping honest: this run exercised the **fixed** configuration, where sixteen cores
+  ask for four threads. It confirms the route is safe to isolate now; it does not independently
+  prove the original failure was the sixteen-thread request, because the unfixed build was never
+  re-run on that machine. The thread-count sweep is the evidence for that, and it is circumstantial
+  rather than a reproduction.
+
+  Testing note: these headers cannot be exercised through `astro dev` or `astro preview`, and a LAN
+  address cannot be isolated either — cross-origin isolation additionally requires a secure context,
+  which plain `http://` on a LAN IP is not. Use `127.0.0.1` on the machine under test, or Chrome's
+  `--unsafely-treat-insecure-origin-as-secure` / the matching `chrome://flags` entry. `AGENTS.md`
+  has the server.
+
 - 2026-09-12 — `threaded inference` / `partially diagnosed` / `verified on four cores` /
   `headers still off`: the multi-threaded path was finally exercised for real. `npm run build` plus
   a local static server sending COOP/COEP (the repro in `AGENTS.md`) put Chrome 152 on Windows into

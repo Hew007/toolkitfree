@@ -98,7 +98,13 @@ createServer(async (req, res) => {
 ```
 
 Confirm the environment before trusting any result from it: `self.crossOriginIsolated` must be
-`true` and `typeof SharedArrayBuffer` must be `'function'`. If isolation is false the page is on the
+`true` and `typeof SharedArrayBuffer` must be `'function'`. Isolation also requires a **secure context**, so
+serving this to another machine over a LAN address will report `crossOriginIsolated: false` however
+correct the headers are — plain `http://` on a LAN IP is not a trustworthy origin. Test on
+`127.0.0.1` on the machine under test, or launch Chrome there with
+`--user-data-dir=<fresh dir> --unsafely-treat-insecure-origin-as-secure=http://<ip>:4321` (the origin
+must match the address bar exactly, no trailing slash), or set the same origin in
+`chrome://flags/#unsafely-treat-insecure-origin-as-secure`. If isolation is false the page is on the
 single-threaded path and the run says nothing about threading. Serving the same `dist/` on a second
 port *without* the headers gives the single-threaded control to compare against; without that
 comparison a timing number cannot distinguish real threading from a silent fallback.
