@@ -32,6 +32,7 @@ import {
   backgroundLabelColor,
   mapBackgroundProgress,
   normalizeHexColor,
+  plannedThreadCount,
 } from '../src/lib/background-remover.ts';
 
 assert.equal(PDF_PRESETS[PDF_VARIANT_PRESETS['image-to-a4-pdf']].pageSize, 'a4');
@@ -302,6 +303,32 @@ for (const preset of BACKGROUND_PRESETS) {
   assert.ok(preset.label.length > 0);
   assert.ok(normalizeHexColor(preset.swatch), `${preset.label} swatch must be a hex colour`);
 }
+
+/* --- Inference thread plan ---------------------------------------------- */
+
+// Without isolation there is no SharedArrayBuffer, so the runtime is single-threaded
+// whatever it is asked for; the plan says 1 rather than implying the request matters.
+assert.equal(plannedThreadCount(16, false), 1);
+assert.equal(plannedThreadCount(4, false), 1);
+
+// Isolated: half the logical cores, never above the cap where threading measured
+// slower than not threading at all.
+assert.equal(plannedThreadCount(4, true), 2);
+assert.equal(plannedThreadCount(8, true), 4);
+assert.equal(plannedThreadCount(16, true), 4);
+assert.equal(plannedThreadCount(128, true), 4);
+
+// Two threads is the floor once threading is possible at all, and a single core
+// never gets more than the one thread it has.
+assert.equal(plannedThreadCount(2, true), 2);
+assert.equal(plannedThreadCount(3, true), 2);
+assert.equal(plannedThreadCount(1, true), 1);
+
+// hardwareConcurrency is optional, and browsers have shipped junk in it before.
+assert.equal(plannedThreadCount(undefined, true), 2);
+assert.equal(plannedThreadCount(Number.NaN, true), 2);
+assert.equal(plannedThreadCount(0, true), 1);
+assert.equal(plannedThreadCount(-4, true), 1);
 
 console.log(
   JSON.stringify({

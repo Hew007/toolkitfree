@@ -61,6 +61,58 @@ Use npm for this project.
 
 Use `C:\Users\Hew\AppData\Local\OpenAI\Codex\bin\node.exe` directly if `node` or `npm` is not reliably exposed in the current shell.
 
+### Reproducing cross-origin isolation locally
+
+`public/_headers` is a Cloudflare file. Neither `astro dev` nor `astro preview` sends the headers in
+it, so neither can exercise anything that needs `SharedArrayBuffer` — today that means ONNX Runtime's
+multi-threaded path in Background Remover. To reproduce it, build and then serve `dist/` yourself
+with both isolation headers:
+
+```js
+// serve-isolated.mjs - run with `node serve-isolated.mjs`, then open
+// http://127.0.0.1:4321/tools/background-remover/
+import { createServer } from 'node:http';
+import { readFile, stat } from 'node:fs/promises';
+import path from 'node:path';
+const root = path.resolve('dist');
+const types = { '.html':'text/html','.js':'text/javascript','.mjs':'text/javascript',
+  '.css':'text/css','.json':'application/json','.wasm':'application/wasm',
+  '.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.ico':'image/x-icon',
+  '.woff2':'font/woff2','.txt':'text/plain','.xml':'application/xml',
+  '.bin':'application/octet-stream' };
+createServer(async (req, res) => {
+  const p = decodeURIComponent(req.url.split('?')[0]);
+  let file = path.join(root, p);
+  try { if ((await stat(file)).isDirectory()) file = path.join(file, 'index.html'); }
+  catch { file = path.join(root, p + '.html'); }
+  try {
+    const body = await readFile(file);
+    res.writeHead(200, {
+      'Content-Type': types[path.extname(file)] ?? 'application/octet-stream',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    });
+    res.end(body);
+  } catch { res.writeHead(404); res.end('nf'); }
+}).listen(4321);
+```
+
+Confirm the environment before trusting any result from it: `self.crossOriginIsolated` must be
+`true` and `typeof SharedArrayBuffer` must be `'function'`. Isolation also requires a **secure context**, so
+serving this to another machine over a LAN address will report `crossOriginIsolated: false` however
+correct the headers are — plain `http://` on a LAN IP is not a trustworthy origin. Test on
+`127.0.0.1` on the machine under test, or launch Chrome there with
+`--user-data-dir=<fresh dir> --unsafely-treat-insecure-origin-as-secure=http://<ip>:4321` (the origin
+must match the address bar exactly, no trailing slash), or set the same origin in
+`chrome://flags/#unsafely-treat-insecure-origin-as-secure`. If isolation is false the page is on the
+single-threaded path and the run says nothing about threading. Serving the same `dist/` on a second
+port *without* the headers gives the single-threaded control to compare against; without that
+comparison a timing number cannot distinguish real threading from a silent fallback.
+
+`npm run build` runs `prepare:assets`, which downloads the model and the ONNX runtime from
+`staticimgly.com` into `public/generated/background-removal/1.7.0/`. That needs working network the
+first time; afterwards the files are on disk and the build is offline-safe.
+
 ## Architecture
 
 ToolkitFree uses the Astro Islands pattern:
