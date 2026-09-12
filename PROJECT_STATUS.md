@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-09-11
+Last updated: 2026-09-12
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -319,6 +319,16 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-09-12 — `browser regression` / `fixed`: `npm run test:e2e` had been red on master since
+  2026-09-09. `validate-batch-download-browser.mjs` failed at `Resize 2 images button`, and the
+  cause was a stale test rather than a product defect: `54e9774` deliberately removed the Image
+  Resizer's submit button ("No submit button: results follow the controls, debounced"), matching the
+  compressor. That commit updated `validate-resizer-cropper-browser.mjs` but missed the second place
+  that clicked the button, here. The click is replaced by the wait on
+  `[data-batch-success-count="2"]` the compressor section already uses. Full Chrome regression now
+  passes end to end: 12 scripts, `browserErrors: 0` throughout, and the resized ZIP still contains
+  both `photo.jpg` and `sample.jpg`.
 
 - 2026-09-11 — `production regression` / `reverted` / `diagnosis pending`: with the duplicate-header
   fix (#16) live, cross-origin isolation was genuinely in effect on `/tools/background-remover/` for

@@ -252,7 +252,8 @@ reports.push(await downloadAndInspectZip('toolkitfree-compressed-images.zip', co
 await navigate('/tools/image-resizer/');
 await setFiles([path.join(fixtures, 'photo.jpg'), path.join(fixtures, 'sample.webp')]);
 await waitFor(`document.querySelectorAll('.file-item').length === 2`, 'resizer files');
-await clickAction('Resize 2 images');
+// The resizer has no submit step either, since 54e9774: results follow the controls,
+// debounced, so the wait below is what stands in for a click.
 await waitFor(
   `Boolean(document.querySelector('[data-batch-success-count="2"][data-batch-failure-count="0"]'))`,
   'resizer results'
