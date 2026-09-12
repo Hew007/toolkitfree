@@ -87,6 +87,8 @@ export interface BackgroundProgress {
 export type BackgroundWorkerRequest = {
   type: 'process';
   file: File;
+  /** Thread count the worker pins ONNX Runtime to; omitted means "leave it alone". */
+  threads?: number;
 };
 
 export type BackgroundWorkerResponse =
@@ -105,13 +107,44 @@ export type BackgroundWorkerResponse =
       message: string;
     };
 
-export async function removeBackgroundInWorker(
+/** Threads beyond this measured slower, not faster, so nothing asks for more. */
+const MAX_INFERENCE_THREADS = 4;
+
+/**
+ * Chooses how many threads the first attempt asks ONNX Runtime for.
+ *
+ * Without cross-origin isolation there is no `SharedArrayBuffer`, so the WASM
+ * build runs on one thread whatever it is told; saying 1 makes that explicit
+ * rather than pretending the request matters.
+ *
+ * When isolation *is* in effect, one thread per logical core — what the library
+ * asks for on its own — is too many. Measured on four cores against the same
+ * image: 17.9s at one thread, 8.8s at two, 11.6s at four, 25.9s at sixteen. So
+ * halve the logical count, which lands near one thread per physical core on
+ * hyper-threaded machines, and cap it before the regime where threading loses.
+ */
+export function plannedThreadCount(cores: number | undefined, isolated: boolean): number {
+  if (!isolated) return 1;
+  const logical = typeof cores === 'number' && Number.isFinite(cores) ? Math.floor(cores) : 4;
+  if (logical <= 1) return 1;
+  return Math.max(2, Math.min(MAX_INFERENCE_THREADS, Math.floor(logical / 2)));
+}
+
+/**
+ * Runs the model once, in a worker, with a fixed thread count.
+ *
+ * `inferenceTimeoutMs` is separate because the library reports `compute:inference`
+ * exactly once, before the session runs: that one watchdog has to cover the whole
+ * inference, so a threaded attempt gets a shorter budget than the single-threaded
+ * fallback it can still fall back to.
+ */
+function runBackgroundWorker(
   file: File,
+  threads: number,
+  inferenceTimeoutMs: number,
   onProgress: (progress: BackgroundProgress) => void,
   signal?: AbortSignal
 ): Promise<Blob> {
-  if (signal?.aborted) throw new DOMException('Background removal was canceled.', 'AbortError');
-
   const worker = new Worker(new URL('../workers/background-removal.worker.ts', import.meta.url), {
     type: 'module',
   });
@@ -150,7 +183,7 @@ export async function removeBackgroundInWorker(
       if (response.type === 'progress') {
         armWatchdog(
           response.key === 'compute:inference'
-            ? 180_000
+            ? inferenceTimeoutMs
             : response.key.startsWith('fetch:')
               ? 60_000
               : 120_000
@@ -162,15 +195,64 @@ export async function removeBackgroundInWorker(
         finish(() => reject(new Error(response.message)));
       }
     });
-    worker.addEventListener('error', () => {
-      finish(() => reject(new Error('The background removal worker stopped unexpectedly.')));
+    // An `ErrorEvent` here is the worker itself dying — the thrown value never made
+    // it through `postMessage`. Keep whatever detail the event carries; a failure
+    // reported as "stopped unexpectedly" and nothing else is a failure nobody can fix.
+    worker.addEventListener('error', (event: ErrorEvent) => {
+      const where = event.filename ? ` (${event.filename}:${event.lineno}:${event.colno})` : '';
+      finish(() =>
+        reject(
+          new Error(
+            event.message
+              ? `The background removal worker stopped unexpectedly: ${event.message}${where}`
+              : 'The background removal worker stopped unexpectedly.'
+          )
+        )
+      );
     });
     signal?.addEventListener('abort', handleAbort, { once: true });
 
-    const request: BackgroundWorkerRequest = { type: 'process', file };
+    const request: BackgroundWorkerRequest = { type: 'process', file, threads };
     armWatchdog(60_000);
     worker.postMessage(request);
   });
+}
+
+/**
+ * Removes the background, preferring the threaded path but never depending on it.
+ *
+ * Threading is the whole reason this route would be cross-origin isolated, and it
+ * has broken on real hardware once before, in a way that was never reproduced. So
+ * a threaded attempt that fails for any reason other than the user canceling is
+ * retried on the single thread the tool used before threading existed: the fast
+ * path is an improvement when it works, and cannot make the tool worse than the
+ * slow path when it does not.
+ */
+export async function removeBackgroundInWorker(
+  file: File,
+  onProgress: (progress: BackgroundProgress) => void,
+  signal?: AbortSignal
+): Promise<Blob> {
+  if (signal?.aborted) throw new DOMException('Background removal was canceled.', 'AbortError');
+
+  const threads = plannedThreadCount(navigator.hardwareConcurrency, self.crossOriginIsolated);
+  if (threads <= 1) {
+    return runBackgroundWorker(file, 1, 180_000, onProgress, signal);
+  }
+
+  try {
+    return await runBackgroundWorker(file, threads, 90_000, onProgress, signal);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error;
+    if (signal?.aborted) throw error;
+    // `warn`, not `debug`: the tool still produced an image, but it fell back, and
+    // that is the signal that the threaded path is broken on this machine.
+    console.warn(
+      `[toolkitfree] background removal failed on ${threads} threads, retrying single-threaded`,
+      error
+    );
+    return runBackgroundWorker(file, 1, 180_000, onProgress, signal);
+  }
 }
 
 function percent(current: number, total: number): number | null {

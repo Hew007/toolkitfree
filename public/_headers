@@ -10,22 +10,47 @@
 /generated/background-removal/1.7.0/*
   Cache-Control: public, max-age=31556952, immutable
 
-# Background Remover deliberately does NOT send Cross-Origin-Opener-Policy and
-# Cross-Origin-Embedder-Policy. Those two headers are what a document needs
-# before the browser hands it SharedArrayBuffer, and without SharedArrayBuffer
-# ONNX Runtime's WASM build falls back to a single thread no matter how many
-# cores the visitor has — so isolating this route is the obvious way to make
-# the model faster.
+# Background Remover is cross-origin isolated on purpose. COOP and COEP are what
+# a document needs before the browser hands it SharedArrayBuffer, and without
+# SharedArrayBuffer ONNX Runtime's WASM build falls back to a single thread no
+# matter how many cores the visitor has.
 #
-# It was tried, and it broke the tool. Once isolation was genuinely in effect
-# (an earlier attempt sent each header twice, which browsers reject, so the
-# page was never isolated and the slow single-threaded path kept working), the
-# runtime took its multi-threaded path and background removal started failing
-# outright on real hardware. A slow tool beats a broken one, so the headers are
-# off until the threaded path is reproduced and fixed end to end.
+# EXACTLY ONE RULE MAY MATCH THIS PAGE. `/tools/background-remover/*` already
+# covers the trailing-slash URL. Adding `/tools/background-remover/` as well
+# makes both rules match, each policy is then sent twice, and the joined value
+# `same-origin, same-origin` is not a valid value — the browser falls back to
+# unsafe-none and the page is not isolated at all. That exact mistake shipped
+# once and hid the real problem below for weeks, because the page looked
+# configured while quietly staying on the slow path.
 #
-# If they are restored: exactly ONE rule may match the page. `/tools/background-remover/*`
-# already covers the trailing-slash URL; adding `/tools/background-remover/` as
-# well makes both rules match, each policy is sent twice, and the joined value
-# `same-origin, same-origin` is invalid — the browser then falls back to
-# unsafe-none and the page is not isolated at all.
+# The history, since this route has been broken by these headers before:
+#
+#   1. The headers went out duplicated, so isolation never took effect. Nobody
+#      noticed, because the tool kept working on the single-threaded path.
+#   2. The duplicate was removed. Isolation took effect for the first time, the
+#      runtime took its multi-threaded path for the first time, and the tool
+#      broke outright on the owner's sixteen-core machine. The headers were
+#      pulled and the route went back to single-threaded.
+#   3. The threaded path was then reproduced and measured. The defect was the
+#      thread count: the library asks ONNX Runtime for one thread per logical
+#      core and exposes no override, and past a couple of threads it loses to
+#      contention badly. Measured on four cores, one image: 17.9s at one thread,
+#      8.8s at two, 11.6s at four, 25.9s at sixteen. A sixteen-core visitor was
+#      asking for the slowest setting available — worse than not threading.
+#
+# So `plannedThreadCount` now caps the request (sixteen cores ask for four), and
+# a threaded attempt that fails for any reason other than the user canceling is
+# retried automatically on a single thread, which makes the worst case the speed
+# the tool had before rather than a broken tool.
+#
+# Verified on the sixteen-core machine that originally broke, with isolation
+# genuinely in effect (`crossOriginIsolated` true, `hardwareConcurrency` 16):
+# inference 5.98s against the 24.2s that machine took single-threaded, upload to
+# output, no fallback triggered.
+#
+# If this ever regresses, `AGENTS.md` has the procedure for reproducing
+# isolation locally — neither `astro dev` nor `astro preview` sends these, so
+# this file cannot be tested through either of them.
+/tools/background-remover/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
