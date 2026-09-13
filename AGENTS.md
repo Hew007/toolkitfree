@@ -174,6 +174,20 @@ Important directories:
   - sitemap and LLM registry coverage.
 - Prefer long-tail, practical tools over broad all-in-one editors.
 
+## Tool Interaction
+
+`TOOL_INTERACTION.md` is the contract for how a tool page behaves: intent chips instead of a leading
+form question, a result that follows the controls instead of waiting behind a submit button, and a
+folded fine-tune panel holding every exact value a chip just set. Read it before changing a tool's
+controls, and use the shared pieces it names — `ToolChoices` / `ToolPresets`, `FineTune`,
+`ToolRunNote`, `useAutoRun` — rather than re-implementing the markup, so the tools cannot drift apart.
+
+It also records which tools must keep an explicit button. Auto-run assumes a run is cheap enough that
+starting one by accident costs nothing; that is false for Background Remover and Video to GIF, and
+applying the pattern there would make the product worse.
+
+Image Compressor and Image Resizer are the reference implementations.
+
 ## Checklist: Adding a Tool or Variant Page
 
 SEO and GEO coverage is registry-driven. Work through this list whenever a public

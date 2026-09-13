@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-09-12
+Last updated: 2026-09-13
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -319,6 +319,31 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-09-13 — `foundation` / `ready for parallel work`: the interaction redesign had reached two of
+  fourteen tools — Image Compressor and Image Resizer had intent chips, auto-run and a folded
+  fine-tune panel; the other twelve were still fill-in-then-submit. Rolling that out twelve more
+  times needed a written contract first, or twelve conversions would have produced twelve dialects.
+
+  `TOOL_INTERACTION.md` is that contract, and the shared pieces it names now exist:
+  `ToolChoices` / `ToolPresets` (selection chips and action chips), `FineTune` / `FineTuneField`,
+  `ToolRunNote`, and the `useAutoRun` hook that carries the debounce and the run-token discipline —
+  the part that is easy to leave out, since a superseded run overwriting fresh results only misbehaves
+  when input arrives faster than the work completes. Both reference tools were migrated onto them, so
+  the API is proven against two real cases rather than specified in the abstract; their browser suites
+  pass unchanged, which is what says the refactor changed no behaviour.
+
+  The spec is deliberately not a template to apply everywhere. It records which tools must keep an
+  explicit button — Background Remover at 6-25s a run, Video to GIF at tens of seconds — because
+  auto-run assumes starting a run by accident is free, and says that reporting a wrong assignment is
+  a correct outcome rather than a failure. It also fixes the two things that would otherwise make
+  parallel work cost more than it saves: `global.css` and this file are integration-owned, so no
+  conversion touches them, and browser tests take their ports from `E2E_PREVIEW_PORT` /
+  `E2E_DEBUG_PORT` so concurrent runs cannot collide.
+
+  Gates on this change: typecheck, lint, format, 13 unit scripts, build, SEO registry, site
+  integrity, and the compressor, resizer/cropper and batch-download browser suites, all passing with
+  zero browser errors.
 
 - 2026-09-12 — `browser regression` / `fixed`: `npm run test:e2e` had been red on master since
   2026-09-09. `validate-batch-download-browser.mjs` failed at `Resize 2 images button`, and the

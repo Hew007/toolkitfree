@@ -1,5 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
+import { ToolChoices, type ToolChoice } from './ToolChoices';
+import FineTune, { FineTuneField } from './FineTune';
+import ToolRunNote from './ToolRunNote';
+import { useAutoRun } from '../hooks/useAutoRun';
 import { mapWithConcurrency } from '../lib/async-pool';
 import FileList from './FileList';
 import BatchResultsSummary from './BatchResultsSummary';
@@ -137,6 +141,18 @@ const PURPOSES: readonly Purpose[] = [
   },
 ];
 
+/** The chip row is a projection of the presets above; it is never written twice. */
+const PURPOSE_CHOICES: readonly ToolChoice<PurposeId>[] = PURPOSES.map((entry) => ({
+  id: entry.id,
+  label: entry.label,
+  hint: entry.summary,
+}));
+
+const PURPOSE_BY_ID = Object.fromEntries(PURPOSES.map((entry) => [entry.id, entry])) as Record<
+  PurposeId,
+  Purpose
+>;
+
 /**
  * Three finished candidates instead of one dial. Lossless sources ignore
  * quality, so there the candidates differ by dimensions instead — otherwise a
@@ -235,7 +251,6 @@ export default function ImageCompressor({
   const [selectedVariant, setSelectedVariant] = useState<VariantId>('balanced');
   const [runs, setRuns] = useState<VariantRuns>({});
   const nextFileId = useRef(0);
-  const runIdRef = useRef(0);
   const objectUrls = useObjectUrlRegistry();
 
   const purpose = PURPOSES.find((entry) => entry.id === purposeId) ?? defaultPurpose;
@@ -414,7 +429,7 @@ export default function ImageCompressor({
   );
 
   const runVariants = useCallback(
-    async (variants: readonly VariantProfile[], queued: QueuedFile[], runId: number) => {
+    async (variants: readonly VariantProfile[], queued: QueuedFile[], isCurrent: () => boolean) => {
       setRuns((previous) => {
         const next = { ...previous };
         for (const variant of variants) {
@@ -445,7 +460,7 @@ export default function ImageCompressor({
       });
 
       // A newer settings change already invalidated this run.
-      if (runIdRef.current !== runId) return;
+      if (!isCurrent()) return;
 
       const elapsedMs = Math.round(performance.now() - startedAt);
       const failures = outcomes
@@ -477,33 +492,33 @@ export default function ImageCompressor({
     [compressFile]
   );
 
-  // No submit button: the result follows the controls. Work is debounced and a
-  // newer change abandons the previous run rather than queueing behind it.
-  useEffect(() => {
-    runIdRef.current += 1;
-    objectUrls.revokePrefix('result:');
-    setRuns({});
+  // What the scheduled run will encode, fixed at the moment it is scheduled.
+  // `selectedVariant` is deliberately not part of the key: when every candidate is
+  // encoded up front, switching between cards is free and must not re-encode.
+  const wantedRef = useRef<readonly VariantProfile[]>([]);
 
-    if (files.length === 0) return;
-
-    const runId = runIdRef.current;
-    const queued = files;
-    const wanted =
-      mode === 'target'
-        ? VARIANTS.filter((variant) => variant.id === 'balanced')
-        : compareAll
-          ? VARIANTS
-          : VARIANTS.filter((variant) => variant.id === selectedVariant);
-
-    const timer = setTimeout(() => {
-      void runVariants(wanted, queued, runId);
-    }, RECOMPRESS_DELAY_MS);
-
-    return () => clearTimeout(timer);
-    // `selectedVariant` intentionally drives this only through `compareAll`:
-    // when every candidate is encoded up front, switching cards is free.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settingsKey, compareAll, mode, objectUrls, runVariants]);
+  // No submit button: the result follows the controls.
+  const { runNow } = useAutoRun({
+    key: `${settingsKey}|${compareAll}`,
+    enabled: files.length > 0,
+    delayMs: RECOMPRESS_DELAY_MS,
+    onInvalidate: () => {
+      objectUrls.revokePrefix('result:');
+      setRuns({});
+      // Decided here, while the settings change is being handled, rather than when
+      // the run fires. `handleSelectVariant` starts its own run for a card clicked
+      // during the delay; if this run re-read the selection at fire time both would
+      // encode that same card, into the same object-URL keys, and each would revoke
+      // the other's URL under a rendered preview.
+      wantedRef.current =
+        mode === 'target'
+          ? VARIANTS.filter((variant) => variant.id === 'balanced')
+          : compareAll
+            ? VARIANTS
+            : VARIANTS.filter((variant) => variant.id === selectedVariant);
+    },
+    run: (isCurrent) => runVariants(wantedRef.current, files, isCurrent),
+  });
 
   const activeVariantId: VariantId = mode === 'target' ? 'balanced' : selectedVariant;
   const activeRun = runs[activeVariantId];
@@ -515,9 +530,11 @@ export default function ImageCompressor({
     (variant: VariantProfile) => {
       setSelectedVariant(variant.id);
       if (compareAll || runs[variant.id] || files.length === 0) return;
-      void runVariants([variant], files, runIdRef.current);
+      // Adds a candidate to the current run rather than replacing it, so the
+      // cards already encoded stay on screen.
+      runNow((isCurrent) => runVariants([variant], files, isCurrent));
     },
-    [compareAll, files, runVariants, runs]
+    [compareAll, files, runNow, runVariants, runs]
   );
 
   const totalOutput = results.reduce((sum, result) => sum + result.outputSize, 0);
@@ -546,30 +563,14 @@ export default function ImageCompressor({
       <FileList files={files.map(({ file }) => file)} onRemove={handleRemove} />
 
       <div className="compressor-controls">
-        <fieldset className="tool-chip-group">
-          <legend>What is it for?</legend>
-          <p className="tool-chip-help">
-            Choose a purpose and the settings follow. You can still change every value below.
-          </p>
-          <div className="tool-chip-row">
-            {PURPOSES.map((entry) => (
-              <label
-                key={entry.id}
-                className={`tool-chip${purposeId === entry.id ? ' is-selected' : ''}`}
-              >
-                <input
-                  type="radio"
-                  name="compressor-purpose"
-                  value={entry.id}
-                  checked={purposeId === entry.id}
-                  onChange={() => handlePurpose(entry)}
-                />
-                <span className="tool-chip-label">{entry.label}</span>
-                <span className="tool-chip-hint">{entry.summary}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <ToolChoices
+          name="compressor-purpose"
+          legend="What is it for?"
+          help="Choose a purpose and the settings follow. You can still change every value below."
+          choices={PURPOSE_CHOICES}
+          value={purposeId}
+          onChange={(choice) => handlePurpose(PURPOSE_BY_ID[choice.id])}
+        />
 
         {mode === 'target' && (
           <div className="compressor-target-row">
@@ -634,71 +635,56 @@ export default function ImageCompressor({
 
         {files.length > 0 && (
           <>
-            <details className="fine-tune">
-              <summary>
-                <span>Fine-tune</span>
-                <span className="fine-tune-summary">{fineTuneSummary}</span>
-              </summary>
-              <div className="fine-tune-body">
-                <div className="fine-tune-field">
-                  <label htmlFor="compressor-quality">Quality: {quality}%</label>
-                  <input
-                    id="compressor-quality"
-                    aria-label="Compression Quality"
-                    type="range"
-                    min="10"
-                    max="100"
-                    value={quality}
-                    onChange={(event) => {
-                      setQuality(Number(event.target.value));
-                      setTuned(true);
-                    }}
-                  />
-                  <p className="tool-hint">
-                    Applies to JPG and WebP. PNG is lossless, so its candidates differ by width
-                    instead.
-                  </p>
-                </div>
+            <FineTune
+              summary={fineTuneSummary}
+              onReset={tuned ? () => handlePurpose(purpose) : undefined}
+              resetLabel={`Back to the ${purpose.label} preset`}
+            >
+              <FineTuneField
+                htmlFor="compressor-quality"
+                label={`Quality: ${quality}%`}
+                hint="Applies to JPG and WebP. PNG is lossless, so its candidates differ by width instead."
+              >
+                <input
+                  id="compressor-quality"
+                  aria-label="Compression Quality"
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={quality}
+                  onChange={(event) => {
+                    setQuality(Number(event.target.value));
+                    setTuned(true);
+                  }}
+                />
+              </FineTuneField>
 
-                <div className="fine-tune-field">
-                  <label htmlFor="compressor-max-width">Starting max width</label>
-                  <select
-                    id="compressor-max-width"
-                    aria-label="Starting Max Width"
-                    value={maxWidth}
-                    onChange={(event) => {
-                      setMaxWidth(Number(event.target.value));
-                      setTuned(true);
-                    }}
-                  >
-                    {MAX_WIDTH_CHOICES.map((width) => (
-                      <option key={width} value={width}>
-                        {width === 0 ? 'Original width' : `${width} px`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <FineTuneField htmlFor="compressor-max-width" label="Starting max width">
+                <select
+                  id="compressor-max-width"
+                  aria-label="Starting Max Width"
+                  value={maxWidth}
+                  onChange={(event) => {
+                    setMaxWidth(Number(event.target.value));
+                    setTuned(true);
+                  }}
+                >
+                  {MAX_WIDTH_CHOICES.map((width) => (
+                    <option key={width} value={width}>
+                      {width === 0 ? 'Original width' : `${width} px`}
+                    </option>
+                  ))}
+                </select>
+              </FineTuneField>
+            </FineTune>
 
-                {tuned && (
-                  <button
-                    type="button"
-                    className="fine-tune-reset"
-                    onClick={() => handlePurpose(purpose)}
-                  >
-                    Back to the {purpose.label} preset
-                  </button>
-                )}
-              </div>
-            </details>
-
-            <p className="tool-run-note">
-              <span className={`run-dot${busy ? ' is-busy' : ''}`} aria-hidden="true" />
+            <ToolRunNote busy={busy}>
               {busy
                 ? 'Encoding in your browser…'
                 : activeRun?.status === 'ready'
                   ? `Encoded in your browser in ${(activeRun.elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
                   : 'Results follow the settings above. Nothing is uploaded.'}
-            </p>
+            </ToolRunNote>
 
             {!compareAll && mode !== 'target' && (
               <p className="tool-hint">

@@ -3188,9 +3188,14 @@ input[type='range'] {
   }
 }
 
-/* Image Compressor: purpose presets, candidate results, and folded fine-tune.
-   The primary action is the download link on each result, so nothing here is a
-   submit button. */
+/* The shared tool-interaction surface: chip rows, the folded fine-tune panel, and
+   the run note. Owned by `ToolChoices.tsx`, `FineTune.tsx` and `ToolRunNote.tsx`
+   — style it here, never per tool, so the tools cannot drift apart as more of
+   them adopt it. The tool-specific rules that follow each name their own tool.
+
+   Nothing here is a submit button: in these tools the result follows the
+   controls, and the primary action is the download on the result itself. */
+/* Image Compressor: the column its chips, target row and fine-tune sit in. */
 .compressor-controls {
   margin-top: 1.25rem;
   display: grid;
@@ -3206,10 +3211,17 @@ input[type='range'] {
 }
 
 .tool-chip-group legend,
+.tool-chip-legend,
 .variant-fieldset legend {
   padding: 0;
   font-size: 0.9375rem;
   font-weight: 600;
+}
+
+/* `ToolPresets` renders buttons, not inputs, so it is a plain div with no legend
+   element to borrow. This gives that heading the same weight. */
+.tool-chip-legend {
+  margin: 0;
 }
 
 .tool-chip-help {
