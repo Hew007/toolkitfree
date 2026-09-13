@@ -3195,7 +3195,11 @@ input[type='range'] {
 
    Nothing here is a submit button: in these tools the result follows the
    controls, and the primary action is the download on the result itself. */
-/* Image Compressor: the column its chips, target row and fine-tune sit in. */
+/* The column a converted tool's chips, fine-tune panel and run note stack in.
+   None of those three carry outer margin of their own, so without this they sit
+   flush against each other. Shared, because every conversion needs it and the
+   alternative is each tool inlining the same three declarations. */
+.tool-controls,
 .compressor-controls {
   margin-top: 1.25rem;
   display: grid;
@@ -3455,6 +3459,14 @@ input[type='range'] {
   max-width: 26rem;
 }
 
+/* `display: grid` above is a class selector, so it outranks the user agent's
+   `[hidden] { display: none }` and a field passed `hidden` stays on screen —
+   which is how a quality slider kept showing for a lossless format. This puts
+   the attribute back in charge. */
+.fine-tune-field[hidden] {
+  display: none;
+}
+
 .fine-tune-field > label {
   font-size: 0.875rem;
   font-weight: 500;
@@ -3522,8 +3534,18 @@ input[type='range'] {
     width: 100%;
   }
 
+  /* The summary is the whole reason the panel can stay shut, so on a narrow
+     screen it wraps onto its own line under the label instead of being dropped.
+     Hiding it made mobile visitors open the panel just to read what applied. */
+  .fine-tune > summary {
+    flex-wrap: wrap;
+    row-gap: 0.2rem;
+  }
+
   .fine-tune-summary {
-    display: none;
+    width: 100%;
+    margin-left: 0;
+    text-align: left;
   }
 }
 

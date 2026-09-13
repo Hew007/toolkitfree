@@ -203,7 +203,7 @@ await setFiles([
   path.join(fixtures, 'invalid.txt'),
 ]);
 await waitFor(`document.querySelectorAll('.file-item').length === 3`, 'converter files');
-await clickAction('Convert 3 images');
+// The converter has no submit step any more: the batch follows the chosen format.
 await waitFor(
   `Boolean(document.querySelector('[data-batch-success-count="2"][data-batch-failure-count="1"]'))`,
   'converter mixed results'
@@ -225,14 +225,20 @@ assert.deepEqual(await evaluate(`window.__objectUrlStats()`), {
   active: 5,
 });
 
+// Switching the format has to release the URLs the previous results held. A chip
+// that is already selected fires no change event, so this picks a different one —
+// which also proves the re-run happens without a submit step.
 await evaluate(`
   (() => {
-    const select = document.querySelector('select[aria-label="Output Format"]');
-    select.value = 'image/png';
-    select.dispatchEvent(new Event('change', { bubbles: true }));
+    const chip = document.querySelector('input[name="converter-output-format"][value="image/jpeg"]');
+    chip.click();
   })()
 `);
-await waitFor(`window.__objectUrlStats().active === 2`, 'old converter result URLs cleanup');
+await waitFor(
+  `document.querySelectorAll('.result-item a[download]').length === 2
+   && [...document.querySelectorAll('.result-item a[download]')].every((link) => link.download.endsWith('.jpg'))`,
+  'converter re-runs on the new format'
+);
 
 await navigate('/tools/image-compressor/');
 await setFiles([path.join(fixtures, 'photo.jpg'), path.join(fixtures, 'sample.webp')]);
@@ -268,7 +274,7 @@ reports.push(await downloadAndInspectZip('toolkitfree-resized-images.zip', resiz
 await navigate('/tools/image-converter/');
 await setFiles([path.join(fixtures, 'invalid.txt')]);
 await waitFor(`document.querySelectorAll('.file-item').length === 1`, 'all-failure file');
-await clickAction('Convert 1 image');
+// Again no submit step; the failure summary has to arrive on its own.
 await waitFor(
   `Boolean(document.querySelector('[data-batch-success-count="0"][data-batch-failure-count="1"]'))`,
   'all-failure result'
