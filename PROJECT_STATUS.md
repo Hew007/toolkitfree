@@ -320,6 +320,18 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-13 — `合并 master` / `修掉 agent worktree 污染 lint`：#20 合入 master 后，把 master 合进
+  foundation 分支。照例只有 `PROJECT_STATUS.md` 冲突——两边都往同一个倒序日志顶部追加——全部条目按
+  日期保留，没有丢弃。
+
+  合完暴露出一个真问题：`npm run lint` 报了 14085 个错。不是代码的问题。子 agent 的 worktree 建在
+  `.claude/worktrees/agent-*`，也就是**仓库目录内部**，每个都是完整检出，带自己生成的 `.astro` 类型
+  和软链过去的 `node_modules`，于是主检出跑 `eslint .` 会走进这三个目录，报出一堆不属于任何人 diff
+  的错误。`eslint.config.js` 的 ignores 里加上 `.claude/**`。worktree 里面的 agent 不受影响（worktree
+  不嵌套），受影响的只有主检出——但那正是集成时要跑门禁的地方。
+
+  合并后完整门禁通过：typecheck、lint、format、13 项单测、构建、SEO 注册表、站点完整性。
+
 - 2026-09-13 — `规则` / `文档语言`：项目说明文档改用中文，规则写进 `CLAUDE.md` 与 `AGENTS.md`。
   边界是明确的，因为搞错代价很大：**网站上任何访客能读到的文案、代码注释与标识符、提交信息与 PR
   正文，一律保持英文**。站点面向英语受众，代码库通篇英文注释，中途混入中文只会让它前后不一致。
@@ -350,6 +362,39 @@ or `owner approved`. Never infer owner approval.
   Gates on this change: typecheck, lint, format, 13 unit scripts, build, SEO registry, site
   integrity, and the compressor, resizer/cropper and batch-download browser suites, all passing with
   zero browser errors.
+- 2026-09-12 — `observability` / `reviewed`: the threading fix and the header restore were reviewed
+  against a fresh clone. The diagnosis holds and the gates pass here — typecheck, lint, format, all
+  13 unit scripts, and eleven of the twelve browser suites; the built `_headers` carries exactly one
+  rule for the tool route, and a headless Chrome load behind a server that sends the two headers
+  reports `crossOriginIsolated: true` with `SharedArrayBuffer` available and a clean console.
+  `validate-secondary-tools-browser.mjs` is the one failure and it is environmental: the sandbox
+  cannot reach `staticimgly.com`, so the model never downloads and removal reports
+  `Resource metadata not found`.
+
+  One real gap came out of that review and is fixed here. The timing line logged
+  `hardwareConcurrency` — what the machine has — but never the thread count the run actually asked
+  for, and a fallback to one thread is invisible in the result, since the cutout is correct either
+  way. A future report of "still slow" would not have said whether four threads lost to contention
+  or the single-threaded retry had quietly taken over, which is the same ambiguity that let the
+  sixteen-thread defect survive two releases. `removeBackgroundInWorker` now returns
+  `{ blob, threads, fellBack }`; the timing log and `data-background-threads` /
+  `data-background-fell-back` carry both, the failure log reports the planned count, and the browser
+  suite asserts the contract (exactly one thread and no fallback when the page is not isolated,
+  within the measured cap when it is).
+
+  Two smaller things from the same review: the inference watchdogs are now named constants with the
+  reasoning for the 90s threaded budget written down — it is roughly fifteen times the measured
+  4-thread time, the model resizes input to a fixed size so inference does not grow with the image,
+  and a hang and mere slowness are deliberately treated alike because they are indistinguishable
+  from outside the worker — and `runBackgroundWorker` now rejects an already-aborted signal itself
+  instead of relying on every caller to check first, since `addEventListener('abort')` never fires
+  on a signal that has already aborted.
+
+  Still open for the owner: after this deploys, check whether Cloudflare Web Analytics still records
+  pageviews for `/tools/background-remover/`. COEP `require-corp` blocks cross-origin subresources
+  and the analytics beacon is injected at the edge, so it may go dark on that one route. It cannot
+  be verified locally — the built HTML references no cross-origin host. If it does go dark, that is
+  the price of isolation and belongs in this file as a decision rather than being rediscovered later.
 
 - 2026-09-12 — `browser regression` / `fixed`: `npm run test:e2e` had been red on master since
   2026-09-09. `validate-batch-download-browser.mjs` failed at `Resize 2 images button`, and the

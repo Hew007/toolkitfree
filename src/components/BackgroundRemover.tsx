@@ -13,6 +13,7 @@ import {
   backgroundLabelColor,
   composeBackgroundColor,
   normalizeHexColor,
+  plannedThreadCount,
   removeBackgroundInWorker,
   type BackgroundProgress,
 } from '../lib/background-remover';
@@ -59,6 +60,10 @@ interface StageTiming {
 interface RunTiming {
   totalMs: number;
   stages: StageTiming[];
+  /** Threads the successful attempt asked for; 1 means the single-threaded path. */
+  threads: number;
+  /** True when a threaded attempt failed first and this total includes both. */
+  fellBack: boolean;
 }
 
 interface TimingProgress {
@@ -156,6 +161,9 @@ export default function BackgroundRemover() {
         setPreviewUrl(objectUrls.replace('background:preview', nextFile));
         setError(null);
         setProgress(null);
+        // The timing describes the previous file's run. Left standing, its note and
+        // its thread attributes would be read as belonging to this one.
+        setTiming(null);
       } catch (fileError) {
         setError({ message: getImageProcessingErrorMessage(fileError) });
       }
@@ -215,6 +223,9 @@ export default function BackgroundRemover() {
     setResult(null);
     setError(null);
     setProgress(null);
+    // Without this the "Removed in your browser in X.Xs" note outlives the file it
+    // describes and sits under an empty uploader.
+    setTiming(null);
   }, [cancelProcessing, objectUrls, releaseForeground]);
 
   const removeBackground = async () => {
@@ -238,7 +249,8 @@ export default function BackgroundRemover() {
       // The 'runtime' stage above must stay visible until the worker reports its
       // first progress event. Overwriting it here batched into the same render,
       // so the user never saw it and it never reached the DOM.
-      const removedBlob = await removeBackgroundInWorker(file, trackProgress, controller.signal);
+      const run = await removeBackgroundInWorker(file, trackProgress, controller.signal);
+      const removedBlob = run.blob;
       setModelRuns((runs) => runs + 1);
 
       // Close the stage the worker finished on, so the model side is fully
@@ -272,7 +284,7 @@ export default function BackgroundRemover() {
           { stage: 'compose', ms: Math.round(performance.now() - modelDoneAt) },
         ];
         const totalMs = Math.round(performance.now() - tracked.startedAt);
-        setTiming({ totalMs, stages });
+        setTiming({ totalMs, stages, threads: run.threads, fellBack: run.fellBack });
         // Threads only speed up inference. Comparing these numbers between runs
         // is the only way to tell whether a runtime change is worth having.
         // Deliberately `info` rather than `debug`: Chrome hides `debug` behind
@@ -283,6 +295,12 @@ export default function BackgroundRemover() {
           totalMs,
           crossOriginIsolated: self.crossOriginIsolated,
           hardwareConcurrency: navigator.hardwareConcurrency,
+          // The thread count is the only variable that decides whether isolation was
+          // worth having, and a fallback is invisible in the result, so both belong on
+          // the line someone will paste. `hardwareConcurrency` alone cannot stand in:
+          // it is what the machine has, not what the run asked for.
+          threads: run.threads,
+          fellBack: run.fellBack,
           // The worker can report a stage more than once — initialisation shows up
           // again after inference — so the totals are summed per stage. Keying
           // them directly would let a later entry silently replace an earlier one.
@@ -307,6 +325,10 @@ export default function BackgroundRemover() {
       console.error('[toolkitfree] background removal failed', processingError, {
         crossOriginIsolated: self.crossOriginIsolated,
         hardwareConcurrency: navigator.hardwareConcurrency,
+        // Recomputed rather than captured: reaching here means every attempt failed,
+        // including the single-threaded fallback, so there is no successful run to
+        // ask. Same pure function on the same inputs, so it reports the same plan.
+        plannedThreads: plannedThreadCount(navigator.hardwareConcurrency, self.crossOriginIsolated),
       });
       setError({
         message: unrecognized
@@ -357,6 +379,8 @@ export default function BackgroundRemover() {
       data-background-timing={
         timing ? timing.stages.map((entry) => `${entry.stage}:${entry.ms}`).join(',') : undefined
       }
+      data-background-threads={timing?.threads}
+      data-background-fell-back={timing ? String(timing.fellBack) : undefined}
       aria-busy={processing || composing}
     >
       {!file ? (
