@@ -320,6 +320,12 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-13 — `规则` / `文档语言`：项目说明文档改用中文，规则写进 `CLAUDE.md` 与 `AGENTS.md`。
+  边界是明确的，因为搞错代价很大：**网站上任何访客能读到的文案、代码注释与标识符、提交信息与 PR
+  正文，一律保持英文**。站点面向英语受众，代码库通篇英文注释，中途混入中文只会让它前后不一致。
+  已有的英文段落不回头翻译，按需改动时再换。`TOOL_INTERACTION.md` 已整篇改为中文——它是接下来十二
+  次改造要反复读的文件，是这条规则最该先落地的地方。本条之后的日志也用中文。
+
 - 2026-09-13 — `foundation` / `ready for parallel work`: the interaction redesign had reached two of
   fourteen tools — Image Compressor and Image Resizer had intent chips, auto-run and a folded
   fine-tune panel; the other twelve were still fill-in-then-submit. Rolling that out twelve more
