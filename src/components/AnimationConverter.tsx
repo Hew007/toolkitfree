@@ -1,12 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import FileList from './FileList';
 import DownloadResult from './DownloadResult';
+import { ToolChoices, type ToolChoice } from './ToolChoices';
+import FineTune, { FineTuneField } from './FineTune';
+import ToolRunNote from './ToolRunNote';
 import { useNumberDraft } from '../hooks/useNumberDraft';
 import { formatSize } from '../lib/image-processing';
 import {
+  ANIMATION_OUTPUT_FORMATS,
+  ANIMATION_OUTPUT_FORMAT_BY_ID,
   ANIMATION_PRESETS,
+  ANIMATION_PRESET_LABELS,
   DEFAULT_ANIMATION_SETTINGS,
+  animationOutputDimensions,
   buildAnimationFfmpegArgs,
   createAnimationOutputName,
   detectAnimationInputFormat,
@@ -41,6 +48,16 @@ interface ConversionResult {
 
 const ACCEPTED_INPUTS =
   'video/mp4,video/webm,video/quicktime,image/gif,image/webp,image/apng,image/png,.mp4,.webm,.mov,.m4v,.gif,.webp,.apng,.png';
+
+/**
+ * The chip row is a projection of the format table, so a chip can never describe
+ * a format the rest of the tool no longer produces.
+ */
+const OUTPUT_CHOICES: readonly ToolChoice<AnimationOutputFormat>[] = ANIMATION_OUTPUT_FORMATS.map(
+  (format) => ({ id: format.id, label: format.label, hint: format.use })
+);
+
+const PRESET_ORDER: readonly AnimationPreset[] = ['small', 'balanced', 'high'];
 
 function isMobileDevice(): boolean {
   if (typeof window === 'undefined') return false;
@@ -141,6 +158,20 @@ function outputMime(format: AnimationOutputFormat): string {
 }
 
 export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
+  const mobile = useMemo(() => isMobileDevice(), []);
+  const budget = useMemo(() => getAnimationBudget(mobile), [mobile]);
+
+  /**
+   * The preset a format starts on. A small-memory device is capped regardless of
+   * the format, so the chip and the reset button both land somewhere the device
+   * can actually finish.
+   */
+  const presetForFormat = useCallback(
+    (format: AnimationOutputFormat): AnimationPreset =>
+      mobile ? 'small' : ANIMATION_OUTPUT_FORMAT_BY_ID[format].preset,
+    [mobile]
+  );
+
   const [file, setFile] = useState<File | null>(null);
   const [inputFormat, setInputFormat] = useState<AnimationInputFormat | null>(null);
   const [metadata, setMetadata] = useState<AnimationMetadata | null>(null);
@@ -149,9 +180,11 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
     ...DEFAULT_ANIMATION_SETTINGS,
     outputFormat: defaultOutput,
   });
+  const [tuned, setTuned] = useState(false);
   const [status, setStatus] = useState('Choose one file to begin.');
   const [progress, setProgress] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [lastRunSeconds, setLastRunSeconds] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [converting, setConverting] = useState(false);
   const [result, setResult] = useState<ConversionResult | null>(null);
@@ -173,7 +206,7 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
     onCommit: (durationSeconds) => setSettings((previous) => ({ ...previous, durationSeconds })),
   });
   const resultUrlRef = useRef<string | null>(null);
-  const budget = useMemo(() => getAnimationBudget(isMobileDevice()), []);
+  const outputFormat = ANIMATION_OUTPUT_FORMAT_BY_ID[settings.outputFormat];
 
   useEffect(() => {
     const runtime = runtimeRef.current;
@@ -195,11 +228,27 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
     return () => window.clearInterval(interval);
   }, [converting]);
 
-  const clearResult = () => {
+  const clearResult = useCallback(() => {
     if (resultUrlRef.current) URL.revokeObjectURL(resultUrlRef.current);
     resultUrlRef.current = null;
     setResult(null);
-  };
+    setLastRunSeconds(null);
+  }, []);
+
+  /**
+   * Every setting, serialized. A finished animation belongs to the settings that
+   * produced it, so any edit drops it rather than leaving a download on screen
+   * that no longer matches the controls above it.
+   */
+  const settingsKey = useMemo(
+    () => JSON.stringify({ name: file?.name ?? null, size: file?.size ?? null, ...settings }),
+    [file, settings]
+  );
+
+  useEffect(() => {
+    clearResult();
+    setProgress(0);
+  }, [settingsKey, clearResult]);
 
   const chooseFiles = async (files: File[]) => {
     const nextFile = files[0];
@@ -228,17 +277,16 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
       setMetadata(inspected);
       setSettings((previous) => ({
         ...previous,
-        ...(budget.maxFrames === 150
-          ? { preset: 'small' as const, ...ANIMATION_PRESETS.small }
-          : {}),
+        ...(mobile ? { preset: 'small' as const, ...ANIMATION_PRESETS.small } : {}),
         startSeconds: 0,
         durationSeconds:
           format === 'video'
             ? Math.max(0.1, Math.min(6, inspected?.durationSeconds || 6))
-            : budget.maxFrames === 150
+            : mobile
               ? 10
               : 12,
       }));
+      setTuned(false);
       setStatus('Ready. The conversion engine will load only when you start.');
     } catch (selectionError) {
       setFile(null);
@@ -250,9 +298,24 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
     }
   };
 
+  /** The chip, and the identical control inside the fine-tune panel. */
+  const applyOutputFormat = useCallback(
+    (format: AnimationOutputFormat) => {
+      const preset = presetForFormat(format);
+      setSettings((previous) => ({
+        ...previous,
+        outputFormat: format,
+        preset,
+        ...ANIMATION_PRESETS[preset],
+      }));
+      setTuned(false);
+    },
+    [presetForFormat]
+  );
+
   const updatePreset = (preset: AnimationPreset) => {
-    clearResult();
     setSettings((previous) => ({ ...previous, preset, ...ANIMATION_PRESETS[preset] }));
+    setTuned(true);
   };
 
   const removeFile = () => {
@@ -362,7 +425,9 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
       });
       await ffmpeg.deleteFile(virtualOutput).catch(() => undefined);
       setProgress(1);
-      setStatus(`Finished in ${((performance.now() - started) / 1000).toFixed(1)} seconds.`);
+      const seconds = (performance.now() - started) / 1000;
+      setLastRunSeconds(seconds);
+      setStatus(`Finished in ${seconds.toFixed(1)} seconds.`);
     } catch (conversionError) {
       if (controller.signal.aborted) {
         setStatus('Conversion cancelled.');
@@ -388,7 +453,45 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
     runtimeRef.current.terminate();
   };
 
-  const estimatedFrames = Math.ceil(settings.durationSeconds * settings.fps);
+  // The same clamp the conversion applies, so the numbers below the controls are
+  // the numbers the conversion will actually use.
+  const effectiveDuration =
+    metadata && metadata.durationSeconds > 0
+      ? Math.min(
+          settings.durationSeconds,
+          Math.max(0.1, metadata.durationSeconds - settings.startSeconds)
+        )
+      : settings.durationSeconds;
+  const estimatedFrames = Math.ceil(effectiveDuration * settings.fps);
+  const outputDimensions = metadata ? animationOutputDimensions(metadata, settings.maxSide) : null;
+
+  /**
+   * The cheap half of the work runs on every change: the frame, pixel and size
+   * budgets are pure arithmetic, so the tool can say a combination will not fit
+   * before anyone spends a 10 MB engine download and a minute of CPU proving it.
+   * The transcode itself stays behind the button.
+   */
+  const workloadWarning = useMemo(() => {
+    if (!file || !inputFormat || !metadata) return '';
+    try {
+      validateAnimationWorkload(
+        metadata,
+        inputFormat,
+        { ...settings, durationSeconds: effectiveDuration },
+        budget
+      );
+      return '';
+    } catch (validationError) {
+      return validationError instanceof Error ? validationError.message : '';
+    }
+  }, [budget, effectiveDuration, file, inputFormat, metadata, settings]);
+
+  const fineTuneSummary = [
+    outputFormat.label,
+    `${settings.maxSide} px`,
+    `${settings.fps} fps`,
+    `${effectiveDuration.toFixed(1)}s from ${settings.startSeconds.toFixed(1)}s`,
+  ].join(' · ');
 
   return (
     <div className="animation-converter" data-animation-converter aria-busy={converting}>
@@ -420,121 +523,189 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
 
       {file && inputFormat && (
         <div className="animation-settings">
-          <div className="settings-grid">
-            <label>
-              Output format
-              <select
-                value={settings.outputFormat}
-                onChange={(event) => {
-                  clearResult();
-                  setSettings((previous) => ({
-                    ...previous,
-                    outputFormat: event.target.value as AnimationOutputFormat,
-                  }));
-                }}
+          {/*
+           * The reference tool gets this column from `.compressor-controls` in
+           * global.css. That file belongs to the integrator this round, so the
+           * same spacing is inline here and the margins the older blocks carry
+           * are zeroed rather than fought with. A shared control-column class
+           * would replace all of it.
+           */}
+          <div className="animation-controls" style={{ display: 'grid', gap: '1.25rem' }}>
+            <ToolChoices
+              name="animation-output"
+              legend="What is the animation for?"
+              help="Pick an output and the size, frame rate and quality follow. Every value stays editable below."
+              choices={OUTPUT_CHOICES}
+              value={settings.outputFormat}
+              onChange={(choice) => applyOutputFormat(choice.id)}
+            />
+
+            <FineTune
+              summary={fineTuneSummary}
+              onReset={tuned ? () => applyOutputFormat(settings.outputFormat) : undefined}
+              resetLabel={`Back to the ${outputFormat.label} preset`}
+            >
+              <FineTuneField
+                htmlFor="animation-output-format"
+                label="Output format"
+                hint="The same choice as the chips above."
               >
-                <option value="gif">GIF</option>
-                <option value="webp">Animated WebP</option>
-                <option value="apng">APNG</option>
-              </select>
-            </label>
-            <label>
-              Preset
-              <select
-                value={settings.preset}
-                onChange={(event) => updatePreset(event.target.value as AnimationPreset)}
+                <select
+                  id="animation-output-format"
+                  value={settings.outputFormat}
+                  onChange={(event) =>
+                    applyOutputFormat(event.target.value as AnimationOutputFormat)
+                  }
+                >
+                  {ANIMATION_OUTPUT_FORMATS.map((format) => (
+                    <option key={format.id} value={format.id}>
+                      {format.label}
+                    </option>
+                  ))}
+                </select>
+              </FineTuneField>
+
+              <FineTuneField
+                htmlFor="animation-preset"
+                label="Size and frame rate"
+                hint="Fewer pixels and fewer frames make a smaller file and a faster conversion."
               >
-                <option value="small">Small · 480px · 8fps</option>
-                <option value="balanced">Balanced · 640px · 12fps</option>
-                <option value="high">High · 960px · 15fps</option>
-              </select>
-            </label>
-            <label>
-              Start time (seconds)
-              <input
-                className="field-input"
-                type="number"
-                min="0"
-                max={startSecondsMax}
-                step="0.1"
-                {...startSecondsProps}
-              />
-            </label>
-            <label>
-              Maximum duration (seconds)
-              <input
-                className="field-input"
-                type="number"
-                min="0.1"
-                max="20"
-                step="0.1"
-                {...durationSecondsProps}
-              />
-            </label>
-            <label>
-              Loop count
-              <select
-                value={settings.loopCount}
-                onChange={(event) =>
-                  setSettings((previous) => ({
-                    ...previous,
-                    loopCount: Number(event.target.value),
-                  }))
-                }
-              >
-                <option value="0">Forever</option>
-                <option value="1">Play once</option>
-                <option value="2">Twice</option>
-                <option value="3">Three times</option>
-              </select>
-            </label>
-            {settings.outputFormat === 'webp' && (
-              <label>
-                WebP quality: {settings.quality}
+                <select
+                  id="animation-preset"
+                  value={settings.preset}
+                  onChange={(event) => updatePreset(event.target.value as AnimationPreset)}
+                >
+                  {PRESET_ORDER.map((preset) => (
+                    <option key={preset} value={preset}>
+                      {`${ANIMATION_PRESET_LABELS[preset]} · ${ANIMATION_PRESETS[preset].maxSide}px · ${ANIMATION_PRESETS[preset].fps}fps`}
+                    </option>
+                  ))}
+                </select>
+              </FineTuneField>
+
+              <FineTuneField htmlFor="animation-start" label="Start time (seconds)">
                 <input
-                  type="range"
-                  min="40"
-                  max="95"
-                  value={settings.quality}
+                  id="animation-start"
+                  className="field-input"
+                  type="number"
+                  min="0"
+                  max={startSecondsMax}
+                  step="0.1"
+                  {...startSecondsProps}
+                />
+              </FineTuneField>
+
+              <FineTuneField
+                htmlFor="animation-duration"
+                label="Maximum duration (seconds)"
+                hint={`Up to ${budget.maxClipSeconds} seconds, and shortened when the source ends first.`}
+              >
+                <input
+                  id="animation-duration"
+                  className="field-input"
+                  type="number"
+                  min="0.1"
+                  max="20"
+                  step="0.1"
+                  {...durationSecondsProps}
+                />
+              </FineTuneField>
+
+              <FineTuneField htmlFor="animation-loop" label="Loop count">
+                <select
+                  id="animation-loop"
+                  value={settings.loopCount}
                   onChange={(event) =>
                     setSettings((previous) => ({
                       ...previous,
-                      quality: Number(event.target.value),
+                      loopCount: Number(event.target.value),
                     }))
                   }
-                />
-              </label>
-            )}
-          </div>
-          <div className="conversion-summary">
-            <span>{settings.maxSide}px maximum side</span>
-            <span>{settings.fps} fps</span>
-            <span>Up to {estimatedFrames} frames</span>
-            {metadata && (
+                >
+                  <option value="0">Forever</option>
+                  <option value="1">Play once</option>
+                  <option value="2">Twice</option>
+                  <option value="3">Three times</option>
+                </select>
+              </FineTuneField>
+
+              {/*
+               * Rendered only for WebP, as before. `FineTuneField`'s own `hidden`
+               * prop cannot do this here: `.fine-tune-field` sets `display: grid`,
+               * which outranks the user-agent rule behind the `hidden` attribute,
+               * so the field would stay on screen claiming to control a setting
+               * GIF and APNG ignore.
+               */}
+              {settings.outputFormat === 'webp' && (
+                <FineTuneField
+                  htmlFor="animation-quality"
+                  label={`WebP quality: ${settings.quality}`}
+                  hint="Higher keeps more detail and makes a larger file."
+                >
+                  <input
+                    id="animation-quality"
+                    type="range"
+                    min="40"
+                    max="95"
+                    value={settings.quality}
+                    onChange={(event) => {
+                      setSettings((previous) => ({
+                        ...previous,
+                        quality: Number(event.target.value),
+                      }));
+                      setTuned(true);
+                    }}
+                  />
+                </FineTuneField>
+              )}
+            </FineTune>
+
+            <div className="conversion-summary">
               <span>
-                {metadata.width} × {metadata.height} source
+                {outputDimensions && outputDimensions.width > 0
+                  ? `${outputDimensions.width} × ${outputDimensions.height} output`
+                  : `${settings.maxSide}px maximum side`}
               </span>
+              <span>{settings.fps} fps</span>
+              <span>Up to {estimatedFrames} frames</span>
+              {metadata && (
+                <span>
+                  {metadata.width} × {metadata.height} source
+                </span>
+              )}
+            </div>
+            {settings.outputFormat === 'apng' && (
+              <p className="tool-hint">
+                APNG keeps full-color transparency but can be substantially larger.
+              </p>
             )}
-          </div>
-          {settings.outputFormat === 'apng' && (
-            <p className="tool-hint">
-              APNG keeps full-color transparency but can be substantially larger.
-            </p>
-          )}
-          <div className="action-row">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => void convert()}
-              disabled={converting}
-            >
-              {converting ? 'Converting…' : `Create ${settings.outputFormat.toUpperCase()}`}
-            </button>
-            {converting && (
-              <button type="button" className="btn btn-secondary" onClick={cancel}>
-                Cancel
+            {workloadWarning && (
+              <div className="notice-card" role="status">
+                {workloadWarning} Adjust the size, frame rate, or duration above.
+              </div>
+            )}
+            <div className="action-row">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => void convert()}
+                disabled={converting || Boolean(workloadWarning)}
+              >
+                {converting ? 'Converting…' : `Create ${settings.outputFormat.toUpperCase()}`}
               </button>
-            )}
+              {converting && (
+                <button type="button" className="btn btn-secondary" onClick={cancel}>
+                  Cancel
+                </button>
+              )}
+            </div>
+            <ToolRunNote busy={converting}>
+              {converting
+                ? 'Converting on this device. Keep the tab open.'
+                : lastRunSeconds !== null
+                  ? `Created on this device in ${lastRunSeconds.toFixed(1)}s. Your media file was not uploaded.`
+                  : 'Size and frame count follow the settings. Converting stays a separate step: it runs on this device and takes seconds to minutes.'}
+            </ToolRunNote>
           </div>
         </div>
       )}

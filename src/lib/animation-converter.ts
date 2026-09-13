@@ -48,6 +48,79 @@ export const ANIMATION_PRESETS: Record<
   high: { maxSide: 960, fps: 15, quality: 88 },
 };
 
+export const ANIMATION_PRESET_LABELS: Record<AnimationPreset, string> = {
+  small: 'Small',
+  balanced: 'Balanced',
+  high: 'High',
+};
+
+export interface AnimationOutputFormatInfo {
+  id: AnimationOutputFormat;
+  /** The chip label and the word used in running copy. */
+  label: string;
+  /** What the format is good for, and therefore who picks it. */
+  use: string;
+  /**
+   * The size and frame-rate preset this format starts on. All three sit on
+   * `balanced` today, which is the value every entry point already defaults to;
+   * the field exists so a format that needs a different starting point can say
+   * so here instead of somewhere in the component.
+   */
+  preset: AnimationPreset;
+}
+
+/**
+ * The one place the three output formats are described. The chip row, the
+ * fine-tune format control and the output file name all read from this, so a
+ * label cannot end up saying one thing in one place and another somewhere else.
+ */
+export const ANIMATION_OUTPUT_FORMATS: readonly AnimationOutputFormatInfo[] = [
+  {
+    id: 'gif',
+    label: 'GIF',
+    use: 'Send in chat, forums, and anywhere that only takes GIF',
+    preset: 'balanced',
+  },
+  {
+    id: 'webp',
+    label: 'Animated WebP',
+    use: 'Web pages and docs, usually the smallest file',
+    preset: 'balanced',
+  },
+  {
+    id: 'apng',
+    label: 'APNG',
+    use: 'Full color and transparency, usually the largest file',
+    preset: 'balanced',
+  },
+];
+
+export const ANIMATION_OUTPUT_FORMAT_BY_ID = Object.fromEntries(
+  ANIMATION_OUTPUT_FORMATS.map((format) => [format.id, format])
+) as Record<AnimationOutputFormat, AnimationOutputFormatInfo>;
+
+/**
+ * The output pixel dimensions FFmpeg's scale filter will produce, so the tool can
+ * show them before a conversion is started rather than after.
+ *
+ * This mirrors `scale=maxSide:maxSide:force_original_aspect_ratio=decrease`,
+ * which fits the source inside a square of `maxSide` — it enlarges a source
+ * smaller than that as readily as it shrinks a larger one, so there is no clamp
+ * at 1 here. (`validateAnimationWorkload` does clamp, which only ever makes its
+ * pixel budget more permissive, and is left alone.)
+ */
+export function animationOutputDimensions(
+  metadata: Pick<AnimationMetadata, 'width' | 'height'>,
+  maxSide: number
+): { width: number; height: number } {
+  const longest = Math.max(metadata.width, metadata.height);
+  if (longest <= 0) return { width: 0, height: 0 };
+  const scale = maxSide / longest;
+  // `force_divisible_by=2` rounds each side down to an even number.
+  const even = (value: number) => Math.max(2, Math.floor(Math.round(value * scale) / 2) * 2);
+  return { width: even(metadata.width), height: even(metadata.height) };
+}
+
 export const DEFAULT_ANIMATION_SETTINGS: AnimationConversionSettings = {
   outputFormat: 'gif',
   preset: 'balanced',
