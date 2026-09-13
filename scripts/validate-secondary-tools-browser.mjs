@@ -994,6 +994,45 @@ assert.equal(
 );
 assert.equal(transparentResult.modelRuns, runsBaseline + 1);
 assert.equal(transparentResult.downloadDisabled, false, 'A settled result must be downloadable');
+
+// The thread decision has to survive onto the page. A fallback to one thread is
+// invisible in the result — the cutout is correct either way — so without this a
+// slow run could be a threaded attempt losing to contention or the single-threaded
+// retry, and nothing would say which. Polled separately from the result because it
+// is published one state update later, after the composition settles.
+const threadPlan = await waitForValue(
+  `(() => {
+    const root = document.querySelector('[data-background-stage]');
+    const threads = root?.dataset.backgroundThreads;
+    if (threads === undefined) return null;
+    return {
+      threads: Number(threads),
+      fellBack: root.dataset.backgroundFellBack,
+      isolated: Boolean(self.crossOriginIsolated),
+    };
+  })()`,
+  (state) => state !== null,
+  'background thread plan'
+);
+assert.equal(
+  ['true', 'false'].includes(threadPlan.fellBack),
+  true,
+  `Fallback state must be reported, got ${threadPlan.fellBack}`
+);
+if (threadPlan.isolated) {
+  // `astro preview` does not send the isolation headers, so this branch only runs
+  // when the build is served by something that does. See AGENTS.md.
+  assert.equal(
+    threadPlan.threads >= 1 && threadPlan.threads <= 4,
+    true,
+    `Isolated runs must stay within the measured thread cap, got ${threadPlan.threads}`
+  );
+} else {
+  // No SharedArrayBuffer means the runtime is single-threaded whatever it is asked
+  // for, so asking for more would be a lie, and there is no threaded attempt to fail.
+  assert.equal(threadPlan.threads, 1, 'An unisolated run must plan a single thread');
+  assert.equal(threadPlan.fellBack, 'false', 'An unisolated run has nothing to fall back from');
+}
 const urlsBeforeRecompose = await evaluate(`window.__objectUrlStats()`);
 
 await evaluate(watchRecomposition);

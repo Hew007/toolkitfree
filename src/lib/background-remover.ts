@@ -111,6 +111,38 @@ export type BackgroundWorkerResponse =
 const MAX_INFERENCE_THREADS = 4;
 
 /**
+ * How long one `compute:inference` report may go unanswered before the run is
+ * abandoned. The library emits that key exactly once, so whichever value is armed
+ * has to cover the entire inference rather than a step of it.
+ *
+ * A threaded attempt gets the shorter budget because it can still fall back, and
+ * the fallback cannot be free: whatever the threaded attempt burns is added to the
+ * single-threaded retry that follows. 90s is roughly fifteen times the 5.98s a
+ * sixteen-core machine measured on four threads, and the model resizes its input
+ * to a fixed size, so inference does not grow with the image the way the decode
+ * and compose steps do. A machine slow enough to exceed this is one where the
+ * threaded path is not delivering anyway.
+ *
+ * This does treat a hang and mere slowness the same, since from outside the worker
+ * they are indistinguishable — the run reports nothing either way. That is the
+ * intended trade: a hung threaded attempt is exactly what the fallback exists for,
+ * and the margin above is what keeps a working-but-slow run from being killed.
+ */
+const THREADED_INFERENCE_TIMEOUT_MS = 90_000;
+
+/** No fallback left to fund, so the single-threaded path gets the full budget. */
+const SINGLE_THREAD_INFERENCE_TIMEOUT_MS = 180_000;
+
+/** A finished run, with the thread decision that produced it. */
+export interface BackgroundRemovalRun {
+  blob: Blob;
+  /** Threads the attempt that produced `blob` asked ONNX Runtime for. */
+  threads: number;
+  /** True when a threaded attempt failed and this is the single-threaded retry. */
+  fellBack: boolean;
+}
+
+/**
  * Chooses how many threads the first attempt asks ONNX Runtime for.
  *
  * Without cross-origin isolation there is no `SharedArrayBuffer`, so the WASM
@@ -145,6 +177,15 @@ function runBackgroundWorker(
   onProgress: (progress: BackgroundProgress) => void,
   signal?: AbortSignal
 ): Promise<Blob> {
+  // An `AbortSignal` that is already aborted never fires `abort` again, so the
+  // listener below would never run and the worker would spend a full inference on
+  // work nobody wants. This is the only check — the guarantee belongs here rather
+  // than to whichever caller remembers to make it, and both entry paths below reach
+  // this function before anything is spawned.
+  if (signal?.aborted) {
+    return Promise.reject(new DOMException('Background removal was canceled.', 'AbortError'));
+  }
+
   const worker = new Worker(new URL('../workers/background-removal.worker.ts', import.meta.url), {
     type: 'module',
   });
@@ -227,21 +268,39 @@ function runBackgroundWorker(
  * retried on the single thread the tool used before threading existed: the fast
  * path is an improvement when it works, and cannot make the tool worse than the
  * slow path when it does not.
+ *
+ * The returned `threads` and `fellBack` are what make a timing number readable
+ * afterwards. A fallback is otherwise invisible in the result — the caller gets a
+ * correct cutout either way — so a slow run could be four threads losing to
+ * contention or one thread doing its best, and nothing in the timing would say
+ * which. That ambiguity is how the sixteen-thread defect survived two releases.
  */
 export async function removeBackgroundInWorker(
   file: File,
   onProgress: (progress: BackgroundProgress) => void,
   signal?: AbortSignal
-): Promise<Blob> {
-  if (signal?.aborted) throw new DOMException('Background removal was canceled.', 'AbortError');
-
+): Promise<BackgroundRemovalRun> {
   const threads = plannedThreadCount(navigator.hardwareConcurrency, self.crossOriginIsolated);
   if (threads <= 1) {
-    return runBackgroundWorker(file, 1, 180_000, onProgress, signal);
+    const blob = await runBackgroundWorker(
+      file,
+      1,
+      SINGLE_THREAD_INFERENCE_TIMEOUT_MS,
+      onProgress,
+      signal
+    );
+    return { blob, threads: 1, fellBack: false };
   }
 
   try {
-    return await runBackgroundWorker(file, threads, 90_000, onProgress, signal);
+    const blob = await runBackgroundWorker(
+      file,
+      threads,
+      THREADED_INFERENCE_TIMEOUT_MS,
+      onProgress,
+      signal
+    );
+    return { blob, threads, fellBack: false };
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error;
     if (signal?.aborted) throw error;
@@ -251,7 +310,14 @@ export async function removeBackgroundInWorker(
       `[toolkitfree] background removal failed on ${threads} threads, retrying single-threaded`,
       error
     );
-    return runBackgroundWorker(file, 1, 180_000, onProgress, signal);
+    const blob = await runBackgroundWorker(
+      file,
+      1,
+      SINGLE_THREAD_INFERENCE_TIMEOUT_MS,
+      onProgress,
+      signal
+    );
+    return { blob, threads: 1, fellBack: true };
   }
 }
 
