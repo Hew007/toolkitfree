@@ -400,7 +400,6 @@ export default function ImageCompressor({
           }
         }
 
-        const url = objectUrls.replace(`result:${variant.id}:${queuedFile.id}`, blob);
         encoded[variant.id] = {
           sourceId: queuedFile.id,
           sourceName: queuedFile.file.name,
@@ -410,6 +409,11 @@ export default function ImageCompressor({
           outputSize: blob.size,
           compressedSize: blob.size,
           blob,
+          // Both filled in after the run proves it is still current. Registering
+          // here would let a superseded run replace — and so revoke — the newer
+          // run's URL for the same key on its way to abandoning itself.
+          url: '',
+          previewUrl: '',
           originalWidth,
           originalHeight,
           width,
@@ -418,14 +422,12 @@ export default function ImageCompressor({
           attempts,
           status,
           message,
-          url,
-          previewUrl: url,
         };
       }
 
       return encoded;
     },
-    [inputFormat.allowedTypes, maxWidth, mode, objectUrls, quality, targetKB]
+    [inputFormat.allowedTypes, maxWidth, mode, quality, targetKB]
   );
 
   const runVariants = useCallback(
@@ -462,6 +464,20 @@ export default function ImageCompressor({
       // A newer settings change already invalidated this run.
       if (!isCurrent()) return;
 
+      // Only now, past the guard, does this run own the result keys. Object URLs
+      // are shared state: `replace` revokes whatever the key held, so a run that
+      // registers during its work can revoke a newer run's URL and then bail at
+      // this check, leaving the screen pointing at a blob that no longer exists.
+      for (const outcome of outcomes) {
+        if (outcome.status !== 'success') continue;
+        for (const variant of variants) {
+          const result = outcome.value[variant.id];
+          if (!result) continue;
+          result.url = objectUrls.replace(`result:${variant.id}:${result.sourceId}`, result.blob);
+          result.previewUrl = result.url;
+        }
+      }
+
       const elapsedMs = Math.round(performance.now() - startedAt);
       const failures = outcomes
         .filter(
@@ -489,7 +505,7 @@ export default function ImageCompressor({
         return next;
       });
     },
-    [compressFile]
+    [compressFile, objectUrls]
   );
 
   // What the scheduled run will encode, fixed at the moment it is scheduled.
