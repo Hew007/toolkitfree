@@ -530,7 +530,7 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
            * are zeroed rather than fought with. A shared control-column class
            * would replace all of it.
            */}
-          <div className="animation-controls" style={{ display: 'grid', gap: '1.25rem' }}>
+          <div className="animation-controls tool-controls">
             <ToolChoices
               name="animation-output"
               legend="What is the animation for?"

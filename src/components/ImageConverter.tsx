@@ -300,7 +300,7 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
       <FileList files={files.map(({ file }) => file)} onRemove={handleRemove} />
 
       {files.length > 0 && (
-        <div style={{ marginTop: '1.5rem', display: 'grid', gap: '1.25rem' }}>
+        <div className="tool-controls">
           <ToolChoices
             name="converter-output-format"
             legend="Convert to"

@@ -320,6 +320,46 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-13 — `试点三个工具改造` / `已集成` / `规格已按反馈修订`：Image Converter（A 类）、
+  Image Cropper（B 类）、Video to GIF（C 类）由三个并行 agent 在各自 worktree 完成并合入。刻意先派
+  三个而不是十二个，一类一个，检验的是规格本身能不能被执行——事实证明这个决定是对的，下面每一条
+  都是在三个上发现、而不是在十二个上发现的。
+
+  三次改造本身都达标：Converter 用格式芯片 + 自动运行，且没有动任何变体页钉死的输出格式；Cropper
+  的结果跟随裁剪框，解码结果按文件缓存后，实测 1.2 秒拖拽 48 次 pointermove 期间编码 0 次、松手后
+  恰好 1 次；Video to GIF 实测转码 2.2–15.3 秒后确认 C 类判断成立，保留按钮，只把零成本的算术
+  （输出尺寸、帧数、预算预检）做成实时——其中预检前移是净收益，原来要等 10 MB 引擎下载完才会告诉
+  用户这组设置超预算。
+
+  集成时发现并修复的问题，全部不是 agent 能从自己的任务里看到的：
+
+  - **`FineTuneField` 的 `hidden` 不生效**（共享件 bug，由 C 类 agent 回报）。`.fine-tune-field` 的
+    `display: grid` 是类选择器，优先级高过 UA 样式表的 `[hidden]`，所以 Resizer 选 PNG 时质量滑块
+    一直在显示。这是改造前就存在的缺陷，被共享件原样继承。已加 `.fine-tune-field[hidden]`。
+  - **Compressor 在工作过程中注册对象 URL**（由 A 类 agent 回报，在集成方自己写的代码里）。
+    `objectUrls.replace` 会吊销该 key 原有的 URL，所以被取代的运行能先吊销新运行的 URL、再自我放弃，
+    页面上留下指向已吊销 blob 的 `src`。注册改到令牌检查之后。
+  - **删掉一个提交按钮会打挂别的套件。** `validate-batch-download-browser.mjs` 和
+    `validate-performance-browser.mjs` 都驱动 converter，都还在点那个不存在的按钮。两个都修了，并把
+    原来的点击辅助函数换成一条防倒退断言：这些路由上不得再出现提交按钮。
+  - **`.gitignore` 不忽略 `node_modules` 符号链接**（`node_modules/` 带斜杠只匹配目录），而 worktree
+    的依赖正是符号链接，`git add -A` 会把它暂存进去。去掉斜杠。
+  - **`eslint .` 会走进 `.claude/worktrees/`**，报出 14085 个不属于任何人 diff 的错误。已 ignore。
+  - **微调摘要行在窄屏被 `display: none`**，等于手机上看不到当前值，与规格承诺矛盾。改为换行到下一行。
+
+  `TOOL_INTERACTION.md` 按这些反馈修订：对象 URL 必须在令牌检查之后注册（不只是 `runNow` 的问题）；
+  `key` 序列化的是输出真正依赖的量而非控件当前值；解码成本必须按文件缓存；`onInvalidate` 在编辑器型
+  工具里一次拖拽跑几十次，必须便宜且幂等；芯片不得覆盖变体页面钉死的值；B 类的"不加芯片"指不新增
+  问题、不是禁用共享组件；改造必须同步修 FAQ 与步骤文案里描述已删按钮的句子；验收清单区分 A/B 类与
+  C 类；转码成本表换成实测数字，并把判据从秒数改成"误触发值不值得付账"；新增共享类 `.tool-controls`
+  （两个 agent 独立提出同一需求）；以及"先 grep 所有套件"这一条。
+
+  门禁：typecheck、lint、format、13 项单测、构建、SEO 注册表、站点完整性全部通过；12 个浏览器套件
+  全部通过、`browserErrors` 均为 0。第 13 个 `validate-secondary-tools-browser.mjs` 仍因沙箱连不上
+  `staticimgly.com` 跑不了。
+
+  剩余九个工具尚未改造。试点暴露的规格缺口已经补上，可以放大批次。
+
 - 2026-09-13 — `合并 master` / `修掉 agent worktree 污染 lint`：#20 合入 master 后，把 master 合进
   foundation 分支。照例只有 `PROJECT_STATUS.md` 冲突——两边都往同一个倒序日志顶部追加——全部条目按
   日期保留，没有丢弃。
