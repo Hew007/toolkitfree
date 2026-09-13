@@ -3534,12 +3534,25 @@ input[type='range'] {
     width: 100%;
   }
 
+  /* A chip carrying a hint is a sentence wide, so on a phone three of them wrap
+     to three ragged widths. Full width makes them a clean stack. Chips without a
+     hint are short labels — a ratio, a size — and six full-width rows of "1:1"
+     would be worse than the ragged row, so they keep their intrinsic width. */
+  .tool-chip:has(.tool-chip-hint) {
+    width: 100%;
+  }
+
   /* The summary is the whole reason the panel can stay shut, so on a narrow
      screen it wraps onto its own line under the label instead of being dropped.
-     Hiding it made mobile visitors open the panel just to read what applied. */
+     Hiding it made mobile visitors open the panel just to read what applied.
+     `justify-content` has to be reset with it: once the summary leaves the row,
+     `space-between` has only the marker and the label left to push apart, and
+     strands "Fine-tune" against the right edge. */
   .fine-tune > summary {
     flex-wrap: wrap;
+    justify-content: flex-start;
     row-gap: 0.2rem;
+    column-gap: 0.5rem;
   }
 
   .fine-tune-summary {

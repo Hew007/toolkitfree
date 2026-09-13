@@ -320,6 +320,25 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-13 — `视觉验收` / `修掉三处只有看页面才能发现的问题`：前一条记的是门禁和代码审查，但
+  页面长什么样一直没人看过。补做了截图验收（桌面 1440 / 手机 390，上传真实文件后拍控件区），发现
+  三处自动化完全抓不到的问题：
+
+  - **Image Converter 的"如何使用"步骤还写着 Click "Convert"**，主页面一处、`[variant].astro` 一处
+    （覆盖 9 个变体页）。改造 agent 修了 FAQ 答案却漏了同一个文件里的 `<ol>`。`validate-seo` 和
+    `validate-site` 都不读散文，所以全绿也说明不了这句话是真是假。
+  - **微调摘要行在手机上排版错乱，是集成方自己引入的回归。** 上一条把窄屏 `display:none` 改成换行时
+    没有一并重置 `justify-content: space-between`——摘要换行后那一行只剩箭头和 "Fine-tune" 两个元素，
+    被撑到了两端。
+  - **带提示语的芯片在手机上三种宽度参差不齐。** 改为窄屏下占满整行，用 `:has(.tool-chip-hint)` 限定
+    ——没有提示语的短芯片（裁剪比例那六枚）保持原宽，否则六行 "1:1" 比参差更糟。
+
+  结论记在这里：**这三个工具的浏览器套件此前全绿，但页面上写着一句假话、手机布局是坏的。**
+  自动化能证明行为正确，证明不了观感正确；后面九个工具的验收必须包含截图这一步。
+
+  重跑门禁：typecheck、lint、format、13 项单测、构建、SEO、站点完整性，以及 responsive/a11y、
+  converter、resizer/cropper、compressor 四个浏览器套件，全部通过，`browserErrors` 均为 0。
+
 - 2026-09-13 — `试点三个工具改造` / `已集成` / `规格已按反馈修订`：Image Converter（A 类）、
   Image Cropper（B 类）、Video to GIF（C 类）由三个并行 agent 在各自 worktree 完成并合入。刻意先派
   三个而不是十二个，一类一个，检验的是规格本身能不能被执行——事实证明这个决定是对的，下面每一条
