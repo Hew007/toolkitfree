@@ -1,5 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
+import { ToolChoices, type ToolChoice } from './ToolChoices';
+import FineTune, { FineTuneField } from './FineTune';
+import ToolRunNote from './ToolRunNote';
+import { useAutoRun } from '../hooks/useAutoRun';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
 import {
   downloadUrl,
@@ -53,6 +57,26 @@ const EMPTY_BOUNDS: CropBounds = { width: 0, height: 0 };
 const EMPTY_CROP: CropRect = { x: 0, y: 0, width: 0, height: 0 };
 const EMPTY_DISPLAY = { width: 0, height: 0 };
 
+/**
+ * The shape chips are a projection of the preset table, never a second copy of
+ * it, so a label cannot drift away from the ratio it names. This is the control
+ * that was already here, moved onto the shared chip so it wraps on a phone and
+ * keeps a 44px target; the tool gains no new question it did not already ask.
+ */
+const ASPECT_CHOICES: readonly ToolChoice<CropAspectPresetKey>[] = (
+  Object.keys(CROP_ASPECT_PRESETS) as CropAspectPresetKey[]
+).map((key) => ({ id: key, label: CROP_ASPECT_PRESETS[key].label }));
+
+/**
+ * Cropping needs no submit step: the crop box *is* the input, so the result
+ * follows it. The delay is what keeps a drag smooth — pointer moves land dozens
+ * of times a second and each one only invalidates the stale result, while the
+ * export waits until the box has been still this long. The key is built from the
+ * rounded pixel rect, so a sub-pixel nudge that lands on the same pixels does
+ * not re-encode anything.
+ */
+const CROP_DELAY_MS = 320;
+
 export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCropperProps) {
   const [file, setFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -67,16 +91,30 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<CropResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [elapsedMs, setElapsedMs] = useState<number | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const cleanupDragRef = useRef<(() => void) | null>(null);
+  // Decoding a photo costs far more than drawing one region of it, and with the
+  // result following the crop box that decode would otherwise repeat after every
+  // drag. One decode per file, reused by every run on that file.
+  const decodedRef = useRef<{ file: File; image: HTMLImageElement } | null>(null);
   const objectUrls = useObjectUrlRegistry();
   const aspectRatio = CROP_ASPECT_PRESETS[aspectPreset].ratio;
 
   const clearResult = useCallback(() => {
     objectUrls.revoke('cropper:result');
     setResult(null);
+    setElapsedMs(null);
   }, [objectUrls]);
+
+  const decodeSource = useCallback(async (source: File): Promise<HTMLImageElement> => {
+    const cached = decodedRef.current;
+    if (cached && cached.file === source) return cached.image;
+    const image = await loadImage(source);
+    decodedRef.current = { file: source, image };
+    return image;
+  }, []);
 
   const updateDisplayScale = useCallback(() => {
     const image = imageRef.current;
@@ -117,6 +155,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
       try {
         validateImageFile(nextFile);
         clearResult();
+        decodedRef.current = null;
         setFile(nextFile);
         setImageBounds(EMPTY_BOUNDS);
         setCropRect(EMPTY_CROP);
@@ -135,6 +174,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
     cleanupDragRef.current?.();
     objectUrls.revoke('cropper:preview');
     clearResult();
+    decodedRef.current = null;
     setFile(null);
     setImageUrl(null);
     setImageBounds(EMPTY_BOUNDS);
@@ -155,7 +195,6 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
 
   const handleAspectChange = (nextPreset: CropAspectPresetKey) => {
     setAspectPreset(nextPreset);
-    clearResult();
     if (imageBounds.width > 0 && imageBounds.height > 0) {
       setCropRect(createInitialCropRect(imageBounds, CROP_ASPECT_PRESETS[nextPreset].ratio));
     }
@@ -185,8 +224,10 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
         drag.handle === 'move'
           ? moveCropRect(drag.startRect, dx, dy, imageBounds)
           : resizeCropRect(drag.startRect, drag.handle, dx, dy, imageBounds, aspectRatio);
+      // Only the rect moves here. Dropping the stale result and scheduling the
+      // next export both belong to the auto-run, which does the first once and
+      // the second no sooner than `CROP_DELAY_MS` after the pointer settles.
       setCropRect(nextRect);
-      clearResult();
     };
 
     const cleanup = () => {
@@ -218,58 +259,108 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
         ? resizeCropRect(current, 'se', dx, dy, imageBounds, aspectRatio)
         : moveCropRect(current, dx, dy, imageBounds)
     );
-    clearResult();
   };
 
-  const handleCrop = async () => {
-    if (!file || imageBounds.width <= 0 || imageBounds.height <= 0) return;
-    setProcessing(true);
-    setError(null);
-    clearResult();
+  /**
+   * The crop the output will actually have. Rounded to whole pixels on purpose:
+   * this is what `run` draws, so keying off it means a drag that ends on the same
+   * pixel row does not re-encode, and a re-measured preview never does either.
+   */
+  const pixelCrop = useMemo(() => {
+    if (imageBounds.width < 1 || imageBounds.height < 1) return null;
+    if (cropRect.width < 1 || cropRect.height < 1) return null;
+    return toPixelCropRect(cropRect, imageBounds);
+  }, [cropRect, imageBounds]);
 
-    try {
-      const image = await loadImage(file);
-      const pixelCrop = toPixelCropRect(cropRect, imageBounds);
-      const canvas = document.createElement('canvas');
-      canvas.width = pixelCrop.width;
-      canvas.height = pixelCrop.height;
-      const context = getCanvas2dContext(canvas);
-      if (format === 'image/jpeg') {
-        context.fillStyle = '#ffffff';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-      }
-      context.drawImage(
-        image,
-        pixelCrop.x,
-        pixelCrop.y,
-        pixelCrop.width,
-        pixelCrop.height,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-      const blob = await exportCanvas(
-        canvas,
+  /**
+   * Everything the cropped file depends on, and nothing else. Zoom, display
+   * scale and the measured frame are absent because they change how the crop box
+   * is drawn, not what comes out of it; the aspect preset is absent because it
+   * only reaches the output through the rect it produced.
+   */
+  const settingsKey = useMemo(
+    () =>
+      JSON.stringify({
+        file: file ? `${file.name}:${file.size}:${file.lastModified}` : null,
+        crop: pixelCrop,
         format,
-        format === 'image/png' ? undefined : quality / 100
-      );
-      const baseName = file.name.replace(/\.[^.]+$/, '') || 'cropped-image';
-      const outputName = `${baseName}-cropped.${OUTPUT_FORMATS[format].extension}`;
-      const url = objectUrls.replace('cropper:result', blob);
-      setResult({
-        name: outputName,
-        newSize: blob.size,
-        width: canvas.width,
-        height: canvas.height,
-        url,
-      });
-    } catch (cropError) {
-      setError(getImageProcessingErrorMessage(cropError));
-    } finally {
-      setProcessing(false);
-    }
-  };
+        quality: format === 'image/png' ? null : quality,
+      }),
+    [file, format, pixelCrop, quality]
+  );
+
+  // No submit step: the result follows the crop box.
+  useAutoRun({
+    key: settingsKey,
+    enabled: Boolean(file) && pixelCrop !== null,
+    delayMs: CROP_DELAY_MS,
+    onInvalidate: () => {
+      objectUrls.revoke('cropper:result');
+      // Written as bail-outs because this fires on every pointer move of a drag:
+      // passing the value React already holds ends the update there, so dragging
+      // costs one render per move rather than two.
+      setResult((current) => (current === null ? current : null));
+      setElapsedMs((current) => (current === null ? current : null));
+      setError((current) => (current === null ? current : null));
+      setProcessing((current) => (current ? false : current));
+    },
+    run: async (isCurrent) => {
+      const source = file;
+      const crop = pixelCrop;
+      if (!source || !crop) return;
+      setProcessing(true);
+      const startedAt = performance.now();
+
+      try {
+        const image = await decodeSource(source);
+        if (!isCurrent()) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = crop.width;
+        canvas.height = crop.height;
+        const context = getCanvas2dContext(canvas);
+        if (format === 'image/jpeg') {
+          context.fillStyle = '#ffffff';
+          context.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        context.drawImage(
+          image,
+          crop.x,
+          crop.y,
+          crop.width,
+          crop.height,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        const blob = await exportCanvas(
+          canvas,
+          format,
+          format === 'image/png' ? undefined : quality / 100
+        );
+        if (!isCurrent()) return;
+
+        const baseName = source.name.replace(/\.[^.]+$/, '') || 'cropped-image';
+        const outputName = `${baseName}-cropped.${OUTPUT_FORMATS[format].extension}`;
+        const url = objectUrls.replace('cropper:result', blob);
+        setResult({
+          name: outputName,
+          newSize: blob.size,
+          width: canvas.width,
+          height: canvas.height,
+          url,
+        });
+        setElapsedMs(Math.round(performance.now() - startedAt));
+        setProcessing(false);
+      } catch (cropError) {
+        if (!isCurrent()) return;
+        setError(getImageProcessingErrorMessage(cropError));
+        setProcessing(false);
+      }
+    },
+  });
 
   const handleDownload = () => {
     if (!result) return;
@@ -510,12 +601,51 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
           </div>
 
           <div className="cropper-controls-panel">
-            <p
-              id="crop-keyboard-instructions"
-              style={{ fontSize: '0.8125rem', color: '#6b665c', marginBottom: '0.75rem' }}
-            >
+            <p id="crop-keyboard-instructions" className="tool-hint">
               Arrow keys move the crop. Hold Alt + arrows to resize; Shift uses larger steps.
             </p>
+
+            <div
+              className="cropper-file-summary"
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '1rem',
+              }}
+            >
+              <span style={{ fontSize: '0.875rem', color: '#6b665c' }}>
+                {file?.name} - {imageBounds.width}x{imageBounds.height} -{' '}
+                {file ? formatSize(file.size) : ''}
+              </span>
+              <button
+                type="button"
+                onClick={handleRemove}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#ef4444',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                }}
+              >
+                Remove
+              </button>
+            </div>
+
+            <ToolChoices
+              name="cropper-aspect"
+              legend="Crop shape"
+              help="The crop box takes this shape. Drag or nudge it to choose the area — the file below follows it."
+              choices={ASPECT_CHOICES}
+              value={aspectPreset}
+              onChange={(choice) => handleAspectChange(choice.id)}
+            />
+
+            <div data-testid="crop-size" style={{ fontSize: '0.8125rem', color: '#6b665c' }}>
+              Crop: {pixelCrop ? `${pixelCrop.width}x${pixelCrop.height}` : '0x0'}
+            </div>
 
             <div>
               <label
@@ -561,102 +691,20 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
               </div>
             </div>
 
-            <div
-              className="cropper-file-summary"
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '1rem',
-                marginBottom: '1rem',
-              }}
+            <FineTune
+              summary={
+                <>
+                  {OUTPUT_FORMATS[format].label}
+                  {format === 'image/png' ? '' : ` · quality ${quality}%`}
+                </>
+              }
             >
-              <span style={{ fontSize: '0.875rem', color: '#6b665c' }}>
-                {file?.name} - {imageBounds.width}x{imageBounds.height} -{' '}
-                {file ? formatSize(file.size) : ''}
-              </span>
-              <button
-                type="button"
-                onClick={handleRemove}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#ef4444',
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                }}
-              >
-                Remove
-              </button>
-            </div>
-
-            <div
-              className="cropper-options-row"
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '0.75rem',
-                alignItems: 'flex-end',
-                marginBottom: '1rem',
-              }}
-            >
-              <div>
-                <span
-                  style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    display: 'block',
-                    marginBottom: '0.25rem',
-                  }}
-                >
-                  Aspect Ratio
-                </span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                  {Object.entries(CROP_ASPECT_PRESETS).map(([key, value]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      data-crop-aspect-option={key}
-                      onClick={() => handleAspectChange(key as CropAspectPresetKey)}
-                      className="btn"
-                      aria-pressed={aspectPreset === key}
-                      style={{
-                        padding: '0.375rem 0.75rem',
-                        fontSize: '0.8125rem',
-                        background: aspectPreset === key ? '#2563eb' : '#f4f0e8',
-                        color: aspectPreset === key ? '#fff' : '#3a362f',
-                        border: `1px solid ${aspectPreset === key ? '#2563eb' : '#e7e3db'}`,
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {value.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label
-                  htmlFor="crop-format"
-                  style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    display: 'block',
-                    marginBottom: '0.25rem',
-                  }}
-                >
-                  Format
-                </label>
+              <FineTuneField htmlFor="crop-format" label="Output format">
                 <select
                   id="crop-format"
                   data-testid="crop-format"
                   value={format}
-                  onChange={(event) => {
-                    setFormat(event.target.value as ImageOutputMimeType);
-                    clearResult();
-                  }}
-                  style={{ padding: '0.375rem', border: '1px solid #e7e3db', borderRadius: 6 }}
+                  onChange={(event) => setFormat(event.target.value as ImageOutputMimeType)}
                 >
                   {Object.entries(OUTPUT_FORMATS).map(([mimeType, value]) => (
                     <option key={mimeType} value={mimeType}>
@@ -664,52 +712,33 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                     </option>
                   ))}
                 </select>
-              </div>
-              {format !== 'image/png' && (
-                <div>
-                  <label
-                    htmlFor="crop-quality"
-                    style={{
-                      fontSize: '0.875rem',
-                      fontWeight: 500,
-                      display: 'block',
-                      marginBottom: '0.25rem',
-                    }}
-                  >
-                    Quality: {quality}%
-                  </label>
-                  <input
-                    id="crop-quality"
-                    data-testid="crop-quality"
-                    type="range"
-                    min="10"
-                    max="100"
-                    value={quality}
-                    onChange={(event) => {
-                      setQuality(Number(event.target.value));
-                      clearResult();
-                    }}
-                    style={{ width: 120 }}
-                  />
-                </div>
-              )}
-              <div
-                data-testid="crop-size"
-                style={{ fontSize: '0.8125rem', color: '#6b665c', marginLeft: 'auto' }}
-              >
-                Crop: {Math.round(cropRect.width)}x{Math.round(cropRect.height)}
-              </div>
-            </div>
+              </FineTuneField>
 
-            <button
-              type="button"
-              className="btn btn-primary cropper-primary-action"
-              onClick={handleCrop}
-              disabled={processing || cropRect.width < 1 || cropRect.height < 1}
-              style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
-            >
-              {processing ? 'Cropping...' : 'Crop Image'}
-            </button>
+              <FineTuneField
+                htmlFor="crop-quality"
+                label={`Quality: ${quality}%`}
+                hint="PNG is lossless, so quality does not apply to it."
+                hidden={format === 'image/png'}
+              >
+                <input
+                  id="crop-quality"
+                  data-testid="crop-quality"
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={quality}
+                  onChange={(event) => setQuality(Number(event.target.value))}
+                />
+              </FineTuneField>
+            </FineTune>
+
+            <ToolRunNote busy={processing}>
+              {processing
+                ? 'Cropping in your browser…'
+                : elapsedMs !== null
+                  ? `Cropped in your browser in ${(elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
+                  : 'The cropped file follows the crop box above. Nothing is uploaded.'}
+            </ToolRunNote>
           </div>
         </div>
       )}

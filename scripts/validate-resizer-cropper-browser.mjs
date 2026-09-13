@@ -379,19 +379,30 @@ for (const [slug, preset, ratio] of cropperVariants) {
     assert.equal(Math.abs(initialRect.width / initialRect.height - ratio) < 1e-8, true);
   }
 
+  // The cropper has no submit step any more: the file follows the crop box, so
+  // the result has to appear on its own after the upload.
+  await waitFor(`Boolean(document.querySelector('[data-crop-result]'))`, `${slug} crop result`);
+  assert.equal(
+    await evaluate(
+      `[...document.querySelectorAll('button')].some((button) => button.textContent.trim() === 'Crop Image')`
+    ),
+    false,
+    'The cropper must not reintroduce a submit button'
+  );
+
   if (slug === 'crop-to-square') {
+    // Reaches the format control inside the folded fine-tune panel, then waits
+    // for the output to follow it rather than clicking anything.
     await evaluate(`
       const format = document.querySelector('[data-testid="crop-format"]');
       format.value = 'image/jpeg';
       format.dispatchEvent(new Event('change', { bubbles: true }));
     `);
+    await waitFor(
+      `document.querySelector('[data-crop-result]')?.dataset.cropResult.endsWith('.jpg') === true`,
+      `${slug} jpeg crop result`
+    );
   }
-  await evaluate(`
-    [...document.querySelectorAll('button')]
-      .find((button) => button.textContent.trim() === 'Crop Image')
-      .click()
-  `);
-  await waitFor(`Boolean(document.querySelector('[data-crop-result]'))`, `${slug} crop result`);
   const result = await inspectResult('[data-crop-result]');
   assert.equal(result.width, result.declaredWidth);
   assert.equal(result.height, result.declaredHeight);
@@ -573,10 +584,23 @@ assert.equal(Math.abs(mobileRect.width / mobileRect.height - 1) < 1e-8, true);
 assert.equal(mobileRect.x >= 0 && mobileRect.y >= 0, true);
 assert.equal(mobileRect.x + mobileRect.width <= 600.0001, true);
 assert.equal(mobileRect.y + mobileRect.height <= 1000.0001, true);
+// The touch drag shrank the square below the full 600px width it started at, so
+// a result narrower than that is the re-export the new crop box triggered — not
+// the one that was on screen before the drag.
+await waitFor(
+  `Number(document.querySelector('[data-crop-result]')?.dataset.width ?? 600) < 600`,
+  'mobile crop result follows the box'
+);
+const mobileResult = await evaluate(`(() => {
+  const item = document.querySelector('[data-crop-result]');
+  return { width: Number(item.dataset.width), height: Number(item.dataset.height) };
+})()`);
+assert.equal(Math.abs(mobileResult.width / mobileResult.height - 1) < 0.02, true);
 await send('Emulation.clearDeviceMetricsOverride');
 
+// The preview plus the cropped file the crop box produced without a submit step.
 const cropperUrlStats = await evaluate(`window.__objectUrlStats()`);
-assert.equal(cropperUrlStats.active, 1);
+assert.equal(cropperUrlStats.active, 2);
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
 
@@ -593,6 +617,7 @@ console.log(
     keyboardRect,
     draggedRect,
     mobileRect,
+    mobileResult,
     resizerUrlStats,
     cropperUrlStats,
     browserErrors: actionableBrowserErrors.length,
