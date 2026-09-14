@@ -94,19 +94,19 @@ async function setFiles(filePaths) {
   await send('DOM.setFileInputFiles', { nodeId: inputNode.nodeId, files: filePaths });
 }
 
-async function clickAction(text) {
+/**
+ * Every tool this suite drives now produces its results without a submit step, so
+ * the helper that clicked one is gone. This replaces it: if a submit button ever
+ * comes back, some route here will say so.
+ */
+async function assertNoSubmitButton(label) {
   assert.equal(
     await evaluate(`
-    (() => {
-      const button = [...document.querySelectorAll('button')]
-        .find((candidate) => candidate.textContent.trim() === ${JSON.stringify(text)});
-      if (!button) return false;
-      button.click();
-      return true;
-    })()
+    [...document.querySelectorAll('button')]
+      .some((button) => /^(Convert|Compress|Resize) /.test(button.textContent.trim()))
   `),
-    true,
-    `${text} button`
+    false,
+    `${label} must not reintroduce a submit button`
   );
 }
 
@@ -203,7 +203,8 @@ await setFiles([
   path.join(fixtures, 'invalid.txt'),
 ]);
 await waitFor(`document.querySelectorAll('.file-item').length === 3`, 'converter files');
-await clickAction('Convert 3 images');
+// The converter has no submit step any more: the batch follows the chosen format.
+await assertNoSubmitButton('image-converter');
 await waitFor(
   `Boolean(document.querySelector('[data-batch-success-count="2"][data-batch-failure-count="1"]'))`,
   'converter mixed results'
@@ -225,18 +226,25 @@ assert.deepEqual(await evaluate(`window.__objectUrlStats()`), {
   active: 5,
 });
 
+// Switching the format has to release the URLs the previous results held. A chip
+// that is already selected fires no change event, so this picks a different one —
+// which also proves the re-run happens without a submit step.
 await evaluate(`
   (() => {
-    const select = document.querySelector('select[aria-label="Output Format"]');
-    select.value = 'image/png';
-    select.dispatchEvent(new Event('change', { bubbles: true }));
+    const chip = document.querySelector('input[name="converter-output-format"][value="image/jpeg"]');
+    chip.click();
   })()
 `);
-await waitFor(`window.__objectUrlStats().active === 2`, 'old converter result URLs cleanup');
+await waitFor(
+  `document.querySelectorAll('.result-item a[download]').length === 2
+   && [...document.querySelectorAll('.result-item a[download]')].every((link) => link.download.endsWith('.jpg'))`,
+  'converter re-runs on the new format'
+);
 
 await navigate('/tools/image-compressor/');
 await setFiles([path.join(fixtures, 'photo.jpg'), path.join(fixtures, 'sample.webp')]);
 await waitFor(`document.querySelectorAll('.file-item').length === 2`, 'compressor files');
+await assertNoSubmitButton('image-compressor');
 // The compressor has no submit step: results follow the selected purpose.
 await waitFor(
   `Boolean(document.querySelector('[data-batch-success-count="2"][data-batch-failure-count="0"]'))`,
@@ -252,6 +260,7 @@ reports.push(await downloadAndInspectZip('toolkitfree-compressed-images.zip', co
 await navigate('/tools/image-resizer/');
 await setFiles([path.join(fixtures, 'photo.jpg'), path.join(fixtures, 'sample.webp')]);
 await waitFor(`document.querySelectorAll('.file-item').length === 2`, 'resizer files');
+await assertNoSubmitButton('image-resizer');
 // The resizer has no submit step either, since 54e9774: results follow the controls,
 // debounced, so the wait below is what stands in for a click.
 await waitFor(
@@ -268,7 +277,8 @@ reports.push(await downloadAndInspectZip('toolkitfree-resized-images.zip', resiz
 await navigate('/tools/image-converter/');
 await setFiles([path.join(fixtures, 'invalid.txt')]);
 await waitFor(`document.querySelectorAll('.file-item').length === 1`, 'all-failure file');
-await clickAction('Convert 1 image');
+// Again no submit step; the failure summary has to arrive on its own.
+await assertNoSubmitButton('image-converter all-failure');
 await waitFor(
   `Boolean(document.querySelector('[data-batch-success-count="0"][data-batch-failure-count="1"]'))`,
   'all-failure result'

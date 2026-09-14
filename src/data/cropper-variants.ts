@@ -23,7 +23,7 @@ export const variantData: Record<string, CropperVariantPageData> = {
       {
         question: 'How to crop an image to a square?',
         answer:
-          'Choose your image, select the 1:1 aspect ratio, adjust the crop area by dragging, and click Crop. Then download the square result.',
+          'Choose your image, select the 1:1 aspect ratio, and adjust the crop area by dragging. The square result follows the crop box, so you can download it straight away.',
       },
       {
         question: 'What size is a square image?',
@@ -51,7 +51,7 @@ export const variantData: Record<string, CropperVariantPageData> = {
       {
         question: 'How to crop an image to 16:9?',
         answer:
-          'Upload your image, select the 16:9 aspect ratio, position the crop area, and click Crop. Your widescreen image is ready to download.',
+          'Upload your image, select the 16:9 aspect ratio, and position the crop area. The widescreen result follows the crop box and is ready to download.',
       },
       {
         question: 'What is 16:9 used for?',
@@ -74,7 +74,7 @@ export const variantData: Record<string, CropperVariantPageData> = {
       {
         question: 'How to crop an image to 4:3?',
         answer:
-          'Choose your image, select the 4:3 aspect ratio, adjust the crop area, and click Crop. Download the result when processing finishes.',
+          'Choose your image, select the 4:3 aspect ratio, and adjust the crop area. The result follows the crop box; download it once it appears.',
       },
       {
         question: 'What is 4:3 used for?',
@@ -97,7 +97,7 @@ export const variantData: Record<string, CropperVariantPageData> = {
       {
         question: 'How to crop an image to 3:2?',
         answer:
-          'Upload your image, select the 3:2 ratio, drag to position the crop area, and click Crop. Your photo is ready to download.',
+          'Upload your image, select the 3:2 ratio, and drag to position the crop area. The cropped photo follows the crop box and is ready to download.',
       },
       {
         question: 'What is the 3:2 aspect ratio?',
@@ -120,7 +120,7 @@ export const variantData: Record<string, CropperVariantPageData> = {
       {
         question: 'How does free crop work?',
         answer:
-          'Upload your image, select "Free" for aspect ratio, drag the crop handles to select any area, and click Crop. You can resize the selection freely without any ratio constraint.',
+          'Upload your image, select "Free" for aspect ratio, and drag the crop handles to select any area. The result follows the selection, which you can resize freely without any ratio constraint.',
       },
       {
         question: 'Can I enter exact pixel dimensions?',

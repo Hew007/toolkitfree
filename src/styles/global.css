@@ -3188,9 +3188,18 @@ input[type='range'] {
   }
 }
 
-/* Image Compressor: purpose presets, candidate results, and folded fine-tune.
-   The primary action is the download link on each result, so nothing here is a
-   submit button. */
+/* The shared tool-interaction surface: chip rows, the folded fine-tune panel, and
+   the run note. Owned by `ToolChoices.tsx`, `FineTune.tsx` and `ToolRunNote.tsx`
+   — style it here, never per tool, so the tools cannot drift apart as more of
+   them adopt it. The tool-specific rules that follow each name their own tool.
+
+   Nothing here is a submit button: in these tools the result follows the
+   controls, and the primary action is the download on the result itself. */
+/* The column a converted tool's chips, fine-tune panel and run note stack in.
+   None of those three carry outer margin of their own, so without this they sit
+   flush against each other. Shared, because every conversion needs it and the
+   alternative is each tool inlining the same three declarations. */
+.tool-controls,
 .compressor-controls {
   margin-top: 1.25rem;
   display: grid;
@@ -3206,10 +3215,17 @@ input[type='range'] {
 }
 
 .tool-chip-group legend,
+.tool-chip-legend,
 .variant-fieldset legend {
   padding: 0;
   font-size: 0.9375rem;
   font-weight: 600;
+}
+
+/* `ToolPresets` renders buttons, not inputs, so it is a plain div with no legend
+   element to borrow. This gives that heading the same weight. */
+.tool-chip-legend {
+  margin: 0;
 }
 
 .tool-chip-help {
@@ -3443,6 +3459,14 @@ input[type='range'] {
   max-width: 26rem;
 }
 
+/* `display: grid` above is a class selector, so it outranks the user agent's
+   `[hidden] { display: none }` and a field passed `hidden` stays on screen —
+   which is how a quality slider kept showing for a lossless format. This puts
+   the attribute back in charge. */
+.fine-tune-field[hidden] {
+  display: none;
+}
+
 .fine-tune-field > label {
   font-size: 0.875rem;
   font-weight: 500;
@@ -3510,8 +3534,31 @@ input[type='range'] {
     width: 100%;
   }
 
+  /* A chip carrying a hint is a sentence wide, so on a phone three of them wrap
+     to three ragged widths. Full width makes them a clean stack. Chips without a
+     hint are short labels — a ratio, a size — and six full-width rows of "1:1"
+     would be worse than the ragged row, so they keep their intrinsic width. */
+  .tool-chip:has(.tool-chip-hint) {
+    width: 100%;
+  }
+
+  /* The summary is the whole reason the panel can stay shut, so on a narrow
+     screen it wraps onto its own line under the label instead of being dropped.
+     Hiding it made mobile visitors open the panel just to read what applied.
+     `justify-content` has to be reset with it: once the summary leaves the row,
+     `space-between` has only the marker and the label left to push apart, and
+     strands "Fine-tune" against the right edge. */
+  .fine-tune > summary {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    row-gap: 0.2rem;
+    column-gap: 0.5rem;
+  }
+
   .fine-tune-summary {
-    display: none;
+    width: 100%;
+    margin-left: 0;
+    text-align: left;
   }
 }
 

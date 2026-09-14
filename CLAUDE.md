@@ -33,6 +33,20 @@ Current public tools:
 Advertising is intentionally disabled while product quality and user experience are improved. Do
 not reintroduce advertising scripts or placeholders without the project owner's approval.
 
+## Documentation Language
+
+Project documentation is written in Chinese: `PROJECT_STATUS.md`, this file, `AGENTS.md`,
+`TOOL_INTERACTION.md`, `design-qa.md`, and any new handoff or specification document. Existing
+English passages do not need retranslating on their own; switch them over when you next edit them.
+
+These stay in English and are outside the rule:
+
+- **Anything a visitor reads on the site** — page copy, button labels, error messages, SEO metadata,
+  `llms.txt`. The audience is English-speaking.
+- **Code comments and identifiers** — the codebase is commented in English throughout, and mixing
+  languages into it would only make it inconsistent.
+- **Commit messages, pull request titles and bodies** — these live on GitHub and are read with the code.
+
 ## Package Manager and Commands
 
 Use npm and preserve `package-lock.json`.

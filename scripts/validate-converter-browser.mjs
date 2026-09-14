@@ -142,16 +142,25 @@ async function convertVariant({ route, fixture, accept, outputMime, extension })
   );
   await setFiles([fixture]);
   await waitFor(`document.querySelectorAll('.file-item').length === 1`, `${route} file list`);
+  // The output format moved from a select to the chip row, so the variant default
+  // is now read off the lit chip. It still has to be the format this route promises.
+  await waitFor(
+    `document.querySelector('input[name="converter-output-format"]:checked')`,
+    `${route} output chips`
+  );
   assert.equal(
-    await evaluate(`document.querySelector('select[aria-label="Output Format"]').value`),
+    await evaluate(`document.querySelector('input[name="converter-output-format"]:checked').value`),
     outputMime,
     `${route} default output`
   );
-  await evaluate(`
-    [...document.querySelectorAll('button')]
-      .find((button) => button.textContent.trim() === 'Convert 1 image')
-      .click()
-  `);
+  // There is no submit step any more: the result has to arrive on its own.
+  assert.equal(
+    await evaluate(
+      `[...document.querySelectorAll('button')].some((button) => /^Convert \\d+ image/.test(button.textContent.trim()))`
+    ),
+    false,
+    `${route} runs without a submit button`
+  );
   await waitFor(
     `document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`,
     `${route} result`
@@ -270,6 +279,44 @@ const matrix = [
 const matrixResults = [];
 for (const item of matrix) matrixResults.push(await convertVariant(item));
 
+// Changing the chip has to replace the result by itself, and the result it
+// replaces has to be revoked rather than left behind. The counts below are every
+// object URL this page creates: one file thumbnail, one per decode (revoked as
+// soon as the image has loaded), and one per result.
+await navigate('/jpg-to-png/');
+await setFiles([path.join(fixtures, 'photo.jpg')]);
+await waitFor(`document.querySelectorAll('.file-item').length === 1`, 'chip re-run file list');
+await waitFor(
+  `document.querySelector('.result-item a[download]')?.download.endsWith('.png')`,
+  'PNG result without a submit step'
+);
+await evaluate(
+  `document.querySelector('input[name="converter-output-format"][value="image/webp"]').click()`
+);
+await waitFor(
+  `document.querySelector('input[name="converter-output-format"]:checked').value === 'image/webp'`,
+  'WebP chip selected'
+);
+await waitFor(
+  `document.querySelector('.result-item a[download]')?.download.endsWith('.webp')`,
+  'chip change re-runs the conversion'
+);
+assert.equal(
+  await evaluate(`
+    (async () => {
+      const link = document.querySelector('.result-item a[download]');
+      return (await fetch(link.href).then((response) => response.blob())).type;
+    })()
+  `),
+  'image/webp',
+  'chip change output MIME'
+);
+assert.deepEqual(
+  await evaluate(`window.__objectUrlStats()`),
+  { created: 5, revoked: 3, active: 2 },
+  'the replaced result is revoked when the settings change'
+);
+
 if (runExtended) {
   await navigate('/');
   assert.equal(
@@ -283,11 +330,6 @@ if (runExtended) {
     path.join(fixtures, 'empty.bin'),
   ]);
   await waitFor(`document.querySelectorAll('.file-item').length === 4`, 'mixed batch files');
-  await evaluate(`
-    [...document.querySelectorAll('button')]
-      .find((button) => button.textContent.trim() === 'Convert 4 images')
-      .click()
-  `);
   await waitFor(
     `document.querySelector('[data-batch-success-count="2"][data-batch-failure-count="2"]')`,
     'partial batch success'
@@ -335,18 +377,17 @@ if (runExtended) {
   await navigate('/png-to-jpg/');
   await setFiles([path.join(fixtures, 'transparent.png')]);
   await waitFor(`document.querySelectorAll('.file-item').length === 1`, 'transparent PNG');
-  await evaluate(`
-    [...document.querySelectorAll('button')]
-      .find((button) => button.textContent.trim() === 'Convert 1 image')
-      .click()
-  `);
   await waitFor(
     `document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`,
     'transparent PNG to JPG'
   );
   const whiteBackground = await evaluate(`
     (async () => {
-      const source = document.querySelector('input[type="file"]').files[0];
+      // The uploader clears its own input once it has handed the files to React,
+      // so the original bytes come back from the file list's thumbnail instead.
+      const source = await fetch(
+        document.querySelector('.file-item .file-item-thumbnail').src
+      ).then((response) => response.blob());
       const outputUrl = document.querySelector('.result-item a[download]').href;
       const read = async (blob) => {
         const bitmap = await createImageBitmap(blob);
@@ -386,18 +427,17 @@ if (runExtended) {
   await navigate('/png-to-webp/');
   await setFiles([path.join(fixtures, 'transparent.png')]);
   await waitFor(`document.querySelectorAll('.file-item').length === 1`, 'transparent PNG for WebP');
-  await evaluate(`
-    [...document.querySelectorAll('button')]
-      .find((button) => button.textContent.trim() === 'Convert 1 image')
-      .click()
-  `);
   await waitFor(
     `document.querySelector('[data-batch-success-count="1"][data-batch-failure-count="0"]')`,
     'transparent PNG to WebP'
   );
   const webpTransparency = await evaluate(`
     (async () => {
-      const source = document.querySelector('input[type="file"]').files[0];
+      // The uploader clears its own input once it has handed the files to React,
+      // so the original bytes come back from the file list's thumbnail instead.
+      const source = await fetch(
+        document.querySelector('.file-item .file-item-thumbnail').src
+      ).then((response) => response.blob());
       const outputUrl = document.querySelector('.result-item a[download]').href;
       const read = async (blob) => {
         const bitmap = await createImageBitmap(blob);

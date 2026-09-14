@@ -174,6 +174,32 @@ Important directories:
   - sitemap and LLM registry coverage.
 - Prefer long-tail, practical tools over broad all-in-one editors.
 
+## 文档语言
+
+项目内的说明文档使用中文：`PROJECT_STATUS.md`、`CLAUDE.md`、本文件、`TOOL_INTERACTION.md`、
+`design-qa.md`，以及新增的任何交接或规格文档。已有的英文段落不必回头翻译——按需改动时再一并换掉。
+
+以下一律保持英文，不在此规则范围内：
+
+- **网站上任何面向访客的文案** —— 页面内容、按钮文字、错误提示、SEO 元数据、`llms.txt`。站点面向
+  英语受众（见"Product and SEO Conventions"）。
+- **代码注释和标识符** —— 整个代码库的注释都是英文，中途混入中文只会让它前后不一致。
+- **提交信息、PR 标题与正文** —— 这些活在 GitHub 上，和代码一起被阅读。
+
+## Tool Interaction
+
+`TOOL_INTERACTION.md` is the contract for how a tool page behaves: intent chips instead of a leading
+form question, a result that follows the controls instead of waiting behind a submit button, and a
+folded fine-tune panel holding every exact value a chip just set. Read it before changing a tool's
+controls, and use the shared pieces it names — `ToolChoices` / `ToolPresets`, `FineTune`,
+`ToolRunNote`, `useAutoRun` — rather than re-implementing the markup, so the tools cannot drift apart.
+
+It also records which tools must keep an explicit button. Auto-run assumes a run is cheap enough that
+starting one by accident costs nothing; that is false for Background Remover and Video to GIF, and
+applying the pattern there would make the product worse.
+
+Image Compressor and Image Resizer are the reference implementations.
+
 ## Checklist: Adding a Tool or Variant Page
 
 SEO and GEO coverage is registry-driven. Work through this list whenever a public

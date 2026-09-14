@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-09-12
+Last updated: 2026-09-13
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -320,6 +320,133 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-14 — `对外身份` / `llms.txt 可发现性`：外部 SEO 审计的六条里，核实后三条成立、一条部分
+  成立、一条基本不成立、一条无法从这个沙箱验证（出口代理拦了 toolkitfree.net，www 和 301 的实际
+  行为只能由项目所有者在线上确认）。本次实现其中两条。
+
+  **对外身份（审计第 3 条，部分成立）。** 审计说描述还写着"只有图片工具"——这条是错的，Organization
+  的 description 早就是"images, PDFs, QR codes, ID photos, and animated media"。真正缺的是身份：
+  全仓库 `sameAs` 零处，Organization 只有 name/url/description 三个字段。现在补上运营者
+  `ruofeng_x`、对外邮箱（本来就已明文挂在 About 页上，写进 schema 不增加新暴露）、以及 YouTube 频道
+  的 `sameAs`。定义收敛到 `src/data/organization.ts` 一处，首页 `WebSite.publisher` 和 About 的
+  `AboutPage.mainEntity` 都引用它，避免两处漂移。About 页同时加了"Who Runs ToolkitFree"一节——
+  光有 schema 而页面上没有任何佐证，实体识别是站不住的。
+
+  **Dev.to 的 `sameAs` 没有加。** 仓库里没有记录 handle，而 `sameAs` 是一条"此站与该主页同属一个
+  运营者"的可被核查的声明，指向一个不存在的主页比不写更糟。等所有者给出确切 URL，加进
+  `organization.ts` 的数组即可，一行。
+
+  **llms.txt 可发现性（审计第 4 条，成立）。** 此前 `robots.txt`、sitemap、页脚、About 全站 grep
+  零处引用——文件写得不错但没有任何入口。现在页脚每页一个链接、`robots.txt` 以注释指明两个文件
+  （robots 没有对应的标准指令）、About 页给出面向助手的说明。**没有把 llms.txt 放进 sitemap.xml**：
+  sitemap 是给可索引 HTML 页面的，而 `validate-seo-registry.mjs` 正是拿可索引路由去比对 llms 覆盖，
+  把它自己放进去会让这个校验自指。审计这一小条不采纳。
+
+  门禁：typecheck、lint、format、13 项单测、构建、SEO 注册表、站点完整性，以及 71 路由 × 5 宽度的
+  responsive/a11y 套件，全部通过，`browserErrors` 为 0。内部链接从 4292 涨到 4366（页脚每页多一个
+  llms.txt 链接），零断链。
+
+- 2026-09-13 — `视觉验收` / `修掉三处只有看页面才能发现的问题`：前一条记的是门禁和代码审查，但
+  页面长什么样一直没人看过。补做了截图验收（桌面 1440 / 手机 390，上传真实文件后拍控件区），发现
+  三处自动化完全抓不到的问题：
+
+  - **Image Converter 的"如何使用"步骤还写着 Click "Convert"**，主页面一处、`[variant].astro` 一处
+    （覆盖 9 个变体页）。改造 agent 修了 FAQ 答案却漏了同一个文件里的 `<ol>`。`validate-seo` 和
+    `validate-site` 都不读散文，所以全绿也说明不了这句话是真是假。
+  - **微调摘要行在手机上排版错乱，是集成方自己引入的回归。** 上一条把窄屏 `display:none` 改成换行时
+    没有一并重置 `justify-content: space-between`——摘要换行后那一行只剩箭头和 "Fine-tune" 两个元素，
+    被撑到了两端。
+  - **带提示语的芯片在手机上三种宽度参差不齐。** 改为窄屏下占满整行，用 `:has(.tool-chip-hint)` 限定
+    ——没有提示语的短芯片（裁剪比例那六枚）保持原宽，否则六行 "1:1" 比参差更糟。
+
+  结论记在这里：**这三个工具的浏览器套件此前全绿，但页面上写着一句假话、手机布局是坏的。**
+  自动化能证明行为正确，证明不了观感正确；后面九个工具的验收必须包含截图这一步。
+
+  重跑门禁：typecheck、lint、format、13 项单测、构建、SEO、站点完整性，以及 responsive/a11y、
+  converter、resizer/cropper、compressor 四个浏览器套件，全部通过，`browserErrors` 均为 0。
+
+- 2026-09-13 — `试点三个工具改造` / `已集成` / `规格已按反馈修订`：Image Converter（A 类）、
+  Image Cropper（B 类）、Video to GIF（C 类）由三个并行 agent 在各自 worktree 完成并合入。刻意先派
+  三个而不是十二个，一类一个，检验的是规格本身能不能被执行——事实证明这个决定是对的，下面每一条
+  都是在三个上发现、而不是在十二个上发现的。
+
+  三次改造本身都达标：Converter 用格式芯片 + 自动运行，且没有动任何变体页钉死的输出格式；Cropper
+  的结果跟随裁剪框，解码结果按文件缓存后，实测 1.2 秒拖拽 48 次 pointermove 期间编码 0 次、松手后
+  恰好 1 次；Video to GIF 实测转码 2.2–15.3 秒后确认 C 类判断成立，保留按钮，只把零成本的算术
+  （输出尺寸、帧数、预算预检）做成实时——其中预检前移是净收益，原来要等 10 MB 引擎下载完才会告诉
+  用户这组设置超预算。
+
+  集成时发现并修复的问题，全部不是 agent 能从自己的任务里看到的：
+
+  - **`FineTuneField` 的 `hidden` 不生效**（共享件 bug，由 C 类 agent 回报）。`.fine-tune-field` 的
+    `display: grid` 是类选择器，优先级高过 UA 样式表的 `[hidden]`，所以 Resizer 选 PNG 时质量滑块
+    一直在显示。这是改造前就存在的缺陷，被共享件原样继承。已加 `.fine-tune-field[hidden]`。
+  - **Compressor 在工作过程中注册对象 URL**（由 A 类 agent 回报，在集成方自己写的代码里）。
+    `objectUrls.replace` 会吊销该 key 原有的 URL，所以被取代的运行能先吊销新运行的 URL、再自我放弃，
+    页面上留下指向已吊销 blob 的 `src`。注册改到令牌检查之后。
+  - **删掉一个提交按钮会打挂别的套件。** `validate-batch-download-browser.mjs` 和
+    `validate-performance-browser.mjs` 都驱动 converter，都还在点那个不存在的按钮。两个都修了，并把
+    原来的点击辅助函数换成一条防倒退断言：这些路由上不得再出现提交按钮。
+  - **`.gitignore` 不忽略 `node_modules` 符号链接**（`node_modules/` 带斜杠只匹配目录），而 worktree
+    的依赖正是符号链接，`git add -A` 会把它暂存进去。去掉斜杠。
+  - **`eslint .` 会走进 `.claude/worktrees/`**，报出 14085 个不属于任何人 diff 的错误。已 ignore。
+  - **微调摘要行在窄屏被 `display: none`**，等于手机上看不到当前值，与规格承诺矛盾。改为换行到下一行。
+
+  `TOOL_INTERACTION.md` 按这些反馈修订：对象 URL 必须在令牌检查之后注册（不只是 `runNow` 的问题）；
+  `key` 序列化的是输出真正依赖的量而非控件当前值；解码成本必须按文件缓存；`onInvalidate` 在编辑器型
+  工具里一次拖拽跑几十次，必须便宜且幂等；芯片不得覆盖变体页面钉死的值；B 类的"不加芯片"指不新增
+  问题、不是禁用共享组件；改造必须同步修 FAQ 与步骤文案里描述已删按钮的句子；验收清单区分 A/B 类与
+  C 类；转码成本表换成实测数字，并把判据从秒数改成"误触发值不值得付账"；新增共享类 `.tool-controls`
+  （两个 agent 独立提出同一需求）；以及"先 grep 所有套件"这一条。
+
+  门禁：typecheck、lint、format、13 项单测、构建、SEO 注册表、站点完整性全部通过；12 个浏览器套件
+  全部通过、`browserErrors` 均为 0。第 13 个 `validate-secondary-tools-browser.mjs` 仍因沙箱连不上
+  `staticimgly.com` 跑不了。
+
+  剩余九个工具尚未改造。试点暴露的规格缺口已经补上，可以放大批次。
+
+- 2026-09-13 — `合并 master` / `修掉 agent worktree 污染 lint`：#20 合入 master 后，把 master 合进
+  foundation 分支。照例只有 `PROJECT_STATUS.md` 冲突——两边都往同一个倒序日志顶部追加——全部条目按
+  日期保留，没有丢弃。
+
+  合完暴露出一个真问题：`npm run lint` 报了 14085 个错。不是代码的问题。子 agent 的 worktree 建在
+  `.claude/worktrees/agent-*`，也就是**仓库目录内部**，每个都是完整检出，带自己生成的 `.astro` 类型
+  和软链过去的 `node_modules`，于是主检出跑 `eslint .` 会走进这三个目录，报出一堆不属于任何人 diff
+  的错误。`eslint.config.js` 的 ignores 里加上 `.claude/**`。worktree 里面的 agent 不受影响（worktree
+  不嵌套），受影响的只有主检出——但那正是集成时要跑门禁的地方。
+
+  合并后完整门禁通过：typecheck、lint、format、13 项单测、构建、SEO 注册表、站点完整性。
+
+- 2026-09-13 — `规则` / `文档语言`：项目说明文档改用中文，规则写进 `CLAUDE.md` 与 `AGENTS.md`。
+  边界是明确的，因为搞错代价很大：**网站上任何访客能读到的文案、代码注释与标识符、提交信息与 PR
+  正文，一律保持英文**。站点面向英语受众，代码库通篇英文注释，中途混入中文只会让它前后不一致。
+  已有的英文段落不回头翻译，按需改动时再换。`TOOL_INTERACTION.md` 已整篇改为中文——它是接下来十二
+  次改造要反复读的文件，是这条规则最该先落地的地方。本条之后的日志也用中文。
+
+- 2026-09-13 — `foundation` / `ready for parallel work`: the interaction redesign had reached two of
+  fourteen tools — Image Compressor and Image Resizer had intent chips, auto-run and a folded
+  fine-tune panel; the other twelve were still fill-in-then-submit. Rolling that out twelve more
+  times needed a written contract first, or twelve conversions would have produced twelve dialects.
+
+  `TOOL_INTERACTION.md` is that contract, and the shared pieces it names now exist:
+  `ToolChoices` / `ToolPresets` (selection chips and action chips), `FineTune` / `FineTuneField`,
+  `ToolRunNote`, and the `useAutoRun` hook that carries the debounce and the run-token discipline —
+  the part that is easy to leave out, since a superseded run overwriting fresh results only misbehaves
+  when input arrives faster than the work completes. Both reference tools were migrated onto them, so
+  the API is proven against two real cases rather than specified in the abstract; their browser suites
+  pass unchanged, which is what says the refactor changed no behaviour.
+
+  The spec is deliberately not a template to apply everywhere. It records which tools must keep an
+  explicit button — Background Remover at 6-25s a run, Video to GIF at tens of seconds — because
+  auto-run assumes starting a run by accident is free, and says that reporting a wrong assignment is
+  a correct outcome rather than a failure. It also fixes the two things that would otherwise make
+  parallel work cost more than it saves: `global.css` and this file are integration-owned, so no
+  conversion touches them, and browser tests take their ports from `E2E_PREVIEW_PORT` /
+  `E2E_DEBUG_PORT` so concurrent runs cannot collide.
+
+  Gates on this change: typecheck, lint, format, 13 unit scripts, build, SEO registry, site
+  integrity, and the compressor, resizer/cropper and batch-download browser suites, all passing with
+  zero browser errors.
 - 2026-09-12 — `observability` / `reviewed`: the threading fix and the header restore were reviewed
   against a fresh clone. The diagnosis holds and the gates pass here — typecheck, lint, format, all
   13 unit scripts, and eleven of the twelve browser suites; the built `_headers` carries exactly one

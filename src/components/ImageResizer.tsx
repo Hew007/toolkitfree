@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
+import { ToolPresets, type ToolChoice } from './ToolChoices';
+import FineTune, { FineTuneField } from './FineTune';
+import ToolRunNote from './ToolRunNote';
+import { useAutoRun } from '../hooks/useAutoRun';
 import { mapSettledWithConcurrency } from '../lib/async-pool';
 import FileList from './FileList';
 import BatchResultsSummary from './BatchResultsSummary';
@@ -70,8 +74,10 @@ const OUTPUT_FORMATS: Record<ImageOutputMimeType, { label: string; extension: st
  * box with the ratio kept, so these shortcuts set exactly that. The full preset
  * list stays available for anyone who needs a specific platform size.
  */
+type FitShortcutId = 'fit-1920' | 'fit-1280' | 'fit-800' | 'fit-300';
+
 interface FitShortcut {
-  id: string;
+  id: FitShortcutId;
   label: string;
   hint: string;
   longestEdge: number;
@@ -83,6 +89,15 @@ const FIT_SHORTCUTS: readonly FitShortcut[] = [
   { id: 'fit-800', label: 'Fit 800 px', hint: 'Email and chat', longestEdge: 800 },
   { id: 'fit-300', label: 'Fit 300 px', hint: 'Thumbnails and avatars', longestEdge: 300 },
 ];
+
+/** The chip row is a projection of the shortcuts above; it is never written twice. */
+const FIT_SHORTCUT_CHOICES: readonly ToolChoice<FitShortcutId>[] = FIT_SHORTCUTS.map(
+  (shortcut) => ({ id: shortcut.id, label: shortcut.label, hint: shortcut.hint })
+);
+
+const FIT_SHORTCUT_BY_ID = Object.fromEntries(
+  FIT_SHORTCUTS.map((shortcut) => [shortcut.id, shortcut])
+) as Record<FitShortcutId, FitShortcut>;
 
 /**
  * Resizing needs no submit step: the output size is known the moment the
@@ -109,7 +124,6 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
   const [elapsedMs, setElapsedMs] = useState<number | null>(null);
   const objectUrls = useObjectUrlRegistry();
   const previewDragRef = useRef<PreviewResizeDrag | null>(null);
-  const runIdRef = useRef(0);
 
   useEffect(() => {
     const firstFile = files[0];
@@ -322,52 +336,44 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
     [files, format, height, maintainRatio, preset, quality, width]
   );
 
-  // No submit step: the result follows the controls, debounced, and a newer
-  // change abandons the run in flight instead of queueing behind it.
-  useEffect(() => {
-    runIdRef.current += 1;
-    objectUrls.revokePrefix('resizer:result:');
-    setResults([]);
-    setFailures([]);
-    setElapsedMs(null);
-
-    if (files.length === 0 || width < 1 || height < 1) {
+  // No submit step: the result follows the controls.
+  useAutoRun({
+    key: settingsKey,
+    enabled: files.length > 0 && width >= 1 && height >= 1,
+    delayMs: RESIZE_DELAY_MS,
+    onInvalidate: () => {
+      objectUrls.revokePrefix('resizer:result:');
+      setResults([]);
+      setFailures([]);
+      setElapsedMs(null);
       setProcessing(false);
-      return;
-    }
+    },
+    run: async (isCurrent) => {
+      const queued = files;
+      setProcessing(true);
+      const startedAt = performance.now();
+      const settled = await mapSettledWithConcurrency(queued, 2, resizeImage);
+      if (!isCurrent()) return;
 
-    const runId = runIdRef.current;
-    const queued = files;
-
-    const timer = setTimeout(() => {
-      void (async () => {
-        setProcessing(true);
-        const startedAt = performance.now();
-        const settled = await mapSettledWithConcurrency(queued, 2, resizeImage);
-        if (runIdRef.current !== runId) return;
-
-        const nextResults: ResizedFile[] = [];
-        const nextFailures: ResizeFailure[] = [];
-        settled.forEach((outcome, index) => {
-          if (outcome.status === 'fulfilled') {
-            nextResults.push(outcome.value);
-          } else {
-            nextFailures.push({
-              sourceId: `file-${index}`,
-              name: queued[index].name,
-              message: getImageProcessingErrorMessage(outcome.reason),
-            });
-          }
-        });
-        setResults(nextResults);
-        setFailures(nextFailures);
-        setElapsedMs(Math.round(performance.now() - startedAt));
-        setProcessing(false);
-      })();
-    }, RESIZE_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [settingsKey, files, width, height, objectUrls, resizeImage]);
+      const nextResults: ResizedFile[] = [];
+      const nextFailures: ResizeFailure[] = [];
+      settled.forEach((outcome, index) => {
+        if (outcome.status === 'fulfilled') {
+          nextResults.push(outcome.value);
+        } else {
+          nextFailures.push({
+            sourceId: `file-${index}`,
+            name: queued[index].name,
+            message: getImageProcessingErrorMessage(outcome.reason),
+          });
+        }
+      });
+      setResults(nextResults);
+      setFailures(nextFailures);
+      setElapsedMs(Math.round(performance.now() - startedAt));
+      setProcessing(false);
+    },
+  });
 
   return (
     <div data-resizer-preset={preset} aria-busy={processing}>
@@ -444,32 +450,20 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
           </section>
 
           <div className="resizer-controls-panel">
-            <div className="tool-chip-group">
-              <p className="tool-chip-help">
-                Common sizes. Each one keeps the aspect ratio and fits the image inside the value.
-              </p>
-              <div className="tool-chip-row">
-                {FIT_SHORTCUTS.map((shortcut) => {
-                  const active =
-                    preset === 'custom' &&
-                    maintainRatio &&
-                    width === shortcut.longestEdge &&
-                    height === shortcut.longestEdge;
-                  return (
-                    <button
-                      type="button"
-                      key={shortcut.id}
-                      className={`tool-chip${active ? ' is-selected' : ''}`}
-                      aria-pressed={active}
-                      onClick={() => handleFitShortcut(shortcut)}
-                    >
-                      <span className="tool-chip-label">{shortcut.label}</span>
-                      <span className="tool-chip-hint">{shortcut.hint}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <ToolPresets
+              help="Common sizes. Each one keeps the aspect ratio and fits the image inside the value."
+              presets={FIT_SHORTCUT_CHOICES}
+              isActive={(choice) => {
+                const shortcut = FIT_SHORTCUT_BY_ID[choice.id];
+                return (
+                  preset === 'custom' &&
+                  maintainRatio &&
+                  width === shortcut.longestEdge &&
+                  height === shortcut.longestEdge
+                );
+              }}
+              onApply={(choice) => handleFitShortcut(FIT_SHORTCUT_BY_ID[choice.id])}
+            />
 
             <div className="resizer-size-fields">
               <div>
@@ -540,65 +534,60 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
               </p>
             </div>
 
-            <details className="fine-tune">
-              <summary>
-                <span>Fine-tune</span>
-                <span className="fine-tune-summary">
+            <FineTune
+              summary={
+                <>
                   {OUTPUT_FORMATS[format].label}
                   {format === 'image/png' ? '' : ` · quality ${quality}%`}
-                </span>
-              </summary>
-              <div className="fine-tune-body">
-                <div className="fine-tune-field">
-                  <label htmlFor="resize-format">Output format</label>
-                  <select
-                    id="resize-format"
-                    data-testid="resize-format"
-                    value={format}
-                    onChange={(event) => {
-                      setFormat(event.target.value as ImageOutputMimeType);
-                      clearResults();
-                    }}
-                  >
-                    {Object.entries(OUTPUT_FORMATS).map(([mimeType, value]) => (
-                      <option key={mimeType} value={mimeType}>
-                        {value.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div
-                  className="fine-tune-field"
-                  hidden={format === 'image/png'}
-                  aria-hidden={format === 'image/png'}
+                </>
+              }
+            >
+              <FineTuneField htmlFor="resize-format" label="Output format">
+                <select
+                  id="resize-format"
+                  data-testid="resize-format"
+                  value={format}
+                  onChange={(event) => {
+                    setFormat(event.target.value as ImageOutputMimeType);
+                    clearResults();
+                  }}
                 >
-                  <label htmlFor="resize-quality">Quality: {quality}%</label>
-                  <input
-                    id="resize-quality"
-                    data-testid="resize-quality"
-                    type="range"
-                    min="10"
-                    max="100"
-                    value={quality}
-                    onChange={(event) => {
-                      setQuality(Number(event.target.value));
-                      clearResults();
-                    }}
-                  />
-                  <p className="tool-hint">PNG is lossless, so quality does not apply to it.</p>
-                </div>
-              </div>
-            </details>
+                  {Object.entries(OUTPUT_FORMATS).map(([mimeType, value]) => (
+                    <option key={mimeType} value={mimeType}>
+                      {value.label}
+                    </option>
+                  ))}
+                </select>
+              </FineTuneField>
 
-            <p className="tool-run-note">
-              <span className={`run-dot${processing ? ' is-busy' : ''}`} aria-hidden="true" />
+              <FineTuneField
+                htmlFor="resize-quality"
+                label={`Quality: ${quality}%`}
+                hint="PNG is lossless, so quality does not apply to it."
+                hidden={format === 'image/png'}
+              >
+                <input
+                  id="resize-quality"
+                  data-testid="resize-quality"
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={quality}
+                  onChange={(event) => {
+                    setQuality(Number(event.target.value));
+                    clearResults();
+                  }}
+                />
+              </FineTuneField>
+            </FineTune>
+
+            <ToolRunNote busy={processing}>
               {processing
                 ? 'Resizing in your browser…'
                 : elapsedMs !== null
                   ? `Resized in your browser in ${(elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
                   : 'Results follow the settings above. Nothing is uploaded.'}
-            </p>
+            </ToolRunNote>
           </div>
         </div>
       )}

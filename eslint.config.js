@@ -14,6 +14,11 @@ export default tseslint.config(
       '.wrangler/**',
       'docs/**',
       'public/generated/**',
+      // Agent worktrees live inside the repo, each a full checkout with its own
+      // generated `.astro` types and a symlinked `node_modules`. Without this,
+      // `eslint .` from the main checkout walks into all of them and reports
+      // thousands of errors that belong to nobody's diff.
+      '.claude/**',
     ],
   },
   eslint.configs.recommended,

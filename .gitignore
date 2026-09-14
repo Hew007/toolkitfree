@@ -2,7 +2,10 @@
 dist/
 
 # dependencies
-node_modules/
+# No trailing slash: that form matches directories only, and agent worktrees get
+# their dependencies as a symlink named `node_modules`, which `git add -A` would
+# then happily stage.
+node_modules
 public/generated/ffmpeg/
 public/generated/background-removal/
 pnpm-lock.yaml

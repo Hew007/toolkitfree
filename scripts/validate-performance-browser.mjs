@@ -284,11 +284,9 @@ for (const [route, forbidden] of [
 await navigate('/tools/image-converter/');
 await uploadGeneratedPng({ name: 'one.png', width: 96, height: 64 });
 await waitFor(`document.querySelectorAll('.file-item').length === 1`, 'converter file');
-await evaluate(`
-  [...document.querySelectorAll('button')]
-    .find((button) => button.textContent.trim() === 'Convert 1 image')
-    .click()
-`);
+// No submit step: the conversion follows the chosen format, so the ZIP action
+// appears on its own. What this guards is unchanged — JSZip must stay unloaded
+// until that action is used, and converting on upload must not pull it in early.
 await waitFor(`Boolean(document.querySelector('[data-batch-download]'))`, 'converter result');
 assert.equal(requested(heavyAssets.jszip), false, 'JSZip should remain unloaded before ZIP action');
 await evaluate(`document.querySelector('[data-batch-download]').click()`);

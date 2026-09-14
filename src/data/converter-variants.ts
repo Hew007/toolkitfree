@@ -76,7 +76,7 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
     {
       question: 'How to convert JPG to PNG?',
       answer:
-        'Upload your JPG file, select PNG as the output format, and click Convert. The PNG output uses lossless encoding for the decoded pixels, but existing JPG compression artifacts and lost detail remain.',
+        'Upload your JPG file. This page opens with PNG already chosen, and the conversion runs as soon as the file is read. The PNG output uses lossless encoding for the decoded pixels, but existing JPG compression artifacts and lost detail remain.',
     },
     {
       question: 'Is JPG to PNG conversion lossless?',
@@ -103,7 +103,7 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
     {
       question: 'How to convert PNG to JPG?',
       answer:
-        'Upload your PNG file, select JPG as the output format, adjust the quality slider if needed, and click Convert. Transparent areas will be filled with white.',
+        'Upload your PNG file. This page opens with JPG already chosen and converts without a further step; open Fine-tune to move the quality slider, and the result follows it. Transparent areas will be filled with white.',
     },
     {
       question: 'Will I lose transparency when converting PNG to JPG?',
@@ -125,7 +125,7 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
     {
       question: 'How to convert WebP to JPG?',
       answer:
-        'Choose your WebP file, select JPG as the output format, and click Convert. Download the JPG when browser processing finishes.',
+        'Choose your WebP file. JPG is already chosen on this page, so the conversion runs on its own. Download the JPG when browser processing finishes.',
     },
     {
       question: 'Why convert WebP to JPG?',
@@ -142,7 +142,7 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
     {
       question: 'How to convert JPG to WebP?',
       answer:
-        'Choose your JPG file, select WebP as the output format, adjust quality if desired, and click Convert. Compare the actual output size and preview before downloading.',
+        'Choose your JPG file. WebP is already chosen on this page and the conversion runs on its own; open Fine-tune to adjust quality and the result follows it. Compare the actual output size and preview before downloading.',
     },
     {
       question: 'Why convert JPG to WebP?',
@@ -159,7 +159,7 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
     {
       question: 'How to convert PNG to WebP?',
       answer:
-        'Upload your PNG file, select WebP as the output format, and click Convert. WebP supports transparency, so your transparent PNG will keep its transparency.',
+        'Upload your PNG file. This page opens with WebP already chosen and converts without a further step. WebP supports transparency, so your transparent PNG will keep its transparency.',
     },
     {
       question: 'Does WebP support transparency like PNG?',
@@ -176,7 +176,7 @@ export const faqData: Record<string, { question: string; answer: string }[]> = {
     {
       question: 'How to convert WebP to PNG?',
       answer:
-        'Upload your WebP file, select PNG as the output format, and click Convert. The conversion preserves transparency and image quality.',
+        'Upload your WebP file. PNG is already chosen on this page, so the conversion runs as soon as the file is read. The conversion preserves transparency and image quality.',
     },
     {
       question: 'Why convert WebP to PNG?',

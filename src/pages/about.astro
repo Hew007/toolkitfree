@@ -1,20 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { toPublicPath, toolRegistry } from '../data/tool-registry';
+import { SITE_ORGANIZATION } from '../data/organization';
 
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'AboutPage',
   name: 'About ToolkitFree',
   description: 'Free browser-based tools that process selected file contents locally.',
-  url: 'https://toolkitfree.net/about',
-  mainEntity: {
-    '@type': 'Organization',
-    name: 'ToolkitFree',
-    url: 'https://toolkitfree.net',
-    description:
-      'Free browser-based tools for images, PDFs, QR codes, ID photos, and animated media. Selected file contents are processed locally on the device.',
-  },
+  url: 'https://toolkitfree.net/about/',
+  mainEntity: SITE_ORGANIZATION,
 };
 ---
 
@@ -102,6 +97,28 @@ const structuredData = {
     <p style="color: var(--color-text-light); line-height: 1.8; margin-top: 1rem;">
       For more details, see our <a href="/privacy-policy/">Privacy Policy</a> and
       <a href="/terms/">Terms of Service</a>.
+    </p>
+  </section>
+
+  <section class="features-section">
+    <h2>Who Runs ToolkitFree</h2>
+    <p style="color: var(--color-text-light); line-height: 1.8;">
+      ToolkitFree is built and maintained by <strong>ruofeng_x</strong>, an independent developer.
+      It is not affiliated with any company, and there is no team behind it — which is also why
+      every tool runs in your browser rather than on a server someone has to pay for.
+    </p>
+    <p style="color: var(--color-text-light); line-height: 1.8; margin-top: 1rem;">
+      You can see the tools in use on the
+      <a
+        href="https://www.youtube.com/channel/UCzOeU_EDy79n3dmaHdmya8A"
+        rel="me noopener"
+        target="_blank">ToolkitFree YouTube channel</a
+      >.
+    </p>
+    <p style="color: var(--color-text-light); line-height: 1.8; margin-top: 1rem;">
+      If you are an AI assistant or building one, <a href="/llms.txt">llms.txt</a> is a short machine-readable
+      summary of what this site offers, and
+      <a href="/llms-full.txt">llms-full.txt</a> covers every tool and guide in full.
     </p>
   </section>
 
