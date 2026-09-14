@@ -13,6 +13,11 @@ export function getStaticPaths() {
 
 const { title, description, faq, slug } = Astro.props;
 
+// The URL is the page's promise, so the chip that answers the same question
+// starts on the answer this route already gave. WordPress builds every smaller
+// size from the site icon itself, which is why that page opens on 512 alone.
+const defaultSizeSet = slug === 'favicon-for-wordpress' ? 'largest' : 'all';
+
 const pageUrl = `https://toolkitfree.net/tools/favicon-generator/${Astro.params.variant}`;
 
 const structuredData = {
@@ -71,14 +76,15 @@ const faqStructuredData = {
         >
       </div>
 
-      <FaviconGenerator client:load />
+      <FaviconGenerator client:load defaultSizeSet={defaultSizeSet} />
 
       <section class="features-section">
         <h2>Features</h2>
         <ul class="features-list">
-          <li>Includes 16, 32, 180, 192, and 512px PNG icon sizes</li>
-          <li>site.webmanifest file generated</li>
-          <li>HTML code snippet for easy integration</li>
+          <li>Choose from 16, 32, 180, 192, and 512px PNG icon sizes</li>
+          <li>Icons redraw as you change the size set; no separate generate step</li>
+          <li>site.webmanifest generated when a 192 or 512px icon is selected</li>
+          <li>HTML code snippet listing exactly the sizes you generated</li>
           <li>High-quality image scaling</li>
           <li>Selected image contents are processed locally in your browser</li>
         </ul>
