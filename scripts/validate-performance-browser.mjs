@@ -318,16 +318,14 @@ assert.ok(
 
 await navigate('/tools/favicon-generator/');
 await uploadGeneratedPng({ name: 'favicon.png', width: 96, height: 64 });
-// The page copy explains the "Generate Favicons" step, so only the button proves the upload
-// has rendered.
-await waitFor(
-  `[...document.querySelectorAll('button')].some((button) => button.textContent.trim() === 'Generate Favicons')`,
-  'favicon generate button'
-);
+// No submit step: the five icons follow the chosen size set and appear on their own.
+// What this guards is unchanged — JSZip must stay unloaded until the visitor asks for
+// the ZIP, and rendering five icons on upload must not pull it in early.
+await waitFor(`document.querySelectorAll('[data-favicon-icon]').length === 5`, 'favicon icons');
 assert.equal(requested(heavyAssets.jszip), false);
 await evaluate(`
   [...document.querySelectorAll('button')]
-    .find((button) => button.textContent.trim() === 'Generate Favicons')
+    .find((button) => button.textContent.trim() === 'Download ZIP')
     .click()
 `);
 await waitForRequest(heavyAssets.jszip, 'Favicon JSZip dynamic request');

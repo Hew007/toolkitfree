@@ -12,7 +12,7 @@ const faqItems = [
   {
     question: 'What sizes does this tool generate?',
     answer:
-      'The tool generates five common PNG sizes: 16x16, 32x32, 180x180, 192x192, and 512x512, plus a site.webmanifest file. It does not generate an .ico file.',
+      'It can generate five common PNG sizes: 16x16, 32x32, 180x180, 192x192, and 512x512, plus a site.webmanifest file. The size-set choice above the preview decides which of them are produced, and the fine-tune panel selects sizes individually. It does not generate an .ico file.',
   },
   {
     question: 'Is this favicon generator free?',
@@ -27,7 +27,7 @@ const faqItems = [
   {
     question: 'How do I add the favicon to my website?',
     answer:
-      "After downloading the ZIP, extract the files to your website's root directory and add the provided HTML code to your page's <head> section.",
+      "Download the ZIP, extract the files to your website's root directory, and add the HTML code shown under the icons to your page's <head> section. That snippet lists exactly the sizes you generated.",
   },
   {
     question: 'Does this work for WordPress?',
@@ -42,7 +42,7 @@ const faqItems = [
   {
     question: 'Are my images uploaded to a server?',
     answer:
-      'No. Favicon generation uses the Canvas API and JSZip in your browser. The selected image contents are not sent to ToolkitFree for processing.',
+      'No. Icons are drawn with the Canvas API in your browser, and the ZIP is packaged in your browser with JSZip when you ask for it. The selected image contents are not sent to ToolkitFree for processing.',
   },
   {
     question: 'Can I use any image format?',
@@ -52,7 +52,7 @@ const faqItems = [
   {
     question: 'Does this tool generate favicon.ico?',
     answer:
-      'No. The ZIP contains five PNG icons and site.webmanifest. The provided HTML references PNG favicon files.',
+      'No. The ZIP contains the PNG icons you selected, plus site.webmanifest when a 192 or 512 px icon is among them. The provided HTML references PNG favicon files.',
   },
   {
     question: 'What is the recommended favicon size?',
@@ -109,8 +109,9 @@ const breadcrumbSchema = {
     <div class="tool-content">
       <h1>Free Online Favicon Generator</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
-        Generate five common PNG favicon sizes from one image. Download a ZIP with a webmanifest and
-        HTML code. All processing in your browser.
+        Pick the set of favicon sizes you need and the icons are drawn as you choose — no generate
+        step. Download a ZIP with a webmanifest and HTML code. Selected image contents are processed
+        in your browser.
       </p>
 
       <div class="privacy-badge">
@@ -125,8 +126,8 @@ const breadcrumbSchema = {
         <h2>How to Generate Favicons</h2>
         <ol class="howto-steps">
           <li>Upload a square image (PNG recommended, 512x512 or larger)</li>
-          <li>Click "Generate Favicons"</li>
-          <li>Preview all generated sizes</li>
+          <li>Choose which set of sizes you need; the icons redraw as you choose</li>
+          <li>Open Fine-tune to add or remove individual sizes</li>
           <li>Download the ZIP file</li>
           <li>Copy the HTML code and add it to your website</li>
         </ol>
@@ -136,11 +137,12 @@ const breadcrumbSchema = {
         <h2>Features</h2>
         <ul class="features-list">
           <li>Generates 16, 32, 180, 192, and 512px PNG icon sizes</li>
-          <li>Includes site.webmanifest file</li>
-          <li>Ready-to-use HTML code snippet</li>
+          <li>Icons redraw as you change the size set; no separate generate step</li>
+          <li>Includes site.webmanifest when a 192 or 512px icon is selected</li>
+          <li>HTML code snippet listing exactly the sizes you generated</li>
           <li>Non-square images use transparent padding, never stretching</li>
           <li>PNG output only; no .ico file is generated</li>
-          <li>Supports PNG, JPG, WebP, and more</li>
+          <li>Accepts PNG, JPG, and WebP input</li>
           <li>Selected image contents are processed locally in your browser</li>
         </ul>
       </section>

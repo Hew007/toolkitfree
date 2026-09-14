@@ -407,18 +407,18 @@ await upload([
     transparent: true,
   },
 ]);
-await waitFor(
-  `[...document.querySelectorAll('button')].some((button) => button.textContent.trim() === 'Generate Favicons')`,
-  'favicon input'
-);
-await evaluate(`
-  [...document.querySelectorAll('button')]
-    .find((button) => button.textContent.trim() === 'Generate Favicons')
-    .click()
-`);
+// The icons follow the chosen size set, so they arrive without a submit step.
 await waitFor(
   `document.querySelectorAll('[data-favicon-icon]').length === 5`,
   'five favicon outputs'
+);
+assert.equal(
+  await evaluate(`
+    [...document.querySelectorAll('button')]
+      .some((button) => button.textContent.trim() === 'Generate Favicons')
+  `),
+  false,
+  'Favicon generator must not regain a generate step'
 );
 const faviconResults = await evaluate(`
   (async () => Promise.all(
@@ -460,6 +460,13 @@ const paddingPixels = await evaluate(`
 `);
 assert.equal(paddingPixels.topAlpha, 0);
 assert.equal(paddingPixels.centerAlpha, 255);
+// Packaging stays a deliberate action, so the archive only exists once asked for.
+await evaluate(`
+  [...document.querySelectorAll('button')]
+    .find((button) => button.textContent.trim() === 'Download ZIP')
+    .click()
+`);
+await waitFor(`Boolean(document.querySelector('[data-favicon-zip-url]'))`, 'favicon ZIP packaging');
 const zipBase64 = await evaluate(`
   (async () => {
     const url = document.querySelector('[data-favicon-zip-url]').dataset.faviconZipUrl;
