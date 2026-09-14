@@ -1,5 +1,6 @@
 ---
 import ImageConverter from '../components/ImageConverter';
+import { SITE_ORGANIZATION } from '../data/organization';
 import ToolIcon from '../components/ToolIcon.astro';
 import { toPublicPath, toolRegistry } from '../data/tool-registry';
 import Layout from '../layouts/Layout.astro';
@@ -10,7 +11,10 @@ const structuredData = {
   name: 'ToolkitFree',
   description:
     'Free browser tools for images, PDFs, QR codes, ID photos, and animated media with local file-content processing.',
-  url: 'https://toolkitfree.net',
+  url: 'https://toolkitfree.net/',
+  // Names the operator on the page most likely to be cited, so the site is an
+  // identifiable entity rather than an anonymous domain.
+  publisher: SITE_ORGANIZATION,
 };
 ---
 

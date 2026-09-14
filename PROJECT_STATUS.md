@@ -320,6 +320,32 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-14 — `对外身份` / `llms.txt 可发现性`：外部 SEO 审计的六条里，核实后三条成立、一条部分
+  成立、一条基本不成立、一条无法从这个沙箱验证（出口代理拦了 toolkitfree.net，www 和 301 的实际
+  行为只能由项目所有者在线上确认）。本次实现其中两条。
+
+  **对外身份（审计第 3 条，部分成立）。** 审计说描述还写着"只有图片工具"——这条是错的，Organization
+  的 description 早就是"images, PDFs, QR codes, ID photos, and animated media"。真正缺的是身份：
+  全仓库 `sameAs` 零处，Organization 只有 name/url/description 三个字段。现在补上运营者
+  `ruofeng_x`、对外邮箱（本来就已明文挂在 About 页上，写进 schema 不增加新暴露）、以及 YouTube 频道
+  的 `sameAs`。定义收敛到 `src/data/organization.ts` 一处，首页 `WebSite.publisher` 和 About 的
+  `AboutPage.mainEntity` 都引用它，避免两处漂移。About 页同时加了"Who Runs ToolkitFree"一节——
+  光有 schema 而页面上没有任何佐证，实体识别是站不住的。
+
+  **Dev.to 的 `sameAs` 没有加。** 仓库里没有记录 handle，而 `sameAs` 是一条"此站与该主页同属一个
+  运营者"的可被核查的声明，指向一个不存在的主页比不写更糟。等所有者给出确切 URL，加进
+  `organization.ts` 的数组即可，一行。
+
+  **llms.txt 可发现性（审计第 4 条，成立）。** 此前 `robots.txt`、sitemap、页脚、About 全站 grep
+  零处引用——文件写得不错但没有任何入口。现在页脚每页一个链接、`robots.txt` 以注释指明两个文件
+  （robots 没有对应的标准指令）、About 页给出面向助手的说明。**没有把 llms.txt 放进 sitemap.xml**：
+  sitemap 是给可索引 HTML 页面的，而 `validate-seo-registry.mjs` 正是拿可索引路由去比对 llms 覆盖，
+  把它自己放进去会让这个校验自指。审计这一小条不采纳。
+
+  门禁：typecheck、lint、format、13 项单测、构建、SEO 注册表、站点完整性，以及 71 路由 × 5 宽度的
+  responsive/a11y 套件，全部通过，`browserErrors` 为 0。内部链接从 4292 涨到 4366（页脚每页多一个
+  llms.txt 链接），零断链。
+
 - 2026-09-13 — `视觉验收` / `修掉三处只有看页面才能发现的问题`：前一条记的是门禁和代码审查，但
   页面长什么样一直没人看过。补做了截图验收（桌面 1440 / 手机 390，上传真实文件后拍控件区），发现
   三处自动化完全抓不到的问题：

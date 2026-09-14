@@ -2,3 +2,9 @@ User-agent: *
 Allow: /
 
 Sitemap: https://toolkitfree.net/sitemap.xml
+
+# Machine-readable summaries of this site, for assistants that look for them.
+# There is no standard robots.txt directive for these, so they are named here as
+# comments and linked from the site footer and the About page.
+# llms.txt: https://toolkitfree.net/llms.txt
+# llms-full.txt: https://toolkitfree.net/llms-full.txt

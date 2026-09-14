@@ -253,6 +253,11 @@ const orgSchema = {
             <a href="/terms/">Terms</a>
             <a href="/privacy-policy/">Privacy</a>
             <a href="/contact/">Contact</a>
+            {
+              /* The machine-readable site summary. It only helps if something can
+                find it, and a link in the footer is the one place every page has. */
+            }
+            <a href="/llms.txt">llms.txt</a>
           </div>
           <p class="footer-copy">
             &copy; {new Date().getFullYear()}
