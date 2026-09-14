@@ -1,5 +1,5 @@
 import { useNumberDraft } from '../hooks/useNumberDraft';
-import type { IdPhotoPreset, IdPhotoPresetId } from '../data/id-photo-presets';
+import type { IdPhotoPresetId } from '../data/id-photo-presets';
 import type { ImageOutputMimeType } from '../lib/image-processing';
 
 export interface IdPhotoSettings {
@@ -16,8 +16,16 @@ export interface IdPhotoSettings {
   cutLines: boolean;
 }
 
+/**
+ * Every exact value the document chips just set, plus the print and download
+ * fields they leave alone. This is the fine-tune panel's body: the chips choose
+ * a document, and nothing here is hidden or removed because of that choice —
+ * people come to this tool with very specific millimetre and DPI requirements.
+ *
+ * Which document the photo is for is asked once, by the chip row above; there is
+ * deliberately no second control for it here.
+ */
 interface IdPhotoOptionsProps {
-  presets: readonly IdPhotoPreset[];
   settings: IdPhotoSettings;
   onChange: (settings: IdPhotoSettings) => void;
 }
@@ -53,26 +61,12 @@ function NumberField({
   );
 }
 
-export default function IdPhotoOptions({ presets, settings, onChange }: IdPhotoOptionsProps) {
+export default function IdPhotoOptions({ settings, onChange }: IdPhotoOptionsProps) {
   const update = <K extends keyof IdPhotoSettings>(key: K, value: IdPhotoSettings[K]) =>
     onChange({ ...settings, [key]: value });
   return (
     <section className="id-photo-options" aria-label="ID photo options">
       <div className="id-photo-options-grid">
-        <label className="id-photo-field">
-          Size reference
-          <select
-            className="id-photo-control"
-            value={settings.presetId}
-            onChange={(event) => update('presetId', event.target.value as IdPhotoPresetId)}
-          >
-            {presets.map((preset) => (
-              <option key={preset.id} value={preset.id}>
-                {preset.label}
-              </option>
-            ))}
-          </select>
-        </label>
         <label className="id-photo-field">
           Unit
           <select

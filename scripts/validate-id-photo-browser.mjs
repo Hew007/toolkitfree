@@ -67,6 +67,16 @@ async function inspectResults() {
   }))`);
 }
 
+/** Both exports decoded to the sizes the current settings ask for. */
+function exportsAt(photoWidth, photoHeight, sheetWidth, sheetHeight) {
+  return `(() => {
+    const images = [...document.querySelectorAll('[data-id-photo-result] img')];
+    return images.length === 2 &&
+      images[0].naturalWidth === ${photoWidth} && images[0].naturalHeight === ${photoHeight} &&
+      images[1].naturalWidth === ${sheetWidth} && images[1].naturalHeight === ${sheetHeight};
+  })()`;
+}
+
 await send('Page.enable');
 await send('Runtime.enable');
 await send('Log.enable');
@@ -92,6 +102,13 @@ await evaluate(`(async () => {
 })()`);
 
 await waitFor(`Boolean(document.querySelector('[data-testid="id-photo-editor"]'))`, 'photo editor');
+
+// Every exact value now lives in the fine-tune panel, which starts folded. The
+// layout assertions below measure those fields, so the panel is opened first —
+// a closed `details` reports zero-sized rectangles, which would pass the
+// overlap check while measuring nothing at all.
+await evaluate(`(() => { document.querySelector('.fine-tune').open = true; })()`);
+
 const uiLayouts = [];
 for (const width of [1440, 1240, 900, 600, 375]) {
   await send('Emulation.setDeviceMetricsOverride', {
@@ -155,10 +172,11 @@ assert.match(
   await evaluate(`document.querySelector('[data-testid="id-photo-output-size"]').textContent`),
   /413\s*×\s*531px/
 );
-await evaluate(
-  `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Prepare photo and print sheet').click()`
-);
-await waitFor(`document.querySelectorAll('[data-id-photo-result]').length === 2`, 'two exports');
+
+// No click: both files follow the frame and the settings. Waiting on the decoded
+// size rather than on the element count is what makes this assertion mean "the
+// output matches the settings" instead of "two elements exist".
+await waitFor(exportsAt(413, 531, 1800, 1200), 'custom-size exports');
 const customResults = await inspectResults();
 assert.deepEqual(
   customResults.map(({ width, height, type }) => ({ width, height, type })),
@@ -172,15 +190,107 @@ assert.equal(
   true
 );
 
-await evaluate(`(() => {
-  const select = [...document.querySelectorAll('select')].find((item) => [...item.options].some((option) => option.value === 'us-passport-print-reference'));
-  select.value = 'us-passport-print-reference';
-  select.dispatchEvent(new Event('change', { bubbles: true }));
-})()`);
+// The submit button is gone and must stay gone: without this, adding one back
+// would break nothing that any test can see.
+assert.equal(
+  await evaluate(
+    `[...document.querySelectorAll('button')].some((button) => /Prepare photo and print sheet/i.test(button.textContent))`
+  ),
+  false,
+  'the tool must not regain a submit button'
+);
+
+// The chip row is the document question, derived from the selectable presets.
+const chipLabels = await evaluate(
+  `[...document.querySelectorAll('input[name="id-photo-document"]')].map((input) => input.closest('.tool-chip').querySelector('.tool-chip-label').textContent)`
+);
+assert.deepEqual(chipLabels, [
+  'Custom ID photo',
+  'US passport print size reference',
+  'UK passport paper size reference',
+]);
+
+// Two chip changes back to back, the second landing while the first run is still
+// in flight. A superseded run that wrote its results anyway would leave the UK
+// size on screen under the US chip.
+await evaluate(
+  `document.querySelector('input[name="id-photo-document"][value="uk-passport-paper-reference"]').click()`
+);
+await evaluate(
+  `document.querySelector('input[name="id-photo-document"][value="us-passport-print-reference"]').click()`
+);
 await waitFor(
   `document.querySelector('[data-testid="id-photo-output-size"]').textContent.includes('600 × 600px')`,
   'US reference size'
 );
+await waitFor(exportsAt(600, 600, 1800, 1200), 'US reference exports');
+const referenceResults = await inspectResults();
+assert.deepEqual(
+  referenceResults.map(({ width, height, type }) => ({ width, height, type })),
+  [
+    { width: 600, height: 600, type: 'image/jpeg' },
+    { width: 1800, height: 1200, type: 'image/png' },
+  ]
+);
+
+// Settle time for any late run that ignored its guard, then look again: the
+// export must still belong to the settings on screen.
+await new Promise((resolve) => setTimeout(resolve, 1200));
+assert.deepEqual(
+  (await inspectResults()).map(({ width, height }) => ({ width, height })),
+  referenceResults.map(({ width, height }) => ({ width, height })),
+  'a superseded run must not overwrite the current export'
+);
+
+// The two outputs are keyed on what each of them actually depends on, and this
+// is what that buys: a quality change re-encodes the 11 KB photo without
+// rebuilding the print sheet, and a print-layout change does the reverse. Each
+// object URL below is one produced artifact, so a URL that changed names exactly
+// one file that was re-encoded.
+await evaluate(`(() => { document.querySelector('.fine-tune').open = true; })()`);
+const setField = (startsWith, value) => `(() => {
+  const field = [...document.querySelectorAll('.id-photo-field')].find((item) => item.textContent.trim().startsWith(${JSON.stringify(startsWith)}));
+  const input = field.querySelector('input');
+  Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(input, ${JSON.stringify(value)});
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+})()`;
+const exportUrls = () =>
+  evaluate(
+    `[...document.querySelectorAll('[data-id-photo-result] img')].map((image) => image.src)`
+  );
+const settle = () => new Promise((resolve) => setTimeout(resolve, 1200));
+
+const beforeTuning = await exportUrls();
+await evaluate(setField('JPG quality', '60'));
+await settle();
+const afterQuality = await exportUrls();
+assert.notEqual(beforeTuning[0], afterQuality[0], 'quality must re-encode the photo');
+assert.equal(beforeTuning[1], afterQuality[1], 'quality must not re-encode the PNG print sheet');
+
+await evaluate(setField('Print gap', '6'));
+await settle();
+const afterGap = await exportUrls();
+assert.equal(afterQuality[0], afterGap[0], 'the print gap must not re-encode the photo');
+assert.notEqual(afterQuality[1], afterGap[1], 'the print gap must rebuild the print sheet');
+
+// Hand-editing a value offers the way back, and the offer is derived from the
+// values themselves, so returning to the preset withdraws it again.
+assert.equal(
+  await evaluate(`document.querySelector('.fine-tune-reset').textContent`),
+  'Back to the US passport print size reference preset'
+);
+await evaluate(`document.querySelector('.fine-tune-reset').click()`);
+await waitFor(exportsAt(600, 600, 1800, 1200), 'exports back at the preset');
+assert.equal(
+  await evaluate(`document.querySelector('.fine-tune-summary').textContent`),
+  '2 × 2 in · 300 DPI · JPG 92% · 4×6 sheet'
+);
+assert.equal(
+  await evaluate(`document.querySelector('.fine-tune-reset') === null`),
+  true,
+  'the reset offer must withdraw once the values match the preset again'
+);
+
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
 await send('Target.closeTarget', { targetId: target.id });
@@ -189,6 +299,7 @@ console.log(
   JSON.stringify({
     status: 'ID_PHOTO_BROWSER_OK',
     customResults,
+    referenceResults,
     uiLayouts,
     browserErrors: actionableBrowserErrors.length,
   })

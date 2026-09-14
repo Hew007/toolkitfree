@@ -30,7 +30,7 @@ const faqItems = [
   {
     question: 'What is on the print sheet?',
     answer:
-      'The print sheet repeats the prepared photo on a 4 by 6 inch or A4 PNG with optional dashed cut lines. Use matching paper and disable unexpected printer scaling when printing.',
+      'The print sheet repeats the prepared photo on a 4 by 6 inch or A4 PNG with optional dashed cut lines. It is rebuilt whenever you change the frame or the settings, so it always matches the photo above it. Use matching paper and disable unexpected printer scaling when printing.',
   },
   {
     question: 'Can I use the Canada passport requirements here?',
@@ -93,11 +93,14 @@ const breadcrumbSchema = {
       <section class="howto-section">
         <h2>How to Prepare an ID Photo</h2><ol class="howto-steps">
           <li>Upload one JPG, PNG, or WebP photo.</li><li>
-            Choose a size reference or enter your own width, height, and DPI.
+            Pick the document the photo is for, or fine-tune your own width, height, and DPI.
           </li><li>
             Drag the photo to frame it, then use zoom controls and the reference lines as a manual
             guide.
-          </li><li>Prepare a single digital photo and an optional 4×6 or A4 print sheet.</li><li>
+          </li><li>
+            The digital photo and the 4×6 or A4 print sheet re-render as you adjust the frame and
+            the settings; download either one.
+          </li><li>
             Review the receiving authority’s current rules before submitting or printing.
           </li>
         </ol>
