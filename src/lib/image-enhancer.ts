@@ -95,3 +95,165 @@ export function getEnhancedFilename(sourceName: string, outputType: ImageOutputM
   const baseName = sourceName.replace(/\.[^.]+$/, '') || 'image';
   return normalizeDownloadFilename(`${baseName}-enhanced.${EXTENSIONS[outputType]}`);
 }
+
+/**
+ * The corrections the chips offer, and the only place their numbers are written.
+ *
+ * Each preset is a complete set of adjustments, so choosing one is a single
+ * answer to "which correction" rather than six separate decisions. The chip row
+ * is a projection of this table and the fine-tune panel edits the same values,
+ * so a label cannot drift away from what it applies. Every slider the panel
+ * exposes is reached by at least one preset, blur included.
+ */
+export type ImageEnhancerPresetId = 'original' | 'photo' | 'lowlight' | 'scan' | 'bw' | 'soft';
+
+export interface ImageEnhancerPreset {
+  id: ImageEnhancerPresetId;
+  label: string;
+  /** One short line for the chip. Says what the correction does, not that it exists. */
+  summary: string;
+  adjustments: ImageEnhancerAdjustments;
+}
+
+export const IMAGE_ENHANCER_PRESETS: readonly ImageEnhancerPreset[] = [
+  {
+    id: 'original',
+    label: 'Original',
+    summary: 'Keep the image as it is',
+    adjustments: DEFAULT_IMAGE_ENHANCER_ADJUSTMENTS,
+  },
+  {
+    id: 'photo',
+    label: 'Photo boost',
+    summary: 'Lift a flat phone photo',
+    adjustments: {
+      brightness: 8,
+      contrast: 12,
+      saturation: 12,
+      sharpness: 25,
+      blur: 0,
+      grayscale: false,
+    },
+  },
+  {
+    id: 'lowlight',
+    label: 'Low light',
+    summary: 'Open up an underexposed shot',
+    adjustments: {
+      brightness: 30,
+      contrast: 8,
+      saturation: 6,
+      sharpness: 15,
+      blur: 0,
+      grayscale: false,
+    },
+  },
+  {
+    id: 'scan',
+    label: 'Document scan',
+    summary: 'Cleaner paper, harder text',
+    adjustments: {
+      brightness: 10,
+      contrast: 35,
+      saturation: -40,
+      sharpness: 55,
+      blur: 0,
+      grayscale: false,
+    },
+  },
+  {
+    id: 'bw',
+    label: 'Black and white',
+    summary: 'Grayscale with a contrast lift',
+    adjustments: {
+      brightness: 4,
+      contrast: 18,
+      saturation: 0,
+      sharpness: 15,
+      blur: 0,
+      grayscale: true,
+    },
+  },
+  {
+    id: 'soft',
+    label: 'Soften',
+    summary: 'Ease harsh detail and noise',
+    adjustments: {
+      brightness: 3,
+      contrast: 0,
+      saturation: 4,
+      sharpness: 0,
+      blur: 1,
+      grayscale: false,
+    },
+  },
+];
+
+export const DEFAULT_IMAGE_ENHANCER_PRESET_ID: ImageEnhancerPresetId = 'original';
+
+export function getImageEnhancerPreset(id: ImageEnhancerPresetId): ImageEnhancerPreset {
+  const preset = IMAGE_ENHANCER_PRESETS.find((entry) => entry.id === id);
+  if (!preset) throw new RangeError(`Unknown image enhancer preset: ${id}`);
+  return preset;
+}
+
+export function adjustmentsEqual(
+  left: ImageEnhancerAdjustments,
+  right: ImageEnhancerAdjustments
+): boolean {
+  return (
+    left.brightness === right.brightness &&
+    left.contrast === right.contrast &&
+    left.saturation === right.saturation &&
+    left.sharpness === right.sharpness &&
+    left.blur === right.blur &&
+    left.grayscale === right.grayscale
+  );
+}
+
+/**
+ * How many pixels the on-screen preview is allowed to be.
+ *
+ * The preview is redrawn on every slider movement and the sharpening pass walks
+ * every pixel in JavaScript, so the preview's size is the cost of dragging.
+ * Fitting the column width alone is not enough: a tall panorama scaled to a
+ * 700 px column is still several megapixels. Capping the area as well is what
+ * keeps a drag smooth whatever shape the source is.
+ */
+export const IMAGE_ENHANCER_PREVIEW_MAX_PIXELS = 1_200_000;
+
+/**
+ * The size to draw the preview at: never wider than the space it has, never
+ * larger in area than the cap, and never larger than the source itself —
+ * upscaling would add pixels to sharpen without adding detail to see.
+ */
+export function getEnhancerPreviewSize(
+  sourceWidth: number,
+  sourceHeight: number,
+  availableWidth: number,
+  maxPixels: number = IMAGE_ENHANCER_PREVIEW_MAX_PIXELS
+): { width: number; height: number } {
+  if (
+    !Number.isFinite(sourceWidth) ||
+    !Number.isFinite(sourceHeight) ||
+    sourceWidth < 1 ||
+    sourceHeight < 1
+  ) {
+    throw new RangeError('Image dimensions must be positive.');
+  }
+  if (!Number.isFinite(maxPixels) || maxPixels < 1) {
+    throw new RangeError('The preview pixel budget must be positive.');
+  }
+
+  let scale = 1;
+  if (Number.isFinite(availableWidth) && availableWidth > 0 && availableWidth < sourceWidth) {
+    scale = availableWidth / sourceWidth;
+  }
+  const pixels = sourceWidth * sourceHeight * scale * scale;
+  if (pixels > maxPixels) scale *= Math.sqrt(maxPixels / pixels);
+
+  return {
+    width: Math.max(1, Math.round(sourceWidth * scale)),
+    height: Math.max(1, Math.round(sourceHeight * scale)),
+  };
+}
