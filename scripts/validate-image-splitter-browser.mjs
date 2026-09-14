@@ -167,14 +167,6 @@ function clickButton(label) {
   `);
 }
 
-function clickButtonStartingWith(prefix) {
-  return evaluate(`
-    [...document.querySelectorAll('button')]
-      .find((button) => button.textContent.trim().startsWith(${JSON.stringify(prefix)}))
-      .click()
-  `);
-}
-
 /** Set a React-controlled number input the way a keyboard user would. */
 function setNumberInput(id, value) {
   return evaluate(`
@@ -258,7 +250,46 @@ await waitFor(
 );
 
 await setFile(fixture);
-await waitFor(`document.getElementById('splitter-x-cut-0')`, 'split lines ready');
+await waitFor(`document.querySelector('.splitter-handle')`, 'split lines ready');
+
+/** The exact values live in the folded panel; open it once so the fields are reachable. */
+function openFineTune() {
+  return evaluate(`
+    (() => {
+      const panel = document.querySelector('[data-image-splitter] details.fine-tune');
+      panel.open = true;
+      return panel.open;
+    })()
+  `);
+}
+assert.equal(await openFineTune(), true, 'The fine-tune panel holds the exact values');
+await waitFor(`document.getElementById('splitter-x-cut-0')`, 'cut position fields ready');
+
+/**
+ * The pieces follow the split lines, so a change drops the stale pieces at once
+ * and the next set arrives after the auto-run delay. Waiting for both halves is
+ * what proves a run actually happened, rather than reading the previous pieces.
+ */
+async function waitForFreshPieces(label) {
+  await waitFor(
+    `!document.querySelector('[data-split-results]')`,
+    `${label}: stale pieces dropped`
+  );
+  await waitFor(`document.querySelector('[data-split-results]')`, `${label}: new pieces`);
+}
+
+// --- No submit step ----------------------------------------------------------
+// The button this tool used to have must not come back: without an assertion,
+// re-adding it would break nothing and nobody would notice.
+
+assert.equal(
+  await evaluate(
+    `[...document.querySelectorAll('button')].some((button) =>
+       button.textContent.trim().startsWith('Split into'))`
+  ),
+  false,
+  'There is no Split button: the pieces follow the split lines'
+);
 
 // --- Default even grid -------------------------------------------------------
 
@@ -278,7 +309,6 @@ assert.deepEqual(
   'A 400x300 source opens as an even 2x2 grid'
 );
 
-await clickButtonStartingWith('Split into');
 await waitFor(`document.querySelector('[data-split-results]')`, 'even split results');
 
 // Pixel-level round trip: each quadrant must land in the matching piece.
@@ -312,10 +342,7 @@ assert.deepEqual(
 // --- Precise positioning -----------------------------------------------------
 
 assert.equal(await setNumberInput('splitter-x-cut-0', 120), '120');
-await waitFor(`!document.querySelector('[data-split-results]')`, 'results cleared after a change');
-
-await clickButtonStartingWith('Split into');
-await waitFor(`document.querySelector('[data-split-results]')`, 'uneven split results');
+await waitForFreshPieces('typed cut position');
 assert.deepEqual(
   (await evaluate(readPieces)).map((piece) => `${piece.width}x${piece.height} ${piece.centre}`),
   [
@@ -326,6 +353,40 @@ assert.deepEqual(
   ],
   'A typed cut position produces uneven pieces cut at exactly that pixel'
 );
+
+// --- Fast successive changes leave no stale pieces ---------------------------
+// Four positions typed back to back, inside the auto-run delay, so the earlier
+// runs are superseded before they finish. What must survive is the last one: a
+// superseded run that wrote its pieces anyway would leave a download link that
+// does not match the split lines on screen.
+
+for (const position of [140, 160, 180, 250]) {
+  await setNumberInput('splitter-x-cut-0', position);
+}
+await waitForFreshPieces('rapid changes');
+assert.deepEqual(
+  (await evaluate(readPieces)).map((piece) => `${piece.width}x${piece.height}`),
+  ['250x150', '150x150', '250x150', '150x150'],
+  'Only the last of several rapid changes reaches the pieces'
+);
+
+// Four pieces, each holding one object URL, plus the preview of the source. The
+// ZIP above added one more and revoked it as the pieces were re-cut, so the live
+// count is back to exactly those five.
+assert.deepEqual(
+  await evaluate(`(() => {
+    const stats = window.__objectUrlStats();
+    return {
+      active: stats.active,
+      links: document.querySelectorAll('[data-split-results] a[download]').length,
+    };
+  })()`),
+  { active: 5, links: 4 },
+  'Superseded runs leave nothing behind: one URL per piece, plus the source preview'
+);
+
+assert.equal(await setNumberInput('splitter-x-cut-0', 120), '120');
+await waitForFreshPieces('restored cut position');
 
 // --- Keyboard nudge ----------------------------------------------------------
 
@@ -372,15 +433,26 @@ await waitFor(
   `document.body.innerText.includes('would be empty')`,
   'impossible margin is explained rather than silently accepted'
 );
-assert.equal(
-  await evaluate(
-    `document.querySelector('[data-image-splitter]').querySelector('.btn-primary[disabled]') !== null ||
-     [...document.querySelectorAll('button')].some((b) => b.disabled && b.textContent.includes('Split into'))`
-  ),
-  true,
-  'Splitting stays disabled while the layout is impossible'
+// The button that used to be disabled here is gone, so what has to be proved now
+// is that nothing runs and no download link is left pointing at pieces that no
+// longer match the settings above it.
+await new Promise((resolve) => setTimeout(resolve, 900));
+assert.deepEqual(
+  await evaluate(`(() => {
+    const root = document.querySelector('[data-image-splitter]');
+    return {
+      results: root.querySelector('[data-split-results]') === null,
+      busy: root.getAttribute('aria-busy'),
+    };
+  })()`),
+  { results: true, busy: 'false' },
+  'An impossible layout leaves no pieces on screen and starts no run'
 );
 await setNumberInput('splitter-margin', 0);
+await waitFor(
+  `document.querySelector('[data-split-results]')`,
+  'pieces return once the layout is possible again'
+);
 
 // --- Number fields can be cleared while typing -------------------------------
 // Mobile browsers render no spinner, so the field has to be typeable: clearing it
@@ -482,6 +554,7 @@ await clickButton('Choose a different image');
 await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, 'uploader restored');
 await setFile(stitched);
 await waitFor(`document.getElementById('splitter-x-cut-0')`, 'stitched image ready');
+assert.equal(await openFineTune(), true, 'The fine-tune panel reopens for the new image');
 
 // The even grid opens on 200 and 150; detection has to move both lines onto the
 // real seams and set the discard width to the gutter it measured.
@@ -514,7 +587,6 @@ assert.deepEqual(
   'Detection lands on both gutters and discards their full width'
 );
 
-await clickButtonStartingWith('Split into');
 await waitFor(`document.querySelector('[data-split-results]')`, 'detected split results');
 const detectedPieces = await evaluate(readPieces);
 assert.deepEqual(

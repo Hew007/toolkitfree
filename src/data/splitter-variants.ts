@@ -33,7 +33,7 @@ export const variantData: Record<string, SplitterVariantPageData> = {
       {
         question: 'How do I split an image in half?',
         answer:
-          'Upload the image and the tool places one line down the middle. Click Split to get the left and right halves. To halve it top and bottom instead, choose the "2 down" preset before splitting.',
+          'Upload the image and the tool places one line down the middle, then cuts the left and right halves straight away — there is no button to press. To halve it top and bottom instead, choose the "2 down" preset and the pieces follow.',
       },
       {
         question: 'Can I split it somewhere other than the exact middle?',
@@ -61,7 +61,7 @@ export const variantData: Record<string, SplitterVariantPageData> = {
     intro:
       'The tool opens with a 2 × 2 grid, giving four quarters. Both dividing lines can be moved independently, so the four pieces do not have to be the same size.',
     features: [
-      'Even 2 × 2 quarters in one click',
+      'Even 2 × 2 quarters cut as soon as the image loads',
       'Move the vertical and horizontal lines independently',
       'Pieces named by row and column so the order survives',
       'Download the four pieces separately or as a ZIP',
@@ -70,7 +70,7 @@ export const variantData: Record<string, SplitterVariantPageData> = {
       {
         question: 'How do I split an image into 4 equal parts?',
         answer:
-          'Upload the image, keep the default 2 × 2 grid, and click Split. If the width or height is an odd number, the leftover pixel goes to the first piece, so no two pieces differ by more than one pixel.',
+          'Upload the image and keep the default 2 × 2 grid. The four quarters are cut as soon as the lines are in place, so there is nothing to submit. If the width or height is an odd number, the leftover pixel goes to the first piece, so no two pieces differ by more than one pixel.',
       },
       {
         question: 'Can the four parts be different sizes?',
@@ -85,7 +85,7 @@ export const variantData: Record<string, SplitterVariantPageData> = {
       {
         question: 'Can I split into more than four parts?',
         answer:
-          'Yes. Change the row and column count, or use Add line to place extra dividing lines wherever you need them, up to 144 pieces in total.',
+          'Yes. Change the row and column count in Fine-tune, or use Add line to place extra dividing lines wherever you need them, up to 144 pieces in total. The pieces are re-cut as you change them.',
       },
     ],
   },
@@ -107,7 +107,7 @@ export const variantData: Record<string, SplitterVariantPageData> = {
       {
         question: 'How do I make an Instagram grid from one photo?',
         answer:
-          'Upload the photo, keep the 3 × 3 grid, and click Split. You get nine pieces named by row and column. Post them so the grid reads correctly, which means starting with the bottom right piece.',
+          'Upload the photo and keep the 3 × 3 grid. The nine pieces appear on their own, named by row and column. Post them so the grid reads correctly, which means starting with the bottom right piece.',
       },
       {
         question: 'In what order do I post the pieces?',
@@ -127,7 +127,7 @@ export const variantData: Record<string, SplitterVariantPageData> = {
       {
         question: 'Can I use a different grid than 3 by 3?',
         answer:
-          'Yes. A 1 × 3 row is common for a carousel-style header, and 3 × 2 or 3 × 4 also work. Change the row and column count, or add and remove individual lines.',
+          'Yes. A 1 × 3 row is common for a carousel-style header, and 3 × 2 or 3 × 4 also work. Change the row and column count in Fine-tune, or add and remove individual lines.',
       },
     ],
   },
@@ -149,7 +149,7 @@ export const variantData: Record<string, SplitterVariantPageData> = {
       {
         question: 'How do I print a large image across several pages?',
         answer:
-          'Split the image into as many tiles as you have sheets, download them, then open the Image to PDF tool and combine the tiles into one document. Print that PDF at 100 percent scale so the tiles line up.',
+          'Set as many tiles as you have sheets, download them, then open the Image to PDF tool and combine the tiles into one document. Print that PDF at 100 percent scale so the tiles line up.',
       },
       {
         question: 'How many tiles do I need?',
