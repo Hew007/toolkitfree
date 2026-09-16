@@ -29,6 +29,19 @@ export default function BatchResultsSummary({
   const objectUrls = useObjectUrlRegistry();
   const totals = calculateBatchTotals(successes, failures);
 
+  // Resets whenever the result set is replaced, abandoning any archive still being
+  // built from the previous one.
+  //
+  // This keys on the arrays' identity, which makes the caller's contract matter:
+  // pass a reference that changes exactly when the results change. State holds
+  // that naturally; a `.map()` written inline in the JSX does not — it is a new
+  // array on every render, so a tool whose results follow its controls would
+  // cancel its own download on every frame of a drag. Memoize anything derived.
+  //
+  // Identity rather than a content signature on purpose: two runs can produce the
+  // same filenames from different bytes — re-encoding the same batch at another
+  // quality does exactly that — and a signature would then miss a change that
+  // matters and archive stale blobs.
   useEffect(() => {
     controllerRef.current?.abort();
     controllerRef.current = null;

@@ -407,18 +407,18 @@ await upload([
     transparent: true,
   },
 ]);
-await waitFor(
-  `[...document.querySelectorAll('button')].some((button) => button.textContent.trim() === 'Generate Favicons')`,
-  'favicon input'
-);
-await evaluate(`
-  [...document.querySelectorAll('button')]
-    .find((button) => button.textContent.trim() === 'Generate Favicons')
-    .click()
-`);
+// The icons follow the chosen size set, so they arrive without a submit step.
 await waitFor(
   `document.querySelectorAll('[data-favicon-icon]').length === 5`,
   'five favicon outputs'
+);
+assert.equal(
+  await evaluate(`
+    [...document.querySelectorAll('button')]
+      .some((button) => button.textContent.trim() === 'Generate Favicons')
+  `),
+  false,
+  'Favicon generator must not regain a generate step'
 );
 const faviconResults = await evaluate(`
   (async () => Promise.all(
@@ -460,6 +460,13 @@ const paddingPixels = await evaluate(`
 `);
 assert.equal(paddingPixels.topAlpha, 0);
 assert.equal(paddingPixels.centerAlpha, 255);
+// Packaging stays a deliberate action, so the archive only exists once asked for.
+await evaluate(`
+  [...document.querySelectorAll('button')]
+    .find((button) => button.textContent.trim() === 'Download ZIP')
+    .click()
+`);
+await waitFor(`Boolean(document.querySelector('[data-favicon-zip-url]'))`, 'favicon ZIP packaging');
 const zipBase64 = await evaluate(`
   (async () => {
     const url = document.querySelector('[data-favicon-zip-url]').dataset.faviconZipUrl;
@@ -628,21 +635,121 @@ const enhancerInitial = await evaluate(`(() => {
 assert.equal(enhancerInitial.width, 120);
 assert.equal(enhancerInitial.height, 60);
 assert.equal(enhancerInitial.pixel[3], 255);
+// No submit step: the full-size file appears on its own, and nothing was clicked
+// between the upload and this wait.
+await waitFor(
+  `Boolean(document.querySelector('[data-enhancer-download]'))`,
+  'enhancer result without a click'
+);
+// The button that used to render and encode on click is gone. Without this a
+// later change could quietly put the submit step back and no test would object.
+assert.equal(
+  await evaluate(
+    `[...document.querySelectorAll('button')].some((button) => button.textContent.trim() === 'Download enhanced image')`
+  ),
+  false,
+  'The enhancer must not regain an encode-on-click button'
+);
+// A chip writes the whole set of adjustments, and every one of them stays visible
+// and editable in the fine-tune panel.
 await evaluate(`(() => {
-  const brightness = document.querySelector('#enhancer-brightness');
-  const sharpness = document.querySelector('#enhancer-sharpness');
-  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-  setter.call(brightness, '20');
-  brightness.dispatchEvent(new Event('input', { bubbles: true }));
-  setter.call(sharpness, '50');
-  sharpness.dispatchEvent(new Event('input', { bubbles: true }));
+  document.querySelector('details.fine-tune').open = true;
+  const chip = [...document.querySelectorAll('input[name="enhancer-correction"]')]
+    .find((input) => input.value === 'photo');
+  chip.click();
 })()`);
 await waitFor(
-  `document.querySelector('output[for="enhancer-brightness"]')?.textContent.trim() === '+20'`,
+  `document.querySelector('#enhancer-brightness')?.value === '8'`,
+  'enhancer preset written into the panel'
+);
+assert.deepEqual(
+  await evaluate(`({
+    brightness: document.querySelector('#enhancer-brightness').value,
+    contrast: document.querySelector('#enhancer-contrast').value,
+    saturation: document.querySelector('#enhancer-saturation').value,
+    sharpness: document.querySelector('#enhancer-sharpness').value,
+    blur: document.querySelector('#enhancer-blur').value,
+    grayscale: document.querySelector('#enhancer-grayscale').getAttribute('aria-pressed'),
+  })`),
+  {
+    brightness: '8',
+    contrast: '12',
+    saturation: '12',
+    sharpness: '25',
+    blur: '0',
+    grayscale: 'false',
+  }
+);
+// The Black and white chip is the one that carries a boolean, so it proves the
+// panel follows more than the numbers.
+await evaluate(`[...document.querySelectorAll('input[name="enhancer-correction"]')]
+  .find((input) => input.value === 'bw').click()`);
+await waitFor(
+  `document.querySelector('#enhancer-grayscale')?.getAttribute('aria-pressed') === 'true'`,
+  'enhancer grayscale preset'
+);
+await evaluate(`[...document.querySelectorAll('input[name="enhancer-correction"]')]
+  .find((input) => input.value === 'photo').click()`);
+await waitFor(
+  `document.querySelector('#enhancer-grayscale')?.getAttribute('aria-pressed') === 'false'`,
+  'enhancer preset restored'
+);
+await waitFor(
+  `Boolean(document.querySelector('[data-enhancer-download]'))`,
+  'enhancer result after preset change'
+);
+// Two settings changes in quick succession: the first result must be dropped
+// rather than left on screen next to settings it no longer matches, and the
+// result that finally arrives must be the one for the last value typed.
+await evaluate(`(() => {
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+  const brightness = document.querySelector('#enhancer-brightness');
+  setter.call(brightness, '20');
+  brightness.dispatchEvent(new Event('input', { bubbles: true }));
+  setter.call(brightness, '40');
+  brightness.dispatchEvent(new Event('input', { bubbles: true }));
+})()`);
+assert.equal(
+  await evaluate(`Boolean(document.querySelector('[data-enhancer-download]'))`),
+  false,
+  'A changed setting must invalidate the file offered for download'
+);
+await waitFor(
+  `document.querySelector('label[for="enhancer-brightness"]')?.textContent.trim() === 'Brightness: +40'`,
   'enhancer controls'
 );
-await evaluate(`document.querySelector('button[aria-label="Reset brightness"]').click()`);
-await waitFor(`document.querySelector('#enhancer-brightness').value === '0'`, 'brightness reset');
+await waitFor(
+  `Boolean(document.querySelector('[data-enhancer-download]'))`,
+  'enhancer result after a fast edit'
+);
+assert.equal(
+  await evaluate(
+    `Boolean([...document.querySelectorAll('.fine-tune-reset')].find((button) => button.textContent.trim() === 'Back to the Photo boost preset'))`
+  ),
+  true,
+  'An edited value must offer a way back to the named preset'
+);
+// The per-slider reset returns the slider to the preset value, not to zero.
+assert.equal(
+  await evaluate(
+    `document.querySelector('[data-reset-adjustment="enhancer-brightness"]').textContent.trim()`
+  ),
+  'Reset brightness to +8',
+  'The per-slider reset must name the value it returns to'
+);
+await evaluate(`document.querySelector('[data-reset-adjustment="enhancer-brightness"]').click()`);
+await waitFor(`document.querySelector('#enhancer-brightness').value === '8'`, 'brightness reset');
+assert.equal(
+  await evaluate(
+    `Boolean([...document.querySelectorAll('.fine-tune-reset')].find((button) => button.textContent.trim() === 'Back to the Photo boost preset'))`
+  ),
+  false,
+  'Back at the preset there is nothing to reset'
+);
+await waitFor(
+  `Boolean(document.querySelector('[data-enhancer-download]'))`,
+  'enhancer result after reset'
+);
 await evaluate(`document.querySelector('[data-enhancer-download]').click()`);
 const enhancerDownload = await waitForFile('enhance-source-enhanced.png');
 const enhancerBytes = fs.readFileSync(enhancerDownload);
@@ -651,11 +758,19 @@ assert.equal(
   true
 );
 const enhancerStats = await evaluate(`window.__objectUrlStats()`);
-assert.equal(enhancerStats.active, 0, 'Enhancer download URLs should be revoked');
+// One, not zero as before: the enhanced file is now produced by the auto-run and
+// its URL stays alive so the download link on the result card keeps working. That
+// single URL is the result blob; removing the image revokes it below.
+assert.equal(enhancerStats.active, 1, 'Only the enhanced result URL should be held');
 await evaluate(
   `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Remove image').click()`
 );
 await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, 'enhancer cleanup');
+assert.equal(
+  (await evaluate(`window.__objectUrlStats()`)).active,
+  0,
+  'Removing the image should revoke the enhancer result URL'
+);
 
 await navigate('/tools/background-remover/');
 await upload([{ name: 'corrupt.png', type: 'image/png', corrupt: true }]);

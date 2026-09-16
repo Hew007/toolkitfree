@@ -13,7 +13,7 @@ const faqItems = [
   {
     question: 'How does the image splitter work?',
     answer:
-      'The splitter measures your image in the browser, cuts it along the split lines you set, and redraws each piece onto its own canvas. The image is never uploaded for processing.',
+      'The splitter measures your image in the browser, cuts it along the split lines you set, and redraws each piece onto its own canvas. There is no submit step: the pieces are re-cut whenever you move a line or change a setting. The image is not uploaded for processing.',
   },
   {
     question: 'Can I split a picture into pieces that are not the same size?',
@@ -53,7 +53,7 @@ const faqItems = [
   {
     question: 'How do I split an image for an Instagram grid?',
     answer:
-      'Upload the image, choose 3 rows and 3 columns, then split. The pieces are named by row and column so you can post them in the correct order. Instagram fills a profile grid from the top left, so post the last piece first if you want the grid to read normally.',
+      'Upload the image and choose the 3 × 3 grid. The nine pieces appear underneath on their own, named by row and column so you can post them in the correct order. Instagram fills a profile grid from the top left, so post the last piece first if you want the grid to read normally.',
   },
   {
     question: 'What are the downloaded files named?',
@@ -134,13 +134,16 @@ const faqStructuredData = {
           <li>Upload a JPG, PNG, or WebP image by dragging & dropping or clicking to browse</li>
           <li>
             Click "Detect split lines" to find the seams of a stitched image, or pick a common split
-            and set your own row and column count
+            and set your own row and column count in Fine-tune
           </li>
           <li>
             Drag any split line to move it, or type its exact pixel position — add and remove lines
             as needed
           </li>
-          <li>Click "Split", then download the pieces individually or once as a ZIP</li>
+          <li>
+            The pieces are cut as you go, with no button to press — download them individually or
+            once as a ZIP
+          </li>
         </ol>
       </section>
 
@@ -151,6 +154,7 @@ const faqStructuredData = {
           <li>Drag each split line, or type its exact pixel position</li>
           <li>Uneven pieces — cut a stitched collage along its real edges</li>
           <li>Add or remove individual lines, up to 144 pieces</li>
+          <li>Pieces re-cut as you move a line, with no button to press</li>
           <li>Even-grid presets and one-click redistribute as a starting point</li>
           <li>Skip existing borders and seams with margin and discard controls</li>
           <li>Pieces named by row and column so the order survives the download</li>

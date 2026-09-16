@@ -16,12 +16,12 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'How to convert PNG to favicon?',
         answer:
-          'Choose your PNG image, click "Generate Favicons," and download the ZIP containing five common PNG icon sizes plus a webmanifest file.',
+          'Choose your PNG image. The icons are drawn as soon as it loads — there is no generate step. Pick the set of sizes you need, then download the ZIP containing them plus a webmanifest file.',
       },
       {
         question: 'What size should my PNG be?',
         answer:
-          'For best results, use a square PNG that is at least 512x512 pixels. The tool resizes it to 16, 32, 180, 192, and 512px PNG icons.',
+          'For best results, use a square PNG that is at least 512x512 pixels. The tool resizes it to the sizes you select, out of 16, 32, 180, 192, and 512px PNG icons.',
       },
       {
         question: 'Does PNG transparency work for favicons?',
@@ -31,7 +31,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'What files are included in the download?',
         answer:
-          'The ZIP includes favicon-16x16.png, favicon-32x32.png, apple-touch-icon.png (180x180), android-chrome-192x192.png, android-chrome-512x512.png, and site.webmanifest.',
+          'With the default set, the ZIP includes favicon-16x16.png, favicon-32x32.png, apple-touch-icon.png (180x180), android-chrome-192x192.png, android-chrome-512x512.png, and site.webmanifest. Narrowing the size set leaves out the files you did not select.',
       },
     ],
   },
@@ -43,7 +43,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'How to convert JPG to favicon?',
         answer:
-          'Choose your JPG image and click "Generate Favicons." The tool creates five common PNG icon sizes and packages them in a downloadable ZIP.',
+          'Choose your JPG image. The tool draws the icons straight away and redraws them whenever you change the size set; the ZIP download packages whatever is on screen.',
       },
       {
         question: 'Can I use a photo as a favicon?',
@@ -65,7 +65,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'How to turn a logo into a favicon?',
         answer:
-          'Choose your supported logo image, click "Generate Favicons," and download a ZIP with five PNG icon sizes plus the HTML code to add to your site.',
+          'Choose your supported logo image. The icons appear without a generate step, and you can download a ZIP with the PNG sizes you selected plus the HTML code to add to your site.',
       },
       {
         question: 'What makes a good favicon from a logo?',
@@ -75,7 +75,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'What files do I need for a website favicon?',
         answer:
-          'A modern website needs: favicon-32x32.png, favicon-16x16.png, apple-touch-icon.png (180x180), android-chrome-192x192.png, android-chrome-512x512.png, and site.webmanifest. Our tool generates all of these.',
+          'A modern website needs: favicon-32x32.png, favicon-16x16.png, apple-touch-icon.png (180x180), android-chrome-192x192.png, android-chrome-512x512.png, and site.webmanifest. The default size set generates all of these.',
       },
     ],
   },
@@ -86,7 +86,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'What favicon sizes does WordPress need?',
         answer:
-          'WordPress needs a site icon of at least 512x512 pixels. It automatically generates all smaller sizes from this. Our tool creates the 512x512 version plus all other standard sizes.',
+          'WordPress needs a site icon of at least 512x512 pixels. It automatically generates all smaller sizes from this, so this page starts on the 512x512 icon alone. Switch the size set to add the other standard sizes.',
       },
       {
         question: 'How to add a favicon to WordPress?',
@@ -96,7 +96,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'Can I use the ZIP download for WordPress?',
         answer:
-          'For WordPress, you only need the 512x512 android-chrome-512x512.png file. Upload it as the Site Icon in WordPress. The other files in the ZIP are useful if you have a custom theme.',
+          'For WordPress, you only need the 512x512 android-chrome-512x512.png file, which is what this page generates by default. Upload it as the Site Icon in WordPress. Choose a wider size set if you also want the tab and Apple touch icons for a custom theme.',
       },
       {
         question: 'What is site.webmanifest?',

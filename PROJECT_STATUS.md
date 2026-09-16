@@ -320,6 +320,51 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-14 — `第二批四个工具改造` / `已集成`：Image Enhancer、Favicon Generator、ID Photo Maker
+  （A 类）和 Image Splitter（B 类）由四个并行 agent 完成并合入。**改造进度 5/14 → 9/14。**
+
+  四个 agent 中途被会话用量上限同时掐断（HTTP 429），worktree 完好但都没提交。用 SendMessage 带着
+  原有上下文恢复，四个都从断点续上并完成 —— 冷启动会把它们各自做过的实测数据全部作废。这条路验证
+  可行，代价可控。
+
+  **这一批最有价值的产出是它们驳回了任务描述里的错误**，而不是照做：
+
+  - **ID Photo**：任务里说预设表在 `src/lib/id-photo.ts`（实际在 `src/data/id-photo-presets.ts`）、
+    芯片做成"护照/签证/身份证"（表里**没有**签证和身份证，只有三个有官方来源的可选项）、"底色归入
+    微调面板"（**压根没有底色控件**）。它拒绝造一枚"签证"芯片——编造一个没有来源的证件尺寸正是
+    `CLAUDE.md` 禁止的过度声称。三处我都核实了，它是对的。
+  - **Image Splitter**：任务里假设"切 N 块 = N 倍代价"，因此把它标成最可能推翻分类的那个。**实测是
+    错的**——切片合起来正好覆盖原图一次，4 块 376 ms、9 块 368 ms（9 块反而略快），144 块 1.3 s。
+    成本随总像素走，与产出文件数无关。B 类成立，全自动运行，无需阈值或降级按钮。
+  - **Favicon**：任务里要求"确保变体入口带进来的默认值仍然生效"——四个变体页原本一个 prop 都没传，
+    这条要求是空的。任务里举例的"只要 .ico"芯片也不可实现，这个工具不产出 `.ico`。
+  - 任务里说 `validate-batch-download-browser.mjs` 驱动 image-splitter，实际 **0 处引用**。
+
+  实测数据（都写进了规格）：Enhancer 预览 46.5 万像素 17 ms vs 导出 600 万像素 195 ms，相差 12.9 倍
+  （手机 67 倍），且只限宽度不够——1000×20000 全景图缩到 700px 列宽仍有 9.8 Mpx，必须加面积上限。
+  Favicon 一次产 5 个图标平在 10–15 ms，不随输入变大。ID Photo 证件照 3.1 ms、A4@600DPI 底片最坏
+  272 ms，两者都自动运行，但**分开建 key**：底片永远是 PNG，所以下载格式和 JPG 质量不进它的 key，
+  拖质量滑块只重编 11 KB 照片、2.6 MB 底片纹丝不动。
+
+  集成时处理的问题：删掉 `.id-photo-actions`（`position: sticky` 的死规则，按钮删除后它把次要动作
+  悬浮在芯片行上方，盖住页面最重要的控件）；给 `BatchResultsSummary` 补上引用稳定性契约的说明——
+  它以数组身份判断"结果换了一批"，内联 `.map()` 会让拖拽时每帧取消一次用户的下载（Splitter 撞上并
+  已 memo 化；其余三个传的是 state，当前安全）。**没有改成内容签名**：两次运行可能产出同名不同字节
+  的文件，签名会漏掉真正的变化并归档过期 blob。
+
+  截图验收再次抓到套件抓不到的问题：Enhancer 的 FAQ 还写着已不存在的"Reset all"按钮、每个滑块的
+  重置在手机上渲染成光秃秃的 `Reset`（靠 `aria-label` 才知道重置什么）；Splitter 的运行注记把 26 ms
+  显示成"0.0s"（读起来像失败）、输出格式下拉框因未用 `FineTuneField` 而只有 36 px 高。
+
+  **需要所有者决定的一件事**：Favicon agent 把 `/favicon-for-wordpress/` 的默认输出从 5 个图标改成
+  1 个（仅 512），理由是该页 FAQ 原文就写着"you only need the 512x512 file"，并同步改了文案。行为
+  与文案一致、不是偷改，但这**改变了一个已索引落地页默认交付什么**，属于产品判断。一行可改回。
+
+  门禁：typecheck、lint、format、13 项单测、构建、SEO 注册表、站点完整性，以及**全部 12 个可运行的
+  浏览器套件**，全部通过，`browserErrors` 均为 0。第 13 个 `validate-secondary-tools-browser.mjs`
+  仍因沙箱连不上 `staticimgly.com` 跑不了——Enhancer 和 Favicon 的断言都在失败点之前，两个 agent
+  都按要求明确声明了"不报成通过"，并各自用截断副本取得了正面证据。
+
 - 2026-09-14 — `对外身份` / `llms.txt 可发现性`：外部 SEO 审计的六条里，核实后三条成立、一条部分
   成立、一条基本不成立、一条无法从这个沙箱验证（出口代理拦了 toolkitfree.net，www 和 301 的实际
   行为只能由项目所有者在线上确认）。本次实现其中两条。

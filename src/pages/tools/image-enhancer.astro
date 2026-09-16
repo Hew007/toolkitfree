@@ -10,7 +10,7 @@ const faqItems = [
   {
     question: 'How does the image enhancer work?',
     answer:
-      'The tool uses your browser Canvas API to adjust brightness, contrast, saturation, sharpness, blur, and grayscale. Processing stays on your device.',
+      'Pick a correction, such as Photo boost or Document scan, and it sets brightness, contrast, saturation, sharpness, blur, and grayscale for you. The browser Canvas API applies them to a scaled preview while you adjust, then renders the full-size file once the settings sit still. Processing stays on your device.',
   },
   {
     question: 'Is my image uploaded to a server?',
@@ -35,7 +35,7 @@ const faqItems = [
   {
     question: 'Can I combine multiple adjustments?',
     answer:
-      'Yes. The live preview combines all selected adjustments. Reset all returns every visual adjustment to its neutral value.',
+      'Yes. The preview combines every adjustment, and each correction preset is simply a set of them. Open Fine-tune to change any single value, and the reset link there returns the whole set to the preset you chose.',
   },
   {
     question: 'Will the exported image lose quality?',
@@ -89,8 +89,9 @@ const faqStructuredData = {
     <div class="tool-content">
       <h1>Free Online Image Enhancer</h1>
       <p style="color: var(--color-text-light); margin-bottom: 1.5rem;">
-        Adjust the appearance of one JPG, PNG, or WebP image with a live preview. The selected image
-        content is processed locally in your browser.
+        Pick a correction for one JPG, PNG, or WebP image, then fine-tune any value. The preview
+        follows you and the full-size file follows the preview. The selected image content is
+        processed locally in your browser.
       </p>
 
       <ImageEnhancer client:load />
@@ -99,19 +100,30 @@ const faqStructuredData = {
         <h2>How to Enhance an Image</h2>
         <ol class="howto-steps">
           <li>Choose one JPG, PNG, or WebP image</li>
-          <li>Adjust brightness, contrast, saturation, sharpness, blur, or grayscale</li>
-          <li>Check the live preview and reset individual controls when needed</li>
-          <li>Choose PNG, JPG, or WebP and download the processed image</li>
+          <li>
+            Pick a correction, such as Photo boost, Low light, Document scan, or Black and white
+          </li>
+          <li>
+            Open Fine-tune to change brightness, contrast, saturation, sharpness, blur, grayscale,
+            or the output format
+          </li>
+          <li>
+            The full-size file is rendered as you settle on the settings; download it when it
+            appears
+          </li>
         </ol>
       </section>
 
       <section class="features-section">
         <h2>Features</h2>
         <ul class="features-list">
+          <li>
+            One-click corrections for photos, low light, scans, black and white, and softening
+          </li>
           <li>Brightness, contrast, and saturation controls</li>
           <li>Edge sharpening with a corrected RGBA pixel kernel</li>
           <li>Browser blur and grayscale effects</li>
-          <li>Live preview before export</li>
+          <li>Scaled preview while you drag, then a full-resolution render for the download</li>
           <li>PNG, JPG, and WebP output with quality control where supported</li>
           <li>Large-image memory review before processing</li>
           <li>Selected image contents are processed locally in your browser</li>
