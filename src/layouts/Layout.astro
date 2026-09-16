@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { SITE_ORGANIZATION } from '../data/organization';
 import '../styles/responsive-accessibility.css';
 import { guideRegistry } from '../data/guide-registry';
 import {
@@ -111,14 +112,15 @@ const enrichGuideArticle = (value: unknown): unknown => {
 };
 const normalizedStructuredData = enrichGuideArticle(normalizeStructuredUrls(structuredData));
 
+// Every page carries the site's identity, and it has to be the same identity the
+// homepage names as its publisher and the About page names as its subject —
+// otherwise the site tells a crawler two different stories about one entity.
+// Spread from the single definition rather than restating it; this block used to
+// carry its own description and drifted into claiming image tools only.
 const orgSchema = {
   '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'ToolkitFree',
-  url: toPublicUrl('/'),
-  logo: 'https://toolkitfree.net/brand/toolkitfree-mark.svg',
-  description:
-    'Free online image tools for converting, compressing, resizing, and editing images in your browser.',
+  ...SITE_ORGANIZATION,
+  logo: toPublicUrl('/brand/toolkitfree-mark.svg'),
 };
 ---
 

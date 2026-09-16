@@ -236,6 +236,44 @@ for (const guide of guideRegistry) {
 }
 assert.equal(layoutSample.includes('href="/guides/"'), true, 'Footer Guides link');
 
+// A page that states its own "Last updated" date must not contradict the `lastmod`
+// the sitemap reports for it. Both are hand-maintained in different files, and they
+// drifted: the policy pages said August while the sitemap still said May.
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+const sitemapLastmod = new Map(
+  [...sitemap.matchAll(/<loc>([^<]+)<\/loc>\s*<lastmod>([^<]+)<\/lastmod>/g)].map((match) => [
+    normalizeRoute(new URL(match[1]).pathname),
+    match[2],
+  ])
+);
+let datedPages = 0;
+for (const { route, html } of pages) {
+  const stated = /Last updated:\s*([A-Z][a-z]+)\s+(\d{1,2}),\s*(\d{4})/.exec(html);
+  if (!stated) continue;
+  const month = String(MONTHS.indexOf(stated[1]) + 1).padStart(2, '0');
+  const iso = `${stated[3]}-${month}-${stated[2].padStart(2, '0')}`;
+  assert.equal(
+    sitemapLastmod.get(route),
+    iso,
+    `${route} states "Last updated: ${stated[0].slice(14)}" but the sitemap reports ${sitemapLastmod.get(route)}`
+  );
+  datedPages += 1;
+}
+assert.equal(datedPages >= 2, true, 'Expected the policy pages to state a last-updated date');
+
 console.log(
   JSON.stringify({
     status: 'SEO_REGISTRY_VALIDATION_OK',
@@ -246,6 +284,7 @@ console.log(
     jsonLdBlocks,
     webApplications,
     faqPages,
+    datedPages,
     locale: SITE_LOCALE,
   })
 );

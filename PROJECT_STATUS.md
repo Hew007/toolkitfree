@@ -320,6 +320,38 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-16 — `外部审计复核` / `修掉两条真问题`：外部给的六条里，核实后**两条成立、两条已知且不在
+  仓库、一条不成立、一条是有意为之**。
+
+  **成立并已修：站点级 Organization 描述是旧的。** 上次做身份收敛时我只改了首页 `WebSite.publisher`
+  和 About 的 `mainEntity`，**漏了 `Layout.astro` 里那份每页都输出的 `orgSchema`**——它自带一句
+  "Free online image tools ... editing images in your browser"，于是首页上同时存在两个 Organization
+  节点、描述互相矛盾，比只有一份过期的更糟：爬虫拿到的是同一实体的两种说法。现在 `orgSchema` 从
+  `SITE_ORGANIZATION` 展开、只补一个 `logo`，全站 71 页的 Organization 描述已核实为同一份。
+
+  **成立并已修：sitemap 的 lastmod 与页面自述日期矛盾。** Privacy 和 Terms 页面上写着
+  "Last updated: August 1, 2026"，sitemap 却停在 5 月 20/22 日。两处都是手工维护、分在不同文件里，
+  漂移是必然的。日期已对齐，并给 `validate-seo-registry.mjs` 加了一条检查：任何自述 "Last updated"
+  的页面，其日期必须与 sitemap 报告的 `lastmod` 一致。**已验证这条检查会失败**——故意把 terms 改回
+  5 月，门禁报出 `/terms states "Last updated: August 1, 2026" but the sitemap reports 2026-05-22`。
+
+  **不成立：无斜杠主页应当 301 到 `/`。** `https://toolkitfree.net` 与 `https://toolkitfree.net/`
+  按 RFC 3986 是**同一个 URL**（http(s) 的空路径等价于 `/`），200 是正确行为，没有可重定向的对象。
+
+  **已知且不在仓库：路径无斜杠的 307。** 查证了 Cloudflare 文档：Workers 静态资源的
+  `html_handling`（含 `force-trailing-slash`）**只会发 307，没有配置项能改成 301**。唯一办法是
+  Cloudflare 控制台的 Redirect Rule——它在 Worker 之前执行，可用动态表达式
+  `concat(http.request.uri.path, "/")` 指定 301。这条只能由项目所有者在控制台做。
+
+  **有意为之：sitemap 不收录 `llms.txt`。** sitemap 是给可索引 HTML 页面的，而
+  `validate-seo-registry.mjs` 的逻辑正是"拿所有可索引路由去比对 llms 的覆盖"，把覆盖文件本身放进被
+  覆盖的路由集会让这个校验自指。入口已通过页脚（每页）、`robots.txt` 注释、About 页三处提供。
+
+  联系邮箱仍是 Gmail，外部审计自己也认为不是硬伤，未改。
+
+  门禁：typecheck、lint、format、13 项单测、构建、SEO 注册表（新增 `datedPages: 2`）、站点完整性，
+  以及 71 路由 × 5 宽度的 responsive/a11y 套件，全部通过，`browserErrors` 为 0。
+
 - 2026-09-14 — `第二批四个工具改造` / `已集成`：Image Enhancer、Favicon Generator、ID Photo Maker
   （A 类）和 Image Splitter（B 类）由四个并行 agent 完成并合入。**改造进度 5/14 → 9/14。**
 
