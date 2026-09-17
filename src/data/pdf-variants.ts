@@ -18,7 +18,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'How to convert JPG to PDF?',
         answer:
-          'Upload your JPG file(s), choose page size and orientation, and click "Create PDF." Your PDF is ready to download in seconds.',
+          'Upload your JPG file(s) and choose a page size. The PDF is built as you go and rebuilt whenever you change the pages, so it is ready to download in seconds without a convert step.',
       },
       {
         question: 'Can I convert multiple JPGs to one PDF?',
@@ -45,7 +45,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'How to convert PNG to PDF?',
         answer:
-          'Choose your PNG file(s), set the page size and orientation, and click "Create PDF." Download the result when browser processing finishes.',
+          'Choose your PNG file(s) and set the page size. The PDF follows the page editor, so there is nothing to submit — download the result once browser processing finishes.',
       },
       {
         question: 'What happens to transparent PNGs?',
@@ -77,7 +77,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'How to convert an image to A4 PDF?',
         answer:
-          'Upload your image, select "A4" as the page size, adjust orientation and margins if needed, and click Convert. Your A4 PDF is ready.',
+          'Upload your image and select "A4" as the page size, adjusting orientation and margins under Fine-tune if needed. The A4 PDF follows those settings on its own and is ready to download.',
       },
       {
         question: 'Can I fit multiple images on one A4 page?',
@@ -99,7 +99,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'How to combine multiple images into one PDF?',
         answer:
-          'Upload all your images at once. They are arranged in the order you uploaded them, with each image on its own page, and every page is previewed immediately. Click "Create PDF" and download.',
+          'Upload all your images at once. They are arranged in the order you uploaded them, with each image on its own page, and every page is previewed immediately. The combined PDF follows that preview, so you can download it straight away.',
       },
       {
         question: 'How many images can I combine?',
@@ -148,7 +148,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'How to convert a photo to PDF?',
         answer:
-          'Upload your photo(s) from your phone or computer, choose page settings, and click Convert. Your PDF is ready to download and share.',
+          'Upload your photo(s) from your phone or computer and choose your page settings. The PDF is rebuilt whenever those settings or the pages change, so it is ready to download and share without a convert step.',
       },
       {
         question: 'Can I convert iPhone photos to PDF?',
