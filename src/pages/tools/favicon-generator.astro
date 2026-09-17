@@ -1,5 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import ToolVariantLinks from '../../components/ToolVariantLinks.astro';
+import { allVariants, variantData } from '../../data/favicon-variants';
 import ToolDirectory from '../../components/ToolDirectory.astro';
 import FaviconGenerator from '../../components/FaviconGenerator';
 
@@ -132,6 +134,14 @@ const breadcrumbSchema = {
           <li>Copy the HTML code and add it to your website</li>
         </ol>
       </section>
+
+      <ToolVariantLinks
+        toolHref="/tools/favicon-generator"
+        heading="Start From Your Image Type or Platform"
+        intro="Each option opens the same favicon generator with a sensible size set selected, and you can switch sets at any time."
+        variants={allVariants}
+        describe={(v) => variantData[v.slug]?.description}
+      />
 
       <section class="features-section">
         <h2>Features</h2>

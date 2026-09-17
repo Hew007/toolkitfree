@@ -1,0 +1,63 @@
+---
+import { toPublicPath } from '../data/tool-registry';
+import type { ToolVariantSummary } from '../data/content-types';
+
+/**
+ * The card grid a tool page uses to reach its own variant routes.
+ *
+ * It exists because those routes were unreachable. Seven of the nine tools with
+ * variants linked none of them, so 25 of 48 variant pages had no inbound link
+ * from outside their own cluster — findable only by typing the URL or reading
+ * the sitemap. Thin content and no inbound links is the combination that keeps a
+ * page in "discovered, not indexed".
+ *
+ * Shared rather than repeated per page: two tools already had a hand-written
+ * version of this grid and the other seven had nothing, which is exactly the
+ * drift this codebase keeps paying for elsewhere.
+ *
+ * Non-indexable variants are skipped. A variant left out of the sitemap on
+ * purpose must not be linked from every tool page as though it were a
+ * destination.
+ */
+interface Props {
+  /** The parent tool route, without a trailing slash: `/tools/favicon-generator`. */
+  toolHref: string;
+  /**
+   * Written for this tool, not generic. It is a heading a visitor reads while
+   * deciding, so it should name the decision — "Crop for a Specific Shape or Use
+   * Case", not "Variants".
+   */
+  heading: string;
+  /** One sentence on what picking one of these actually does. */
+  intro: string;
+  variants: readonly ToolVariantSummary[];
+  /**
+   * Where this tool keeps its variant descriptions. A callback because the three
+   * shapes in `src/data/*-variants.ts` disagree: most have a `variantData` record,
+   * the converter has a flat `descriptions` map, and the PDF-page and animation
+   * variants carry the description on the variant itself. Normalising those files
+   * would touch code far outside this change, so the caller does the lookup.
+   */
+  describe: (variant: ToolVariantSummary) => string | undefined;
+}
+
+const { toolHref, heading, intro, variants, describe } = Astro.props;
+const linked = variants.filter((variant) => variant.indexable !== false);
+---
+
+{
+  linked.length > 0 && (
+    <section class="related-tools">
+      <h2>{heading}</h2>
+      <p style="color: var(--color-text-light);">{intro}</p>
+      <div class="related-tools-grid">
+        {linked.map((variant) => (
+          <a href={toPublicPath(`${toolHref}/${variant.slug}`)} class="tool-card">
+            <h3>{variant.label}</h3>
+            <p>{describe(variant)}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  )
+}

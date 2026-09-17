@@ -236,6 +236,27 @@ for (const guide of guideRegistry) {
 }
 assert.equal(layoutSample.includes('href="/guides/"'), true, 'Footer Guides link');
 
+// Every indexable variant must be reachable from its own tool page. The rule
+// already existed for guides two blocks up; it was never applied to variants, and
+// 25 of 48 of them shipped with no inbound link from outside their own cluster —
+// reachable only by typing the URL or reading the sitemap. Thin content with no
+// inbound links is what keeps a page in "discovered, not indexed".
+let linkedVariants = 0;
+for (const tool of toolRegistry) {
+  const toolPage = pages.find(({ route }) => route === tool.href);
+  assert.ok(toolPage, `${tool.id} tool page`);
+  for (const variant of tool.variants) {
+    if (variant.indexable === false) continue;
+    const href = `href="${toPublicPath(`${tool.href}/${variant.slug}`)}"`;
+    assert.equal(
+      toolPage.html.includes(href),
+      true,
+      `${tool.id} must link its ${variant.slug} variant from the tool page`
+    );
+    linkedVariants += 1;
+  }
+}
+
 // A page that states its own "Last updated" date must not contradict the `lastmod`
 // the sitemap reports for it. Both are hand-maintained in different files, and they
 // drifted: the policy pages said August while the sitemap still said May.
@@ -284,6 +305,7 @@ console.log(
     jsonLdBlocks,
     webApplications,
     faqPages,
+    linkedVariants,
     datedPages,
     locale: SITE_LOCALE,
   })

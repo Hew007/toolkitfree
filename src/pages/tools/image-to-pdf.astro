@@ -1,5 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import ToolVariantLinks from '../../components/ToolVariantLinks.astro';
+import { allVariants, variantData } from '../../data/pdf-variants';
 import ToolDirectory from '../../components/ToolDirectory.astro';
 import ImageToPdf from '../../components/ImageToPdf';
 
@@ -146,6 +148,14 @@ const breadcrumbSchema = {
           <li>Click "Create PDF" — the generated file uses the layout shown in the editor</li>
         </ol>
       </section>
+
+      <ToolVariantLinks
+        toolHref="/tools/image-to-pdf"
+        heading="Build a PDF for a Specific Page Setup"
+        intro="Each option opens the same image-to-PDF tool with that page size, orientation and margin already applied."
+        variants={allVariants}
+        describe={(v) => variantData[v.slug]?.description}
+      />
 
       <section class="features-section">
         <h2>Features</h2>

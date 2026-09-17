@@ -1,5 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import ToolVariantLinks from '../../components/ToolVariantLinks.astro';
+import { allVariants, variantData } from '../../data/resizer-variants';
 import RelatedGuides from '../../components/RelatedGuides.astro';
 import ProcessingLimits from '../../components/ProcessingLimits.astro';
 import ToolDirectory from '../../components/ToolDirectory.astro';
@@ -111,6 +113,14 @@ const breadcrumbSchema = {
           <li>Read the real output size, then download files individually or once as a ZIP</li>
         </ol>
       </section>
+
+      <ToolVariantLinks
+        toolHref="/tools/image-resizer"
+        heading="Resize to a Platform Size"
+        intro="Each option opens the same resizer with those dimensions filled in, so you can check the crop before downloading."
+        variants={allVariants}
+        describe={(v) => variantData[v.slug]?.description}
+      />
 
       <section class="features-section">
         <h2>Features</h2>
