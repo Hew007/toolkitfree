@@ -320,6 +320,36 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-17 — `线上故障` / `第二次撤掉隔离头` / `根因仍未查明`：所有者报告 Background Remover 线上
+  报错 `The background removal worker stopped unexpectedly`，后面没有任何细节——`ErrorEvent.message`
+  为空，是 **worker 进程被浏览器杀掉**的特征，不是 worker 内部抛异常（那样会带上消息）。而且这是**两次
+  尝试都死了**：多线程那次死了之后，单线程兜底重试也死了，用户才会看到最终报错。
+
+  先排除的：从 PR #20 到 `35f0013`，**没有任何提交碰过这个工具的代码**——`background-remover.ts`、
+  worker、组件、`_headers`、`wrangler.jsonc` 全部零改动，worker 产物 hash 仍是 `2po4Cew3`，字节级
+  相同。构建自洽，worker 动态 import 的两个 ort chunk 都在，148 文件 / 73 MB 远低于 Cloudflare 限制。
+  所有者在线上实测：`crossOriginIsolated: true`、`resources.json` 完整返回——**隔离生效、模型资源
+  部署正常**，"资源缺失"的假设排除。
+
+  关键的新事实：这台机器 **20 核**，而 PR #18 当初验证"多线程能跑通"是在 **16 核**那台上。不是同一台。
+  按 `plannedThreadCount(20, true)` 算请求的是 4 线程，和 16 核那台一样——所以线程数不是差异所在。
+  **隔离 + 多线程这条路，在两台未经调优的机器上都把工具搞死了，只在当初调优的那一台上好使过。**
+
+  兜底为什么救不了：它只能接住**抛异常**的运行。浏览器直接杀掉 worker 进程时，error 事件不带消息，
+  也没有任何东西还活着可以重试进去——PR #18 自己的提交信息当时就写明了这一点。
+
+  隔离头第二次撤掉。`_headers` 里的注释现在完整记录了四个阶段（重复规则→生效即崩→限线程+兜底→
+  在 20 核上再次崩溃），以及"兜底接不住进程被杀"这个结构性原因，并写明：**在有人能复现并解释这次
+  崩溃之前**这条路由保持不隔离——"在新硬件上复现不出来"不算解释。
+
+  验证方式本身也修了一处：复用的探针脚本**自己会发隔离头**（早先为测试改的），所以它报 `isolated:
+  true` 说明不了任何事。去掉之后重测，构建产物确认 `crossOriginIsolated: false`、`SharedArrayBuffer`
+  不可用。构建产物里隔离头数量为 0。
+
+  仍然缺的是所有者浏览器控制台的红色报错——特别是有没有出现
+  `[toolkitfree] background removal failed on 4 threads, retrying single-threaded` 这行 warn。
+  它在，就证明确实走到了兜底；不在，说明故障发生在这条路径之外，那是另一个方向。
+
 - 2026-09-16 — `外部审计复核` / `修掉两条真问题`：外部给的六条里，核实后**两条成立、两条已知且不在
   仓库、一条不成立、一条是有意为之**。
 
