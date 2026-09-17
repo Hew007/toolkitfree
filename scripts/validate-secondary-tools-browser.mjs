@@ -576,6 +576,39 @@ assert.equal(
   ),
   true
 );
+// The renderer is imported on demand, so the download buttons are on screen
+// before the first code can be exported. `data-qr-ready` reports that renderer
+// rather than merely that the textarea holds text, and the buttons must stay
+// disabled until it flips: a click in that window produced no file and no
+// message at all.
+const qrReadiness = await evaluate(`
+  (async () => {
+    const input = document.querySelector('textarea[placeholder="Enter text or URL..."]');
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
+    setter.call(input, 'readiness-check');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    let enabledBeforeReady = 0;
+    let sawPendingButton = false;
+    const started = performance.now();
+    while (performance.now() - started < 30000) {
+      const root = document.querySelector('[data-qr-ready]');
+      const button = [...document.querySelectorAll('button')].find(
+        (candidate) => candidate.textContent.trim() === 'Download PNG'
+      );
+      const ready = root?.dataset.qrReady === 'true';
+      if (button && !ready) {
+        sawPendingButton = true;
+        if (!button.disabled) enabledBeforeReady += 1;
+      }
+      if (ready) return { ready: true, enabledBeforeReady, sawPendingButton };
+      await new Promise((resolve) => setTimeout(resolve, 16));
+    }
+    return { ready: false, enabledBeforeReady, sawPendingButton };
+  })()
+`);
+assert.equal(qrReadiness.ready, true, 'QR renderer never became ready');
+assert.equal(qrReadiness.enabledBeforeReady, 0, 'QR downloads must wait for the renderer');
+
 await evaluate(`
   (() => {
     const input = document.querySelector('textarea[placeholder="Enter text or URL..."]');
@@ -588,9 +621,9 @@ await waitFor(
   `document.querySelector('[data-qr-data]')?.dataset.qrData === 'https://example.com/a?x=1&y=2'`,
   'text QR data'
 );
-await waitFor(`Boolean(document.querySelector('[data-qr-data] canvas'))`, 'QR canvas');
+await waitFor(`Boolean(document.querySelector('[data-qr-ready="true"] canvas'))`, 'QR canvas');
 
-await evaluate(`document.querySelector('[data-qr-tab="wifi"]').click()`);
+await evaluate(`document.querySelector('input[name="qr-content-type"][value="wifi"]').click()`);
 await waitFor(
   `document.querySelector('[data-qr-input-type]').dataset.qrInputType === 'wifi'`,
   'WiFi tab'
@@ -611,7 +644,7 @@ await waitFor(
   'escaped WiFi QR data'
 );
 
-await evaluate(`document.querySelector('[data-qr-tab="vcard"]').click()`);
+await evaluate(`document.querySelector('input[name="qr-content-type"][value="vcard"]').click()`);
 await waitFor(
   `document.querySelector('[data-qr-input-type]').dataset.qrInputType === 'vcard'`,
   'vCard tab'
@@ -632,7 +665,7 @@ await waitFor(
   'escaped vCard QR data'
 );
 
-await evaluate(`document.querySelector('[data-qr-tab="text"]').click()`);
+await evaluate(`document.querySelector('input[name="qr-content-type"][value="text"]').click()`);
 await waitFor(
   `document.querySelector('[data-qr-input-type]').dataset.qrInputType === 'text'`,
   'Text tab'
@@ -682,6 +715,21 @@ assert.equal(
     `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Download PNG').disabled`
   ),
   true
+);
+
+// The QR output follows the controls, so this page must never grow a submit
+// step. Without this guard someone can add `Generate` back and nothing objects.
+assert.deepEqual(
+  await evaluate(`
+    [
+      ...document.querySelectorAll(
+        '.qr-generator-layout button, .qr-generator-layout input[type="submit"]'
+      ),
+    ]
+      .map((control) => control.textContent.trim() || control.value || '')
+      .filter((label) => /^(generate|create|make|build|render|convert|apply|start)\\b/i.test(label))
+  `),
+  []
 );
 
 await navigate('/tools/image-enhancer/');
