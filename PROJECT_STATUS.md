@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-09-13
+Last updated: 2026-09-17
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -319,6 +319,49 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-09-17 — `删掉 23.9 MB 从没被下载过的 WASM` / `favicon-for-wordpress 维持 1 个图标`：
+
+  **23.9 MB 的死重量。** `dist/_astro/ort-wasm-simd-threaded.jsep-*.wasm` 每次发布都上线，**从来没有
+  任何人下载过**，而且它一个人就占满了 `validate-static-asset-sizes.mjs` 那条 24 MiB 红线的 95%。
+
+  来源：`onnxruntime-web@1.21` 的浏览器默认入口本身就是 JSEP（带 WebGPU）那份构建，它在两处
+  `new URL("…jsep.wasm", import.meta.url)` 兜底里写了自己的二进制文件名，Vite 看见就把 23.9 MB 打包
+  进产物。**第一次尝试用 `resolve.alias` 把 `onnxruntime-web/webgpu` 指回 `onnxruntime-web` 失败了**，
+  因为两份 bundle 引用的是同一个 JSEP 文件——问题从来不在 `/webgpu` 这个子路径上。
+
+  为什么能确认没人下载：`@imgly/background-removal` 在建 session 前**总是**先设
+  `ort.env.wasm.wasmPaths`（见其 `index.mjs` 的 `createOnnxSession`），指向它自己从
+  `/generated/background-removal/1.7.0/` 取回来拼成的 blob URL，而那里我们自托管的是**非 JSEP**的
+  `ort-wasm-simd-threaded.wasm`——因为我们从不传 `device: 'gpu'`。两处兜底因此都是死路：一处挂在
+  `!wasm.wasmPaths` 后面，另一处挂在缺少 `locateFile` 后面，而 `locateFile` 正是 `wasmPaths` 提供的。
+
+  做法：`astro.config.mjs` 里加一个 Vite 插件，把那个文件名改写成 Vite 资源扫描器不认的表达式
+  （运行时取值不变，只是不再触发产出）。**关键一点是插件必须同时注册到 `vite.worker.plugins`**——
+  worker 打包走的是**独立的插件管线**，`vite.plugins` 到不了那里，而拉进 ORT 的正是 background-removal
+  worker；只注册到 `vite.plugins` 时文件原样还在。
+
+  代价说清楚：如果将来哪次改动真的走到那两处兜底（换了 device，或者不再设 `wasmPaths`），它会去取一个
+  现在 404 的地址。那是响亮的失败而不是静默的错误，但确实是失败，改到那里的人必须回头看这段。
+
+  结果：`dist` 从 73 MB 降到 50 MB，最大单文件变成 9.78 MiB 的 FFmpeg core。
+
+  **补上校验**：`validate-static-asset-sizes.mjs` 现在额外要求 `dist/_astro` 里不出现任何 `.wasm`——
+  本站要跑的 WASM 都是自托管在 `/generated/` 下按需取、分块缓存的，落在 Vite 产物目录里的只会是依赖
+  替我们声明、我们替它发布的东西。**已验证这条检查会失败**：往 `dist/_astro` 放一个假的 `.wasm`，门禁
+  立刻报出文件名。原来那条 24 MiB 大小红线没动——它拦的是别的东西，而且在没有完整 background-removal
+  资源的环境里无法重新标定。
+
+  **`/favicon-for-wordpress/` 维持默认只出 1 个图标**（所有者决定，不改代码）。页面文案本来就把这件事
+  说清楚了：WordPress 只要一张 ≥512×512 的站点图标，其余尺寸由它自己生成，需要更多可以切换尺寸集。
+  上一条日志里"仍未决定"的项到此关闭。
+
+  验证：typecheck、lint、format、13 项单测、构建、SEO 注册表（`linkedVariants: 42`）、站点完整性
+  （4399 内链 / 0 断链）、静态资源门禁全部通过。**两处未能在本沙箱验证**，需要所有者机器上补：
+  一是 `npm run build` 的完整形态——沙箱出网被挡，`staticimgly.com` 返回 403，
+  `prepare-background-removal-assets.mjs` 下不来资源，本次是用 `npx astro build` 绕过 prebuild 构建的；
+  二是 Background Remover 的端到端实跑，同样因为下不来模型。`validate-content-freshness.mjs` 在本沙箱
+  必然失败，那是新克隆导致所有源文件 mtime 都是今天，与本次改动无关。
 
 - 2026-09-17 — `变体页入口` / `25 个孤儿页修复` / `校验盲区补上`：所有者问"那个 WordPress 变体页
   从哪进去"——答案是**进不去**。查下来问题远比一个页面大：全站 48 个变体页，**25 个从自己那一簇之外
