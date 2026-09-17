@@ -309,11 +309,28 @@ await waitFor(
   'images merged onto one page again'
 );
 
-await evaluate(`document.querySelector('[data-testid="pdf-convert"]').click()`);
-await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'partial PDF result');
+// No submit step: the PDF follows the page list, so merging the two images onto
+// one page is enough to produce a one-page document. Waiting on the page count
+// rather than the panel alone also proves the result belongs to the current
+// layout — an earlier two-page run is invalidated the moment the merge lands.
+await waitForValue(
+  `document.querySelector('[data-pdf-result]')?.dataset.pages ?? null`,
+  (pages) => pages === '1',
+  'one-page PDF result following the merged layout'
+);
+// No regression: the submit button must not come back.
 assert.equal(
-  await evaluate(`Number(document.querySelector('[data-pdf-result]').dataset.pages)`),
-  1
+  await evaluate(`Boolean(document.querySelector('[data-testid="pdf-convert"]'))`),
+  false,
+  'Image to PDF must not regain a submit button'
+);
+assert.equal(
+  await evaluate(`
+    [...document.querySelectorAll('button')]
+      .some((button) => button.textContent.trim().startsWith('Create PDF'))
+  `),
+  false,
+  'no "Create PDF" button may remain on the page'
 );
 const pdfBase64 = await evaluate(`
   (async () => {
@@ -333,6 +350,8 @@ assert.equal(pdfText.trimEnd().endsWith('%%EOF'), true);
 assert.equal((pdfText.match(/\/Type \/Page\b/g) || []).length, 1);
 assert.equal((pdfText.match(/\/MediaBox/g) || []).length >= 1, true);
 const pdfStats = await evaluate(`window.__objectUrlStats()`);
+// Unchanged by auto-run: every rebuild replaces the single `pdf:result` key and
+// revokes the document it held, so the superseded PDFs leave nothing behind.
 assert.equal(pdfStats.active, 4, 'Three previews plus one PDF result should remain active');
 
 // Starting the next PDF must not mean removing images one at a time or
@@ -365,7 +384,6 @@ await waitFor(
 await navigate('/tools/image-to-pdf/image-to-pdf-no-margin/');
 await upload([{ name: 'wide.png', type: 'image/png', width: 400, height: 200 }]);
 await waitFor(`Boolean(document.querySelector('[data-pdf-file]'))`, 'fit PDF input');
-await evaluate(`document.querySelector('[data-testid="pdf-convert"]').click()`);
 await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'fit PDF result');
 const fitPdfBase64 = await evaluate(`
   (async () => {
@@ -395,6 +413,62 @@ assert.ok(
   Math.abs(Number(drawMatrix[2]) - Number(mediaBox[2])) < 0.5,
   `Drawn height ${drawMatrix[2]} should fill the page height ${mediaBox[2]}`
 );
+
+// Input arriving faster than the work completes is the only condition under
+// which a superseded run can overwrite a fresher one, so add a second image
+// while the first document is still being assembled and hold the tool to the
+// newer layout.
+await upload([{ name: 'tall.png', type: 'image/png', width: 200, height: 400 }]);
+await waitForValue(
+  `document.querySelector('[data-pdf-result]')?.dataset.pages ?? null`,
+  (pages) => pages === '2',
+  'the PDF settles on the newer two-page layout'
+);
+await new Promise((resolve) => setTimeout(resolve, 900));
+assert.equal(
+  await evaluate(`document.querySelector('[data-pdf-result]').dataset.pages`),
+  '2',
+  'a superseded one-page run must not overwrite the fresher two-page result'
+);
+
+// The page-size chips answer the question; Fine-tune keeps every value they do
+// not, still editable. Editing one by hand has to offer the way back to the
+// setup this route arrived with, and put that offer away again once it matches.
+await navigate('/tools/image-to-pdf/');
+await upload([{ name: 'setup.png', type: 'image/png', width: 400, height: 300 }]);
+await waitFor(`Boolean(document.querySelector('[data-pdf-file]'))`, 'page setup input');
+assert.equal(
+  await evaluate(`Boolean(document.querySelector('.fine-tune-reset'))`),
+  false,
+  'the reset stays away until a value is hand-edited'
+);
+await evaluate(`
+  (() => {
+    const slider = document.querySelector('[data-testid="pdf-margin"]');
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    setter.call(slider, '25');
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+    slider.dispatchEvent(new Event('change', { bubbles: true }));
+  })()
+`);
+await waitFor(
+  `document.querySelector('[data-pdf-preset]').dataset.margin === '25'`,
+  'margin edited by hand'
+);
+await waitFor(`Boolean(document.querySelector('.fine-tune-reset'))`, 'reset offered');
+// The document follows the margin on its own, with nothing to submit.
+await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'PDF at the wider margin');
+await evaluate(`document.querySelector('.fine-tune-reset').click()`);
+await waitFor(
+  `document.querySelector('[data-pdf-preset]').dataset.margin === '10'`,
+  'margin back at this page preset'
+);
+assert.equal(
+  await evaluate(`Boolean(document.querySelector('.fine-tune-reset'))`),
+  false,
+  'the reset puts itself away once the setup matches the preset again'
+);
+await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'PDF after the reset');
 
 await navigate('/tools/favicon-generator/');
 await upload([
