@@ -846,6 +846,28 @@ assert.equal(
   'Removing the image should revoke the enhancer result URL'
 );
 
+/* --- Background Remover -------------------------------------------------
+   The colour row is the shared `ToolPresets` chip component, which renders the
+   preset table's own labels and carries no per-chip attribute of its own, so a
+   chip is addressed by its label. Keep this map in step with BACKGROUND_PRESETS
+   in src/lib/background-remover.ts; validate-secondary-tools.mjs asserts that
+   table still holds these values. */
+const backgroundChipLabels = {
+  transparent: 'Transparent',
+  '#ffffff': 'White',
+  '#ff0000': 'Red',
+  '#0000ff': 'Blue',
+  '#008000': 'Green',
+};
+const backgroundChip = (value) =>
+  `[...document.querySelectorAll('[data-background-chips] .tool-chip')].find((chip) => chip.querySelector('.tool-chip-label').textContent.trim() === ${JSON.stringify(
+    backgroundChipLabels[value]
+  )})`;
+// The custom colour and hex fields live in the folded fine-tune panel now. A
+// closed `details` still hides them from a real visitor, so open it first rather
+// than driving a control nobody could reach.
+const openBackgroundFineTune = `document.querySelector('.fine-tune')?.setAttribute('open', '')`;
+
 await navigate('/tools/background-remover/');
 await upload([{ name: 'corrupt.png', type: 'image/png', corrupt: true }]);
 await waitFor(`document.body.innerText.includes('corrupt.png')`, 'corrupt background input');
@@ -863,6 +885,188 @@ assert.equal(
 );
 await evaluate(`document.querySelector('button[aria-label="Remove corrupt.png"]').click()`);
 await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, 'background input reset');
+
+// Background Remover keeps an explicit button on purpose: one run costs 6-25
+// seconds, so starting one by accident is not free the way it is in the tools
+// that auto-run. Two things therefore have to hold of a settings change here,
+// and this block proves them in the only state this environment can reach —
+// the model host is unreachable from CI, so every assertion below the first
+// successful removal stops at that failure.
+//
+// A request count, not only the model-run counter: the counter says the island
+// did not call the model, while the count says the page fetched nothing at all,
+// which is the claim being made. The observer is what actually decides it; the
+// count is recorded alongside because the resource buffer is capped and could
+// otherwise make a plain length comparison pass by being full.
+await upload([
+  {
+    name: 'chips.png',
+    type: 'image/png',
+    width: 96,
+    height: 96,
+    kind: 'portrait',
+    background: '#f3f4f6',
+  },
+]);
+await waitFor(`document.body.innerText.includes('chips.png')`, 'chip idle input');
+await waitFor(
+  `document.querySelector('img[alt="Original preview"]')?.complete === true`,
+  'chip idle preview settled'
+);
+assert.equal(
+  await evaluate(
+    `[...document.querySelectorAll('[data-background-chips] .tool-chip')].map((chip) => chip.querySelector('.tool-chip-label').textContent.trim()).join(',')`
+  ),
+  'Transparent,White,Red,Blue,Green',
+  'The chip row must render the preset table, in order'
+);
+// No-regression guard in the direction this tool needs it: the conversions that
+// auto-run assert their submit button is gone, and the mirror of that here is
+// that this one must never quietly become an auto-run tool.
+assert.equal(
+  await evaluate(
+    `[...document.querySelectorAll('button')].some((button) => button.textContent.trim() === 'Remove Background')`
+  ),
+  true,
+  'Background Remover must keep its explicit run button'
+);
+const idleRequestsBefore = await evaluate(`
+  (() => {
+    window.__bgRequestObserver?.disconnect();
+    window.__bgRequests = [];
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) window.__bgRequests.push(entry.name);
+    });
+    observer.observe({ type: 'resource', buffered: false });
+    window.__bgRequestObserver = observer;
+    return performance.getEntriesByType('resource').length;
+  })()
+`);
+const idleModelRunsBefore = await evaluate(
+  `Number(document.querySelector('[data-background-model-runs]').dataset.backgroundModelRuns)`
+);
+for (const value of ['#ffffff', '#ff0000', '#0000ff', '#008000', 'transparent']) {
+  await evaluate(`${backgroundChip(value)}.click()`);
+  await waitFor(
+    `document.querySelector('[data-active-background]').dataset.activeBackground === ${JSON.stringify(
+      value
+    )}`,
+    `chip selects ${value}`
+  );
+}
+await evaluate(openBackgroundFineTune);
+const idleAfterChips = await evaluate(`
+  (async () => {
+    // PerformanceObserver delivers in a later task, so let anything a click
+    // might have started actually arrive before the buffer is read.
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const root = document.querySelector('[data-background-stage]');
+    return {
+      requests: performance.getEntriesByType('resource').length,
+      newRequests: window.__bgRequests,
+      modelRuns: Number(root.dataset.backgroundModelRuns),
+      stage: root.dataset.backgroundStage,
+      busy: root.getAttribute('aria-busy'),
+      hasResult: Boolean(document.querySelector('[data-background-result]')),
+      status: Boolean(document.querySelector('.status-processing, .status-error')),
+      summary: document.querySelector('.fine-tune-summary')?.textContent.trim(),
+      hex: document.querySelector('[data-testid="bg-color-hex"]')?.value,
+      picker: document.querySelector('[data-testid="bg-color-picker"]')?.value,
+    };
+  })()
+`);
+assert.deepEqual(
+  idleAfterChips.newRequests,
+  [],
+  `Changing the background must not request anything, saw ${idleAfterChips.newRequests.join(', ')}`
+);
+assert.equal(
+  idleAfterChips.requests,
+  idleRequestsBefore,
+  'The resource count must be unchanged across five chip changes'
+);
+assert.equal(
+  idleAfterChips.modelRuns,
+  idleModelRunsBefore,
+  'Changing the background must not run the model'
+);
+assert.equal(idleAfterChips.stage, 'idle', 'No model stage may start from a chip');
+assert.equal(idleAfterChips.busy, 'false', 'A chip change must not put the tool in a busy state');
+assert.equal(idleAfterChips.hasResult, false);
+assert.equal(idleAfterChips.status, false, 'A chip change must not raise a status message');
+// Every value a chip writes has to stay visible and editable in the panel below
+// it, which is the half of the contract that says nobody lost control.
+assert.equal(idleAfterChips.summary, 'Transparent \u00b7 PNG alpha');
+assert.equal(idleAfterChips.hex, '');
+const tunedValues = await evaluate(`
+  (async () => {
+    ${backgroundChip('#ff0000')}.click();
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    return {
+      summary: document.querySelector('.fine-tune-summary').textContent.trim(),
+      hex: document.querySelector('[data-testid="bg-color-hex"]').value,
+      picker: document.querySelector('[data-testid="bg-color-picker"]').value,
+      reset: Boolean(document.querySelector('.fine-tune-reset')),
+    };
+  })()
+`);
+assert.equal(tunedValues.summary, 'Red \u00b7 #ff0000');
+assert.equal(tunedValues.hex, '#ff0000', 'The panel must show the exact value the chip wrote');
+assert.equal(tunedValues.picker, '#ff0000');
+assert.equal(
+  tunedValues.reset,
+  false,
+  'The way back appears only once something has been hand-edited'
+);
+// Hand-editing the exact value must unlight every chip and offer a way back that
+// names the chip it returns to — fine-tuning is only safe to try if there is one.
+const handEdited = await evaluate(`
+  (async () => {
+    const input = document.querySelector('[data-testid="bg-color-hex"]');
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    setter.call(input, '#7a45ff');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const reset = document.querySelector('.fine-tune-reset');
+    return {
+      active: document.querySelector('[data-active-background]').dataset.activeBackground,
+      lit: [...document.querySelectorAll('[data-background-chips] .tool-chip')]
+        .filter((chip) => chip.getAttribute('aria-pressed') === 'true').length,
+      summary: document.querySelector('.fine-tune-summary').textContent.trim(),
+      resetLabel: reset?.textContent.trim(),
+    };
+  })()
+`);
+assert.equal(handEdited.active, '#7a45ff');
+assert.equal(handEdited.lit, 0, 'A hand-edited colour must unlight every chip');
+assert.equal(handEdited.summary, 'Custom \u00b7 #7a45ff');
+assert.equal(
+  handEdited.resetLabel,
+  'Back to the Red background',
+  'The way back must name the chip it returns to'
+);
+const afterReset = await evaluate(`
+  (async () => {
+    document.querySelector('.fine-tune-reset').click();
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    return {
+      active: document.querySelector('[data-active-background]').dataset.activeBackground,
+      reset: Boolean(document.querySelector('.fine-tune-reset')),
+    };
+  })()
+`);
+assert.equal(afterReset.active, '#ff0000', 'Reset must return to the named preset');
+assert.equal(afterReset.reset, false, 'The way back disappears once it has been taken');
+// The colour survives a file change, so leave the tool on its default before the
+// cases below, which expect Transparent unless they select something else.
+await evaluate(`${backgroundChip('transparent')}.click()`);
+await waitFor(
+  `document.querySelector('[data-active-background]').dataset.activeBackground === 'transparent'`,
+  'chip idle restore'
+);
+await evaluate(`document.querySelector('button[aria-label="Remove chips.png"]').click()`);
+await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, 'chip idle cleanup');
 
 await upload([
   {
@@ -889,6 +1093,21 @@ assert.equal(
   await evaluate(`document.querySelector('[data-background-stage]').getAttribute('aria-busy')`),
   'true'
 );
+// One recomposition at a time is a memory constraint, not a preference: each
+// colour paints a full-size canvas. The shared chip component has no disabled
+// prop, so the row is locked by the fieldset around it — which is why this asks
+// the selector rather than the button's own `disabled` property, and why it is
+// checked here, in the one busy state this environment can actually reach.
+assert.equal(
+  await evaluate(`${backgroundChip('#ff0000')}.matches(':disabled')`),
+  true,
+  'The chip row must be locked while a run is in flight'
+);
+assert.equal(
+  await evaluate(`document.querySelector('[data-testid="bg-color-hex"]').disabled`),
+  true,
+  'The fine-tune fields must be locked with the chips'
+);
 await evaluate(
   `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Cancel').click()`
 );
@@ -911,7 +1130,7 @@ const backgroundCases = [
   { name: 'portrait.png', kind: 'portrait', background: '#f3f4f6', color: 'transparent' },
   { name: 'product.png', kind: 'product', background: '#ffffff', color: '#0000ff' },
   { name: 'transparent.png', kind: 'product', transparent: true, color: 'transparent' },
-  // A colour reachable only through the hex field, not through any preset swatch.
+  // A colour reachable only through the hex field, not through any preset chip.
   { name: 'custom.png', kind: 'product', background: '#ffffff', color: '#7a45ff', viaHex: true },
 ];
 const backgroundResults = [];
@@ -933,6 +1152,16 @@ for (const definition of backgroundCases) {
     `${definition.name} input`
   );
   if (definition.viaHex) {
+    // The hex field lives in the folded panel now, so open it first: driving a
+    // control a visitor could not reach would prove nothing about the product.
+    await evaluate(openBackgroundFineTune);
+    assert.equal(
+      await evaluate(
+        `Boolean(document.querySelector('.fine-tune[open] [data-testid="bg-color-hex"]'))`
+      ),
+      true,
+      'The hex field must be reachable from the fine-tune panel'
+    );
     // React controlled inputs only see a change when the native setter is used.
     const typeHex = (value) => `
       (async () => {
@@ -970,9 +1199,7 @@ for (const definition of backgroundCases) {
     );
     assert.equal(await evaluate(typeHex(definition.color)), definition.color);
   } else if (definition.color !== 'transparent') {
-    await evaluate(
-      `document.querySelector('[data-background-color="${definition.color}"]').click()`
-    );
+    await evaluate(`${backgroundChip(definition.color)}.click()`);
   }
   await evaluate(`
     (() => {
@@ -1119,7 +1346,7 @@ const watchRecomposition = `
       const download = result?.querySelector('button')?.disabled;
       const last = window.__recompose.downloadDisabled;
       if (download !== undefined && last[last.length - 1] !== download) last.push(download);
-      const locked = document.querySelector('[data-background-color="#ff0000"]')?.disabled;
+      const locked = ${backgroundChip('#ff0000')}?.matches(':disabled');
       const lockedLog = window.__recompose.colorsLocked;
       if (locked !== undefined && lockedLog[lockedLog.length - 1] !== locked) lockedLog.push(locked);
     };
@@ -1153,7 +1380,7 @@ await upload([
 await waitFor(`document.body.innerText.includes('recompose.png')`, 'recompose input');
 // The colour survives file changes, so the previous case's custom hex would still
 // be selected. Start from Transparent explicitly.
-await evaluate(`document.querySelector('[data-background-color="transparent"]').click()`);
+await evaluate(`${backgroundChip('transparent')}.click()`);
 await waitFor(
   `document.querySelector('[data-active-background]').dataset.activeBackground === 'transparent'`,
   'transparent baseline selection'
@@ -1225,7 +1452,7 @@ if (threadPlan.isolated) {
 const urlsBeforeRecompose = await evaluate(`window.__objectUrlStats()`);
 
 await evaluate(watchRecomposition);
-await evaluate(`document.querySelector('[data-background-color="#ff0000"]').click()`);
+await evaluate(`${backgroundChip('#ff0000')}.click()`);
 const redResult = await waitForValue(
   readBackgroundResult,
   (state) => state !== null && state.composing === 'false' && state.corner[3] === 255,
@@ -1270,7 +1497,7 @@ assert.notEqual(
 
 // Back to Transparent: the cached cutout is reused, still without the model.
 await evaluate(watchRecomposition);
-await evaluate(`document.querySelector('[data-background-color="transparent"]').click()`);
+await evaluate(`${backgroundChip('transparent')}.click()`);
 const backToTransparent = await waitForValue(
   readBackgroundResult,
   (state) => state !== null && state.composing === 'false' && state.corner[3] < 32,
