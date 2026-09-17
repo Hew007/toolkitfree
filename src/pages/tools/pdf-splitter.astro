@@ -1,5 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import ToolVariantLinks from '../../components/ToolVariantLinks.astro';
+import { allVariants } from '../../data/pdf-page-variants';
 import PdfPageExtractor from '../../components/PdfPageExtractor';
 import ToolDirectory from '../../components/ToolDirectory.astro';
 import { toPublicUrl } from '../../data/tool-registry';
@@ -101,6 +103,14 @@ const schemas = [
           <li>Download the result directly from your browser.</li>
         </ol>
       </section>
+
+      <ToolVariantLinks
+        toolHref="/tools/pdf-splitter"
+        heading="Split or Extract in a Specific Way"
+        intro="Each option opens the same PDF tool set up for that task; the page range and rotation stay editable."
+        variants={allVariants}
+        describe={(v) => allVariants.find((entry) => entry.slug === v.slug)?.description}
+      />
 
       <section class="features-section">
         <h2>What This Tool Preserves</h2>

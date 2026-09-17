@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import ToolVariantLinks from '../../components/ToolVariantLinks.astro';
 import RelatedGuides from '../../components/RelatedGuides.astro';
 import ToolDirectory from '../../components/ToolDirectory.astro';
 import ImageCropper from '../../components/ImageCropper';
@@ -130,23 +131,13 @@ const breadcrumbSchema = {
         </ol>
       </section>
 
-      <section class="related-tools">
-        <h2>Crop for a Specific Shape or Use Case</h2>
-        <p style="color: var(--color-text-light);">
-          Start with the crop ratio that matches where you will use the image. Each option opens the
-          same browser-based cropper with that ratio selected.
-        </p>
-        <div class="related-tools-grid">
-          {
-            allVariants.map((variant) => (
-              <a href={`/tools/image-cropper/${variant.slug}/`} class="tool-card">
-                <h3>{variant.label}</h3>
-                <p>{variantData[variant.slug].description}</p>
-              </a>
-            ))
-          }
-        </div>
-      </section>
+      <ToolVariantLinks
+        toolHref="/tools/image-cropper"
+        heading="Crop for a Specific Shape or Use Case"
+        intro="Start with the crop ratio that matches where you will use the image. Each option opens the same browser-based cropper with that ratio selected."
+        variants={allVariants}
+        describe={(v) => variantData[v.slug]?.description}
+      />
 
       <section class="features-section">
         <h2>Features</h2>

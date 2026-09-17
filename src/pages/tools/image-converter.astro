@@ -1,5 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import ToolVariantLinks from '../../components/ToolVariantLinks.astro';
+import { allVariants, descriptions } from '../../data/converter-variants';
 import RelatedGuides from '../../components/RelatedGuides.astro';
 import ProcessingLimits from '../../components/ProcessingLimits.astro';
 import ToolDirectory from '../../components/ToolDirectory.astro';
@@ -148,6 +150,14 @@ const faqStructuredData = {
           <li>Download files individually, or all at once as a ZIP</li>
         </ol>
       </section>
+
+      <ToolVariantLinks
+        toolHref="/tools/image-converter"
+        heading="Convert Between Two Specific Formats"
+        intro="Each option opens the same browser-based converter with that output format already chosen, and explains what the conversion does to quality and transparency."
+        variants={allVariants}
+        describe={(v) => descriptions[v.slug]}
+      />
 
       <section class="features-section">
         <h2>Features</h2>

@@ -1,5 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import ToolVariantLinks from '../../components/ToolVariantLinks.astro';
+import { allVariants, variantData } from '../../data/compressor-variants';
 import RelatedGuides from '../../components/RelatedGuides.astro';
 import ProcessingLimits from '../../components/ProcessingLimits.astro';
 import ToolDirectory from '../../components/ToolDirectory.astro';
@@ -118,6 +120,14 @@ const faqStructuredData = {
           <li>Download files individually or once as a ZIP</li>
         </ol>
       </section>
+
+      <ToolVariantLinks
+        toolHref="/tools/image-compressor"
+        heading="Compress for a Specific Destination"
+        intro="Each option opens the same compressor with settings suited to where the file is going, and every value stays editable."
+        variants={allVariants}
+        describe={(v) => variantData[v.slug]?.description}
+      />
 
       <section class="features-section">
         <h2>Features</h2>

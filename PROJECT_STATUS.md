@@ -320,6 +320,40 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-17 — `变体页入口` / `25 个孤儿页修复` / `校验盲区补上`：所有者问"那个 WordPress 变体页
+  从哪进去"——答案是**进不去**。查下来问题远比一个页面大：全站 48 个变体页，**25 个从自己那一簇之外
+  没有任何入链**，只能靠直接敲 URL 或读 sitemap 到达。favicon-generator（4/4）、pdf-splitter（2/2）、
+  video-to-gif（2/2）三个工具是全军覆没；9 个有变体的工具里，**只有 2 个的父页面链了自己的变体**。
+
+  这条线解释了之前那份外部审计说的"薄变体 GSC 抓过后明确不收"：它们不只内容薄，**还是孤儿页**。
+  内容薄 + 零入链是最差的组合，PROJECT_STATUS 里记的 7 个 discovered-not-indexed 和 5 个
+  crawled-not-indexed 大概率就是这批。
+
+  Image Cropper 和 Image Splitter 本来就有卡片区，做对了——但那是**两份手写实现**，其余七个什么都
+  没有。新建共享组件 `ToolVariantLinks.astro`，九个工具页全部接上，包括把原有那两份手写的也迁过来，
+  避免再养出一个"同一个模式两份实现"。描述来源做成回调，因为 `src/data/*-variants.ts` 有三种形状：
+  多数是 `variantData` 记录、converter 是扁平的 `descriptions` 映射、pdf-page 和 animation 把描述挂
+  在变体自身。归一化这三个文件会波及本次改动之外的代码，所以由调用方做查找。
+
+  每个工具的标题和引导语是**分别写的**，不是套模板——它是访客在做选择时读的东西，"Variants"这种
+  内部概念不该出现在页面上。
+
+  非索引变体被跳过：converter 有 6 个 `availability !== 'supported'` 的变体，它们是有意不进 sitemap 的
+  （已确认带 `noindex, follow`），不能因为要补入链就把它们当成目的地链出去。
+
+  **校验盲区**：`validate-seo-registry.mjs` 早就对 guide 强制要求 ≥2 条上下文入链，**却从没对 variant
+  做过任何这类检查**——规则已经存在、已经被认为是对的，只是没应用到变体页上，所以 25 个孤儿页一路
+  绿灯上了线。现在每个可索引变体都必须能从自己的工具页链到（`linkedVariants: 42`）。**已验证这条
+  检查会失败**：删掉 favicon 页的入口区，门禁报出
+  `favicon-generator must link its png-to-favicon variant from the tool page`。
+
+  结果：42 个可索引变体全部有父页面入链，各工具数量与 sitemap 逐一对齐；站内链接从 4366 涨到 4399，
+  零断链。门禁：typecheck、lint、format、13 项单测、构建、SEO 注册表、站点完整性，以及 71 路由 ×
+  5 宽度的 responsive/a11y 套件，全部通过，`browserErrors` 为 0。截图确认桌面和手机上卡片区正常渲染。
+
+  `/favicon-for-wordpress/` 默认只出 1 个图标那件事**仍未决定**——现在它终于能从站内点进去了，
+  建议所有者实际看过效果再定。
+
 - 2026-09-17 — `线上故障` / `第二次撤掉隔离头` / `根因仍未查明`：所有者报告 Background Remover 线上
   报错 `The background removal worker stopped unexpectedly`，后面没有任何细节——`ErrorEvent.message`
   为空，是 **worker 进程被浏览器杀掉**的特征，不是 worker 内部抛异常（那样会带上消息）。而且这是**两次

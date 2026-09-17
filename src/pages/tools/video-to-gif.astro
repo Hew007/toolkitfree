@@ -1,5 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import ToolVariantLinks from '../../components/ToolVariantLinks.astro';
+import { allVariants } from '../../data/animation-variants';
 import AnimationConverter from '../../components/AnimationConverter';
 import ToolDirectory from '../../components/ToolDirectory.astro';
 import { getTool, toPublicUrl } from '../../data/tool-registry';
@@ -96,6 +98,14 @@ const breadcrumbSchema = {
           <li>Review the result size and download the generated animation.</li>
         </ol>
       </section>
+
+      <ToolVariantLinks
+        toolHref="/tools/video-to-gif"
+        heading="Export a Specific Animated Format"
+        intro="Each option opens the same converter with that output format chosen. Converting stays a separate step, so nothing runs until you ask."
+        variants={allVariants}
+        describe={(v) => allVariants.find((entry) => entry.slug === v.slug)?.description}
+      />
 
       <section class="features-section">
         <h2>Format Guide</h2>

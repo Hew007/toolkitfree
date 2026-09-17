@@ -1,10 +1,11 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import ToolVariantLinks from '../../components/ToolVariantLinks.astro';
 import ToolDirectory from '../../components/ToolDirectory.astro';
 import ProcessingLimits from '../../components/ProcessingLimits.astro';
 import RelatedGuides from '../../components/RelatedGuides.astro';
 import ImageSplitter from '../../components/ImageSplitter';
-import { allVariants } from '../../data/splitter-variants';
+import { allVariants, variantData } from '../../data/splitter-variants';
 import { toPublicUrl } from '../../data/tool-registry';
 
 const pageUrl = toPublicUrl('/tools/image-splitter');
@@ -171,18 +172,13 @@ const faqStructuredData = {
         </p>
       </section>
 
-      <section class="related-tools">
-        <h2>Common Splits</h2>
-        <div class="related-tools-grid">
-          {
-            allVariants.map((variant) => (
-              <a href={`/tools/image-splitter/${variant.slug}/`} class="tool-card">
-                <h3>{variant.label}</h3>
-              </a>
-            ))
-          }
-        </div>
-      </section>
+      <ToolVariantLinks
+        toolHref="/tools/image-splitter"
+        heading="Common Splits"
+        intro="Each option opens the same splitter with that grid already set, and the lines stay draggable."
+        variants={allVariants}
+        describe={(v) => variantData[v.slug]?.description}
+      />
 
       <RelatedGuides toolId="image-splitter" />
 
