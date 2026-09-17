@@ -32,7 +32,7 @@ const faqItems = [
   {
     question: 'Can I add a colored background after removal?',
     answer:
-      'Yes. Pick one of the preset colors (white, red, blue, green), choose any color with the color picker, or type a hex value such as #ff7a45. You can also keep the background transparent, which is the default.',
+      'Yes. Pick one of the preset colors (white, red, blue, green), or open Fine-tune to choose any color with the color picker or to type a hex value such as #ff7a45. You can also keep the background transparent, which is the default. Changing the background repaints the existing result and does not run the AI model again.',
   },
   {
     question: 'What output format will I get?',
@@ -116,7 +116,10 @@ const breadcrumbSchema = {
         <h2>How to Remove Backgrounds</h2>
         <ol class="howto-steps">
           <li>Upload a photo (works best with clear subjects)</li>
-          <li>Choose your background: transparent, a preset color, or any custom color</li>
+          <li>
+            Choose your background: transparent or a preset color, or open Fine-tune for any custom
+            color
+          </li>
           <li>Click "Remove Background" and wait for AI processing</li>
           <li>Download your image with the background removed</li>
         </ol>
@@ -126,7 +129,10 @@ const breadcrumbSchema = {
         <h2>Features</h2>
         <ul class="features-list">
           <li>AI-powered background detection</li>
-          <li>Transparent, preset, or any custom background color via picker or hex</li>
+          <li>
+            Transparent or preset background colors, with any custom color via picker or hex under
+            Fine-tune
+          </li>
           <li>Works with portraits, products, and objects</li>
           <li>Image processing stays local; model files are downloaded separately</li>
           <li>Free with no sign-up or watermark</li>

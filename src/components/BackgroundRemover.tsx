@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
+import { ToolPresets, type ToolChoice } from './ToolChoices';
+import FineTune, { FineTuneField } from './FineTune';
+import ToolRunNote from './ToolRunNote';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
 import {
   downloadUrl,
@@ -10,13 +13,26 @@ import {
 import {
   BACKGROUND_PRESETS,
   TRANSPARENT_BACKGROUND,
-  backgroundLabelColor,
   composeBackgroundColor,
   normalizeHexColor,
   plannedThreadCount,
   removeBackgroundInWorker,
   type BackgroundProgress,
 } from '../lib/background-remover';
+
+/**
+ * The chip row is the preset table, mapped. Deriving it here rather than writing
+ * the labels a second time is what stops a chip from naming one colour while
+ * painting another.
+ *
+ * The chip id is the canvas value, because that is what the tool stores: a chip
+ * is lit exactly while `bgColor` still holds what it wrote, so reaching any
+ * other colour through the fine-tune panel unlights all of them on its own.
+ */
+const BACKGROUND_CHOICES: readonly ToolChoice<string>[] = BACKGROUND_PRESETS.map((preset) => ({
+  id: preset.value,
+  label: preset.label,
+}));
 
 const CHECKERBOARD =
   'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)';
@@ -86,6 +102,10 @@ export default function BackgroundRemover() {
   // isolation regression reached production undiagnosed.
   const [error, setError] = useState<{ message: string; detail?: string } | null>(null);
   const [bgColor, setBgColor] = useState(TRANSPARENT_BACKGROUND);
+  // The chip to return to when the fine-tune panel offers a way back. Only a chip
+  // writes it, so "back" always names a preset the visitor actually chose rather
+  // than whichever colour happened to be active before they typed a hex value.
+  const [lastPresetValue, setLastPresetValue] = useState<string>(TRANSPARENT_BACKGROUND);
   const [hexDraft, setHexDraft] = useState('');
   const [hexError, setHexError] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
@@ -178,6 +198,7 @@ export default function BackgroundRemover() {
       // callers must not start a second full-size canvas in parallel.
       if (processing || composing) return;
       setBgColor(value);
+      if (BACKGROUND_PRESETS.some((preset) => preset.value === value)) setLastPresetValue(value);
       setHexError(null);
       setHexDraft(value === TRANSPARENT_BACKGROUND ? '' : value);
       // With a cutout in hand this is a local recomposition; the existing result
@@ -194,7 +215,7 @@ export default function BackgroundRemover() {
     }
     const normalized = normalizeHexColor(hexDraft);
     if (!normalized) {
-      setHexError('Enter a colour like #ff7a45.');
+      setHexError('Enter a color like #ff7a45.');
       return;
     }
     applyColor(normalized);
@@ -362,9 +383,17 @@ export default function BackgroundRemover() {
   // One recomposition at a time: each colour paints a full-size canvas.
   const colorLocked = processing || composing;
 
-  const isCustomColor =
-    bgColor !== TRANSPARENT_BACKGROUND &&
-    !BACKGROUND_PRESETS.some((preset) => preset.value === bgColor);
+  const activePreset = BACKGROUND_PRESETS.find((preset) => preset.value === bgColor);
+  const isCustomColor = activePreset === undefined;
+  const lastPresetLabel =
+    BACKGROUND_PRESETS.find((preset) => preset.value === lastPresetValue)?.label ?? 'Transparent';
+  // The closed row has to answer "what will it paint?" without being opened, so it
+  // carries the exact value and not just the name of the chip that set it.
+  const fineTuneSummary = activePreset
+    ? activePreset.value === TRANSPARENT_BACKGROUND
+      ? 'Transparent · PNG alpha'
+      : `${activePreset.label} · ${activePreset.value}`
+    : `Custom · ${bgColor}`;
 
   return (
     // `data-active-background` intentionally differs from the presets' `data-background-color`
@@ -413,70 +442,47 @@ export default function BackgroundRemover() {
             </button>
           </div>
 
-          <div style={{ marginBottom: '1rem' }}>
-            <span
-              style={{
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                display: 'block',
-                marginBottom: '0.5rem',
-              }}
+          <div className="tool-controls">
+            {/* `ToolPresets` has no disabled prop, and the lock is not a preference:
+                each colour paints a full-size canvas, so two at once would double the
+                peak memory of a large photo. A disabled fieldset takes the whole row
+                out of the tab order for the duration without re-implementing the chip
+                markup, and the dimming says so on screen. */}
+            <fieldset
+              className="tool-chip-group"
+              data-background-chips=""
+              disabled={colorLocked}
+              style={{ opacity: colorLocked ? 0.55 : undefined }}
             >
-              Background Color
-            </span>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              {BACKGROUND_PRESETS.map((option) => {
-                const selected = bgColor === option.value;
-                const isTransparent = option.value === TRANSPARENT_BACKGROUND;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    data-background-color={option.value}
-                    aria-pressed={selected}
-                    disabled={colorLocked}
-                    onClick={() => applyColor(option.value)}
-                    style={{
-                      padding: '0.375rem 1rem',
-                      borderRadius: 6,
-                      border: selected ? '2px solid #2563eb' : '1px solid #e7e3db',
-                      background: isTransparent ? CHECKERBOARD : option.swatch,
-                      backgroundSize: isTransparent ? '12px 12px' : undefined,
-                      backgroundPosition: isTransparent
-                        ? '0 0, 0 6px, 6px -6px, -6px 0px'
-                        : undefined,
-                      cursor: colorLocked ? 'not-allowed' : 'pointer',
-                      fontSize: '0.8rem',
-                      color: backgroundLabelColor(option.swatch),
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
+              <ToolPresets
+                legend="Background"
+                help="Pick what goes behind the cutout. Choosing one never starts the AI model — open Fine-tune for any other color."
+                presets={BACKGROUND_CHOICES}
+                isActive={(preset) => preset.id === bgColor}
+                onApply={(preset) => applyColor(preset.id)}
+              />
+            </fieldset>
 
-              <span aria-hidden="true" style={{ color: '#ddd8ce' }}>
-                |
-              </span>
-
-              <label
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.375rem',
-                  fontSize: '0.8rem',
-                }}
+            <FineTune
+              summary={fineTuneSummary}
+              onReset={isCustomColor ? () => applyColor(lastPresetValue) : undefined}
+              resetLabel={`Back to the ${lastPresetLabel} background`}
+            >
+              <FineTuneField
+                htmlFor="background-custom-color"
+                label="Custom background color"
+                hint="Any color, including ones the presets above do not offer. Picking one clears the preset selection."
               >
-                <span>Custom</span>
                 <input
+                  id="background-custom-color"
                   type="color"
                   data-testid="bg-color-picker"
-                  value={isCustomColor ? bgColor : '#3b82f6'}
+                  value={bgColor === TRANSPARENT_BACKGROUND ? '#3b82f6' : bgColor}
                   disabled={colorLocked}
                   onChange={(event) => applyColor(event.target.value)}
                   style={{
-                    width: 36,
-                    height: 30,
+                    width: 56,
+                    height: 44,
                     padding: 2,
                     border: isCustomColor ? '2px solid #2563eb' : '1px solid #ddd8ce',
                     borderRadius: 6,
@@ -484,66 +490,87 @@ export default function BackgroundRemover() {
                     background: 'none',
                   }}
                 />
-              </label>
+              </FineTuneField>
 
-              <input
-                type="text"
-                data-testid="bg-color-hex"
-                aria-label="Background colour hex value"
-                aria-invalid={hexError !== null}
-                placeholder="#ff7a45"
-                value={hexDraft}
-                disabled={colorLocked}
-                maxLength={7}
-                onChange={(event) => {
-                  setHexDraft(event.target.value);
-                  setHexError(null);
-                }}
-                onBlur={commitHex}
-                onKeyDown={(event) => {
-                  if (event.key !== 'Enter') return;
-                  event.preventDefault();
-                  commitHex();
-                }}
-                style={{
-                  width: '7.5rem',
-                  padding: '0.375rem 0.5rem',
-                  borderRadius: 6,
-                  border: hexError ? '1px solid #ef4444' : '1px solid #ddd8ce',
-                  fontSize: '0.8rem',
-                  fontFamily: 'ui-monospace, monospace',
-                }}
-              />
-            </div>
-            {hexError && (
-              <p
-                role="alert"
-                style={{ margin: '0.375rem 0 0', color: '#ef4444', fontSize: '0.75rem' }}
+              <FineTuneField
+                htmlFor="background-hex"
+                label="Hex value"
+                hint="Press Enter or leave the field to apply it."
               >
-                {hexError}
-              </p>
-            )}
+                <input
+                  id="background-hex"
+                  type="text"
+                  data-testid="bg-color-hex"
+                  aria-invalid={hexError !== null}
+                  placeholder="#ff7a45"
+                  value={hexDraft}
+                  disabled={colorLocked}
+                  maxLength={7}
+                  onChange={(event) => {
+                    setHexDraft(event.target.value);
+                    setHexError(null);
+                  }}
+                  onBlur={commitHex}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter') return;
+                    event.preventDefault();
+                    commitHex();
+                  }}
+                  style={{
+                    width: '9rem',
+                    minHeight: 44,
+                    padding: '0.375rem 0.5rem',
+                    borderRadius: 6,
+                    border: hexError ? '1px solid #ef4444' : '1px solid #ddd8ce',
+                    fontSize: '0.875rem',
+                    fontFamily: 'ui-monospace, monospace',
+                  }}
+                />
+              </FineTuneField>
+
+              {hexError && (
+                <p role="alert" style={{ margin: 0, color: '#ef4444', fontSize: '0.75rem' }}>
+                  {hexError}
+                </p>
+              )}
+            </FineTune>
+
+            {/* Not the A/B-class idle line: this tool keeps a button, so the file on
+                disk does not follow the settings and saying it would be false. What
+                does follow is the background, and the note has to say which is which
+                — and roughly what pressing the button costs. */}
+            <ToolRunNote busy={processing || composing}>
+              {processing
+                ? 'Removing the background in your browser…'
+                : composing
+                  ? 'Painting the background in your browser…'
+                  : timing
+                    ? `Removed in your browser in ${(timing.totalMs / 1000).toFixed(1)}s — nothing was uploaded. Changing the background above repaints this result without running the model again.`
+                    : 'Nothing is uploaded. The background above applies as soon as there is a result; removal itself is a separate step and usually takes a few seconds to half a minute.'}
+            </ToolRunNote>
           </div>
 
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={removeBackground}
-            disabled={processing}
-            style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
-          >
-            {processing ? 'Processing...' : result ? 'Process Again' : 'Remove Background'}
-          </button>
-          {processing && (
+          <div style={{ marginTop: '1.25rem' }}>
             <button
               type="button"
-              className="btn btn-secondary"
-              onClick={cancelProcessing}
-              style={{ fontSize: '1rem', padding: '0.75rem 2rem', marginLeft: '0.5rem' }}
+              className="btn btn-primary"
+              onClick={removeBackground}
+              disabled={processing}
+              style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
             >
-              Cancel
+              {processing ? 'Processing...' : result ? 'Process Again' : 'Remove Background'}
             </button>
-          )}
+            {processing && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={cancelProcessing}
+                style={{ fontSize: '1rem', padding: '0.75rem 2rem', marginLeft: '0.5rem' }}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
           <p style={{ marginTop: '0.5rem', color: '#6b665c', fontSize: '0.8125rem' }}>
             First use downloads a sizable AI model and requires a network connection. Later offline
             use depends on whether your browser keeps that model cached. Processing speed and
@@ -563,15 +590,12 @@ export default function BackgroundRemover() {
           {progress.percent === null ? '...' : `: ${progress.percent}%`}
         </div>
       )}
-      {timing && !processing && !composing && (
-        <p className="tool-run-note">
-          <span className="run-dot" aria-hidden="true" />
-          Removed in your browser in {(timing.totalMs / 1000).toFixed(1)}s. Nothing was uploaded.
-        </p>
-      )}
+      {/* The run note above carries the wording; this is only what a screen reader
+          needs, since that note is not a live region and a recomposition is
+          otherwise silent. */}
       {composing && (
-        <div className="status status-processing" role="status" aria-live="polite">
-          Applying background color...
+        <div className="visually-hidden" role="status" aria-live="polite">
+          Painting the background.
         </div>
       )}
       {error && (

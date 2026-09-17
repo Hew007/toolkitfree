@@ -296,7 +296,13 @@ assert.equal(backgroundLabelColor('#ffffff'), '#1f2937');
 assert.equal(backgroundLabelColor('#0000ff'), '#ffffff');
 assert.doesNotThrow(() => backgroundLabelColor('not-a-colour'));
 
-// The E2E selects these exact values via [data-background-color].
+// The chip row is this table mapped, and the E2E now finds a chip by the label
+// the table gives it, so the labels are load-bearing too — `backgroundChipLabels`
+// in validate-secondary-tools-browser.mjs mirrors this list.
+assert.deepEqual(
+  BACKGROUND_PRESETS.map((preset) => `${preset.label}:${preset.value}`),
+  ['Transparent:transparent', 'White:#ffffff', 'Red:#ff0000', 'Blue:#0000ff', 'Green:#008000']
+);
 assert.equal(BACKGROUND_PRESETS[0].value, 'transparent');
 assert.ok(BACKGROUND_PRESETS.some((preset) => preset.value === '#0000ff'));
 for (const preset of BACKGROUND_PRESETS) {
