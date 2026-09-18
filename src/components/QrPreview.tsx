@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface QrPreviewProps {
   data: string;
@@ -23,11 +23,22 @@ export default function QrPreview({
 }: QrPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const qrRef = useRef<any>(null);
+  /**
+   * Whether a renderer exists, which is exactly whether a download can produce a
+   * file. The renderer is imported on demand, so for the first code there is a
+   * stretch where the data is set and nothing can be exported yet.
+   *
+   * It is not cleared when settings change: the previous renderer stays usable
+   * and stays on screen until the new one replaces it, so the download keeps
+   * matching the preview instead of flickering off on every keystroke.
+   */
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || !data) {
       if (containerRef.current) containerRef.current.innerHTML = '';
       qrRef.current = null;
+      setReady(false);
       return;
     }
 
@@ -59,6 +70,7 @@ export default function QrPreview({
 
       qrRef.current = qr;
       qr.append(containerRef.current);
+      setReady(true);
     };
 
     render();
@@ -75,7 +87,7 @@ export default function QrPreview({
   };
 
   return (
-    <div data-qr-data={data} data-qr-ready={Boolean(data)} style={{ textAlign: 'center' }}>
+    <div data-qr-data={data} data-qr-ready={ready} style={{ textAlign: 'center' }}>
       <div
         ref={containerRef}
         style={{
@@ -103,7 +115,7 @@ export default function QrPreview({
             <button
               type="button"
               className="btn btn-primary"
-              disabled={!downloadEnabled}
+              disabled={!downloadEnabled || !ready}
               onClick={() => handleDownload('png')}
             >
               Download PNG
@@ -111,7 +123,7 @@ export default function QrPreview({
             <button
               type="button"
               className="btn btn-secondary"
-              disabled={!downloadEnabled}
+              disabled={!downloadEnabled || !ready}
               onClick={() => handleDownload('svg')}
             >
               Download SVG
@@ -120,13 +132,15 @@ export default function QrPreview({
           <p
             style={{
               fontSize: '0.8rem',
-              color: downloadEnabled ? '#8a8377' : '#b91c1c',
+              color: downloadEnabled || !ready ? '#8a8377' : '#b91c1c',
               margin: 0,
             }}
           >
-            {downloadEnabled
-              ? 'Scan with your phone camera to test'
-              : 'Downloads are disabled until color contrast is improved.'}
+            {!ready
+              ? 'Drawing your QR code…'
+              : downloadEnabled
+                ? 'Scan with your phone camera to test'
+                : 'Downloads are disabled until color contrast is improved.'}
           </p>
         </>
       )}

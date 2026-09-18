@@ -293,18 +293,21 @@ await evaluate(`document.querySelector('[data-batch-download]').click()`);
 await waitForRequest(heavyAssets.jszip, 'JSZip dynamic request');
 
 await navigate('/tools/image-to-pdf/image-to-pdf-no-margin/');
+// What this guards is unchanged: jsPDF must not ride along with the page. It is
+// checked here, before a file exists, because the tool has no submit step any
+// more — the document follows the page list, so jsPDF is fetched as soon as
+// there is something to build.
+assert.equal(requested(heavyAssets.jspdf), false, 'jsPDF must stay unloaded on an empty editor');
 await uploadGeneratedPng({ name: 'page.png', width: 96, height: 64 });
 await waitFor(`Boolean(document.querySelector('[data-pdf-file]'))`, 'PDF file');
+await waitForRequest(heavyAssets.jspdf, 'jsPDF dynamic request');
+await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'PDF result');
 await new Promise((resolve) => setTimeout(resolve, 750));
 const imageToPdfLayoutShift = await readLayoutShiftMetrics();
 assert.ok(
   imageToPdfLayoutShift.total <= 0.1,
   `Image-to-PDF upload CLS should stay at or below 0.1: ${JSON.stringify(imageToPdfLayoutShift)}`
 );
-assert.equal(requested(heavyAssets.jspdf), false);
-await evaluate(`document.querySelector('[data-testid="pdf-convert"]').click()`);
-await waitForRequest(heavyAssets.jspdf, 'jsPDF dynamic request');
-await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'PDF result');
 
 await navigate('/tools/image-splitter/');
 await uploadGeneratedPng({ name: 'split.png', width: 400, height: 300 });

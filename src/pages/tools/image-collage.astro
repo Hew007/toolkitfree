@@ -10,7 +10,7 @@ const faqItems = [
   {
     question: 'How does the image collage maker work?',
     answer:
-      'Upload multiple JPG, PNG, or WebP images, choose a layout, and the browser draws them onto one canvas. The final collage is exported locally as PNG, JPG, or WebP.',
+      'Upload multiple JPG, PNG, or WebP images and choose a layout. The browser draws them onto one canvas and builds the collage file as PNG, JPG, or WebP right away, rebuilding it whenever you change the layout, the image order, or a setting, so the download always matches the preview.',
   },
   {
     question: 'Are my images uploaded to ToolkitFree?',
@@ -25,7 +25,7 @@ const faqItems = [
   {
     question: 'Can I combine images side by side?',
     answer:
-      'Yes. Choose Horizontal stitch to place images left to right, or use a grid when you have more than two images.',
+      'Yes. Choose Side by side to place images left to right, or use Grid when you have more than two images.',
   },
   {
     question: 'What is the difference between contain and cover?',
@@ -35,7 +35,7 @@ const faqItems = [
   {
     question: 'Can I change the spacing and background?',
     answer:
-      'Yes. You can adjust the gap, outer margin, corner radius, and background color before downloading the collage.',
+      'Yes. Open the Fine-tune panel to adjust the gap, outer margin, corner radius, and background color. The collage is rebuilt after each change, so the download button always saves the version you can see.',
   },
   {
     question: 'Which output formats are supported?',
@@ -101,7 +101,10 @@ const faqStructuredData = {
         <ol class="howto-steps">
           <li>Upload two or more JPG, PNG, or WebP images</li>
           <li>Keep the recommended Auto layout or choose Grid, Side by side, or Vertical stitch</li>
-          <li>Download the collage, or open Advanced options for precise sizing and appearance</li>
+          <li>
+            Download the collage — the file is already built and follows your layout — or open
+            Fine-tune for precise sizing and appearance
+          </li>
         </ol>
       </section>
 
@@ -110,9 +113,9 @@ const faqStructuredData = {
         <ul class="features-list">
           <li>Combine multiple images into one local canvas</li>
           <li>Recommended automatic layout with clear visual layout choices</li>
-          <li>Simple choose files → choose layout → download workflow</li>
+          <li>Simple choose files → choose layout → download workflow, with no convert step</li>
           <li>Contain, cover, and original-size fit modes</li>
-          <li>Optional advanced gap, margin, background, size, and corner controls</li>
+          <li>Fine-tune panel for gap, margin, background, tile size, and corner controls</li>
           <li>Move images up or down to control the order</li>
           <li>PNG, JPG, and WebP export with quality control where supported</li>
           <li>Selected image contents are processed locally in your browser</li>

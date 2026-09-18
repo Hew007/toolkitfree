@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ToolChoices, type ToolChoice } from './ToolChoices';
 import {
   buildEmailString as encodeEmail,
   buildSmsString as encodeSms,
@@ -22,6 +23,12 @@ const TABS: { key: QrType; label: string }[] = [
   { key: 'phone', label: 'Phone' },
   { key: 'sms', label: 'SMS' },
 ];
+
+/** The chip row is a projection of the table above; it is never written twice. */
+const TYPE_CHOICES: readonly ToolChoice<QrType>[] = TABS.map((tab) => ({
+  id: tab.key,
+  label: tab.label,
+}));
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -148,312 +155,294 @@ export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInpu
 
   return (
     <div data-qr-input-type={type}>
-      {/* Tab bar */}
-      <div
-        role="group"
-        aria-label="QR content type"
-        style={{ display: 'flex', gap: '0.375rem', marginBottom: '1rem', flexWrap: 'wrap' }}
-      >
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            data-qr-tab={tab.key}
-            aria-pressed={type === tab.key}
-            onClick={() => onTypeChange(tab.key)}
-            style={{
-              padding: '0.375rem 0.875rem',
-              borderRadius: 6,
-              border: type === tab.key ? '2px solid #2563eb' : '1px solid #ddd8ce',
-              background: type === tab.key ? '#2563eb' : '#fff',
-              color: type === tab.key ? '#fff' : '#3a362f',
-              cursor: 'pointer',
-              fontSize: '0.8rem',
-              fontWeight: 500,
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Text/URL */}
-      {type === 'text' && (
-        <div style={fieldGroup}>
-          <label htmlFor="qr-text" style={labelStyle}>
-            Text or URL
-          </label>
-          <textarea
-            id="qr-text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Enter text or URL..."
-            rows={3}
-            style={{ ...inputStyle, resize: 'vertical' }}
-          />
-        </div>
-      )}
-
-      {/* WiFi */}
-      {type === 'wifi' && (
-        <>
-          <div style={fieldGroup}>
-            <label htmlFor="qr-wifi-security" style={labelStyle}>
-              Security
-            </label>
-            <select
-              id="qr-wifi-security"
-              value={wifiSecurity}
-              onChange={(e) => setWifiSecurity(e.target.value)}
-              style={inputStyle}
-            >
-              <option value="WPA">WPA/WPA2</option>
-              <option value="WEP">WEP</option>
-              <option value="none">None</option>
-            </select>
-          </div>
-          <div style={fieldGroup}>
-            <label htmlFor="qr-wifi-ssid" style={labelStyle}>
-              Network Name (SSID)
-            </label>
-            <input
-              id="qr-wifi-ssid"
-              type="text"
-              value={wifiSsid}
-              onChange={(e) => setWifiSsid(e.target.value)}
-              placeholder="MyWiFi"
-              style={inputStyle}
-            />
-          </div>
-          {wifiSecurity !== 'none' && (
+      <div className="tool-controls">
+        <ToolChoices
+          name="qr-content-type"
+          legend="What are you encoding?"
+          choices={TYPE_CHOICES}
+          value={type}
+          onChange={(choice) => onTypeChange(choice.id)}
+        />
+        <div>
+          {/* Text/URL */}
+          {type === 'text' && (
             <div style={fieldGroup}>
-              <label htmlFor="qr-wifi-password" style={labelStyle}>
-                Password
+              <label htmlFor="qr-text" style={labelStyle}>
+                Text or URL
+              </label>
+              <textarea
+                id="qr-text"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Enter text or URL..."
+                rows={3}
+                style={{ ...inputStyle, resize: 'vertical' }}
+              />
+            </div>
+          )}
+
+          {/* WiFi */}
+          {type === 'wifi' && (
+            <>
+              <div style={fieldGroup}>
+                <label htmlFor="qr-wifi-security" style={labelStyle}>
+                  Security
+                </label>
+                <select
+                  id="qr-wifi-security"
+                  value={wifiSecurity}
+                  onChange={(e) => setWifiSecurity(e.target.value)}
+                  style={inputStyle}
+                >
+                  <option value="WPA">WPA/WPA2</option>
+                  <option value="WEP">WEP</option>
+                  <option value="none">None</option>
+                </select>
+              </div>
+              <div style={fieldGroup}>
+                <label htmlFor="qr-wifi-ssid" style={labelStyle}>
+                  Network Name (SSID)
+                </label>
+                <input
+                  id="qr-wifi-ssid"
+                  type="text"
+                  value={wifiSsid}
+                  onChange={(e) => setWifiSsid(e.target.value)}
+                  placeholder="MyWiFi"
+                  style={inputStyle}
+                />
+              </div>
+              {wifiSecurity !== 'none' && (
+                <div style={fieldGroup}>
+                  <label htmlFor="qr-wifi-password" style={labelStyle}>
+                    Password
+                  </label>
+                  <input
+                    id="qr-wifi-password"
+                    type="password"
+                    value={wifiPassword}
+                    onChange={(e) => setWifiPassword(e.target.value)}
+                    placeholder="WiFi password"
+                    style={inputStyle}
+                  />
+                </div>
+              )}
+              <div style={fieldGroup}>
+                <label
+                  style={{
+                    fontSize: '0.8rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={wifiHidden}
+                    onChange={(e) => setWifiHidden(e.target.checked)}
+                  />
+                  Hidden network
+                </label>
+              </div>
+            </>
+          )}
+
+          {/* vCard */}
+          {type === 'vcard' && (
+            <div
+              className="qr-field-grid"
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}
+            >
+              <div>
+                <label htmlFor="qr-vcard-first" style={labelStyle}>
+                  First Name
+                </label>
+                <input
+                  id="qr-vcard-first"
+                  type="text"
+                  value={vFirst}
+                  onChange={(e) => setVFirst(e.target.value)}
+                  placeholder="John"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label htmlFor="qr-vcard-last" style={labelStyle}>
+                  Last Name
+                </label>
+                <input
+                  id="qr-vcard-last"
+                  type="text"
+                  value={vLast}
+                  onChange={(e) => setVLast(e.target.value)}
+                  placeholder="Doe"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label htmlFor="qr-vcard-phone" style={labelStyle}>
+                  Phone
+                </label>
+                <input
+                  id="qr-vcard-phone"
+                  type="tel"
+                  value={vPhone}
+                  onChange={(e) => setVPhone(e.target.value)}
+                  placeholder="+1234567890"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label htmlFor="qr-vcard-email" style={labelStyle}>
+                  Email
+                </label>
+                <input
+                  id="qr-vcard-email"
+                  type="email"
+                  value={vEmail}
+                  onChange={(e) => setVEmail(e.target.value)}
+                  placeholder="john@example.com"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label htmlFor="qr-vcard-company" style={labelStyle}>
+                  Company
+                </label>
+                <input
+                  id="qr-vcard-company"
+                  type="text"
+                  value={vCompany}
+                  onChange={(e) => setVCompany(e.target.value)}
+                  placeholder="Company"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label htmlFor="qr-vcard-title" style={labelStyle}>
+                  Job Title
+                </label>
+                <input
+                  id="qr-vcard-title"
+                  type="text"
+                  value={vTitle}
+                  onChange={(e) => setVTitle(e.target.value)}
+                  placeholder="Developer"
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label htmlFor="qr-vcard-website" style={labelStyle}>
+                  Website
+                </label>
+                <input
+                  id="qr-vcard-website"
+                  type="url"
+                  value={vWebsite}
+                  onChange={(e) => setVWebsite(e.target.value)}
+                  placeholder="https://example.com"
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Email */}
+          {type === 'email' && (
+            <>
+              <div style={fieldGroup}>
+                <label htmlFor="qr-email-address" style={labelStyle}>
+                  Email Address
+                </label>
+                <input
+                  id="qr-email-address"
+                  type="email"
+                  value={emailTo}
+                  onChange={(e) => setEmailTo(e.target.value)}
+                  placeholder="someone@example.com"
+                  style={inputStyle}
+                />
+              </div>
+              <div style={fieldGroup}>
+                <label htmlFor="qr-email-subject" style={labelStyle}>
+                  Subject
+                </label>
+                <input
+                  id="qr-email-subject"
+                  type="text"
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  placeholder="Email subject"
+                  style={inputStyle}
+                />
+              </div>
+              <div style={fieldGroup}>
+                <label htmlFor="qr-email-body" style={labelStyle}>
+                  Body
+                </label>
+                <textarea
+                  id="qr-email-body"
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  placeholder="Email body..."
+                  rows={3}
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Phone */}
+          {type === 'phone' && (
+            <div style={fieldGroup}>
+              <label htmlFor="qr-phone" style={labelStyle}>
+                Phone Number
               </label>
               <input
-                id="qr-wifi-password"
-                type="password"
-                value={wifiPassword}
-                onChange={(e) => setWifiPassword(e.target.value)}
-                placeholder="WiFi password"
+                id="qr-phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+1234567890"
                 style={inputStyle}
               />
             </div>
           )}
-          <div style={fieldGroup}>
-            <label
-              style={{
-                fontSize: '0.8rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                cursor: 'pointer',
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={wifiHidden}
-                onChange={(e) => setWifiHidden(e.target.checked)}
-              />
-              Hidden network
-            </label>
-          </div>
-        </>
-      )}
 
-      {/* vCard */}
-      {type === 'vcard' && (
-        <div
-          className="qr-field-grid"
-          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}
-        >
-          <div>
-            <label htmlFor="qr-vcard-first" style={labelStyle}>
-              First Name
-            </label>
-            <input
-              id="qr-vcard-first"
-              type="text"
-              value={vFirst}
-              onChange={(e) => setVFirst(e.target.value)}
-              placeholder="John"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label htmlFor="qr-vcard-last" style={labelStyle}>
-              Last Name
-            </label>
-            <input
-              id="qr-vcard-last"
-              type="text"
-              value={vLast}
-              onChange={(e) => setVLast(e.target.value)}
-              placeholder="Doe"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label htmlFor="qr-vcard-phone" style={labelStyle}>
-              Phone
-            </label>
-            <input
-              id="qr-vcard-phone"
-              type="tel"
-              value={vPhone}
-              onChange={(e) => setVPhone(e.target.value)}
-              placeholder="+1234567890"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label htmlFor="qr-vcard-email" style={labelStyle}>
-              Email
-            </label>
-            <input
-              id="qr-vcard-email"
-              type="email"
-              value={vEmail}
-              onChange={(e) => setVEmail(e.target.value)}
-              placeholder="john@example.com"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label htmlFor="qr-vcard-company" style={labelStyle}>
-              Company
-            </label>
-            <input
-              id="qr-vcard-company"
-              type="text"
-              value={vCompany}
-              onChange={(e) => setVCompany(e.target.value)}
-              placeholder="Company"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label htmlFor="qr-vcard-title" style={labelStyle}>
-              Job Title
-            </label>
-            <input
-              id="qr-vcard-title"
-              type="text"
-              value={vTitle}
-              onChange={(e) => setVTitle(e.target.value)}
-              placeholder="Developer"
-              style={inputStyle}
-            />
-          </div>
-          <div style={{ gridColumn: '1 / -1' }}>
-            <label htmlFor="qr-vcard-website" style={labelStyle}>
-              Website
-            </label>
-            <input
-              id="qr-vcard-website"
-              type="url"
-              value={vWebsite}
-              onChange={(e) => setVWebsite(e.target.value)}
-              placeholder="https://example.com"
-              style={inputStyle}
-            />
-          </div>
+          {/* SMS */}
+          {type === 'sms' && (
+            <>
+              <div style={fieldGroup}>
+                <label htmlFor="qr-sms-phone" style={labelStyle}>
+                  Phone Number
+                </label>
+                <input
+                  id="qr-sms-phone"
+                  type="tel"
+                  value={smsPhone}
+                  onChange={(e) => setSmsPhone(e.target.value)}
+                  placeholder="+1234567890"
+                  style={inputStyle}
+                />
+              </div>
+              <div style={fieldGroup}>
+                <label htmlFor="qr-sms-message" style={labelStyle}>
+                  Message
+                </label>
+                <textarea
+                  id="qr-sms-message"
+                  value={smsMessage}
+                  onChange={(e) => setSmsMessage(e.target.value)}
+                  placeholder="Your message..."
+                  rows={3}
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                />
+              </div>
+            </>
+          )}
         </div>
-      )}
-
-      {/* Email */}
-      {type === 'email' && (
-        <>
-          <div style={fieldGroup}>
-            <label htmlFor="qr-email-address" style={labelStyle}>
-              Email Address
-            </label>
-            <input
-              id="qr-email-address"
-              type="email"
-              value={emailTo}
-              onChange={(e) => setEmailTo(e.target.value)}
-              placeholder="someone@example.com"
-              style={inputStyle}
-            />
-          </div>
-          <div style={fieldGroup}>
-            <label htmlFor="qr-email-subject" style={labelStyle}>
-              Subject
-            </label>
-            <input
-              id="qr-email-subject"
-              type="text"
-              value={emailSubject}
-              onChange={(e) => setEmailSubject(e.target.value)}
-              placeholder="Email subject"
-              style={inputStyle}
-            />
-          </div>
-          <div style={fieldGroup}>
-            <label htmlFor="qr-email-body" style={labelStyle}>
-              Body
-            </label>
-            <textarea
-              id="qr-email-body"
-              value={emailBody}
-              onChange={(e) => setEmailBody(e.target.value)}
-              placeholder="Email body..."
-              rows={3}
-              style={{ ...inputStyle, resize: 'vertical' }}
-            />
-          </div>
-        </>
-      )}
-
-      {/* Phone */}
-      {type === 'phone' && (
-        <div style={fieldGroup}>
-          <label htmlFor="qr-phone" style={labelStyle}>
-            Phone Number
-          </label>
-          <input
-            id="qr-phone"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+1234567890"
-            style={inputStyle}
-          />
-        </div>
-      )}
-
-      {/* SMS */}
-      {type === 'sms' && (
-        <>
-          <div style={fieldGroup}>
-            <label htmlFor="qr-sms-phone" style={labelStyle}>
-              Phone Number
-            </label>
-            <input
-              id="qr-sms-phone"
-              type="tel"
-              value={smsPhone}
-              onChange={(e) => setSmsPhone(e.target.value)}
-              placeholder="+1234567890"
-              style={inputStyle}
-            />
-          </div>
-          <div style={fieldGroup}>
-            <label htmlFor="qr-sms-message" style={labelStyle}>
-              Message
-            </label>
-            <textarea
-              id="qr-sms-message"
-              value={smsMessage}
-              onChange={(e) => setSmsMessage(e.target.value)}
-              placeholder="Your message..."
-              rows={3}
-              style={{ ...inputStyle, resize: 'vertical' }}
-            />
-          </div>
-        </>
-      )}
+      </div>
     </div>
   );
 }
