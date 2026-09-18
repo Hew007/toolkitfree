@@ -8,6 +8,7 @@ const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
 const downloadPath = process.env.BROWSER_DOWNLOAD_DIR || 'C:\\tmp\\toolkitfree-collage-downloads';
 const screenshotPath = process.env.COLLAGE_SCREENSHOT_PATH;
 const mobileScreenshotPath = process.env.COLLAGE_MOBILE_SCREENSHOT_PATH;
+const fineTuneScreenshotPath = process.env.COLLAGE_FINE_TUNE_SCREENSHOT_PATH;
 fs.rmSync(downloadPath, { recursive: true, force: true });
 fs.mkdirSync(downloadPath, { recursive: true });
 
@@ -157,15 +158,51 @@ assert.equal(
   await evaluate(`document.querySelectorAll('[aria-label="Collage images"] li').length`),
   2
 );
-assert.equal(await evaluate(`document.querySelectorAll('[data-collage-layout]').length`), 4);
 assert.equal(
-  await evaluate(`document.querySelector('.collage-advanced').open`),
+  await evaluate(`document.querySelectorAll('.tool-chip input[name="collage-layout"]').length`),
+  4,
+  'The four arrangements should be chips'
+);
+assert.equal(
+  await evaluate(`document.querySelector('.collage-controls .fine-tune').open`),
   false,
-  'Advanced settings should stay collapsed in the fast path'
+  'Fine-tune should stay collapsed in the fast path'
+);
+assert.equal(
+  await evaluate(`Boolean(document.querySelector('.collage-controls .fine-tune-reset'))`),
+  false,
+  'No way back is offered before a value has been hand-edited'
+);
+
+// The collage file must exist before anything is clicked. This is the whole point
+// of the conversion: the download button saves a file that is already built, it
+// does not build one. If someone ever puts the work back behind the button, the
+// button stays disabled here and this times out.
+await waitFor(
+  `document.querySelector('[data-collage-download]')?.disabled === false`,
+  'collage file built without a submit step'
+);
+const builtWithoutClick = await evaluate(`window.__objectUrlStats()`);
+assert.equal(
+  builtWithoutClick.active,
+  1,
+  'Exactly one live object URL: the collage file the download button saves'
+);
+
+// No-regression guard: nothing on the page may ask to be pressed before results
+// appear. `Download collage` saves the finished file and is not such a step.
+assert.deepEqual(
+  await evaluate(`
+    [...document.querySelectorAll('[data-image-collage] button')]
+      .map((button) => button.textContent.trim())
+      .filter((text) => /^(make|create|build|generate|combine|merge|convert)\b/i.test(text))
+  `),
+  [],
+  'The collage must not gain a submit button'
 );
 
 const uiLayouts = [];
-for (const width of [1440, 900, 600, 375]) {
+for (const width of [1440, 900, 600, 390, 375]) {
   await send('Emulation.setDeviceMetricsOverride', {
     width,
     height: 900,
@@ -195,9 +232,12 @@ for (const width of [1440, 900, 600, 375]) {
     fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
     fs.writeFileSync(screenshotPath, Buffer.from(screenshot.data, 'base64'));
   }
-  if (width === 375 && mobileScreenshotPath) {
+  if (width === 390 && mobileScreenshotPath) {
+    // Framed on the controls rather than the status bar: the chips, the folded
+    // summary row, the run note and the download button are what has to be read
+    // on a phone, and they are below the fold from the top of the builder.
     await evaluate(
-      `document.querySelector('.collage-status-bar').scrollIntoView({ block: 'start' })`
+      `document.querySelector('.collage-controls').scrollIntoView({ block: 'start' })`
     );
     const screenshot = await send('Page.captureScreenshot', { format: 'png' });
     fs.mkdirSync(path.dirname(mobileScreenshotPath), { recursive: true });
@@ -249,7 +289,10 @@ assert.equal(
 await send('Emulation.setTouchEmulationEnabled', { enabled: false });
 await send('Emulation.clearDeviceMetricsOverride');
 
-await evaluate(`document.querySelector('[data-collage-layout="vertical"]').click()`);
+const beforeVertical = await evaluate(`window.__objectUrlStats()`);
+await evaluate(
+  `document.querySelector('.tool-chip input[name="collage-layout"][value="vertical"]').click()`
+);
 await waitFor(
   `(() => {
     const canvas = document.querySelector('[data-collage-preview]');
@@ -257,9 +300,28 @@ await waitFor(
   })()`,
   'vertical collage preview'
 );
+// The downloadable file follows the chip, not a button: it is revoked and rebuilt.
+await waitFor(
+  `document.querySelector('[data-collage-download]')?.disabled === false`,
+  'collage file rebuilt for the vertical layout'
+);
+const afterVertical = await evaluate(`window.__objectUrlStats()`);
+assert.equal(
+  afterVertical.created > beforeVertical.created,
+  true,
+  'Changing the arrangement should rebuild the collage file'
+);
+assert.equal(afterVertical.active, 1, 'The superseded collage file should be revoked');
 
-await evaluate(`document.querySelector('[data-collage-layout="columns"]').click()`);
-await waitFor(`Boolean(document.querySelector('#collage-columns'))`, 'columns control');
+await evaluate(
+  `document.querySelector('.tool-chip input[name="collage-layout"][value="columns"]').click()`
+);
+// The column count lives in the fine-tune panel and is mounted at all times, so
+// what changes with the arrangement is whether its field is shown.
+await waitFor(
+  `document.querySelector('#collage-columns').closest('.fine-tune-field').hidden === false`,
+  'columns control'
+);
 await evaluate(`
   (() => {
     const columns = document.querySelector('#collage-columns');
@@ -277,14 +339,100 @@ await waitFor(
   'single-column collage preview'
 );
 
+// Fine-tune holds every value the arrangement does not ask about, and hand-editing
+// one has to be reversible: the way back to the recommended values is the only
+// thing that makes the panel safe to open.
+await evaluate(`document.querySelector('.collage-controls .fine-tune').open = true`);
+if (fineTuneScreenshotPath) {
+  await evaluate(`document.querySelector('.collage-controls').scrollIntoView({ block: 'start' })`);
+  const screenshot = await send('Page.captureScreenshot', { format: 'png' });
+  fs.mkdirSync(path.dirname(fineTuneScreenshotPath), { recursive: true });
+  fs.writeFileSync(fineTuneScreenshotPath, Buffer.from(screenshot.data, 'base64'));
+}
+await evaluate(`
+  (() => {
+    const gap = document.querySelector('#collage-gap');
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    setter.call(gap, '40');
+    gap.dispatchEvent(new Event('input', { bubbles: true }));
+    gap.dispatchEvent(new Event('change', { bubbles: true }));
+  })()
+`);
+await waitFor(
+  `document.querySelector('.collage-controls .fine-tune-reset')?.textContent.includes('recommended')`,
+  'fine-tune reset offered after a hand edit'
+);
+await waitFor(
+  `(() => {
+    const canvas = document.querySelector('[data-collage-preview]');
+    return canvas?.width === 392 && canvas?.height === 648;
+  })()`,
+  'preview follows the hand-edited gap'
+);
+await evaluate(`document.querySelector('.collage-controls .fine-tune-reset').click()`);
+await waitFor(
+  `document.querySelector('#collage-gap').value === '16' &&
+   document.querySelector('#collage-cell-width').value === '360' &&
+   document.querySelector('#collage-cell-height').value === '288' &&
+   !document.querySelector('.collage-controls .fine-tune-reset')`,
+  'fine-tune returns to the recommended values'
+);
+await evaluate(`document.querySelector('.collage-controls .fine-tune').open = false`);
+
+// Supersession: each click lands while the previous run is in flight or has just
+// finished, so older runs have to abandon themselves instead of writing over the
+// newer ones. What is checked afterwards is that the file on offer belongs to the
+// arrangement that is selected at the end, not to one of the ones passed through.
+for (const layout of ['auto-grid', 'horizontal', 'vertical', 'columns']) {
+  await evaluate(
+    `document.querySelector('.tool-chip input[name="collage-layout"][value="${layout}"]').click()`
+  );
+  await new Promise((resolve) => setTimeout(resolve, 330));
+}
+await waitFor(
+  `document.querySelector('[data-collage-download]')?.disabled === false`,
+  'collage file settled after rapid arrangement changes'
+);
+const settled = await evaluate(`(() => {
+  const canvas = document.querySelector('[data-collage-preview]');
+  const note = document.querySelector('.collage-controls .tool-run-note');
+  return {
+    width: canvas.width,
+    height: canvas.height,
+    checked: document.querySelector('.tool-chip input[name="collage-layout"]:checked').value,
+    note: note.textContent.trim(),
+    summary: document.querySelector('.collage-controls .fine-tune-summary').textContent.trim(),
+  };
+})()`);
+assert.equal(settled.checked, 'columns');
+assert.equal(settled.note.startsWith('Collage file ready'), true, settled.note);
+
 await evaluate(`document.querySelector('[data-collage-download]').click()`);
 const download = await waitForFile('toolkitfree-collage.png');
 const bytes = fs.readFileSync(download);
 assert.equal(bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), true);
+// The saved file is the settled one, not a stale run's: PNG IHDR carries the size.
+assert.deepEqual(
+  { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) },
+  { width: settled.width, height: settled.height },
+  'The downloaded collage should match the arrangement on screen'
+);
+
 const urlStats = await evaluate(`window.__objectUrlStats()`);
-assert.equal(urlStats.active, 0);
-assert.equal(urlStats.created, urlStats.revoked);
+// One more URL is created than revoked, and it is nameable: the collage file the
+// download button now saves. It used to be revoked immediately after the click
+// because the click is what built it; it is now held for as long as it is the
+// answer to the settings on screen.
+assert.equal(urlStats.active, 1);
+assert.equal(urlStats.created - urlStats.revoked, 1);
 assert.equal(urlStats.created >= 3, true);
+
+// Start over drops it, so the registry returns to the baseline it started from.
+await evaluate(`document.querySelector('.collage-clear').click()`);
+await waitFor(`!document.querySelector('.collage-builder')`, 'cleared collage builder');
+const clearedStats = await evaluate(`window.__objectUrlStats()`);
+assert.equal(clearedStats.active, 0);
+assert.equal(clearedStats.created, clearedStats.revoked);
 
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
@@ -303,6 +451,8 @@ console.log(
     uiLayouts,
     previewTouchDragOrder,
     pngBytes: bytes.length,
+    settled,
+    objectUrls: { afterDownload: urlStats, afterClear: clearedStats },
     browserErrors: actionableBrowserErrors.length,
   })
 );
