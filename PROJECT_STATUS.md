@@ -44,10 +44,12 @@ task.
 - Design direction: the owner reviewed several UI directions on 2026-08-29 and chose the warm
   neutral palette with a single indigo accent (option A). Its tokens are in `global.css` and the
   warm page ground is now applied site-wide, with the three background roles separated. The Image
-  Compressor is the first tool rebuilt on the reviewed interaction model (purpose presets, three
-  encoded candidates, no submit step, fine-tune folded but complete). The other thirteen tools are
-  unchanged and still use the previous interaction; they inherit only the new surfaces. Owner review
-  of both changes is pending.
+  Compressor was the first tool rebuilt on the reviewed interaction model (purpose presets, three
+  encoded candidates, no submit step, fine-tune folded but complete). **As of 2026-09-18 all fourteen
+  public tools are converted**, in three parallel batches; Background Remover and Video to GIF keep an
+  explicit button by design, because a single run costs seconds to a minute. Owner review of the whole
+  set is pending, and the QR Generator chips changed appearance noticeably — see the Recent Progress
+  Log entry for that date.
 - Advertising: intentionally disabled. Do not restore AdSense scripts, placeholders, or ad-oriented
   layout without explicit owner approval. Product value and user experience come first.
 - Privacy model: selected file contents are processed locally in the browser. Normal site resources,
@@ -319,6 +321,79 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-09-18 — `交互改造收尾 14/14` / `QR 的 D 类判断被推翻` / `CLS 那条断言查清楚了`：
+
+  最后 5 个工具改完，**14 个公开工具全部完成交互改造**。五个 agent 各自独立 worktree 并行，
+  五次合并**零冲突**——三个 agent 共用 `validate-secondary-tools-browser.mjs`，靠"改动锁在自己那一段、
+  不重排不重格式化"这一条约束撑住了。
+
+  **B 类（自动运行）三个：**
+  - **PDF Splitter**：输出跟随页码范围、页序、旋转、输出模式。附带一处关键发现——拆分导出原本用
+    `DEFLATE` 打 ZIP，20 页 74.6 MiB 扫描件耗时 **5074 ms 而体积一个字节没小**（PDF 内容流本来就是
+    Flate 压缩的），改成 `STORE` 是 714 ms。**这是自动运行能成立的前提**，不是顺手优化。
+  - **Image to PDF**：核心是按 `(文件, 旋转)` 缓存栅格化结果，首建 0.2–1.2 s，重建 < 25 ms。
+    `key` 只序列化几何与摆放，于是在全手工摆放的页面上拖边距滑块**正确地什么都不重跑**。
+  - **Image Collage**：拼图跟随布局和排序。运行在离屏画布上重绘而不是读回预览画布——预览在拖拽
+    重排时带着高亮浮层，那东西绝不能进下载的文件。
+
+  **C 类（保留按钮）一个：Background Remover。** 没有引入自动运行（一次 6–25 秒）。五枚背景芯片
+  全部来自 `BACKGROUND_PRESETS`，没有编造选项。触摸目标从 28px 修到 44px。
+  **一处产品损失记在账上**：原来红芯片本身是红的，换成共享 `ToolPresets` 之后只剩文字——共享件没有
+  per-chip 的视觉槽。可接受（颜色名无歧义，取色器仍带色），但共享件若补 `swatch` 槽，这里该第一个加回来。
+
+  **D 类"已经正确、不要动"的判断被推翻了——QR Generator。** 核实下来**行为栏确实全对**：agent 用
+  拦截 `<a download>` 取出 data URL、与同时刻预览画布逐字节比对的办法，证明了**下载的文件真的跟随
+  设置**，不是"预览实时、文件不实时"。但另外三栏有真问题：
+  - **冷启动约 1.2 秒的死按钮窗口**：`data-qr-ready` 报的是"有没有文本"而不是"渲染器就绪没有"，
+    窗口内按钮可点但 `qrRef.current` 还是 null，点下去**不产生文件、不报错、无任何反馈**。
+  - **上传 logo 后 L/M/Q/H 四枚被 `disabled`**，纠错级别被强制 H 且不可编辑——直接撞
+    `TOOL_INTERACTION.md`「不能让人失去控制权」。现在仍自动写入 H，但四枚保持可点，理由放在可朗读的
+    `help` 里；并修掉了"先选 Q → 传 logo → 删 logo 变成 M"的副作用（现在回到 Q，手动点过则手动值优先）。
+  - **三组手写内联芯片触摸目标 24–31px**，低于「不能改变的东西」里 44px 的硬要求。换成 `ToolChoices`
+    后 15 枚芯片最小高度 44px，无一低于。
+
+  **这条教训值得记住：分类是按"行为"给的，而缺陷不一定长在行为那一栏。** "已经正确"只对了四分之一。
+
+  **`validate-performance-browser.mjs` 的 Image Splitter CLS 断言——查清楚了。** 三个 agent 报它失败、
+  一个报通过，两份结果矛盾。做了对照实验：干净 worktree 停在 `5b51ff2`、重新构建、**空闲容器**上
+  `total: 0.0023` 通过；同一份构建**先把 4 核压满**再跑，是 `0.062461332290409975`，与 agent 量到的
+  **十六位有效数字一字不差**。
+
+  原因：CLS 值由几何定死（impact × distance fraction），**负载只决定这次位移记不记得上**——图片解码
+  落在首次布局之后，`.splitter-frame` 的 handle、两条 hint 和 `.tool-controls` 会塌成零尺寸再弹回来。
+
+  所以它**既不是 flaky 也不是必挂的回归**，是慢设备和冷缓存上会真实兑现的 CLS 风险；0.0601 > 0.05
+  意味着那种条件下真实用户会吃到。注意本文件 2026-08-30 记着 Image Splitter 的 CLS 是专门修过、
+  所有者 approve 过的（0.0839 → 0.0090）——**那次是在空闲机器上测的，塌陷路径还在**。
+  **待办：在图片加载前给那几个元素预留空间。** 本批没做，避免把 Image Splitter 卷进来。
+
+  顺带一个此前没人注意的事实：这条套件一直**中止在第 319 行**，后面的断言（Favicon、QR、背景移除的
+  资源守卫，以及末尾的 `browserErrors` 汇总）**在 master 上从来没执行过**。本批集成后在空闲容器上
+  第一次跑到底，全绿。
+
+  **共享件暴露出三个缺口**（已记入 `TOOL_INTERACTION.md`，待集成方补）：`ToolChoices` / `ToolPresets`
+  没有 `disabled`（对 C 类是结构性缺口，目前靠外套 `<fieldset disabled>` 绕，且探针必须写
+  `matches(':disabled')`）；`ToolPresets` 没有 per-chip 视觉槽；`FineTune` 的 `onReset` 在面板收起时
+  仍在 DOM 里（写断言不需要先展开）。
+
+  **门禁**：typecheck、lint、format、13 项单测、构建、SEO 注册表（`linkedVariants: 42`）、站点完整性
+  （4399 内链 / 0 断链），以及**全部 12 个浏览器套件**逐个跑过。唯一失败是
+  `validate-secondary-tools-browser.mjs` 里 background removal 那一条——沙箱出网被封、
+  `staticimgly.com` 返回 403、模型下不来，与改动无关，基线上就是这一条。
+
+  **需要所有者在正常网络的机器上补验的：**
+  1. Background Remover 端到端实跑，以及第一次成功抠图之后的全部断言（重组合期间不换模型、
+     `colorsLocked` 序列、对象 URL 基线、线程计划上板、结果区的视觉）。期望是整条套件全绿。
+  2. QR Generator 换共享芯片带来的**观感变更**：芯片从实心蓝底白字变成站点统一的浅蓝底蓝字、
+     高度 24–31px → 44px、多了一行"What are you encoding?"标题和一行纠错说明。
+     **工具区总高度桌面 823px → 1063px，手机 1352px → 1562px**，右侧预览栏下方留白更明显。
+  3. 十四个工具的完整人工验收。
+
+  **还有一处诚实说明**：QR 那条"冷启动窗口内按钮必须禁用"的守卫（`enabledBeforeReady === 0`）不会
+  假失败，但它只在窗口存在时才咬得住，而窗口长度取决于 chunk 是否命中 HTTP 缓存（冷 1.2 s、热 34 ms）。
+  agent 没有把"观察到中间态"也写成断言，因为那会 flaky——这个克制是对的，但意味着这条守卫在热缓存下
+  是空转的。
 
 - 2026-09-17 — `变体页入口` / `25 个孤儿页修复` / `校验盲区补上`：所有者问"那个 WordPress 变体页
   从哪进去"——答案是**进不去**。查下来问题远比一个页面大：全站 48 个变体页，**25 个从自己那一簇之外
