@@ -696,6 +696,58 @@ const svgText = fs.readFileSync(path.join(downloadPath, 'qrcode.svg'), 'utf8');
 assert.equal(svgText.includes('<svg'), true);
 assert.equal(svgText.includes('<path') || svgText.includes('<rect'), true);
 
+// Content the encoder cannot fit. This is the dangerous shape: a working code is
+// already on screen, so `ready` is true and the renderer in the ref is the old
+// one. If the failed render is not caught, the container is left empty while the
+// buttons stay enabled and save the *previous* code — a wrong file, silently.
+await evaluate(`
+  (() => {
+    const textarea = document.querySelector('#qr-text');
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
+    setter.call(textarea, 'x'.repeat(4000));
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  })()
+`);
+await waitFor(
+  `document.querySelector('[data-qr-ready]')?.dataset.qrReady === 'false'`,
+  'QR renderer drops itself when the content cannot be drawn'
+);
+const qrOverflow = await evaluate(`
+  (() => {
+    const layout = document.querySelector('.qr-generator-layout');
+    const buttons = [...layout.querySelectorAll('button')].filter((button) =>
+      button.textContent.trim().startsWith('Download')
+    );
+    return {
+      downloadsDisabled: buttons.every((button) => button.disabled),
+      // Not "some message appeared": the page must not still claim it is drawing.
+      stillClaimsDrawing: layout.textContent.includes('Drawing your QR code'),
+      explained: layout.textContent.includes('could not be drawn'),
+      previewEmpty: layout.querySelector('[data-qr-ready] canvas') === null,
+    };
+  })()
+`);
+assert.deepEqual(qrOverflow, {
+  downloadsDisabled: true,
+  stillClaimsDrawing: false,
+  explained: true,
+  previewEmpty: true,
+});
+
+// And it recovers: shortening the content draws again and re-enables the buttons.
+await evaluate(`
+  (() => {
+    const textarea = document.querySelector('#qr-text');
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
+    setter.call(textarea, 'recovered');
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  })()
+`);
+await waitFor(
+  `Boolean(document.querySelector('[data-qr-ready="true"] canvas'))`,
+  'QR renderer recovers after the content is shortened'
+);
+
 await evaluate(`
   (() => {
     const colors = document.querySelectorAll('input[type="color"]');
