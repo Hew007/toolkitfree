@@ -309,11 +309,28 @@ await waitFor(
   'images merged onto one page again'
 );
 
-await evaluate(`document.querySelector('[data-testid="pdf-convert"]').click()`);
-await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'partial PDF result');
+// No submit step: the PDF follows the page list, so merging the two images onto
+// one page is enough to produce a one-page document. Waiting on the page count
+// rather than the panel alone also proves the result belongs to the current
+// layout — an earlier two-page run is invalidated the moment the merge lands.
+await waitForValue(
+  `document.querySelector('[data-pdf-result]')?.dataset.pages ?? null`,
+  (pages) => pages === '1',
+  'one-page PDF result following the merged layout'
+);
+// No regression: the submit button must not come back.
 assert.equal(
-  await evaluate(`Number(document.querySelector('[data-pdf-result]').dataset.pages)`),
-  1
+  await evaluate(`Boolean(document.querySelector('[data-testid="pdf-convert"]'))`),
+  false,
+  'Image to PDF must not regain a submit button'
+);
+assert.equal(
+  await evaluate(`
+    [...document.querySelectorAll('button')]
+      .some((button) => button.textContent.trim().startsWith('Create PDF'))
+  `),
+  false,
+  'no "Create PDF" button may remain on the page'
 );
 const pdfBase64 = await evaluate(`
   (async () => {
@@ -333,6 +350,8 @@ assert.equal(pdfText.trimEnd().endsWith('%%EOF'), true);
 assert.equal((pdfText.match(/\/Type \/Page\b/g) || []).length, 1);
 assert.equal((pdfText.match(/\/MediaBox/g) || []).length >= 1, true);
 const pdfStats = await evaluate(`window.__objectUrlStats()`);
+// Unchanged by auto-run: every rebuild replaces the single `pdf:result` key and
+// revokes the document it held, so the superseded PDFs leave nothing behind.
 assert.equal(pdfStats.active, 4, 'Three previews plus one PDF result should remain active');
 
 // Starting the next PDF must not mean removing images one at a time or
@@ -365,7 +384,6 @@ await waitFor(
 await navigate('/tools/image-to-pdf/image-to-pdf-no-margin/');
 await upload([{ name: 'wide.png', type: 'image/png', width: 400, height: 200 }]);
 await waitFor(`Boolean(document.querySelector('[data-pdf-file]'))`, 'fit PDF input');
-await evaluate(`document.querySelector('[data-testid="pdf-convert"]').click()`);
 await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'fit PDF result');
 const fitPdfBase64 = await evaluate(`
   (async () => {
@@ -395,6 +413,62 @@ assert.ok(
   Math.abs(Number(drawMatrix[2]) - Number(mediaBox[2])) < 0.5,
   `Drawn height ${drawMatrix[2]} should fill the page height ${mediaBox[2]}`
 );
+
+// Input arriving faster than the work completes is the only condition under
+// which a superseded run can overwrite a fresher one, so add a second image
+// while the first document is still being assembled and hold the tool to the
+// newer layout.
+await upload([{ name: 'tall.png', type: 'image/png', width: 200, height: 400 }]);
+await waitForValue(
+  `document.querySelector('[data-pdf-result]')?.dataset.pages ?? null`,
+  (pages) => pages === '2',
+  'the PDF settles on the newer two-page layout'
+);
+await new Promise((resolve) => setTimeout(resolve, 900));
+assert.equal(
+  await evaluate(`document.querySelector('[data-pdf-result]').dataset.pages`),
+  '2',
+  'a superseded one-page run must not overwrite the fresher two-page result'
+);
+
+// The page-size chips answer the question; Fine-tune keeps every value they do
+// not, still editable. Editing one by hand has to offer the way back to the
+// setup this route arrived with, and put that offer away again once it matches.
+await navigate('/tools/image-to-pdf/');
+await upload([{ name: 'setup.png', type: 'image/png', width: 400, height: 300 }]);
+await waitFor(`Boolean(document.querySelector('[data-pdf-file]'))`, 'page setup input');
+assert.equal(
+  await evaluate(`Boolean(document.querySelector('.fine-tune-reset'))`),
+  false,
+  'the reset stays away until a value is hand-edited'
+);
+await evaluate(`
+  (() => {
+    const slider = document.querySelector('[data-testid="pdf-margin"]');
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    setter.call(slider, '25');
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+    slider.dispatchEvent(new Event('change', { bubbles: true }));
+  })()
+`);
+await waitFor(
+  `document.querySelector('[data-pdf-preset]').dataset.margin === '25'`,
+  'margin edited by hand'
+);
+await waitFor(`Boolean(document.querySelector('.fine-tune-reset'))`, 'reset offered');
+// The document follows the margin on its own, with nothing to submit.
+await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'PDF at the wider margin');
+await evaluate(`document.querySelector('.fine-tune-reset').click()`);
+await waitFor(
+  `document.querySelector('[data-pdf-preset]').dataset.margin === '10'`,
+  'margin back at this page preset'
+);
+assert.equal(
+  await evaluate(`Boolean(document.querySelector('.fine-tune-reset'))`),
+  false,
+  'the reset puts itself away once the setup matches the preset again'
+);
+await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'PDF after the reset');
 
 await navigate('/tools/favicon-generator/');
 await upload([
@@ -502,6 +576,39 @@ assert.equal(
   ),
   true
 );
+// The renderer is imported on demand, so the download buttons are on screen
+// before the first code can be exported. `data-qr-ready` reports that renderer
+// rather than merely that the textarea holds text, and the buttons must stay
+// disabled until it flips: a click in that window produced no file and no
+// message at all.
+const qrReadiness = await evaluate(`
+  (async () => {
+    const input = document.querySelector('textarea[placeholder="Enter text or URL..."]');
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
+    setter.call(input, 'readiness-check');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    let enabledBeforeReady = 0;
+    let sawPendingButton = false;
+    const started = performance.now();
+    while (performance.now() - started < 30000) {
+      const root = document.querySelector('[data-qr-ready]');
+      const button = [...document.querySelectorAll('button')].find(
+        (candidate) => candidate.textContent.trim() === 'Download PNG'
+      );
+      const ready = root?.dataset.qrReady === 'true';
+      if (button && !ready) {
+        sawPendingButton = true;
+        if (!button.disabled) enabledBeforeReady += 1;
+      }
+      if (ready) return { ready: true, enabledBeforeReady, sawPendingButton };
+      await new Promise((resolve) => setTimeout(resolve, 16));
+    }
+    return { ready: false, enabledBeforeReady, sawPendingButton };
+  })()
+`);
+assert.equal(qrReadiness.ready, true, 'QR renderer never became ready');
+assert.equal(qrReadiness.enabledBeforeReady, 0, 'QR downloads must wait for the renderer');
+
 await evaluate(`
   (() => {
     const input = document.querySelector('textarea[placeholder="Enter text or URL..."]');
@@ -514,9 +621,9 @@ await waitFor(
   `document.querySelector('[data-qr-data]')?.dataset.qrData === 'https://example.com/a?x=1&y=2'`,
   'text QR data'
 );
-await waitFor(`Boolean(document.querySelector('[data-qr-data] canvas'))`, 'QR canvas');
+await waitFor(`Boolean(document.querySelector('[data-qr-ready="true"] canvas'))`, 'QR canvas');
 
-await evaluate(`document.querySelector('[data-qr-tab="wifi"]').click()`);
+await evaluate(`document.querySelector('input[name="qr-content-type"][value="wifi"]').click()`);
 await waitFor(
   `document.querySelector('[data-qr-input-type]').dataset.qrInputType === 'wifi'`,
   'WiFi tab'
@@ -537,7 +644,7 @@ await waitFor(
   'escaped WiFi QR data'
 );
 
-await evaluate(`document.querySelector('[data-qr-tab="vcard"]').click()`);
+await evaluate(`document.querySelector('input[name="qr-content-type"][value="vcard"]').click()`);
 await waitFor(
   `document.querySelector('[data-qr-input-type]').dataset.qrInputType === 'vcard'`,
   'vCard tab'
@@ -558,7 +665,7 @@ await waitFor(
   'escaped vCard QR data'
 );
 
-await evaluate(`document.querySelector('[data-qr-tab="text"]').click()`);
+await evaluate(`document.querySelector('input[name="qr-content-type"][value="text"]').click()`);
 await waitFor(
   `document.querySelector('[data-qr-input-type]').dataset.qrInputType === 'text'`,
   'Text tab'
@@ -589,6 +696,58 @@ const svgText = fs.readFileSync(path.join(downloadPath, 'qrcode.svg'), 'utf8');
 assert.equal(svgText.includes('<svg'), true);
 assert.equal(svgText.includes('<path') || svgText.includes('<rect'), true);
 
+// Content the encoder cannot fit. This is the dangerous shape: a working code is
+// already on screen, so `ready` is true and the renderer in the ref is the old
+// one. If the failed render is not caught, the container is left empty while the
+// buttons stay enabled and save the *previous* code — a wrong file, silently.
+await evaluate(`
+  (() => {
+    const textarea = document.querySelector('#qr-text');
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
+    setter.call(textarea, 'x'.repeat(4000));
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  })()
+`);
+await waitFor(
+  `document.querySelector('[data-qr-ready]')?.dataset.qrReady === 'false'`,
+  'QR renderer drops itself when the content cannot be drawn'
+);
+const qrOverflow = await evaluate(`
+  (() => {
+    const layout = document.querySelector('.qr-generator-layout');
+    const buttons = [...layout.querySelectorAll('button')].filter((button) =>
+      button.textContent.trim().startsWith('Download')
+    );
+    return {
+      downloadsDisabled: buttons.every((button) => button.disabled),
+      // Not "some message appeared": the page must not still claim it is drawing.
+      stillClaimsDrawing: layout.textContent.includes('Drawing your QR code'),
+      explained: layout.textContent.includes('could not be drawn'),
+      previewEmpty: layout.querySelector('[data-qr-ready] canvas') === null,
+    };
+  })()
+`);
+assert.deepEqual(qrOverflow, {
+  downloadsDisabled: true,
+  stillClaimsDrawing: false,
+  explained: true,
+  previewEmpty: true,
+});
+
+// And it recovers: shortening the content draws again and re-enables the buttons.
+await evaluate(`
+  (() => {
+    const textarea = document.querySelector('#qr-text');
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
+    setter.call(textarea, 'recovered');
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  })()
+`);
+await waitFor(
+  `Boolean(document.querySelector('[data-qr-ready="true"] canvas'))`,
+  'QR renderer recovers after the content is shortened'
+);
+
 await evaluate(`
   (() => {
     const colors = document.querySelectorAll('input[type="color"]');
@@ -608,6 +767,21 @@ assert.equal(
     `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Download PNG').disabled`
   ),
   true
+);
+
+// The QR output follows the controls, so this page must never grow a submit
+// step. Without this guard someone can add `Generate` back and nothing objects.
+assert.deepEqual(
+  await evaluate(`
+    [
+      ...document.querySelectorAll(
+        '.qr-generator-layout button, .qr-generator-layout input[type="submit"]'
+      ),
+    ]
+      .map((control) => control.textContent.trim() || control.value || '')
+      .filter((label) => /^(generate|create|make|build|render|convert|apply|start)\\b/i.test(label))
+  `),
+  []
 );
 
 await navigate('/tools/image-enhancer/');
@@ -772,6 +946,28 @@ assert.equal(
   'Removing the image should revoke the enhancer result URL'
 );
 
+/* --- Background Remover -------------------------------------------------
+   The colour row is the shared `ToolPresets` chip component, which renders the
+   preset table's own labels and carries no per-chip attribute of its own, so a
+   chip is addressed by its label. Keep this map in step with BACKGROUND_PRESETS
+   in src/lib/background-remover.ts; validate-secondary-tools.mjs asserts that
+   table still holds these values. */
+const backgroundChipLabels = {
+  transparent: 'Transparent',
+  '#ffffff': 'White',
+  '#ff0000': 'Red',
+  '#0000ff': 'Blue',
+  '#008000': 'Green',
+};
+const backgroundChip = (value) =>
+  `[...document.querySelectorAll('[data-background-chips] .tool-chip')].find((chip) => chip.querySelector('.tool-chip-label').textContent.trim() === ${JSON.stringify(
+    backgroundChipLabels[value]
+  )})`;
+// The custom colour and hex fields live in the folded fine-tune panel now. A
+// closed `details` still hides them from a real visitor, so open it first rather
+// than driving a control nobody could reach.
+const openBackgroundFineTune = `document.querySelector('.fine-tune')?.setAttribute('open', '')`;
+
 await navigate('/tools/background-remover/');
 await upload([{ name: 'corrupt.png', type: 'image/png', corrupt: true }]);
 await waitFor(`document.body.innerText.includes('corrupt.png')`, 'corrupt background input');
@@ -789,6 +985,188 @@ assert.equal(
 );
 await evaluate(`document.querySelector('button[aria-label="Remove corrupt.png"]').click()`);
 await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, 'background input reset');
+
+// Background Remover keeps an explicit button on purpose: one run costs 6-25
+// seconds, so starting one by accident is not free the way it is in the tools
+// that auto-run. Two things therefore have to hold of a settings change here,
+// and this block proves them in the only state this environment can reach —
+// the model host is unreachable from CI, so every assertion below the first
+// successful removal stops at that failure.
+//
+// A request count, not only the model-run counter: the counter says the island
+// did not call the model, while the count says the page fetched nothing at all,
+// which is the claim being made. The observer is what actually decides it; the
+// count is recorded alongside because the resource buffer is capped and could
+// otherwise make a plain length comparison pass by being full.
+await upload([
+  {
+    name: 'chips.png',
+    type: 'image/png',
+    width: 96,
+    height: 96,
+    kind: 'portrait',
+    background: '#f3f4f6',
+  },
+]);
+await waitFor(`document.body.innerText.includes('chips.png')`, 'chip idle input');
+await waitFor(
+  `document.querySelector('img[alt="Original preview"]')?.complete === true`,
+  'chip idle preview settled'
+);
+assert.equal(
+  await evaluate(
+    `[...document.querySelectorAll('[data-background-chips] .tool-chip')].map((chip) => chip.querySelector('.tool-chip-label').textContent.trim()).join(',')`
+  ),
+  'Transparent,White,Red,Blue,Green',
+  'The chip row must render the preset table, in order'
+);
+// No-regression guard in the direction this tool needs it: the conversions that
+// auto-run assert their submit button is gone, and the mirror of that here is
+// that this one must never quietly become an auto-run tool.
+assert.equal(
+  await evaluate(
+    `[...document.querySelectorAll('button')].some((button) => button.textContent.trim() === 'Remove Background')`
+  ),
+  true,
+  'Background Remover must keep its explicit run button'
+);
+const idleRequestsBefore = await evaluate(`
+  (() => {
+    window.__bgRequestObserver?.disconnect();
+    window.__bgRequests = [];
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) window.__bgRequests.push(entry.name);
+    });
+    observer.observe({ type: 'resource', buffered: false });
+    window.__bgRequestObserver = observer;
+    return performance.getEntriesByType('resource').length;
+  })()
+`);
+const idleModelRunsBefore = await evaluate(
+  `Number(document.querySelector('[data-background-model-runs]').dataset.backgroundModelRuns)`
+);
+for (const value of ['#ffffff', '#ff0000', '#0000ff', '#008000', 'transparent']) {
+  await evaluate(`${backgroundChip(value)}.click()`);
+  await waitFor(
+    `document.querySelector('[data-active-background]').dataset.activeBackground === ${JSON.stringify(
+      value
+    )}`,
+    `chip selects ${value}`
+  );
+}
+await evaluate(openBackgroundFineTune);
+const idleAfterChips = await evaluate(`
+  (async () => {
+    // PerformanceObserver delivers in a later task, so let anything a click
+    // might have started actually arrive before the buffer is read.
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const root = document.querySelector('[data-background-stage]');
+    return {
+      requests: performance.getEntriesByType('resource').length,
+      newRequests: window.__bgRequests,
+      modelRuns: Number(root.dataset.backgroundModelRuns),
+      stage: root.dataset.backgroundStage,
+      busy: root.getAttribute('aria-busy'),
+      hasResult: Boolean(document.querySelector('[data-background-result]')),
+      status: Boolean(document.querySelector('.status-processing, .status-error')),
+      summary: document.querySelector('.fine-tune-summary')?.textContent.trim(),
+      hex: document.querySelector('[data-testid="bg-color-hex"]')?.value,
+      picker: document.querySelector('[data-testid="bg-color-picker"]')?.value,
+    };
+  })()
+`);
+assert.deepEqual(
+  idleAfterChips.newRequests,
+  [],
+  `Changing the background must not request anything, saw ${idleAfterChips.newRequests.join(', ')}`
+);
+assert.equal(
+  idleAfterChips.requests,
+  idleRequestsBefore,
+  'The resource count must be unchanged across five chip changes'
+);
+assert.equal(
+  idleAfterChips.modelRuns,
+  idleModelRunsBefore,
+  'Changing the background must not run the model'
+);
+assert.equal(idleAfterChips.stage, 'idle', 'No model stage may start from a chip');
+assert.equal(idleAfterChips.busy, 'false', 'A chip change must not put the tool in a busy state');
+assert.equal(idleAfterChips.hasResult, false);
+assert.equal(idleAfterChips.status, false, 'A chip change must not raise a status message');
+// Every value a chip writes has to stay visible and editable in the panel below
+// it, which is the half of the contract that says nobody lost control.
+assert.equal(idleAfterChips.summary, 'Transparent \u00b7 PNG alpha');
+assert.equal(idleAfterChips.hex, '');
+const tunedValues = await evaluate(`
+  (async () => {
+    ${backgroundChip('#ff0000')}.click();
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    return {
+      summary: document.querySelector('.fine-tune-summary').textContent.trim(),
+      hex: document.querySelector('[data-testid="bg-color-hex"]').value,
+      picker: document.querySelector('[data-testid="bg-color-picker"]').value,
+      reset: Boolean(document.querySelector('.fine-tune-reset')),
+    };
+  })()
+`);
+assert.equal(tunedValues.summary, 'Red \u00b7 #ff0000');
+assert.equal(tunedValues.hex, '#ff0000', 'The panel must show the exact value the chip wrote');
+assert.equal(tunedValues.picker, '#ff0000');
+assert.equal(
+  tunedValues.reset,
+  false,
+  'The way back appears only once something has been hand-edited'
+);
+// Hand-editing the exact value must unlight every chip and offer a way back that
+// names the chip it returns to — fine-tuning is only safe to try if there is one.
+const handEdited = await evaluate(`
+  (async () => {
+    const input = document.querySelector('[data-testid="bg-color-hex"]');
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    setter.call(input, '#7a45ff');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const reset = document.querySelector('.fine-tune-reset');
+    return {
+      active: document.querySelector('[data-active-background]').dataset.activeBackground,
+      lit: [...document.querySelectorAll('[data-background-chips] .tool-chip')]
+        .filter((chip) => chip.getAttribute('aria-pressed') === 'true').length,
+      summary: document.querySelector('.fine-tune-summary').textContent.trim(),
+      resetLabel: reset?.textContent.trim(),
+    };
+  })()
+`);
+assert.equal(handEdited.active, '#7a45ff');
+assert.equal(handEdited.lit, 0, 'A hand-edited colour must unlight every chip');
+assert.equal(handEdited.summary, 'Custom \u00b7 #7a45ff');
+assert.equal(
+  handEdited.resetLabel,
+  'Back to the Red background',
+  'The way back must name the chip it returns to'
+);
+const afterReset = await evaluate(`
+  (async () => {
+    document.querySelector('.fine-tune-reset').click();
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    return {
+      active: document.querySelector('[data-active-background]').dataset.activeBackground,
+      reset: Boolean(document.querySelector('.fine-tune-reset')),
+    };
+  })()
+`);
+assert.equal(afterReset.active, '#ff0000', 'Reset must return to the named preset');
+assert.equal(afterReset.reset, false, 'The way back disappears once it has been taken');
+// The colour survives a file change, so leave the tool on its default before the
+// cases below, which expect Transparent unless they select something else.
+await evaluate(`${backgroundChip('transparent')}.click()`);
+await waitFor(
+  `document.querySelector('[data-active-background]').dataset.activeBackground === 'transparent'`,
+  'chip idle restore'
+);
+await evaluate(`document.querySelector('button[aria-label="Remove chips.png"]').click()`);
+await waitFor(`Boolean(document.querySelector('input[type="file"]'))`, 'chip idle cleanup');
 
 await upload([
   {
@@ -815,6 +1193,21 @@ assert.equal(
   await evaluate(`document.querySelector('[data-background-stage]').getAttribute('aria-busy')`),
   'true'
 );
+// One recomposition at a time is a memory constraint, not a preference: each
+// colour paints a full-size canvas. The shared chip component has no disabled
+// prop, so the row is locked by the fieldset around it — which is why this asks
+// the selector rather than the button's own `disabled` property, and why it is
+// checked here, in the one busy state this environment can actually reach.
+assert.equal(
+  await evaluate(`${backgroundChip('#ff0000')}.matches(':disabled')`),
+  true,
+  'The chip row must be locked while a run is in flight'
+);
+assert.equal(
+  await evaluate(`document.querySelector('[data-testid="bg-color-hex"]').disabled`),
+  true,
+  'The fine-tune fields must be locked with the chips'
+);
 await evaluate(
   `[...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Cancel').click()`
 );
@@ -837,7 +1230,7 @@ const backgroundCases = [
   { name: 'portrait.png', kind: 'portrait', background: '#f3f4f6', color: 'transparent' },
   { name: 'product.png', kind: 'product', background: '#ffffff', color: '#0000ff' },
   { name: 'transparent.png', kind: 'product', transparent: true, color: 'transparent' },
-  // A colour reachable only through the hex field, not through any preset swatch.
+  // A colour reachable only through the hex field, not through any preset chip.
   { name: 'custom.png', kind: 'product', background: '#ffffff', color: '#7a45ff', viaHex: true },
 ];
 const backgroundResults = [];
@@ -859,6 +1252,16 @@ for (const definition of backgroundCases) {
     `${definition.name} input`
   );
   if (definition.viaHex) {
+    // The hex field lives in the folded panel now, so open it first: driving a
+    // control a visitor could not reach would prove nothing about the product.
+    await evaluate(openBackgroundFineTune);
+    assert.equal(
+      await evaluate(
+        `Boolean(document.querySelector('.fine-tune[open] [data-testid="bg-color-hex"]'))`
+      ),
+      true,
+      'The hex field must be reachable from the fine-tune panel'
+    );
     // React controlled inputs only see a change when the native setter is used.
     const typeHex = (value) => `
       (async () => {
@@ -896,9 +1299,7 @@ for (const definition of backgroundCases) {
     );
     assert.equal(await evaluate(typeHex(definition.color)), definition.color);
   } else if (definition.color !== 'transparent') {
-    await evaluate(
-      `document.querySelector('[data-background-color="${definition.color}"]').click()`
-    );
+    await evaluate(`${backgroundChip(definition.color)}.click()`);
   }
   await evaluate(`
     (() => {
@@ -1045,7 +1446,7 @@ const watchRecomposition = `
       const download = result?.querySelector('button')?.disabled;
       const last = window.__recompose.downloadDisabled;
       if (download !== undefined && last[last.length - 1] !== download) last.push(download);
-      const locked = document.querySelector('[data-background-color="#ff0000"]')?.disabled;
+      const locked = ${backgroundChip('#ff0000')}?.matches(':disabled');
       const lockedLog = window.__recompose.colorsLocked;
       if (locked !== undefined && lockedLog[lockedLog.length - 1] !== locked) lockedLog.push(locked);
     };
@@ -1079,7 +1480,7 @@ await upload([
 await waitFor(`document.body.innerText.includes('recompose.png')`, 'recompose input');
 // The colour survives file changes, so the previous case's custom hex would still
 // be selected. Start from Transparent explicitly.
-await evaluate(`document.querySelector('[data-background-color="transparent"]').click()`);
+await evaluate(`${backgroundChip('transparent')}.click()`);
 await waitFor(
   `document.querySelector('[data-active-background]').dataset.activeBackground === 'transparent'`,
   'transparent baseline selection'
@@ -1151,7 +1552,7 @@ if (threadPlan.isolated) {
 const urlsBeforeRecompose = await evaluate(`window.__objectUrlStats()`);
 
 await evaluate(watchRecomposition);
-await evaluate(`document.querySelector('[data-background-color="#ff0000"]').click()`);
+await evaluate(`${backgroundChip('#ff0000')}.click()`);
 const redResult = await waitForValue(
   readBackgroundResult,
   (state) => state !== null && state.composing === 'false' && state.corner[3] === 255,
@@ -1196,7 +1597,7 @@ assert.notEqual(
 
 // Back to Transparent: the cached cutout is reused, still without the model.
 await evaluate(watchRecomposition);
-await evaluate(`document.querySelector('[data-background-color="transparent"]').click()`);
+await evaluate(`${backgroundChip('transparent')}.click()`);
 const backToTransparent = await waitForValue(
   readBackgroundResult,
   (state) => state !== null && state.composing === 'false' && state.corner[3] < 32,

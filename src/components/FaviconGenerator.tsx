@@ -375,7 +375,12 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
         if (!isCurrent()) return;
         setError(getImageProcessingErrorMessage(err));
       } finally {
-        if (isCurrent()) setZipBusy(false);
+        // Cleared unconditionally, unlike the writes above. `zipBusy` is not a
+        // result, it is the guard that stops a second ZIP starting while one is
+        // running — so a superseded run must still release it. Gating this on
+        // `isCurrent()` meant changing the size set mid-packaging left the
+        // button stuck on "Packaging…" for good, with nothing to reset it.
+        setZipBusy(false);
       }
     });
   }, [icons, manifestJson, objectUrls, runNow, zipBusy]);

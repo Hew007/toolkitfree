@@ -102,9 +102,67 @@ async function resultBase64() {
   })()`);
 }
 
+/**
+ * Waits for the download to match the controls. There is no submit step any
+ * more, so "the link exists" is not enough — an older link can still be on
+ * screen for a moment after a change. Settled means the tool is not busy and
+ * the href has stopped changing across a poll longer than the rebuild debounce.
+ */
+async function waitForSettledResult(label, timeoutMs = 120_000) {
+  const started = Date.now();
+  let previous = null;
+  while (Date.now() - started < timeoutMs) {
+    const state = await evaluate(`(() => {
+      const tool = document.querySelector('[data-pdf-page-tool]');
+      const link = document.querySelector('[data-pdf-page-result] a[download]');
+      return { busy: tool?.getAttribute('aria-busy'), href: link?.href ?? null };
+    })()`);
+    if (state.href && state.busy === 'false' && state.href === previous) return;
+    previous = state.href;
+    const failure = await evaluate(
+      `document.querySelector('[data-pdf-page-tool] .status-error')?.textContent?.trim() || ''`
+    );
+    if (failure) throw new Error(`${label} failed: ${failure}`);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`Timed out waiting for ${label}`);
+}
+
+/** No submit step: the download follows the pages, so these must not come back. */
+async function assertNoSubmitStep(where) {
+  const submitLabels = await evaluate(`
+    [...document.querySelectorAll('[data-pdf-page-tool] button')]
+      .map((button) => button.textContent.trim())
+      .filter((text) => /^(extract|split|export)\\b/i.test(text))
+  `);
+  assert.deepEqual(submitLabels, [], `There must be no export button (${where})`);
+}
+
 await send('Page.enable');
 await send('Runtime.enable');
 await send('Log.enable');
+await send('Page.addScriptToEvaluateOnNewDocument', {
+  source: `
+    (() => {
+      const originalCreate = URL.createObjectURL.bind(URL);
+      const originalRevoke = URL.revokeObjectURL.bind(URL);
+      const active = new Set();
+      const stats = { created: 0, revoked: 0 };
+      URL.createObjectURL = (value) => {
+        const url = originalCreate(value);
+        stats.created += 1;
+        active.add(url);
+        return url;
+      };
+      URL.revokeObjectURL = (url) => {
+        stats.revoked += 1;
+        active.delete(url);
+        return originalRevoke(url);
+      };
+      window.__objectUrlStats = () => ({ ...stats, active: active.size });
+    })();
+  `,
+});
 await send('Page.navigate', { url: `${baseUrl}/tools/pdf-splitter/` });
 await waitFor(
   `document.querySelector('[data-pdf-page-tool] input[type="file"]') && !document.querySelector('astro-island[ssr]')`,
@@ -116,6 +174,9 @@ assert.equal(
   ),
   0,
   'PDF worker should stay lazy before upload'
+);
+const resourcesBeforeUpload = await evaluate(
+  `performance.getEntriesByType('resource').map((entry) => entry.name)`
 );
 
 await evaluate(`(() => {
@@ -139,8 +200,9 @@ assert.ok(
 assert.equal(
   resourcesAfterUpload.some((name) => name.includes('jszip.min.')),
   false,
-  'JSZip should stay lazy until split export'
+  'JSZip should stay lazy while one combined PDF is wanted'
 );
+await assertNoSubmitStep('after upload');
 assert.equal(
   await evaluate(
     `[...document.querySelectorAll('[data-pdf-page] img')].every((image) => image.complete && image.naturalWidth > 0)`
@@ -183,6 +245,30 @@ for (const width of [1440, 1240, 900, 600, 375]) {
 assert.equal(uiLayouts.at(-1).columns, 1);
 await send('Emulation.clearDeviceMetricsOverride');
 
+// Nothing has been clicked yet: every page arrives selected, so the combined
+// download builds itself. This is the behaviour the old Extract button gated.
+await waitForSettledResult('first automatic combined export');
+const firstResult = await resultBase64();
+assert.equal(firstResult.name, 'four-pages-extracted.pdf');
+const firstPdf = await PDFDocument.load(Buffer.from(firstResult.base64, 'base64'));
+assert.equal(firstPdf.getPageCount(), 4, 'The automatic export covers all four pages');
+const resourcesAfterFirstRun = await evaluate(
+  `performance.getEntriesByType('resource').map((entry) => entry.name)`
+);
+assert.ok(
+  resourcesAfterFirstRun.some(
+    (name) => /\/_astro\/index\.[^/]+\.js$/.test(name) && !resourcesBeforeUpload.includes(name)
+  ),
+  'The PDF export library should stay lazy until a PDF is chosen'
+);
+// 4 page thumbnails + 1 result. pdf.js renders into a canvas rather than through
+// a blob URL, so nothing else here holds one.
+assert.deepEqual(await evaluate(`window.__objectUrlStats()`), {
+  created: 5,
+  revoked: 0,
+  active: 5,
+});
+
 await evaluate(`(() => {
   const input = document.querySelector('#pdf-page-range');
   const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
@@ -195,6 +281,9 @@ await waitFor(
   `document.querySelectorAll('[data-pdf-page] input[type="checkbox"]:checked').length === 2`,
   'range selection'
 );
+// Three changes back to back, faster than a rebuild finishes. The debounce
+// collapses them and the token makes any run that did start abandon itself, so
+// the link that survives must describe the last of them and not an earlier one.
 await evaluate(`(() => {
   const second = document.querySelector('[data-pdf-page="2"]');
   [...second.querySelectorAll('button')].find((button) => button.getAttribute('aria-label').includes('right')).click();
@@ -204,16 +293,20 @@ await waitFor(
   `document.querySelector('[data-pdf-page="2"]')?.dataset.order === '1' && document.querySelector('[data-pdf-page="2"]')?.dataset.rotation === '90'`,
   'page reorder and rotation'
 );
+await waitForSettledResult('combined page extraction');
+
+// Page 4 is not selected, so the download does not depend on it: removing it
+// must leave the existing link exactly as it is rather than rebuilding.
+const hrefBeforeRemoval = await evaluate(
+  `document.querySelector('[data-pdf-page-result] a[download]').href`
+);
 await evaluate(`document.querySelector('[data-pdf-page="4"] .pdf-page-remove').click()`);
 await waitFor(`document.querySelectorAll('[data-pdf-page]').length === 3`, 'page removal');
-
-await evaluate(`
-  [...document.querySelectorAll('[data-pdf-page-tool] button')]
-    .find((button) => button.textContent.trim() === 'Extract 2 pages').click()
-`);
-await waitFor(
-  `document.querySelector('[data-pdf-page-result] a[download$=".pdf"]')`,
-  'combined page extraction'
+await new Promise((resolve) => setTimeout(resolve, 1200));
+assert.equal(
+  await evaluate(`document.querySelector('[data-pdf-page-result] a[download]')?.href ?? null`),
+  hrefBeforeRemoval,
+  'Removing an unselected page must not rebuild the download'
 );
 const combinedResult = await resultBase64();
 assert.equal(combinedResult.name, 'four-pages-extracted.pdf');
@@ -221,38 +314,37 @@ assert.equal(combinedResult.type, 'application/pdf');
 const combinedPdf = await PDFDocument.load(Buffer.from(combinedResult.base64, 'base64'));
 assert.equal(combinedPdf.getPageCount(), 2);
 assert.equal(combinedPdf.getPage(0).getRotation().angle, degrees(90).angle);
+assert.notEqual(
+  combinedResult.base64,
+  firstResult.base64,
+  'The download must follow the range, order, and rotation'
+);
 const resourcesAfterCombined = await evaluate(
   `performance.getEntriesByType('resource').map((entry) => entry.name)`
-);
-assert.ok(
-  resourcesAfterCombined.some(
-    (name) => name.includes('/_astro/index.') && !resourcesAfterUpload.includes(name)
-  ),
-  'The PDF export library should load only when export begins'
 );
 assert.equal(
   resourcesAfterCombined.some((name) => name.includes('jszip.min.')),
   false,
   'JSZip should stay lazy for combined PDF export'
 );
+// Three surviving thumbnails plus one result. The created/revoked totals are
+// deliberately not pinned: a rebuild that is superseded before it registers its
+// URL never creates one, so how many of them exist depends on how fast this
+// machine is. What must hold either way is that nothing is left behind.
+const editedStats = await evaluate(`window.__objectUrlStats()`);
+assert.equal(editedStats.active, 4, 'Three page thumbnails and one result');
+assert.equal(
+  editedStats.created - editedStats.revoked,
+  editedStats.active,
+  'Every superseded result must be revoked'
+);
 
 await evaluate(`(() => {
+  document.querySelectorAll('input[name="pdf-output-mode"]')[1].click();
   [...document.querySelectorAll('[data-pdf-page-tool] button')]
     .find((button) => button.textContent.trim() === 'Select all').click();
-  document.querySelectorAll('input[name="pdf-output-mode"]')[1].click();
 })()`);
-await waitFor(
-  `[...document.querySelectorAll('[data-pdf-page-tool] button')].some((button) => button.textContent.trim() === 'Split 3 pages')`,
-  'split mode'
-);
-await evaluate(`
-  [...document.querySelectorAll('[data-pdf-page-tool] button')]
-    .find((button) => button.textContent.trim() === 'Split 3 pages').click()
-`);
-await waitFor(
-  `document.querySelector('[data-pdf-page-result] a[download$=".zip"]')`,
-  'individual page split'
-);
+await waitForSettledResult('individual page split');
 const splitResult = await resultBase64();
 assert.equal(splitResult.name, 'four-pages-split-pages.zip');
 const zip = await JSZip.loadAsync(Buffer.from(splitResult.base64, 'base64'));
@@ -269,11 +361,66 @@ for (const name of splitNames) {
   const pagePdf = await PDFDocument.load(bytes);
   assert.equal(pagePdf.getPageCount(), 1);
 }
+await assertNoSubmitStep('after switching output mode');
+
+// Clearing the selection must take the download with it, rather than leaving a
+// link that no longer matches the pages above it.
+await evaluate(`
+  [...document.querySelectorAll('[data-pdf-page-tool] button')]
+    .find((button) => button.textContent.trim() === 'Clear selection').click()
+`);
+await waitFor(
+  `!document.querySelector('[data-pdf-page-result]')`,
+  'download withdrawn with the selection'
+);
+const clearedStats = await evaluate(`window.__objectUrlStats()`);
+assert.equal(clearedStats.active, 3, 'Only the three page thumbnails should remain');
 
 const workerRequests = await evaluate(
   `performance.getEntriesByType('resource').filter((entry) => entry.name.includes('pdf.worker')).map((entry) => entry.name)`
 );
 assert.ok(workerRequests.length >= 1, 'PDF worker should load after a PDF is selected');
+// The two variant routes are this tool's answer to the same question the chips
+// ask, so each one must open on its own chip. A chip that quietly reset the
+// output mode would break the promise the URL makes, and nothing else checks it.
+const variantModes = [];
+for (const [slug, expectedChip, extension] of [
+  ['extract-pages-from-pdf', 'One combined PDF', '.pdf'],
+  ['split-pdf-into-pages', 'Separate page files', '.zip'],
+]) {
+  await send('Page.navigate', { url: `${baseUrl}/tools/pdf-splitter/${slug}/` });
+  await waitFor(
+    `document.querySelector('[data-pdf-page-tool] input[type="file"]') && !document.querySelector('astro-island[ssr]')`,
+    `${slug} hydration`
+  );
+  await evaluate(`(() => {
+    const binary = atob('${sourceBase64}');
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([bytes], 'four-pages.pdf', { type: 'application/pdf' }));
+    const input = document.querySelector('[data-pdf-page-tool] input[type="file"]');
+    input.files = transfer.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  })()`);
+  await waitFor(`document.querySelectorAll('[data-pdf-page]').length === 4`, `${slug} previews`);
+  const chip = await evaluate(`
+    [...document.querySelectorAll('input[name="pdf-output-mode"]')]
+      .find((input) => input.checked)
+      ?.closest('.tool-chip')
+      ?.querySelector('.tool-chip-label')
+      ?.textContent?.trim() ?? null
+  `);
+  assert.equal(chip, expectedChip, `${slug} must open on its own chip`);
+  await waitForSettledResult(`${slug} automatic export`);
+  const download = await evaluate(
+    `document.querySelector('[data-pdf-page-result] a[download]').download`
+  );
+  assert.ok(download.endsWith(extension), `${slug} must produce a ${extension}`);
+  await assertNoSubmitStep(slug);
+  variantModes.push({ slug, chip, download });
+}
+
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
 await send('Target.closeTarget', { targetId: target.id });
@@ -281,10 +428,13 @@ socket.close();
 console.log(
   JSON.stringify({
     status: 'PDF_PAGE_TOOLS_BROWSER_OK',
+    firstRun: { name: firstResult.name, size: firstResult.size, pages: 4 },
     combined: { name: combinedResult.name, size: combinedResult.size, pages: 2 },
     split: { name: splitResult.name, size: splitResult.size, files: splitNames.length },
     uiLayouts,
     workerRequests: workerRequests.length,
+    objectUrls: clearedStats,
+    variantModes,
     browserErrors: actionableBrowserErrors.length,
   })
 );

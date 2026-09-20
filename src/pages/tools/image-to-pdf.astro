@@ -9,7 +9,7 @@ const faqItems = [
   {
     question: 'How do I convert images to PDF?',
     answer:
-      'Choose one or more images and arrange them in the page editor. Set the page size (A4, Letter, or fit to image), orientation, and margins, adjust each image, then click "Create PDF." The generated PDF uses the layout and page settings shown in the editor.',
+      'Choose one or more images and arrange them in the page editor. Set the page size (A4, Letter, or fit to image), and adjust orientation and margins under Fine-tune. There is no convert step: the PDF is rebuilt whenever the pages change, so the download below always matches the layout shown in the editor.',
   },
   {
     question: 'Can I move, resize, or rotate an image before converting?',
@@ -138,14 +138,17 @@ const breadcrumbSchema = {
         <h2>How to Convert Images to PDF</h2>
         <ol class="howto-steps">
           <li>Upload one or more images — each one becomes a page you can see straight away</li>
-          <li>Choose page size (A4, Letter, or Fit to Image), orientation, and margins</li>
+          <li>
+            Choose page size (A4, Letter, or Fit to Image); orientation and margins are under
+            Fine-tune
+          </li>
           <li>Drag an image to move it, drag a corner to resize it, or rotate it 90&deg;</li>
           <li>Drop an image onto another page to put several images on one page</li>
           <li>
             Drop it between two pages to give it a page of its own, or reorder pages with the arrows
             in each page heading
           </li>
-          <li>Click "Create PDF" — the generated file uses the layout shown in the editor</li>
+          <li>Download the PDF — it is rebuilt as you edit, so it always matches the editor</li>
         </ol>
       </section>
 
@@ -160,7 +163,7 @@ const breadcrumbSchema = {
       <section class="features-section">
         <h2>Features</h2>
         <ul class="features-list">
-          <li>Live page preview — what you see is what gets exported</li>
+          <li>Live page preview, and a PDF that is rebuilt as you edit — no convert step</li>
           <li>Move, resize, and rotate each image on its page</li>
           <li>Put several images on a single page, or one per page</li>
           <li>Full keyboard control for every editing action</li>

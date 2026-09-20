@@ -3,7 +3,11 @@ import type { PDFDocumentLoadingTask } from 'pdfjs-dist';
 import type { SetStateAction } from 'react';
 import DownloadResult from './DownloadResult';
 import FileUploader from './FileUploader';
+import ToolRunNote from './ToolRunNote';
+import { ToolChoices, type ToolChoice } from './ToolChoices';
+import { useAutoRun } from '../hooks/useAutoRun';
 import { useObjectUrlRegistry } from '../hooks/useObjectUrlRegistry';
+import { allVariants } from '../data/pdf-page-variants';
 import { formatSize } from '../lib/image-processing';
 import {
   createPdfOutputName,
@@ -30,6 +34,8 @@ interface PdfResult {
   name: string;
   size: number;
   url: string;
+  pages: number;
+  elapsedMs: number;
 }
 
 type OutputMode = 'combined' | 'individual';
@@ -38,12 +44,29 @@ interface PdfPageExtractorProps {
   defaultMode?: OutputMode;
 }
 
+/**
+ * The chips answer the same question the two variant routes answer — one file
+ * or one file per page — so they are derived from the variant table rather than
+ * written out a second time. That is also what keeps a variant landing page
+ * honest: arriving at /split-pdf-into-pages/ lights the matching chip instead of
+ * a chip quietly overriding what the URL promised.
+ */
+const MODE_CHOICES: readonly ToolChoice<OutputMode>[] = allVariants.map((variant) => ({
+  id: variant.defaultMode,
+  label: variant.modeLabel,
+  hint: variant.modeHint,
+}));
+
 function isMobileDevice(): boolean {
   if (typeof window === 'undefined') return false;
   const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
   return (
     window.matchMedia('(max-width: 640px)').matches || (typeof memory === 'number' && memory <= 4)
   );
+}
+
+function formatElapsed(elapsedMs: number): string {
+  return elapsedMs < 950 ? `${Math.round(elapsedMs)} ms` : `${(elapsedMs / 1000).toFixed(1)}s`;
 }
 
 async function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
@@ -66,17 +89,18 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
   const [range, setRange] = useState('');
   const [outputMode, setOutputMode] = useState<OutputMode>(defaultMode);
   const [loading, setLoading] = useState(false);
-  const [exporting, setExporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('Choose one PDF to begin.');
   const [error, setError] = useState('');
+  const [exportError, setExportError] = useState('');
   const [result, setResult] = useState<PdfResult | null>(null);
+  /** Changes for every successfully opened document, so the run key can name it. */
+  const [sourceId, setSourceId] = useState(0);
   const sourceBytesRef = useRef<Uint8Array | null>(null);
   const loadingTaskRef = useRef<PDFDocumentLoadingTask | null>(null);
   const loadGenerationRef = useRef(0);
   const objectUrls = useObjectUrlRegistry();
   const budget = useMemo(() => getPdfToolBudget(isMobileDevice()), []);
-  const busy = loading || exporting;
 
   useEffect(() => {
     return () => {
@@ -86,17 +110,12 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
     };
   }, []);
 
-  const clearResult = () => {
-    objectUrls.revoke('pdf-pages:result');
-    setResult(null);
-  };
-
   const clearPages = () => {
     for (const page of pages) objectUrls.revoke(`pdf-pages:thumbnail:${page.sourceIndex}`);
     setPages([]);
     setSelected(new Set());
+    setSourceId(0);
     sourceBytesRef.current = null;
-    clearResult();
   };
 
   const reset = () => {
@@ -110,7 +129,6 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
     setProgress(0);
     setStatus('Choose one PDF to begin.');
     setLoading(false);
-    setExporting(false);
   };
 
   const loadPdf = async (nextFile: File) => {
@@ -185,6 +203,7 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
       if (generation !== loadGenerationRef.current) return;
       setPages(rendered);
       setSelected(new Set(rendered.map((page) => page.sourceIndex)));
+      setSourceId(generation);
       setProgress(1);
       setStatus(`${pdfDocument.numPages} pages ready. Select, reorder, rotate, or remove pages.`);
       await loadingTask.destroy();
@@ -207,7 +226,6 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
 
   const updatePages = (nextPages: SetStateAction<PdfPageItem[]>) => {
     setPages(nextPages);
-    clearResult();
   };
 
   const applyRange = () => {
@@ -215,7 +233,6 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
       const indexes = parsePdfPageRange(range, pages.length);
       setSelected(new Set(indexes.map((index) => pages[index].sourceIndex)));
       setError('');
-      clearResult();
     } catch (rangeError) {
       setError(rangeError instanceof Error ? rangeError.message : 'Enter a valid page range.');
     }
@@ -228,7 +245,6 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
       else next.add(sourceIndex);
       return next;
     });
-    clearResult();
   };
 
   const rotatePage = (sourceIndex: number, delta: -90 | 90) => {
@@ -252,77 +268,145 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
     });
   };
 
-  const exportPages = async () => {
-    const sourceBytes = sourceBytesRef.current;
-    const targets = pages.filter((page) => selected.has(page.sourceIndex));
-    if (!file || !sourceBytes || targets.length === 0 || busy) return;
-    clearResult();
-    setError('');
-    setExporting(true);
-    setProgress(0.05);
-    setStatus(
-      outputMode === 'combined'
-        ? `Extracting ${targets.length} selected page${targets.length === 1 ? '' : 's'}…`
-        : `Splitting ${targets.length} selected page${targets.length === 1 ? '' : 's'}…`
-    );
+  /** The pages that go into the download, in the order they are shown. */
+  const targets = useMemo(
+    () => pages.filter((page) => selected.has(page.sourceIndex)),
+    [pages, selected]
+  );
 
-    try {
-      const { PDFDocument, degrees } = await import('pdf-lib');
-      const source = await PDFDocument.load(Uint8Array.from(sourceBytes));
-      let blob: Blob;
-      if (outputMode === 'combined') {
-        const output = await PDFDocument.create();
-        const copied = await output.copyPages(
-          source,
-          targets.map((page) => page.sourceIndex)
-        );
-        copied.forEach((page, index) => {
-          const rotation = normalizePdfRotation(page.getRotation().angle + targets[index].rotation);
-          page.setRotation(degrees(rotation));
-          output.addPage(page);
-        });
-        blob = resultBlob(await output.save({ useObjectStreams: true }), 'application/pdf');
-      } else {
-        const { default: JSZip } = await import('jszip');
-        const zip = new JSZip();
-        for (let index = 0; index < targets.length; index += 1) {
-          const target = targets[index];
+  // What the download depends on and nothing more: which source document, which
+  // pages in which order, how far each of them is turned, and which of the two
+  // outputs is wanted. Rotating a page that is not selected changes `pages` but
+  // not this, so it does not rebuild anything.
+  const exportKey = useMemo(
+    () =>
+      [
+        sourceId,
+        outputMode,
+        targets.map((page) => `${page.sourceIndex}:${page.rotation}`).join(','),
+      ].join('|'),
+    [sourceId, outputMode, targets]
+  );
+
+  useAutoRun({
+    key: exportKey,
+    enabled: sourceId > 0 && targets.length > 0 && !loading,
+    // Measured in this browser with pdf-lib on the real page: an ordinary
+    // office PDF rebuilds in tens of milliseconds, and the worst case allowed by
+    // the size budget is still well under a second. The extra margin over the
+    // 320 ms default is for the input shape rather than the cost — these are
+    // discrete clicks on page cards, and people select several in a row.
+    delayMs: 400,
+    onInvalidate: () => {
+      objectUrls.revoke('pdf-pages:result');
+      // Bail out when there is nothing to drop: removing a page re-runs this on
+      // every click, and handing React the value it already holds ends the
+      // update in place instead of re-rendering the whole page grid.
+      setResult((current) => (current === null ? current : null));
+      setExportError((current) => (current === '' ? current : ''));
+    },
+    run: async (isCurrent) => {
+      const sourceBytes = sourceBytesRef.current;
+      const currentFile = file;
+      if (!currentFile || !sourceBytes || targets.length === 0) return;
+      try {
+        const { PDFDocument, degrees } = await import('pdf-lib');
+        if (!isCurrent()) return;
+        // Loaded before the timer starts so the reported time is the rebuild
+        // itself, and left alone entirely when one combined PDF is wanted.
+        const zipModule = outputMode === 'individual' ? await import('jszip') : null;
+        if (!isCurrent()) return;
+
+        const startedAt = performance.now();
+        const source = await PDFDocument.load(Uint8Array.from(sourceBytes));
+        if (!isCurrent()) return;
+        let blob: Blob;
+        if (zipModule === null) {
           const output = await PDFDocument.create();
-          const [page] = await output.copyPages(source, [target.sourceIndex]);
-          page.setRotation(
-            degrees(normalizePdfRotation(page.getRotation().angle + target.rotation))
+          const copied = await output.copyPages(
+            source,
+            targets.map((page) => page.sourceIndex)
           );
-          output.addPage(page);
-          zip.file(
-            `page-${String(index + 1).padStart(3, '0')}-original-${target.originalPageNumber}.pdf`,
-            await output.save({ useObjectStreams: true })
-          );
-          setProgress(0.1 + ((index + 1) / targets.length) * 0.75);
+          if (!isCurrent()) return;
+          copied.forEach((page, index) => {
+            const rotation = normalizePdfRotation(
+              page.getRotation().angle + targets[index].rotation
+            );
+            page.setRotation(degrees(rotation));
+            output.addPage(page);
+          });
+          const saved = await output.save({ useObjectStreams: true });
+          if (!isCurrent()) return;
+          blob = resultBlob(saved, 'application/pdf');
+        } else {
+          const zip = new zipModule.default();
+          for (let index = 0; index < targets.length; index += 1) {
+            const target = targets[index];
+            const output = await PDFDocument.create();
+            const [page] = await output.copyPages(source, [target.sourceIndex]);
+            if (!isCurrent()) return;
+            page.setRotation(
+              degrees(normalizePdfRotation(page.getRotation().angle + target.rotation))
+            );
+            output.addPage(page);
+            const saved = await output.save({ useObjectStreams: true });
+            if (!isCurrent()) return;
+            zip.file(
+              `page-${String(index + 1).padStart(3, '0')}-original-${target.originalPageNumber}.pdf`,
+              saved
+            );
+          }
+          // Stored, not deflated. PDF content streams are already compressed, so
+          // deflating them again buys nothing measurable — on a 20-page, 74.6 MiB
+          // scanned fixture the archive came out the same 74.6 MiB either way —
+          // while costing 5.1s instead of 0.7s. That difference is what decides
+          // whether this output can follow the controls at all.
+          const archive = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+          if (!isCurrent()) return;
+          blob = archive;
         }
-        blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+        const elapsedMs = performance.now() - startedAt;
+
+        // Registered only now: `replace` revokes whatever this key held, so a
+        // superseded run that registered mid-work could pull the URL out from
+        // under the run that replaced it.
+        const url = objectUrls.replace('pdf-pages:result', blob);
+        setResult({
+          name: createPdfOutputName(currentFile.name, outputMode),
+          size: blob.size,
+          url,
+          pages: targets.length,
+          elapsedMs,
+        });
+      } catch (thrown) {
+        if (!isCurrent()) return;
+        setExportError(
+          thrown instanceof Error ? thrown.message : 'The selected PDF pages could not be exported.'
+        );
       }
-      const name = createPdfOutputName(file.name, outputMode);
-      const url = objectUrls.replace('pdf-pages:result', blob);
-      setResult({ name, size: blob.size, url });
-      setProgress(1);
-      setStatus(
-        `${targets.length} selected page${targets.length === 1 ? '' : 's'} exported successfully.`
-      );
-    } catch (exportError) {
-      setError(
-        exportError instanceof Error
-          ? exportError.message
-          : 'The selected PDF pages could not be exported.'
-      );
-      setStatus('PDF export failed.');
-      setProgress(0);
-    } finally {
-      setExporting(false);
-    }
-  };
+    },
+  });
+
+  /**
+   * True from the moment a change invalidates the download until the rebuild
+   * that replaces it lands — the debounce window included, because work is
+   * already owed by then. Derived rather than stored, so a run that is
+   * superseded mid-flight cannot leave the dot spinning on nothing.
+   */
+  const rebuilding = targets.length > 0 && result === null && exportError === '';
+
+  const runNote = rebuilding
+    ? outputMode === 'combined'
+      ? 'Building the combined PDF in your browser…'
+      : 'Building one PDF per page in your browser…'
+    : targets.length === 0
+      ? 'Select at least one page and the download appears here.'
+      : result
+        ? `Built in your browser in ${formatElapsed(result.elapsedMs)} from ${result.pages} page${result.pages === 1 ? '' : 's'}. The download follows the pages above; nothing was uploaded.`
+        : 'The download follows the pages above. Nothing is uploaded.';
 
   return (
-    <div className="pdf-page-tool" data-pdf-page-tool aria-busy={busy}>
+    <div className="pdf-page-tool" data-pdf-page-tool aria-busy={loading || rebuilding}>
       {!file ? (
         <FileUploader
           accept="application/pdf,.pdf"
@@ -338,13 +422,13 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
             <strong>{file.name}</strong>
             <span>{formatSize(file.size)}</span>
           </div>
-          <button type="button" className="btn btn-secondary" onClick={reset} disabled={busy}>
+          <button type="button" className="btn btn-secondary" onClick={reset} disabled={loading}>
             Choose another PDF
           </button>
         </div>
       )}
 
-      {busy && (
+      {loading && (
         <div className="conversion-progress" role="status" aria-live="polite">
           <div
             className="conversion-progress-track is-active"
@@ -389,20 +473,14 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => {
-                  setSelected(new Set(pages.map((page) => page.sourceIndex)));
-                  clearResult();
-                }}
+                onClick={() => setSelected(new Set(pages.map((page) => page.sourceIndex)))}
               >
                 Select all
               </button>
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => {
-                  setSelected(new Set());
-                  clearResult();
-                }}
+                onClick={() => setSelected(new Set())}
               >
                 Clear selection
               </button>
@@ -486,56 +564,30 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
             ))}
           </div>
 
-          <div className="pdf-export-panel">
-            <fieldset>
-              <legend>Export selected pages</legend>
-              <label>
-                <input
-                  type="radio"
-                  name="pdf-output-mode"
-                  checked={outputMode === 'combined'}
-                  onChange={() => {
-                    setOutputMode('combined');
-                    clearResult();
-                  }}
-                />
-                One combined PDF
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="pdf-output-mode"
-                  checked={outputMode === 'individual'}
-                  onChange={() => {
-                    setOutputMode('individual');
-                    clearResult();
-                  }}
-                />
-                One PDF per page in a ZIP
-              </label>
-            </fieldset>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => void exportPages()}
-              disabled={busy || selected.size === 0}
-            >
-              {exporting
-                ? 'Exporting…'
-                : outputMode === 'combined'
-                  ? `Extract ${selected.size} page${selected.size === 1 ? '' : 's'}`
-                  : `Split ${selected.size} page${selected.size === 1 ? '' : 's'}`}
-            </button>
+          <div className="tool-controls">
+            <ToolChoices
+              name="pdf-output-mode"
+              legend="How should the pages come out?"
+              help="The download rebuilds itself whenever you change the selection, order, or rotation."
+              choices={MODE_CHOICES}
+              value={outputMode}
+              onChange={(choice) => setOutputMode(choice.id)}
+            />
+
+            {exportError && (
+              <div className="status status-error" role="alert">
+                {exportError}
+              </div>
+            )}
+
+            <ToolRunNote busy={rebuilding}>{runNote}</ToolRunNote>
           </div>
         </>
       )}
 
-      {!busy && progress >= 1 && pages.length > 0 && (
-        <p className="status status-success">{status}</p>
-      )}
       {result && (
         <div className="conversion-result" data-pdf-page-result data-result-name={result.name}>
-          <DownloadResult {...result} />
+          <DownloadResult name={result.name} size={result.size} url={result.url} />
         </div>
       )}
     </div>

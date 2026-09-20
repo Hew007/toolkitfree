@@ -120,6 +120,17 @@ useAutoRun({
 **每个 `await` 之后的 `if (!isCurrent()) return;` 不是可选项。** 漏掉它产生的 bug 只在"输入到来的速度
 快过工作完成的速度"时才会出现——过期结果覆盖新鲜结果——而那恰好是没人盯得够仔细、抓不住它的时候。
 
+**`onInvalidate` 在 `enabled === false` 时照样会跑。** effect 里先调 `onInvalidate`，再 `if (!enabled) return`。
+这个顺序是对的——失效就该失效——但它意味着 `onInvalidate` 不能用来清那些"输入没了也该留着"的状态。
+在 `onInvalidate` 里清错误信息，会把"文件加载失败"的报错连同结果一起抹掉：加载失败时输入被清空、
+key 变了、`enabled` 变假，而 invalidate 仍然触发。把这类状态和结果分开存。
+
+**busy 必须从"产物欠着没有"推出来，不能从"有没有运行在跑"推出来。** 存一个 `setBusy(true)` / `finally
+setBusy(false)` 的标志位在自动运行下有死角：只要 `enabled` 在运行途中翻假（用户清空选择、换了文件、
+删掉最后一个选中项），就**没有新运行接手来清这个标志**，而旧运行因为 `isCurrent()` 为假不敢清——
+点会永远转下去。判据不是"用户点了哪个按钮"，是"`enabled` 会不会在运行途中变假"；只要会，存储式标志
+就是错的。派生写法长这样：`busy = 有输入 && 结果为空 && 没有错误`。
+
 `key` 要序列化的是**输出真正依赖的量，不是控件的当前值**。两者经常不同：裁剪框是浮点矩形，但输出
 只依赖取整后的像素矩形，照字面写会让每一次亚像素抖动都重跑一遍；PNG 无损，所以质量滑块不该进 PNG
 的 key。
@@ -143,7 +154,7 @@ object-URL 键会互相吊销，页面上已渲染的 `src` 就会指向一个�
 | 解码源文件       | 可达数百毫秒 | 自动运行，但**必须按文件缓存** |
 | 全分辨率重绘     | 6 Mpx 约 195 ms | **预览按预览分辨率算，导出才按全分辨率** |
 | 平铺切片（N 块） | 与 N **无关**，随总像素走 | 自动运行 |
-| PDF 页面组装     | 远小于 1 秒 | 自动运行               |
+| PDF 页面组装     | 随**拷贝字节数**走，约 8–17 ms/MiB；首建含动态 import 可达 ~1 s | 自动运行，但见下面两条 |
 | 背景移除         | 6–25 秒    | **保留显式按钮**       |
 | 视频转码（FFmpeg）| 常见 2–15 秒，合法最坏约 1 分钟，外加一次性 10 MB 引擎下载 / 32 MB wasm 堆 | **保留显式按钮** |
 
@@ -151,6 +162,17 @@ object-URL 键会互相吊销，页面上已渲染的 `src` 就会指向一个�
 就是 N 倍代价，于是把 Image Splitter 标成最可能推翻分类的那个。实测是错的——切片合起来正好覆盖原图
 一次，所以 4 块和 9 块几乎同价（4000×3000 源：376 ms vs 368 ms），144 块也只有 1.3 s。产出多份产物
 本身不贵，**同一批像素被重复处理才贵**。
+
+**PDF 那一行的结论成立，但理由不是表里那个数。** 两个工具分别实测过：PDF Splitter 的 40 页纯文本
+（48 ms）比 4 页图片（91 ms）还快一半——页数不是代价，字节才是；Image to PDF 的首建在 2×12 Mpx PNG
+上是 ~1.17 s，已经不算"远小于 1 秒"。**成立是因为反复发生的是重建而不是首建**：Image to PDF 按
+`(文件, 旋转)` 缓存栅格化后的 JPEG data URL，于是重建 < 25 ms，拖边距滑块既不解码也不重编码。没有
+这层缓存，表里的结论会把工具拖垮。
+
+**不要对已经压过的数据再压一遍。** PDF Splitter 的拆分导出原本用 `compression: 'DEFLATE'` 打 ZIP，
+20 页 74.6 MiB 扫描件耗时 5074 ms 而**体积一个字节都没小**——PDF 内容流本来就是 Flate 压缩的。改成
+`STORE` 是 714 ms。纯文本 PDF 上 deflate 能省 4.5%，代价是 52 ms vs 5 ms。这类"顺手压一下"的默认值
+足以让一个本该自动运行的工具掉进"保留按钮"那一类。
 
 还有一种和解码并列的成本陷阱：**每次重跑都按导出分辨率重算**。Image Enhancer 的解码本来就只做一次、
 不是瓶颈，真正会卡住拖动的是"每动一下滑块就把 6 Mpx 全图重新锐化一遍"。做法是两套像素预算：预览受
@@ -242,8 +264,13 @@ QR Generator 已是实时渲染、没有提交按钮。确认后停手即可。
 - [ ] 手改过某个值之后 `onReset` 出现，并能回到那个具名预设。
 - [ ] （A/B 类）快速连续改动不会产生过期输出。请在一次运行进行到一半时改设置来验证。
 - [ ] （A/B 类）失效时对象 URL 被吊销；注册表的活跃计数回到基线。
-- [ ] （C 类）改设置会作废旧结果，屏幕上不会挂着一个和上方控件不匹配的下载链接；并且改设置**不会**
-      偷偷开工——用"资源请求数不变"之类的方式证明它。
+- [ ] （C 类）屏幕上不会挂着一个和上方控件不匹配的下载链接；并且改设置**不会**偷偷开工——用"资源
+      请求数不变"之类的方式证明它。**作废不是唯一的正确答案。** Background Remover 改背景色走的是本地
+      重组合：拿缓存的抠图结果**就地更新**，不碰模型，`downloadReady` 里带上 `result.color === bgColor`
+      就保证了链接和控件永远一致。这比作废更好，不要为了套这一条把它改坏。真正该作废的是换文件。
+- [ ] （C 类）证明"不会偷偷开工"要用 `PerformanceObserver({ type: 'resource' })`，**不要只数
+      `getEntriesByType('resource').length`**——resource buffer 有上限，满了之后长度不再增长，断言会
+      白白通过。计数可以给人看，判据得是 observer。
 
 **代码**
 
@@ -274,9 +301,12 @@ QR Generator 已是实时渲染、没有提交按钮。确认后停手即可。
 
 **门禁** —— 全部必须通过，在你的 worktree 里运行：
 
+**`npx astro build` 必须排在 `npm run test` 前面**——`validate-image-converter.mjs` 读 `dist/`，没构建过
+就会报 `jpg-to-png should be built`，那是假失败，两个 agent 先后踩过。
+
 ```
-npm run typecheck && npm run lint && npm run format:check && npm run test
 npx astro build
+npm run typecheck && npm run lint && npm run format:check && npm run test
 npm run validate:seo && npm run validate:site
 SKIP_BUILD=1 E2E_PREVIEW_PORT=<你的> E2E_DEBUG_PORT=<你的> node scripts/run-browser-tests.mjs --only=<你的套件>.mjs
 ```
@@ -298,6 +328,50 @@ SKIP_BUILD=1 E2E_PREVIEW_PORT=<你的> E2E_DEBUG_PORT=<你的> node scripts/run-
 - 这个工具最终属于哪一类，是否和分配一致。
 - 芯片回答的是什么问题，为什么是这几个选项。
 - 你选择**不做**的事情，以及原因。
+
+## 共享件的已知缺口
+
+这些是改造过程中撞出来的，**由集成方处理，不要在 worktree 里自己补**。
+
+- **`ToolChoices` / `ToolPresets` 没有 `disabled`。** 对 C 类是结构性缺口——保留按钮的工具天然有
+  "运行中锁住控件"这个状态。目前的绕法是在外面套 `<fieldset className="tool-chip-group" disabled>`，
+  代价有两个：`.tool-chip` 没有 `:disabled` 样式，锁定态只能靠内联 opacity 表达；而且**测试探针必须写
+  `el.matches(':disabled')` 而不是 `el.disabled`**——disabled fieldset 不会给后代 button 设自己的属性。
+- **`ToolPresets` 没有 per-chip 的视觉槽。** Background Remover 原来的背景色芯片**本身就是那个颜色**，
+  换到共享件之后只剩文字。这是换件带来的唯一一处产品损失，记在账上：共享件若加 `swatch` 槽，这里
+  应该第一个加回来。（连带 `backgroundLabelColor()` 目前是孤儿函数，只剩单测在用，先留着。）
+- **`FineTune` 的 `onReset` 在面板收起时仍在 DOM 里。** 它渲染在 `<details>` 内部，收起只是不可见——
+  写断言时 `querySelector('.fine-tune-reset')` 拿得到、`.click()` 也能触发，不需要先展开面板。
+
+## 踩过的坑
+
+- **写浏览器探针时注意 island 是 SSR 的。** QR Generator 的 `#qr-text` 在 hydration **之前**就存在。
+  如果在 hydration 前用原生 setter 写 textarea 的值，会污染 React 的 value tracker，此后再写**相同**的
+  值不会触发 `onChange`，页面看起来像"输入无效"。既有套件因为 `navigate()` 会等 `astro-island[ssr]`
+  消失所以不受影响，自己临时写探针时才会踩。
+- **`validate-performance-browser.mjs` 的 Image Splitter CLS 断言对机器负载敏感。** 空闲容器上
+  `total: 0.0023` 通过；把 4 核压满再跑就是 `0.062461332290409975`，**十六位有效数字可复现**。原因是
+  CLS 值由几何定死（impact × distance fraction），负载只决定这次位移记不记得上：图片解码落在首次布局
+  之后，`.splitter-frame` 的 handle、两条 hint 和 `.tool-controls` 会塌成零尺寸再弹回来。**所以它既不是
+  flaky 也不是必挂的回归**——是慢设备和冷缓存上会真实兑现的 CLS 风险。多个 agent 同时跑浏览器时它必挂，
+  看到它不要去改断言，也不要归咎于自己的改动。
+- **`git stash` 不会带走 `dist/`。** 做基线对照必须重新 `npx astro build`，否则是拿新产物测旧源码。
+
+## 任务描述里出过的错
+
+到目前为止集成方写的任务描述里有**八处**没核实就写下的东西，全部被 agent 拒绝执行并回报——这是正确
+反应，记在这里是为了让下一批知道**任务描述不是权威，代码才是**：
+
+1. ID Photo 的芯片写成"护照、签证、身份证"，预设表里根本没有签证和身份证。
+2. ID Photo 的"底色"控件不存在。
+3. 预设表路径写错。
+4. 声称 batch-download 驱动 image-splitter（实际 0 处引用）。
+5. "N 片 = N 倍成本"的成本模型，实测是假的。
+6. 把 `PdfPageEditor.tsx` 说成 PDF Splitter 的组件（它是 Image to PDF 的）。
+7. 说 Image to PDF 有"手写芯片复刻"（实际是两个内联 `<select>` 加一个 `range`）。
+8. 说 Background Remover 的"背景色已经是芯片形态"——形态对，但触摸目标 28px 不达标。
+
+还有一类不算错但会误导的：说"`src/data/` 里的变体/FAQ 数据也要看"，而 QR Generator 根本没有那类文件。
 
 ## 绝对不能碰的文件
 

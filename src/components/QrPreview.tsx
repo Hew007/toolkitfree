@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface QrPreviewProps {
   data: string;
@@ -23,11 +23,28 @@ export default function QrPreview({
 }: QrPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const qrRef = useRef<any>(null);
+  /**
+   * Whether a renderer exists, which is exactly whether a download can produce a
+   * file. The renderer is imported on demand, so for the first code there is a
+   * stretch where the data is set and nothing can be exported yet.
+   *
+   * It is not cleared when settings change: the previous renderer stays usable
+   * and stays on screen until the new one replaces it, so the download keeps
+   * matching the preview instead of flickering off on every keystroke.
+   */
+  const [ready, setReady] = useState(false);
+  /**
+   * Set when a render throws. The container has already been emptied by then, so
+   * without this the page shows a blank square and says it is still drawing.
+   */
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || !data) {
       if (containerRef.current) containerRef.current.innerHTML = '';
       qrRef.current = null;
+      setReady(false);
+      setFailed(false);
       return;
     }
 
@@ -59,9 +76,23 @@ export default function QrPreview({
 
       qrRef.current = qr;
       qr.append(containerRef.current);
+      setReady(true);
+      setFailed(false);
     };
 
-    render();
+    // A rejection here has to be handled, not just logged. The container was
+    // emptied before the new renderer was built, and `ready` deliberately keeps
+    // its previous value so the download does not flicker off on every
+    // keystroke — so an unhandled failure leaves the old renderer in `qrRef`
+    // behind an empty preview, and the download buttons would hand over the
+    // previous code while the screen shows nothing. Dropping the renderer is
+    // what keeps the buttons honest.
+    render().catch(() => {
+      if (cancelled) return;
+      qrRef.current = null;
+      setReady(false);
+      setFailed(true);
+    });
 
     return () => {
       cancelled = true;
@@ -75,7 +106,7 @@ export default function QrPreview({
   };
 
   return (
-    <div data-qr-data={data} data-qr-ready={Boolean(data)} style={{ textAlign: 'center' }}>
+    <div data-qr-data={data} data-qr-ready={ready} style={{ textAlign: 'center' }}>
       <div
         ref={containerRef}
         style={{
@@ -103,7 +134,7 @@ export default function QrPreview({
             <button
               type="button"
               className="btn btn-primary"
-              disabled={!downloadEnabled}
+              disabled={!downloadEnabled || !ready}
               onClick={() => handleDownload('png')}
             >
               Download PNG
@@ -111,7 +142,7 @@ export default function QrPreview({
             <button
               type="button"
               className="btn btn-secondary"
-              disabled={!downloadEnabled}
+              disabled={!downloadEnabled || !ready}
               onClick={() => handleDownload('svg')}
             >
               Download SVG
@@ -120,13 +151,17 @@ export default function QrPreview({
           <p
             style={{
               fontSize: '0.8rem',
-              color: downloadEnabled ? '#8a8377' : '#b91c1c',
+              color: failed || (!downloadEnabled && ready) ? '#b91c1c' : '#8a8377',
               margin: 0,
             }}
           >
-            {downloadEnabled
-              ? 'Scan with your phone camera to test'
-              : 'Downloads are disabled until color contrast is improved.'}
+            {failed
+              ? 'This content could not be drawn as a QR code. Try shortening it, or lower the error correction level in Fine-tune.'
+              : !ready
+                ? 'Drawing your QR code…'
+                : downloadEnabled
+                  ? 'Scan with your phone camera to test'
+                  : 'Downloads are disabled until color contrast is improved.'}
           </p>
         </>
       )}
