@@ -4,6 +4,10 @@ const prettierTargets = ['src/**/*.{ts,tsx,astro}', 'scripts/*.mjs', '*.{json,mj
 
 const steps = [
   {
+    name: 'Lockfile registry',
+    args: ['scripts/validate-lockfile-registry.mjs'],
+  },
+  {
     name: 'LLM registry',
     args: ['scripts/sync-llms-registry.mjs', '--check'],
   },
