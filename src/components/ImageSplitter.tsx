@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import FileUploader from './FileUploader';
 import BatchResultsSummary from './BatchResultsSummary';
 import DownloadResult from './DownloadResult';
@@ -704,7 +705,16 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
           </div>
 
           {previewUrl && dimensions && (
-            <div className="splitter-frame" ref={frameRef}>
+            <div
+              className="splitter-frame"
+              ref={frameRef}
+              style={
+                {
+                  '--split-width': dimensions.width,
+                  '--split-height': dimensions.height,
+                } as CSSProperties
+              }
+            >
               <img
                 src={previewUrl}
                 width={dimensions.width}

@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-09-18
+Last updated: 2026-09-23
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -321,6 +321,79 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-09-23 — `favicon 浏览器套件接回` / `锁文件改回公共 registry`：
+
+  **`validate-favicon-browser.mjs` 从来没跑过。** 319 行，7 月加进来，Favicon 改造时还被认真改写过，
+  但**不在 `run-browser-tests.mjs` 的清单里、全仓库零引用**，`npm run test:e2e` 从未执行它。它不是
+  冗余的：**它是唯一检查"每个变体页按 URL 承诺的尺寸集打开"的地方**，包括 `/favicon-for-wordpress/`
+  只出 512 那一个图标——就是 9-17 所有者拍板的那件事，此前没有任何测试守着。已验证：把 WordPress
+  页的默认值改回全套，它报 `Timed out waiting for favicon-for-wordpress default run`。
+
+  接回清单后它**立刻失败**：它等的是 `readyState` 加文件输入框存在，但 island 是服务端渲染的，输入框
+  在 React hydration 之前就在了，那时设置文件触发的 `change` 没人接。改成和其余套件一样等 island 去掉
+  `ssr` 标记。这正是 `TOOL_INTERACTION.md`「踩过的坑」里记的那一条——13 个套件各自手写 CDP 底座，
+  同一个坑要在每个文件里分别踩一遍。
+
+  **扫了一遍，`validate-image-splitter-browser.mjs` 是另一个中招的。** 它在 master 上就**有 3/8 的概率
+  失败**（`Timed out waiting for split lines ready`），此前各批次跑它时恰好都赢了竞速。同样改法之后
+  连跑 45 次通过 44 次；那 1 次失败发生在没有抓输出的一批里，之后 35 次都没能复现，**不声称已经
+  归零**。现在 13 个浏览器套件都用同一种方式等 hydration。
+
+  **锁文件 823 / 878 条 `resolved` 指向 `registry.npmmirror.com`。** npm 按实际拉取的 registry 记录
+  `resolved`，锁文件最后是在配了镜像的机器上写的。任何访问不到该镜像的环境里，干净的 `npm ci` 都会
+  失败——受限网络直接拒绝该主机，安装停在一半、`node_modules/.bin` 为空，下游全部跑不起来。容器重启
+  后在本沙箱里实际发生过。
+
+  只换了主机名：镜像在同样路径提供同样的 tarball，所有 `integrity` 哈希原样不动，diff 就是 823 行
+  `resolved`。清空 npm 缓存、不带任何替换参数跑 `npm ci`：744 个包、零 integrity 错误、锁文件未被改写。
+
+  **本地继续用镜像完全没问题，只是不能进提交。** 新增 `validate-lockfile-registry.mjs`，排在
+  `npm run check` 第一步，报出越界主机和第一个包；对旧锁文件实测报
+  `823 lockfile entries resolve outside https://registry.npmjs.org/ (registry.npmmirror.com)`，
+  注释里给了一行 `sed` 的改法。
+
+- 2026-09-23 — `Image Splitter 上传位移修掉` / `CLS 断言改成确定性` / `发现跨工具的上传位移`：
+
+  **根因**：预览框 `.splitter-frame` 原来靠 `width: fit-content` 包住图片，图片是 `width/height: auto`。
+  所以在预览的 blob 加载完成之前，框是 **0 像素高**；加载完成的一瞬间，它下面的提示、控件、how-to
+  整体往下跳一个预览高度（400×300 测试图就是 300px）。这次位移记不记得上，取决于加载有没有赢过
+  首次绘制——这就是它"空闲时约三分之一概率失败、负载下几乎必挂"的原因。之前说它"负载相关"是
+  **框定太窄**，它在空闲机器上也会触发。
+
+  **修法**：框的尺寸改成从已知的原图尺寸算，不再依赖图片加载——`--split-width` / `--split-height`
+  两个 CSS 变量，宽度取 `min(列宽, 原图宽, 60vh × 宽高比)`，图片 `width: 100%` 加 `aspect-ratio`。
+  三个上限就是原来包裹式布局施加的那三个，所以尺寸行为不变：在 1440 和 390 两个宽度下测了极小
+  （200×100）、极高（1000×4000）、极宽（4000×500）、横图（3000×2000）四种形状，框与图完全重合
+  （百分比定位的切割线仍对齐）、比例正确、60vh 上限成立、小图不放大、无横向溢出。
+
+  **CPU 节流下复测**（1280×900，每档 5 次）：修复前 4× / 6× 下总值在 0.158–0.180 之间浮动，其中
+  0.085 那一条就是框塌陷造成的；修复后那一条消失，总值**恒定**。
+
+  **测试从"多半不会失败"改成"确定会失败"**：`validate-performance-browser.mjs` 里 Image Splitter 那条
+  现在在 4× CPU 节流下上传，并新增一条**不依赖时序**的结构断言——上传完成后同步移除 `src`，框高度
+  必须不变。验证：退回修复前的代码，**3 次全部失败**（两次死在 CLS 数值上，一次 CLS 侥幸赢了竞速，
+  被结构断言拦下）；带修复 3 次全过。
+
+  **另外发现一个跨所有工具的问题，尚未处理，需要所有者决定。** 在 1280×900 的桌面视口下，通过文件
+  选择框上传之后，工作区替换上传框、把下方的 how-to / features 区块推出首屏，产生的 CLS：
+
+  | 工具 | 上传 CLS |
+  | --- | --- |
+  | Image Compressor | 0.08 |
+  | Image Enhancer | 0.12 |
+  | Image Splitter | 0.16 |
+  | Image Collage | 0.18 |
+  | Image Resizer | 0.18–0.19 |
+  | Image to PDF | **0.27** |
+
+  Google 的"良好"线是 0.1，0.25 以上算"差"。**文件选择框上传大概率不会被 `hadRecentInput` 豁免**——
+  用户在系统对话框里停留远超 500ms，`change` 事件触发时页面上没有近期输入。这和
+  2026-08 Cloudflare 在 Image Splitter / Image to PDF 路由族上看到的 CLS 样本吻合。
+  既有套件没看到它，是因为套件的默认视口里 how-to 本来就在首屏之外。
+
+  这是一个版面取舍：要么给工具区预留接近工作区的最小高度（上传前会有一块留白），要么调整 how-to
+  的位置，要么接受。**本次没动**，只修了 Image Splitter 那个确定性的、纯属实现缺陷的部分。
 
 - 2026-09-18 — `交互改造收尾 14/14` / `QR 的 D 类判断被推翻` / `CLS 那条断言查清楚了`：
 

@@ -2275,23 +2275,37 @@ input[type='range'] {
 .splitter-frame {
   position: relative;
   display: block;
-  width: fit-content;
+  /*
+   * Sized from the source dimensions, which are known before the preview's
+   * blob has loaded — never from the loaded image. The frame used to
+   * shrink-wrap the image, so until the blob arrived it was zero pixels tall,
+   * and when it arrived everything below it (hints, controls, the how-to)
+   * jumped down by the full preview height. Whether that shift was recorded
+   * depended on whether the load beat the first paint, which is why it failed
+   * one run in three on an idle machine and nearly always on a slow one.
+   *
+   * The three limits are the ones the shrink-wrap used to apply: the column
+   * width, the image's own width, and a 60vh height cap expressed as a width.
+   */
+  width: min(
+    100%,
+    calc(var(--split-width) * 1px),
+    calc(60vh * var(--split-width) / var(--split-height))
+  );
   max-width: 100%;
   margin: 0 auto 0.75rem;
   line-height: 0;
 }
 
 /*
- * The frame shrink-wraps the image, so capping the image height also caps the
- * frame and keeps the percentage-positioned overlays aligned. Without this a
- * tall source fills the screen and buries the controls.
+ * The image fills the frame exactly, so the percentage-positioned overlays stay
+ * aligned with it, and the aspect ratio gives it its height before it decodes.
  */
 .splitter-frame img {
   display: block;
-  max-width: 100%;
-  max-height: 60vh;
-  width: auto;
+  width: 100%;
   height: auto;
+  aspect-ratio: var(--split-width) / var(--split-height);
 }
 
 .splitter-tile {

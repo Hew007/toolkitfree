@@ -310,13 +310,45 @@ assert.ok(
 );
 
 await navigate('/tools/image-splitter/');
+// Throttled on purpose. The shift this guards appears only when the preview's
+// blob loads after the first paint, so on an unthrottled machine it showed up
+// about one run in three and passed the rest — a check that mostly cannot fail.
+// At 4x the load reliably lands after paint, which is what a mid-range phone
+// does anyway, so a regression fails every time instead of occasionally.
+await send('Emulation.setCPUThrottlingRate', { rate: 4 });
 await uploadGeneratedPng({ name: 'split.png', width: 400, height: 300 });
 await waitFor(`Boolean(document.querySelector('.splitter-frame img'))`, 'splitter preview');
+await waitFor(
+  `document.querySelector('.splitter-frame img')?.complete === true`,
+  'splitter preview loaded'
+);
 await new Promise((resolve) => setTimeout(resolve, 750));
+await send('Emulation.setCPUThrottlingRate', { rate: 1 });
 const imageSplitterLayoutShift = await readLayoutShiftMetrics();
 assert.ok(
   imageSplitterLayoutShift.total <= 0.05,
   `Image Splitter upload CLS should stay at or below 0.05: ${JSON.stringify(imageSplitterLayoutShift)}`
+);
+// The CLS number above still depends on a race, even throttled. This is the
+// invariant behind it, checked without one: the preview frame's height must come
+// from the known dimensions, not from the image having loaded. Dropping `src`
+// takes the image back to its unloaded state synchronously; if the frame shrinks,
+// content below it jumps whenever a real load lands after the first paint.
+const splitterFrameBox = await evaluate(`
+  (() => {
+    const frame = document.querySelector('.splitter-frame');
+    const image = frame.querySelector('img');
+    const loaded = frame.getBoundingClientRect().height;
+    const source = image.getAttribute('src');
+    image.removeAttribute('src');
+    const unloaded = frame.getBoundingClientRect().height;
+    image.setAttribute('src', source);
+    return { loaded: Math.round(loaded), unloaded: Math.round(unloaded) };
+  })()
+`);
+assert.ok(
+  splitterFrameBox.loaded > 0 && splitterFrameBox.unloaded === splitterFrameBox.loaded,
+  `The splitter frame must hold its height before the preview loads: ${JSON.stringify(splitterFrameBox)}`
 );
 
 await navigate('/tools/favicon-generator/');
