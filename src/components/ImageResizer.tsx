@@ -214,9 +214,23 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
     width: Math.max(1, width),
     height: Math.max(1, height),
   };
-  const previewDisplayScale = previewBaseline
-    ? Math.min(320 / previewBaseline.width, 260 / previewBaseline.height)
-    : 1;
+  // The scale reference is fixed by the preview image's onLoad. Until then it used
+  // to fall back to a scale of 1, so the frame first rendered at up to 960 x 760
+  // and then snapped to about 320 x 260 when the image arrived — a layout shift
+  // that pushed everything under the preview around.
+  //
+  // Before the load, use the requested size instead. For exact sizes (every
+  // platform preset, or Custom without the ratio lock) that is precisely what
+  // onLoad computes, so nothing moves. With the ratio lock the true output
+  // depends on the source's shape, which is unknown until it decodes; the
+  // requested size is the closest guess available, and the frame only adjusts by
+  // the difference in shape. (The file header would give the shape sooner, but it
+  // ignores EXIF rotation, so a rotated phone photo would be guessed wrong.)
+  const scaleBaseline = previewBaseline ?? {
+    width: Math.max(1, width),
+    height: Math.max(1, height),
+  };
+  const previewDisplayScale = Math.min(320 / scaleBaseline.width, 260 / scaleBaseline.height);
   const previewMinimumScale = Math.max(
     96 / displayedPreviewDimensions.width,
     72 / displayedPreviewDimensions.height

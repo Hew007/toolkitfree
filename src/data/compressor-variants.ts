@@ -1,14 +1,18 @@
 import type { ToolVariantPageData, ToolVariantSummary } from './content-types';
+import type { PurposeId } from '../components/ImageCompressor';
 
 interface CompressorVariant extends ToolVariantPageData {
   slug: string;
   format: 'PNG' | 'JPG' | 'Any';
+  /** The purpose chip this page opens on — the one its URL already names. */
+  purpose: PurposeId;
 }
 
 const variants = [
   {
     slug: 'compress-png',
     format: 'PNG',
+    purpose: 'web',
     title: 'Compress PNG Images Online Free',
     description:
       'Re-encode PNG images or reduce their dimensions in your browser. A smaller output is not guaranteed. Batch processing is supported.',
@@ -38,6 +42,7 @@ const variants = [
   {
     slug: 'compress-jpg',
     format: 'JPG',
+    purpose: 'web',
     title: 'Compress JPG Images Online Free',
     description:
       'Compress JPG images in your browser with adjustable quality from 10–100% and batch support.',
@@ -67,6 +72,7 @@ const variants = [
   {
     slug: 'compress-for-email',
     format: 'Any',
+    purpose: 'email',
     title: 'Compress Images for Email Attachment',
     description:
       'Compress images to fit email attachment limits. Most email providers limit attachments to 25MB. Free online image compressor.',
@@ -91,6 +97,7 @@ const variants = [
   {
     slug: 'compress-for-web',
     format: 'Any',
+    purpose: 'web',
     title: 'Compress Images for Web - Optimize Website Assets',
     description:
       'Compress and optimize images for websites. Faster page load times. Better SEO. Free online image optimizer.',
@@ -115,6 +122,7 @@ const variants = [
   {
     slug: 'compress-for-whatsapp',
     format: 'Any',
+    purpose: 'chat',
     title: 'Compress Images for WhatsApp - Control File Size',
     description:
       'Resize or re-encode images before sharing on WhatsApp so you can inspect the result first.',
@@ -139,6 +147,7 @@ const variants = [
   {
     slug: 'compress-to-100kb',
     format: 'Any',
+    purpose: 'exact',
     title: 'Compress Image to 100KB - Verified Target Size',
     description:
       'Compress images to 100KB or less using bounded quality and dimension search. Every result states whether the target was met.',

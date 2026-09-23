@@ -20,6 +20,17 @@ const { title, description, intro, features, defaultRows, defaultCols, faq, slug
 
 const pageUrl = toPublicUrl(`/tools/image-splitter/${Astro.params.variant}`);
 
+// Steps for the grid this page opens on. The count comes from the same rows and
+// columns the tool is given, so the two cannot disagree.
+const pieceCount = defaultRows * defaultCols;
+const gridPhrase = `${defaultCols} across and ${defaultRows} down — ${pieceCount} pieces`;
+const howToHeading = {
+  'split-into-2': 'How to Split an Image in Half',
+  'split-into-4': 'How to Split an Image Into 4',
+  'instagram-grid': 'How to Make an Instagram Grid',
+  'split-for-printing': 'How to Split an Image for Printing',
+}[slug as string];
+
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
@@ -73,6 +84,41 @@ const faqStructuredData = {
       <div style="margin-top: 1.5rem;">
         <ImageSplitter client:load defaultRows={defaultRows} defaultCols={defaultCols} />
       </div>
+
+      <section class="howto-section">
+        <h2>{howToHeading}</h2>
+        <ol class="howto-steps">
+          <li>Upload a JPG, PNG, or WebP image</li>
+          <li>
+            {
+              slug === 'split-for-printing'
+                ? `It starts as an even grid, ${gridPhrase}; set more rows and columns in Fine-tune for a larger poster`
+                : `It starts as an even grid, ${gridPhrase}`
+            }
+          </li>
+          <li>Drag any split line to move it, or type its exact pixel position in Fine-tune</li>
+          {
+            slug === 'split-for-printing' && (
+              <li>Set Discard at each line in Fine-tune to trim a band for printer margins</li>
+            )
+          }
+          {
+            slug === 'instagram-grid' ? (
+              <li>
+                Download the nine pieces, named by row and column, and post them in reverse: start
+                with row 3, column 3 and finish with row 1, column 1
+              </li>
+            ) : slug === 'split-for-printing' ? (
+              <li>
+                Download the tiles, then combine them into one printable file with{' '}
+                <a href="/tools/image-to-pdf/">Image to PDF</a>
+              </li>
+            ) : (
+              <li>The pieces are cut as you go — download them individually or once as a ZIP</li>
+            )
+          }
+        </ol>
+      </section>
 
       <section class="features-section">
         <h2>How This Split Works</h2>

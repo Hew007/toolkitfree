@@ -361,11 +361,38 @@ or `owner approved`. Never infer owner approval.
 
   **可见变化**：上传之后 how-to 不再显示，移除文件回到上传状态时它会回来。
 
-  **未解决、需要所有者决定**：6 个变体模板下的 **32 个变体页没有 how-to**，上传框下面直接是
-  features，所以仍然有 0.08–0.28 的位移（compressor 0.08、cropper 0.09、favicon 0.10、
-  splitter 0.15、resizer 0.17、image-to-pdf 0.27）。要修就得给这些变体页写 how-to——这同时也回应
-  之前"变体页内容薄"的问题，但属于内容工作。converter、pdf-splitter、video-to-gif 三个模板本来就有
-  how-to，已被这次改动覆盖。
+  **变体页（所有者 9-23 批准"写吧"）**：6 个变体模板下的 32 个变体页原来**没有 how-to**，上传框下面
+  直接是 features，位移 0.08–0.28。现在每个模板都写了 how-to，放在工具正下方，**步骤按该页真实打开的
+  状态来写**（它锁定的用途 / 尺寸 / 比例 / 网格 / 页面预设），不是照抄主页面。32 个页面逐一渲染核对过
+  文字。每条步骤里的 UI 名称都对过源码：比如 100KB 页的 Target size 字段在芯片下面而不是 Fine-tune 里，
+  裁剪比例在侧栏 Crop shape 下而不是图片上方，Favicon 只能整包下载 ZIP。
+
+  1280×900 下 32 个变体页全部降到 0.1 以下（例如 image-to-pdf/image-to-a4-pdf 0.277 → 0.074、
+  resize-for-linkedin 0.265 → 0.044、split-for-printing 0.137 → 0.010）。
+
+  **写 how-to 的过程中查出并修掉的问题**：
+
+  - **`/compress-for-email/` 和 `/compress-for-whatsapp/` 打开时选中的是 Web page。** URL 承诺的
+    用途没有点亮，违反 `TOOL_INTERACTION.md`「芯片不得覆盖变体页面已经钉死的值」。现在用途写进变体
+    数据（单一来源），组件按它初始化；email → Email attachment，whatsapp → Chat and messaging，
+    100kb → Exact size in KB。compressor 浏览器套件新增逐页断言，把映射改回全 web 会报
+    `compress-for-email should open on the email purpose`。
+  - **Resizer 平台预设会拉伸图片。** 预设按精确宽高绘制，"Maintain aspect ratio" 在预设下是禁用的，
+    所以 4:3 的照片选 Instagram 1080×1080 会被压扁。**这是既有行为，没有改**，但 how-to 如实写明，并给出
+    两条出路：有对应比例的先用 Image Cropper 裁（1:1、16:9、9:16 有直链），或切到 Custom（比例锁会自动
+    打开）再填尺寸。两条 FAQ 答案原来是错的，已改答案、未改问题：1920×1080 页说"勾选 Maintain aspect
+    ratio 即可不拉伸"（预设下这个勾选框根本点不了）；Instagram 页说"用我们的工具调整尺寸就能避免被裁或
+    加黑边"（实际是拉伸）。**是否把平台预设改成裁切填充，属于产品决定，留给所有者。**
+  - **Resizer 预览框在图片加载前后尺寸不同。** 加载前缩放比例回退为 1，框先按最大 960×760 渲染，加载后
+    缩到约 320×260，把下面的内容整体顶走——和 Image Splitter 同一类问题，约三分之一的上传会触发，
+    resize-for-youtube 最坏到 0.15。现在加载前用请求尺寸作基准：平台预设下这正是加载后算出的值，
+    框不再变化；Custom 加比例锁时只差源图形状的差异。**没用文件头读尺寸**，因为头解析不处理 EXIF 旋转，
+    手机竖拍照片会猜错。主 resizer 页在横、宽、竖三种源图下，4× 节流仍不超过 0.087（原来 0.12）。
+
+  **测试**：性能套件的桌面上传检查扩成三个页面——主 Image to PDF、变体 image-to-a4-pdf、4× 节流下的
+  resize-for-youtube。已验证：拿掉变体 how-to 报 `a how-to must sit under the tool and be visible`；
+  退回 resizer 旧逻辑 3 次全失败（0.150 / 0.155 / 0.155）。其余 12 个浏览器套件全绿；secondary-tools
+  只剩下不到模型那一条。
 
 - 2026-09-23 — `favicon 浏览器套件接回` / `锁文件改回公共 registry`：
 

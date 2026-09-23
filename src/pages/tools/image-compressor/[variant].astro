@@ -1,7 +1,7 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import ToolDirectory from '../../../components/ToolDirectory.astro';
-import ImageCompressor from '../../../components/ImageCompressor';
+import ImageCompressor, { PURPOSES } from '../../../components/ImageCompressor';
 import { allVariants, variantData } from '../../../data/compressor-variants';
 
 export function getStaticPaths() {
@@ -11,8 +11,36 @@ export function getStaticPaths() {
   }));
 }
 
-const { format, title, description, faq } = Astro.props;
-const isTargetSizeMode = Astro.params.variant === 'compress-to-100kb';
+const { format, purpose, title, description, faq } = Astro.props;
+const isTargetSizeMode = purpose === 'exact';
+
+// The steps describe what this page actually opens on: its format filter and the
+// purpose chip its URL names. They sit where the how-to sits on the main tool page,
+// directly under the tool, so the workspace grows into their space on upload.
+const purposeLabel = PURPOSES.find((entry) => entry.id === purpose)?.label ?? '';
+const formatNoun =
+  format === 'PNG' ? 'PNG images' : format === 'JPG' ? 'JPG images' : 'JPG, PNG, or WebP images';
+const howToHeading = {
+  'compress-png': 'How to Compress PNG Images',
+  'compress-jpg': 'How to Compress JPG Images',
+  'compress-for-email': 'How to Compress Images for Email',
+  'compress-for-web': 'How to Compress Images for the Web',
+  'compress-for-whatsapp': 'How to Compress Images for WhatsApp',
+  'compress-to-100kb': 'How to Compress an Image to 100KB',
+}[Astro.params.variant as string];
+const howToSteps = isTargetSizeMode
+  ? [
+      `Choose one or more ${formatNoun}`,
+      'Exact size in KB is already selected with a 100 KB target — change the Target size field under it if you need a different size',
+      'Each file is encoded toward the target and labeled Target met only when the actual file is 100 KB or less; otherwise the closest result is marked as such',
+      'Download files individually or once as a ZIP',
+    ]
+  : [
+      `Choose one or more ${formatNoun}`,
+      `${purposeLabel} is already selected, so quality and maximum width are set for it — pick another purpose if the file is going somewhere else`,
+      'Compare the three results and their real file sizes, or open Fine-tune to set quality and maximum width yourself',
+      'Download files individually or once as a ZIP',
+    ];
 
 const pageUrl = `https://toolkitfree.net/tools/image-compressor/${Astro.params.variant}`;
 
@@ -77,10 +105,17 @@ const faqStructuredData = {
 
       <ImageCompressor
         client:load
-        defaultMode={isTargetSizeMode ? 'target' : 'quality'}
+        defaultPurpose={purpose}
         defaultTargetKB={100}
         defaultFormat={format}
       />
+
+      <section class="howto-section">
+        <h2>{howToHeading}</h2>
+        <ol class="howto-steps">
+          {howToSteps.map((step) => <li>{step}</li>)}
+        </ol>
+      </section>
 
       <section class="features-section">
         <h2>Features</h2>
