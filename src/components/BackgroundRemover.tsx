@@ -404,6 +404,7 @@ export default function BackgroundRemover() {
       data-background-stage={progress?.stage ?? 'idle'}
       data-active-background={bgColor}
       data-background-composing={composing ? 'true' : 'false'}
+      data-tool-input={file !== null ? 'present' : 'empty'}
       data-background-model-runs={modelRuns}
       data-background-timing={
         timing ? timing.stages.map((entry) => `${entry.stage}:${entry.ms}`).join(',') : undefined

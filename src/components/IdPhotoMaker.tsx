@@ -497,7 +497,11 @@ export default function IdPhotoMaker() {
   ].join(' · ');
 
   return (
-    <div data-id-photo-maker aria-busy={busy}>
+    <div
+      data-id-photo-maker
+      aria-busy={busy}
+      data-tool-input={imageUrl && source && crop ? 'present' : 'empty'}
+    >
       {busy && (
         <div className="visually-hidden" role="status" aria-live="polite">
           Preparing your photo and print sheet.

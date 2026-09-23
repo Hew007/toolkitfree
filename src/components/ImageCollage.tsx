@@ -625,7 +625,11 @@ export default function ImageCollage() {
     .join(' · ');
 
   return (
-    <div className="image-collage" data-image-collage>
+    <div
+      className="image-collage"
+      data-image-collage
+      data-tool-input={items.length > 0 ? 'present' : 'empty'}
+    >
       <FileUploader
         accept="image/jpeg,image/png,image/webp"
         multiple

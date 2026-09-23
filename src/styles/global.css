@@ -2039,6 +2039,28 @@ li {
   margin-top: 2rem;
 }
 
+/*
+ * The how-to is for before you start, so once a tool has input it steps aside
+ * and the workspace takes its place.
+ *
+ * This is a layout-stability fix, not tidying. The how-to sits directly under
+ * the uploader and is on the first screen at desktop sizes. When a file arrived,
+ * the workspace replaced the much shorter uploader and pushed the how-to and
+ * everything after it down — a shift of 0.08 to 0.27 on a 1280x900 screen.
+ * Picking a file through the system dialog leaves no recent input for the
+ * browser to excuse it by, so real visitors were scored for it. Moving the
+ * how-to elsewhere does not help: whatever moves up into its place gets pushed
+ * instead. Letting the workspace grow into the space the how-to was holding
+ * does: every upload tool measures 0.03 or less.
+ *
+ * `data-tool-input` is set by each upload tool from the same condition it uses
+ * to swap the uploader for its workspace. Without `:has()` the how-to simply
+ * stays, which is the old behavior.
+ */
+.tool-content:has([data-tool-input='present']) > .howto-section {
+  display: none;
+}
+
 .howto-section h2 {
   font-size: 1.5rem;
   margin-bottom: 1rem;

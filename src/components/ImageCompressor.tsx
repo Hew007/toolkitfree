@@ -64,7 +64,12 @@ type CompressionOutcome =
   { status: 'success'; value: VariantResults } | { status: 'failure'; value: FailedFile };
 
 interface Props {
-  defaultMode?: CompressionMode;
+  /**
+   * The purpose chip a page opens on. Variant routes name a purpose in their URL
+   * (`/compress-for-email/`), so the chip has to start there rather than on the
+   * general default.
+   */
+  defaultPurpose?: PurposeId;
   defaultTargetKB?: number;
   defaultFormat?: string;
 }
@@ -87,7 +92,7 @@ const INPUT_FORMATS: Record<
  * quality and width the fine-tune panel then exposes, so nothing is hidden —
  * only pre-filled.
  */
-type PurposeId = 'web' | 'email' | 'chat' | 'print' | 'exact';
+export type PurposeId = 'web' | 'email' | 'chat' | 'print' | 'exact';
 
 interface Purpose {
   id: PurposeId;
@@ -98,7 +103,7 @@ interface Purpose {
   maxWidth: number;
 }
 
-const PURPOSES: readonly Purpose[] = [
+export const PURPOSES: readonly Purpose[] = [
   {
     id: 'web',
     label: 'Web page',
@@ -233,14 +238,12 @@ function scaleDimension(value: number, scale: number): number {
 }
 
 export default function ImageCompressor({
-  defaultMode = 'quality',
+  defaultPurpose: defaultPurposeId = 'web',
   defaultTargetKB = 100,
   defaultFormat = 'Any',
 }: Props) {
   const inputFormat = INPUT_FORMATS[defaultFormat] ?? INPUT_FORMATS.Any;
-  const defaultPurpose = PURPOSES.find((purpose) =>
-    defaultMode === 'target' ? purpose.id === 'exact' : purpose.id === 'web'
-  ) as Purpose;
+  const defaultPurpose = PURPOSES.find((purpose) => purpose.id === defaultPurposeId) as Purpose;
 
   const [files, setFiles] = useState<QueuedFile[]>([]);
   const [purposeId, setPurposeId] = useState<PurposeId>(defaultPurpose.id);
@@ -561,7 +564,7 @@ export default function ImageCompressor({
   ].join(' · ');
 
   return (
-    <div aria-busy={busy}>
+    <div aria-busy={busy} data-tool-input={files.length > 0 ? 'present' : 'empty'}>
       {busy && (
         <div className="visually-hidden" role="status" aria-live="polite">
           Compressing images.

@@ -494,7 +494,12 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
   ].join(' · ');
 
   return (
-    <div className="animation-converter" data-animation-converter aria-busy={converting}>
+    <div
+      className="animation-converter"
+      data-animation-converter
+      aria-busy={converting}
+      data-tool-input={file !== null ? 'present' : 'empty'}
+    >
       <FileUploader
         accept={ACCEPTED_INPUTS}
         multiple={false}

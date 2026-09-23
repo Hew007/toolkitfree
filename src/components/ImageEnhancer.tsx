@@ -303,7 +303,11 @@ export default function ImageEnhancer() {
   );
 
   return (
-    <div data-image-enhancer aria-busy={processing}>
+    <div
+      data-image-enhancer
+      aria-busy={processing}
+      data-tool-input={source !== null ? 'present' : 'empty'}
+    >
       {!source ? (
         <>
           <FileUploader

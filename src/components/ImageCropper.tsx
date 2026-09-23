@@ -379,7 +379,11 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
   };
 
   return (
-    <div data-crop-aspect={aspectPreset} aria-busy={processing}>
+    <div
+      data-crop-aspect={aspectPreset}
+      aria-busy={processing}
+      data-tool-input={imageUrl !== null ? 'present' : 'empty'}
+    >
       {!imageUrl ? (
         <FileUploader
           accept="image/jpeg,image/png,image/webp"

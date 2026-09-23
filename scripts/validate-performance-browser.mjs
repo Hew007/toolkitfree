@@ -309,6 +309,55 @@ assert.ok(
   `Image-to-PDF upload CLS should stay at or below 0.1: ${JSON.stringify(imageToPdfLayoutShift)}`
 );
 
+// The same kind of upload at a desktop size, where the how-to is on the first
+// screen. The default viewport above is small enough that everything under the
+// tool is already below the fold, which is how this suite missed shifts of up to
+// 0.28: the workspace replaced the uploader and pushed the how-to down. The how-to
+// now steps aside once the tool has input, so the workspace grows into its space.
+//
+// A main page, a variant page (variants got their own how-to for this), and the
+// resizer throttled: its preview frame used to render at one size and snap to
+// another when the image loaded, which only showed up when the load lost the race.
+await send('Emulation.setDeviceMetricsOverride', {
+  width: 1280,
+  height: 900,
+  deviceScaleFactor: 1,
+  mobile: false,
+});
+const desktopUploadShifts = {};
+for (const [route, throttle] of [
+  ['/tools/image-to-pdf/', 1],
+  ['/tools/image-to-pdf/image-to-a4-pdf/', 1],
+  ['/tools/image-resizer/resize-for-youtube/', 4],
+]) {
+  await navigate(route);
+  assert.equal(
+    await evaluate(`(() => {
+      const howTo = document.querySelector('.tool-content > .howto-section');
+      return Boolean(howTo) && getComputedStyle(howTo).display !== 'none';
+    })()`),
+    true,
+    `${route}: a how-to must sit under the tool and be visible before a file is chosen`
+  );
+  await send('Emulation.setCPUThrottlingRate', { rate: throttle });
+  await uploadGeneratedPng({ name: 'page.png', width: 400, height: 300 });
+  await waitFor(`Boolean(document.querySelector('[data-tool-input="present"]'))`, `${route} input`);
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  await send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  const shift = await readLayoutShiftMetrics();
+  assert.equal(
+    await evaluate(`getComputedStyle(document.querySelector('.howto-section')).display`),
+    'none',
+    `${route}: the how-to should step aside once the tool has input`
+  );
+  assert.ok(
+    shift.total <= 0.1,
+    `${route} desktop upload CLS should stay at or below 0.1: ${JSON.stringify(shift)}`
+  );
+  desktopUploadShifts[route] = Number(shift.total.toFixed(4));
+}
+await send('Emulation.clearDeviceMetricsOverride');
+
 await navigate('/tools/image-splitter/');
 // Throttled on purpose. The shift this guards appears only when the preview's
 // blob loads after the first paint, so on an unthrottled machine it showed up
@@ -436,6 +485,7 @@ console.log(
       warningOverride: true,
       blockedAt120MillionPixels: true,
     },
+    desktopUploadShifts,
     layoutShift: {
       imageToPdf: imageToPdfLayoutShift,
       imageSplitter: imageSplitterLayoutShift,

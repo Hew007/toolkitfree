@@ -3,6 +3,7 @@ import Layout from '../../../layouts/Layout.astro';
 import ToolDirectory from '../../../components/ToolDirectory.astro';
 import ImageCropper from '../../../components/ImageCropper';
 import { allVariants, variantData } from '../../../data/cropper-variants';
+import { CROP_ASPECT_PRESETS } from '../../../lib/image-cropper';
 
 export function getStaticPaths() {
   return allVariants.map((v) => ({
@@ -17,6 +18,10 @@ export function getStaticPaths() {
 const { title, description, defaultAspectPreset, faq, slug } = Astro.props;
 
 const pageUrl = `https://toolkitfree.net/tools/image-cropper/${Astro.params.variant}`;
+
+// The ratio this page opens on, read from the same table the aspect chips use.
+const aspect = CROP_ASPECT_PRESETS[defaultAspectPreset as keyof typeof CROP_ASPECT_PRESETS];
+const isFree = aspect.ratio === null;
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -75,6 +80,37 @@ const faqStructuredData = {
       </div>
 
       <ImageCropper client:load defaultAspectPreset={defaultAspectPreset} />
+
+      <section class="howto-section">
+        <h2>
+          {
+            isFree
+              ? 'How to Crop to Any Shape'
+              : aspect.ratio === 1
+                ? 'How to Crop an Image to a Square'
+                : `How to Crop an Image to ${aspect.label}`
+          }
+        </h2>
+        <ol class="howto-steps">
+          <li>Upload your image</li>
+          {
+            isFree ? (
+              <li>
+                Free is already selected, so the crop box can take any shape — drag the box and its
+                handles to choose the area you want to keep
+              </li>
+            ) : (
+              <li>
+                {aspect.label} is already selected, so the crop box keeps that shape — drag the box
+                and its handles to choose the area you want to keep
+              </li>
+            )
+          }
+          <li>Pick another ratio under Crop shape if you need a different shape</li>
+          <li>Open Fine-tune to change the output format or quality</li>
+          <li>Download the cropped image, which follows the crop box</li>
+        </ol>
+      </section>
 
       <section class="features-section">
         <h2>Features</h2>

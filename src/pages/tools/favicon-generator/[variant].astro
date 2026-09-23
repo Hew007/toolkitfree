@@ -17,6 +17,20 @@ const { title, description, faq, slug } = Astro.props;
 // starts on the answer this route already gave. WordPress builds every smaller
 // size from the site icon itself, which is why that page opens on 512 alone.
 const defaultSizeSet = slug === 'favicon-for-wordpress' ? 'largest' : 'all';
+const isWordPress = slug === 'favicon-for-wordpress';
+const sourceNoun =
+  slug === 'jpg-to-favicon'
+    ? 'JPG image'
+    : slug === 'png-to-favicon'
+      ? 'PNG image'
+      : slug === 'logo-to-favicon'
+        ? 'logo'
+        : 'logo or image';
+const sourceStep =
+  `Upload your ${sourceNoun} — a square image of 512x512 or larger gives the sharpest icons` +
+  (slug === 'jpg-to-favicon'
+    ? '. A JPG has no transparency, so its background stays in the icons'
+    : '');
 
 const pageUrl = `https://toolkitfree.net/tools/favicon-generator/${Astro.params.variant}`;
 
@@ -77,6 +91,43 @@ const faqStructuredData = {
       </div>
 
       <FaviconGenerator client:load defaultSizeSet={defaultSizeSet} />
+
+      <section class="howto-section">
+        <h2>
+          {
+            isWordPress
+              ? 'How to Add a Favicon to WordPress'
+              : `How to Turn a ${sourceNoun === 'logo' ? 'Logo' : sourceNoun.replace(' image', '')} Into a Favicon`
+          }
+        </h2>
+        <ol class="howto-steps">
+          <li>{sourceStep}</li>
+          {
+            isWordPress ? (
+              <>
+                <li>
+                  Largest icon only is already selected: WordPress builds every smaller size from
+                  one 512x512 site icon
+                </li>
+                <li>Download the ZIP and take android-chrome-512x512.png out of it</li>
+                <li>
+                  In WordPress, open Appearance &gt; Customize &gt; Site Identity &gt; Site Icon and
+                  upload that file
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  Website and app icons is already selected: all five sizes from 16 to 512 px, plus
+                  a site.webmanifest
+                </li>
+                <li>Open Fine-tune to add or remove individual sizes</li>
+                <li>Download the ZIP and copy the HTML snippet into your site's &lt;head&gt;</li>
+              </>
+            )
+          }
+        </ol>
+      </section>
 
       <section class="features-section">
         <h2>Features</h2>

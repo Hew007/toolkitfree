@@ -15,6 +15,25 @@ export function getStaticPaths() {
 const { title, description, faq, slug } = Astro.props;
 const presetKey = PDF_VARIANT_PRESETS[slug as PdfVariantSlug];
 
+// Steps for the preset this page opens on: its input filter, page size and margin.
+const noMargin = presetKey === 'no_margin';
+const inputNoun =
+  presetKey === 'jpg'
+    ? 'JPG images'
+    : presetKey === 'png'
+      ? 'PNG images'
+      : presetKey === 'photo'
+        ? 'photos'
+        : 'images';
+const howToHeading = {
+  'jpg-to-pdf': 'How to Convert JPG to PDF',
+  'png-to-pdf': 'How to Convert PNG to PDF',
+  'image-to-a4-pdf': 'How to Make an A4 PDF From Images',
+  'multiple-images-to-pdf': 'How to Combine Multiple Images Into One PDF',
+  'image-to-pdf-no-margin': 'How to Make a PDF With No Margins',
+  'photo-to-pdf': 'How to Convert Photos to PDF',
+}[slug as string];
+
 const pageUrl = `https://toolkitfree.net/tools/image-to-pdf/${Astro.params.variant}`;
 
 const structuredData = {
@@ -74,6 +93,39 @@ const faqStructuredData = {
       </div>
 
       <ImageToPdf client:load defaultPreset={presetKey} />
+
+      <section class="howto-section">
+        <h2>{howToHeading}</h2>
+        <ol class="howto-steps">
+          <li>
+            Upload one or more {inputNoun} — each one becomes a page you can see straight away
+          </li>
+          {
+            noMargin ? (
+              <li>
+                Fit to image is already selected with no margin, so each page is exactly the size of
+                its image
+              </li>
+            ) : (
+              <li>
+                Pages start at A4 portrait with a 10 mm margin — choose Letter or Fit to image, and
+                change orientation and margin under Fine-tune
+              </li>
+            )
+          }
+          {
+            presetKey === 'multiple' ? (
+              <li>
+                Drop an image onto another page to put several on one page, or between two pages to
+                give it a page of its own; reorder pages with the arrows in each page heading
+              </li>
+            ) : (
+              <li>Drag an image to move it, drag a corner to resize it, or rotate it 90&deg;</li>
+            )
+          }
+          <li>Download the PDF — it is rebuilt as you edit, so it always matches the editor</li>
+        </ol>
+      </section>
 
       <section class="features-section">
         <h2>Features</h2>

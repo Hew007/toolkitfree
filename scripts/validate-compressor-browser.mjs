@@ -252,6 +252,28 @@ assert.equal(qualityResult.size, tinyInputSize);
 assert.equal(qualityResult.text.includes('No smaller result was found; original kept.'), true);
 assert.equal(qualityResult.text.includes('--'), false, 'Double-negative saving must not appear');
 
+// Variant routes: the URL is the page's promise, so the purpose chip must open on
+// the purpose the route names. The email and WhatsApp pages used to open on
+// "Web page", and nothing checked. The expectations are written out here rather
+// than read from the variant data, so a wrong entry there is caught too.
+const variantPurposes = [
+  ['compress-png', 'web'],
+  ['compress-jpg', 'web'],
+  ['compress-for-email', 'email'],
+  ['compress-for-web', 'web'],
+  ['compress-for-whatsapp', 'chat'],
+  ['compress-to-100kb', 'exact'],
+];
+const variantResults = {};
+for (const [slug, purpose] of variantPurposes) {
+  await navigate(`${baseUrl}/tools/image-compressor/${slug}/`);
+  const lit = await evaluate(
+    `document.querySelector('input[name="compressor-purpose"]:checked')?.value ?? null`
+  );
+  assert.equal(lit, purpose, `${slug} should open on the ${purpose} purpose`);
+  variantResults[slug] = lit;
+}
+
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
 await send('Target.closeTarget', { targetId: target.id });
@@ -265,6 +287,7 @@ console.log(
     maxAttempts: Math.max(...attempts),
     qualityOriginalBytes: tinyInputSize,
     qualityOutputBytes: qualityResult.size,
+    variantResults,
     browserErrors: actionableBrowserErrors.length,
   })
 );

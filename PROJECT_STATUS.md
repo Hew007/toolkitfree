@@ -322,6 +322,78 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-23 — `上传位移：how-to 给工作区让位` / `主工具页全部降到 0.1 以下` / `32 个变体页待定`：
+
+  所有者选了"调整 how-to 的位置"。**先测了字面做法，没用**：把 how-to 从主栏整个拿掉，Image to PDF
+  0.271 → 0.283、Image Splitter 0.158 → 0.151、Compressor 不变——how-to 让出的位置会被紧跟其后的
+  变体链接或 features 顶上来，被推的只是换了一块。
+
+  **真正起作用的调法**：how-to 位置不变（上传前它就在上传框正下方，那正是它有用的时候），**工具一有
+  输入，how-to 就让出位置，工作区长进它原来占的那块**。实现：13 个上传类工具在根元素上加
+  `data-tool-input`，取值用的就是各自切换"上传框 → 工作区"的那个条件；`global.css` 一条
+  `.tool-content:has([data-tool-input='present']) > .howto-section { display: none }`。
+  不支持 `:has()` 的浏览器保持原样。QR Generator 没有上传，不加标记。
+
+  1280×900、每个工具各测两次：
+
+  | 工具 | 之前 | 之后 |
+  | --- | --- | --- |
+  | Image Converter | 0.089 | 0.008 |
+  | Image Compressor | 0.08–0.09 | 0.02 |
+  | Image Resizer | 0.18 | 0.06 |
+  | Image Enhancer | 0.12 | 0.03 |
+  | Image Collage | 0.18 | 0.06–0.07 |
+  | Image Splitter | 0.16 | 0.02 |
+  | ID Photo | 0.12 | 0.008 |
+  | Image Cropper | 0.08 | 0.009 |
+  | Background Remover | 0.06 | 0.002 |
+  | Image to PDF | 0.26–0.27 | 0.02 |
+  | Favicon Generator | 0.11 | 0.08 |
+
+  **全部落到 Google 0.1 的"良好"线以下**。剩下的 Resizer / Collage / Favicon 那点余量是各自的细节
+  （上传框变紧凑时上移 20px；Favicon 先让位、图标生成后再撑开，分两步），以后可以逐个抠。
+  PDF Splitter、Video to GIF 上传的是 PDF / 视频，探针没测，规则同样作用于它们的 how-to。
+
+  **测试**：`validate-performance-browser.mjs` 新增一段在 1280×900 下对 `/tools/image-to-pdf/` 上传，
+  断言上传前 how-to 可见、上传后隐藏、CLS ≤ 0.1。原来那段在默认的小视口里跑，how-to 本来就在首屏
+  之外，**这就是 0.27 一直没被发现的原因**。已验证：去掉这条 CSS，新断言失败。其余 12 个浏览器套件
+  全绿；secondary-tools 只剩下不到模型那一条。
+
+  **可见变化**：上传之后 how-to 不再显示，移除文件回到上传状态时它会回来。
+
+  **变体页（所有者 9-23 批准"写吧"）**：6 个变体模板下的 32 个变体页原来**没有 how-to**，上传框下面
+  直接是 features，位移 0.08–0.28。现在每个模板都写了 how-to，放在工具正下方，**步骤按该页真实打开的
+  状态来写**（它锁定的用途 / 尺寸 / 比例 / 网格 / 页面预设），不是照抄主页面。32 个页面逐一渲染核对过
+  文字。每条步骤里的 UI 名称都对过源码：比如 100KB 页的 Target size 字段在芯片下面而不是 Fine-tune 里，
+  裁剪比例在侧栏 Crop shape 下而不是图片上方，Favicon 只能整包下载 ZIP。
+
+  1280×900 下 32 个变体页全部降到 0.1 以下（例如 image-to-pdf/image-to-a4-pdf 0.277 → 0.074、
+  resize-for-linkedin 0.265 → 0.044、split-for-printing 0.137 → 0.010）。
+
+  **写 how-to 的过程中查出并修掉的问题**：
+
+  - **`/compress-for-email/` 和 `/compress-for-whatsapp/` 打开时选中的是 Web page。** URL 承诺的
+    用途没有点亮，违反 `TOOL_INTERACTION.md`「芯片不得覆盖变体页面已经钉死的值」。现在用途写进变体
+    数据（单一来源），组件按它初始化；email → Email attachment，whatsapp → Chat and messaging，
+    100kb → Exact size in KB。compressor 浏览器套件新增逐页断言，把映射改回全 web 会报
+    `compress-for-email should open on the email purpose`。
+  - **Resizer 平台预设会拉伸图片。** 预设按精确宽高绘制，"Maintain aspect ratio" 在预设下是禁用的，
+    所以 4:3 的照片选 Instagram 1080×1080 会被压扁。**这是既有行为，没有改**，但 how-to 如实写明，并给出
+    两条出路：有对应比例的先用 Image Cropper 裁（1:1、16:9、9:16 有直链），或切到 Custom（比例锁会自动
+    打开）再填尺寸。两条 FAQ 答案原来是错的，已改答案、未改问题：1920×1080 页说"勾选 Maintain aspect
+    ratio 即可不拉伸"（预设下这个勾选框根本点不了）；Instagram 页说"用我们的工具调整尺寸就能避免被裁或
+    加黑边"（实际是拉伸）。**是否把平台预设改成裁切填充，属于产品决定，留给所有者。**
+  - **Resizer 预览框在图片加载前后尺寸不同。** 加载前缩放比例回退为 1，框先按最大 960×760 渲染，加载后
+    缩到约 320×260，把下面的内容整体顶走——和 Image Splitter 同一类问题，约三分之一的上传会触发，
+    resize-for-youtube 最坏到 0.15。现在加载前用请求尺寸作基准：平台预设下这正是加载后算出的值，
+    框不再变化；Custom 加比例锁时只差源图形状的差异。**没用文件头读尺寸**，因为头解析不处理 EXIF 旋转，
+    手机竖拍照片会猜错。主 resizer 页在横、宽、竖三种源图下，4× 节流仍不超过 0.087（原来 0.12）。
+
+  **测试**：性能套件的桌面上传检查扩成三个页面——主 Image to PDF、变体 image-to-a4-pdf、4× 节流下的
+  resize-for-youtube。已验证：拿掉变体 how-to 报 `a how-to must sit under the tool and be visible`；
+  退回 resizer 旧逻辑 3 次全失败（0.150 / 0.155 / 0.155）。其余 12 个浏览器套件全绿；secondary-tools
+  只剩下不到模型那一条。
+
 - 2026-09-23 — `favicon 浏览器套件接回` / `锁文件改回公共 registry`：
 
   **`validate-favicon-browser.mjs` 从来没跑过。** 319 行，7 月加进来，Favicon 改造时还被认真改写过，

@@ -392,7 +392,11 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
       : `${selectedIcons.length} icon${selectedIcons.length === 1 ? '' : 's'} · ${describeIcons(selectedIcons)}`;
 
   return (
-    <div data-favicon-output="png-only" aria-busy={busy}>
+    <div
+      data-favicon-output="png-only"
+      aria-busy={busy}
+      data-tool-input={file !== null ? 'present' : 'empty'}
+    >
       {!file ? (
         <FileUploader
           accept="image/jpeg,image/png,image/webp"
