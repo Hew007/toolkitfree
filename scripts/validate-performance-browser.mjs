@@ -309,6 +309,38 @@ assert.ok(
   `Image-to-PDF upload CLS should stay at or below 0.1: ${JSON.stringify(imageToPdfLayoutShift)}`
 );
 
+// The same upload at a desktop size, where the how-to is on the first screen.
+// The default viewport above is small enough that everything under the tool is
+// already below the fold, which is how this suite missed a 0.27 shift: the
+// workspace replaced the uploader and pushed the how-to down. The how-to now
+// steps aside once the tool has input, so the workspace grows into its space.
+await send('Emulation.setDeviceMetricsOverride', {
+  width: 1280,
+  height: 900,
+  deviceScaleFactor: 1,
+  mobile: false,
+});
+await navigate('/tools/image-to-pdf/');
+assert.equal(
+  await evaluate(`getComputedStyle(document.querySelector('.howto-section')).display !== 'none'`),
+  true,
+  'The how-to must be visible before a file is chosen'
+);
+await uploadGeneratedPng({ name: 'page.png', width: 96, height: 64 });
+await waitFor(`Boolean(document.querySelector('[data-pdf-result]'))`, 'desktop PDF result');
+await new Promise((resolve) => setTimeout(resolve, 750));
+const desktopUploadShift = await readLayoutShiftMetrics();
+assert.equal(
+  await evaluate(`getComputedStyle(document.querySelector('.howto-section')).display`),
+  'none',
+  'The how-to should step aside once the tool has input'
+);
+assert.ok(
+  desktopUploadShift.total <= 0.1,
+  `Image-to-PDF desktop upload CLS should stay at or below 0.1: ${JSON.stringify(desktopUploadShift)}`
+);
+await send('Emulation.clearDeviceMetricsOverride');
+
 await navigate('/tools/image-splitter/');
 // Throttled on purpose. The shift this guards appears only when the preview's
 // blob loads after the first paint, so on an unthrottled machine it showed up

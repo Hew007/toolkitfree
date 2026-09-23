@@ -572,6 +572,7 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
       data-orientation={orientation}
       data-margin={margin}
       aria-busy={processing}
+      data-tool-input={items.length > 0 ? 'present' : 'empty'}
     >
       {processing && (
         <div className="visually-hidden" role="status" aria-live="polite">

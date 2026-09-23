@@ -282,7 +282,7 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
   const fineTuneSummary = `${formatLabel} · ${lossless ? 'lossless' : `quality ${quality}%`}`;
 
   return (
-    <div aria-busy={busy}>
+    <div aria-busy={busy} data-tool-input={files.length > 0 ? 'present' : 'empty'}>
       {busy && (
         <div className="visually-hidden" role="status" aria-live="polite">
           Converting images.

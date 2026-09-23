@@ -680,6 +680,7 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
       data-split-rows={rows}
       data-split-cols={cols}
       data-split-tile-count={tileCount}
+      data-tool-input={file !== null ? 'present' : 'empty'}
     >
       {!file ? (
         <FileUploader

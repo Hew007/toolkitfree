@@ -406,7 +406,12 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
         : 'The download follows the pages above. Nothing is uploaded.';
 
   return (
-    <div className="pdf-page-tool" data-pdf-page-tool aria-busy={loading || rebuilding}>
+    <div
+      className="pdf-page-tool"
+      data-pdf-page-tool
+      aria-busy={loading || rebuilding}
+      data-tool-input={file !== null ? 'present' : 'empty'}
+    >
       {!file ? (
         <FileUploader
           accept="application/pdf,.pdf"

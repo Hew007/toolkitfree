@@ -322,6 +322,51 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-23 — `上传位移：how-to 给工作区让位` / `主工具页全部降到 0.1 以下` / `32 个变体页待定`：
+
+  所有者选了"调整 how-to 的位置"。**先测了字面做法，没用**：把 how-to 从主栏整个拿掉，Image to PDF
+  0.271 → 0.283、Image Splitter 0.158 → 0.151、Compressor 不变——how-to 让出的位置会被紧跟其后的
+  变体链接或 features 顶上来，被推的只是换了一块。
+
+  **真正起作用的调法**：how-to 位置不变（上传前它就在上传框正下方，那正是它有用的时候），**工具一有
+  输入，how-to 就让出位置，工作区长进它原来占的那块**。实现：13 个上传类工具在根元素上加
+  `data-tool-input`，取值用的就是各自切换"上传框 → 工作区"的那个条件；`global.css` 一条
+  `.tool-content:has([data-tool-input='present']) > .howto-section { display: none }`。
+  不支持 `:has()` 的浏览器保持原样。QR Generator 没有上传，不加标记。
+
+  1280×900、每个工具各测两次：
+
+  | 工具 | 之前 | 之后 |
+  | --- | --- | --- |
+  | Image Converter | 0.089 | 0.008 |
+  | Image Compressor | 0.08–0.09 | 0.02 |
+  | Image Resizer | 0.18 | 0.06 |
+  | Image Enhancer | 0.12 | 0.03 |
+  | Image Collage | 0.18 | 0.06–0.07 |
+  | Image Splitter | 0.16 | 0.02 |
+  | ID Photo | 0.12 | 0.008 |
+  | Image Cropper | 0.08 | 0.009 |
+  | Background Remover | 0.06 | 0.002 |
+  | Image to PDF | 0.26–0.27 | 0.02 |
+  | Favicon Generator | 0.11 | 0.08 |
+
+  **全部落到 Google 0.1 的"良好"线以下**。剩下的 Resizer / Collage / Favicon 那点余量是各自的细节
+  （上传框变紧凑时上移 20px；Favicon 先让位、图标生成后再撑开，分两步），以后可以逐个抠。
+  PDF Splitter、Video to GIF 上传的是 PDF / 视频，探针没测，规则同样作用于它们的 how-to。
+
+  **测试**：`validate-performance-browser.mjs` 新增一段在 1280×900 下对 `/tools/image-to-pdf/` 上传，
+  断言上传前 how-to 可见、上传后隐藏、CLS ≤ 0.1。原来那段在默认的小视口里跑，how-to 本来就在首屏
+  之外，**这就是 0.27 一直没被发现的原因**。已验证：去掉这条 CSS，新断言失败。其余 12 个浏览器套件
+  全绿；secondary-tools 只剩下不到模型那一条。
+
+  **可见变化**：上传之后 how-to 不再显示，移除文件回到上传状态时它会回来。
+
+  **未解决、需要所有者决定**：6 个变体模板下的 **32 个变体页没有 how-to**，上传框下面直接是
+  features，所以仍然有 0.08–0.28 的位移（compressor 0.08、cropper 0.09、favicon 0.10、
+  splitter 0.15、resizer 0.17、image-to-pdf 0.27）。要修就得给这些变体页写 how-to——这同时也回应
+  之前"变体页内容薄"的问题，但属于内容工作。converter、pdf-splitter、video-to-gif 三个模板本来就有
+  how-to，已被这次改动覆盖。
+
 - 2026-09-23 — `favicon 浏览器套件接回` / `锁文件改回公共 registry`：
 
   **`validate-favicon-browser.mjs` 从来没跑过。** 319 行，7 月加进来，Favicon 改造时还被认真改写过，

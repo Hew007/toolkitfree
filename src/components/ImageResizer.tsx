@@ -376,7 +376,11 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
   });
 
   return (
-    <div data-resizer-preset={preset} aria-busy={processing}>
+    <div
+      data-resizer-preset={preset}
+      aria-busy={processing}
+      data-tool-input={files.length > 0 ? 'present' : 'empty'}
+    >
       {processing && (
         <div className="visually-hidden" role="status" aria-live="polite">
           Resizing images.
