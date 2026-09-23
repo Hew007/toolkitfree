@@ -123,10 +123,11 @@ await send('Page.addScriptToEvaluateOnNewDocument', {
 });
 
 await send('Page.navigate', { url: pageUrl });
-await waitFor(
-  `document.readyState === 'complete' && Boolean(document.querySelector('input[type="file"]'))`,
-  'hydrated favicon uploader'
-);
+// The island is server-rendered, so the file input exists before React has
+// hydrated it. Setting files at that point fires a change event nobody handles.
+// Wait for the island to lose its `ssr` marker, as the other suites do.
+const hydrated = `Boolean(document.querySelector('astro-island')) && !document.querySelector('astro-island[ssr]')`;
+await waitFor(hydrated, 'hydrated favicon uploader');
 
 await setFile(fixture);
 await waitFor(`document.body.innerText.includes('opaque.png')`, 'valid file selection');
@@ -277,10 +278,7 @@ const variantExpectations = [
 const variantResults = {};
 for (const variant of variantExpectations) {
   await send('Page.navigate', { url: `${pageUrl}${variant.slug}/` });
-  await waitFor(
-    `document.readyState === 'complete' && Boolean(document.querySelector('input[type="file"]'))`,
-    `${variant.slug} uploader`
-  );
+  await waitFor(hydrated, `${variant.slug} uploader`);
   await setFile(fixture);
   await waitFor(
     `document.querySelectorAll('[data-favicon-icon]').length === ${variant.icons}`,

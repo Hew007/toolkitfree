@@ -25,6 +25,7 @@ const fullTests = [
   'validate-compressor-browser.mjs',
   'validate-resizer-cropper-browser.mjs',
   'validate-secondary-tools-browser.mjs',
+  'validate-favicon-browser.mjs',
   'validate-batch-download-browser.mjs',
   'validate-responsive-accessibility-browser.mjs',
   'validate-performance-browser.mjs',
