@@ -322,6 +322,32 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-23 — `favicon 浏览器套件接回` / `锁文件改回公共 registry`：
+
+  **`validate-favicon-browser.mjs` 从来没跑过。** 319 行，7 月加进来，Favicon 改造时还被认真改写过，
+  但**不在 `run-browser-tests.mjs` 的清单里、全仓库零引用**，`npm run test:e2e` 从未执行它。它不是
+  冗余的：**它是唯一检查"每个变体页按 URL 承诺的尺寸集打开"的地方**，包括 `/favicon-for-wordpress/`
+  只出 512 那一个图标——就是 9-17 所有者拍板的那件事，此前没有任何测试守着。已验证：把 WordPress
+  页的默认值改回全套，它报 `Timed out waiting for favicon-for-wordpress default run`。
+
+  接回清单后它**立刻失败**：它等的是 `readyState` 加文件输入框存在，但 island 是服务端渲染的，输入框
+  在 React hydration 之前就在了，那时设置文件触发的 `change` 没人接。改成和其余套件一样等 island 去掉
+  `ssr` 标记。这正是 `TOOL_INTERACTION.md`「踩过的坑」里记的那一条——13 个套件各自手写 CDP 底座，
+  同一个坑要在每个文件里分别踩一遍。
+
+  **锁文件 823 / 878 条 `resolved` 指向 `registry.npmmirror.com`。** npm 按实际拉取的 registry 记录
+  `resolved`，锁文件最后是在配了镜像的机器上写的。任何访问不到该镜像的环境里，干净的 `npm ci` 都会
+  失败——受限网络直接拒绝该主机，安装停在一半、`node_modules/.bin` 为空，下游全部跑不起来。容器重启
+  后在本沙箱里实际发生过。
+
+  只换了主机名：镜像在同样路径提供同样的 tarball，所有 `integrity` 哈希原样不动，diff 就是 823 行
+  `resolved`。清空 npm 缓存、不带任何替换参数跑 `npm ci`：744 个包、零 integrity 错误、锁文件未被改写。
+
+  **本地继续用镜像完全没问题，只是不能进提交。** 新增 `validate-lockfile-registry.mjs`，排在
+  `npm run check` 第一步，报出越界主机和第一个包；对旧锁文件实测报
+  `823 lockfile entries resolve outside https://registry.npmjs.org/ (registry.npmmirror.com)`，
+  注释里给了一行 `sed` 的改法。
+
 - 2026-09-23 — `Image Splitter 上传位移修掉` / `CLS 断言改成确定性` / `发现跨工具的上传位移`：
 
   **根因**：预览框 `.splitter-frame` 原来靠 `width: fit-content` 包住图片，图片是 `width/height: auto`。
