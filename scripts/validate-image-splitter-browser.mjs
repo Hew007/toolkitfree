@@ -244,8 +244,12 @@ await send('Page.addScriptToEvaluateOnNewDocument', {
 });
 
 await send('Page.navigate', { url: pageUrl });
+// The island is server-rendered, so the file input exists before React has
+// hydrated it, and a file set at that point fires a change event nobody
+// handles. Waiting on readyState plus the input lost that race about three runs
+// in eight. Wait for the island to lose its `ssr` marker, as every other suite does.
 await waitFor(
-  `document.readyState === 'complete' && Boolean(document.querySelector('input[type="file"]'))`,
+  `Boolean(document.querySelector('astro-island')) && !document.querySelector('astro-island[ssr]')`,
   'hydrated splitter uploader'
 );
 

@@ -335,6 +335,11 @@ or `owner approved`. Never infer owner approval.
   `ssr` 标记。这正是 `TOOL_INTERACTION.md`「踩过的坑」里记的那一条——13 个套件各自手写 CDP 底座，
   同一个坑要在每个文件里分别踩一遍。
 
+  **扫了一遍，`validate-image-splitter-browser.mjs` 是另一个中招的。** 它在 master 上就**有 3/8 的概率
+  失败**（`Timed out waiting for split lines ready`），此前各批次跑它时恰好都赢了竞速。同样改法之后
+  连跑 45 次通过 44 次；那 1 次失败发生在没有抓输出的一批里，之后 35 次都没能复现，**不声称已经
+  归零**。现在 13 个浏览器套件都用同一种方式等 hydration。
+
   **锁文件 823 / 878 条 `resolved` 指向 `registry.npmmirror.com`。** npm 按实际拉取的 registry 记录
   `resolved`，锁文件最后是在配了镜像的机器上写的。任何访问不到该镜像的环境里，干净的 `npm ci` 都会
   失败——受限网络直接拒绝该主机，安装停在一半、`node_modules/.bin` 为空，下游全部跑不起来。容器重启
