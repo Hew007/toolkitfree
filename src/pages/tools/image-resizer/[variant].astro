@@ -19,18 +19,10 @@ export function getStaticPaths() {
 const { title, description, faq, slug } = Astro.props;
 const presetKey = RESIZER_VARIANT_PRESETS[slug as ResizerVariantSlug];
 
-// Platform presets draw into their exact width and height, so a source of another
-// shape is stretched — the how-to says so, and names the way around it. Where the
-// cropper has the same ratio, point there; otherwise only the Custom route is exact.
+// Platform presets draw into their exact width and height by default, so a source
+// of another shape is stretched. The how-to says so and names the other choice.
 const preset = RESIZE_PRESETS[presetKey];
 const presetShape = `${preset.width} × ${preset.height}`;
-const cropperForShape: Record<string, { href: string; ratio: string } | undefined> = {
-  '1080x1080': { href: '/tools/image-cropper/crop-to-square/', ratio: '1:1' },
-  '1280x720': { href: '/tools/image-cropper/crop-to-16-9/', ratio: '16:9' },
-  '1920x1080': { href: '/tools/image-cropper/crop-to-16-9/', ratio: '16:9' },
-  '1080x1920': { href: '/tools/image-cropper/', ratio: '9:16' },
-};
-const matchingCrop = cropperForShape[`${preset.width}x${preset.height}`];
 
 const pageUrl = `https://toolkitfree.net/tools/image-resizer/${Astro.params.variant}`;
 
@@ -91,27 +83,14 @@ const faqStructuredData = {
         <ol class="howto-steps">
           <li>Upload one or more images</li>
           <li>
-            {preset.label} is already selected, so every image comes out at exactly {presetShape}
-            pixels
+            {preset.label} is already selected, so by default every image comes out at exactly{' '}
+            {presetShape} pixels — an image with a different shape is stretched to fill it
           </li>
           <li>
-            An image with a different shape is stretched to fill that size.{' '}
-            {
-              matchingCrop ? (
-                <>
-                  To avoid that, crop it to {matchingCrop.ratio} first with the{' '}
-                  <a href={matchingCrop.href}>Image Cropper</a>, or set Platform size to Custom —
-                  Maintain aspect ratio switches on — and enter {preset.width} and {preset.height}
-                  so the whole image fits inside that size instead
-                </>
-              ) : (
-                <>
-                  To avoid that, set Platform size to Custom — Maintain aspect ratio switches on —
-                  and enter {preset.width} and {preset.height} so the whole image fits inside that
-                  size instead
-                </>
-              )
+            To keep an image's proportions instead, tick Maintain aspect ratio: it then fits inside{
+              ' '
             }
+            {presetShape} without stretching, so one side can come out smaller
           </li>
           <li>Open Fine-tune to change the output format or quality</li>
           <li>Read the real output size, then download files individually or once as a ZIP</li>

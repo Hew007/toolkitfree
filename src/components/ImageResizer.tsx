@@ -173,7 +173,13 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
     const nextPreset = RESIZE_PRESETS[value];
     setWidth(nextPreset.width);
     setHeight(nextPreset.height);
-    setMaintainRatio(value === 'custom');
+    // Platform presets stretch to their exact size unless the visitor asks to keep
+    // the proportions, and that choice carries across platform presets. Custom
+    // starts with the lock on, as a bounding box, and leaving Custom for a platform
+    // preset goes back to the exact-size default.
+    setMaintainRatio((current) =>
+      value === 'custom' ? true : preset === 'custom' ? false : current
+    );
     clearResults();
   };
 
@@ -204,12 +210,8 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
 
   const previewDimensions = useMemo(() => {
     if (previewSource.width < 1 || previewSource.height < 1 || width < 1 || height < 1) return null;
-    return calculateResizeDimensions(
-      previewSource,
-      { width, height },
-      preset === 'custom' && maintainRatio
-    );
-  }, [height, maintainRatio, preset, previewSource, width]);
+    return calculateResizeDimensions(previewSource, { width, height }, maintainRatio);
+  }, [height, maintainRatio, previewSource, width]);
   const displayedPreviewDimensions = previewDimensions ?? {
     width: Math.max(1, width),
     height: Math.max(1, height),
@@ -219,9 +221,9 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
   // and then snapped to about 320 x 260 when the image arrived — a layout shift
   // that pushed everything under the preview around.
   //
-  // Before the load, use the requested size instead. For exact sizes (every
-  // platform preset, or Custom without the ratio lock) that is precisely what
-  // onLoad computes, so nothing moves. With the ratio lock the true output
+  // Before the load, use the requested size instead. For exact sizes (any preset
+  // with the ratio lock off, which is how platform presets start) that is
+  // precisely what onLoad computes, so nothing moves. With the ratio lock the true output
   // depends on the source's shape, which is unknown until it decodes; the
   // requested size is the closest guess available, and the frame only adjusts by
   // the difference in shape. (The file header would give the shape sooner, but it
@@ -296,7 +298,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
       const outputDimensions = calculateResizeDimensions(
         { width: image.naturalWidth, height: image.naturalHeight },
         { width, height },
-        preset === 'custom' && maintainRatio
+        maintainRatio
       );
       const canvas = document.createElement('canvas');
       canvas.width = outputDimensions.width;
@@ -332,10 +334,14 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
         url,
       };
     },
-    [format, height, maintainRatio, objectUrls, preset, quality, width]
+    [format, height, maintainRatio, objectUrls, quality, width]
   );
 
-  /** Any change here invalidates the results on screen. */
+  /**
+   * Any change here invalidates the results on screen. The preset is not in it:
+   * the output depends only on the size and the ratio lock, and picking a preset
+   * already changes the size, so naming it again would only re-run for nothing.
+   */
   const settingsKey = useMemo(
     () =>
       JSON.stringify({
@@ -343,11 +349,10 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
         width,
         height,
         maintainRatio,
-        preset,
         format,
         quality,
       }),
-    [files, format, height, maintainRatio, preset, quality, width]
+    [files, format, height, maintainRatio, quality, width]
   );
 
   // No submit step: the result follows the controls.
@@ -446,7 +451,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                       const baseline = calculateResizeDimensions(
                         source,
                         { width, height },
-                        preset === 'custom' && maintainRatio
+                        maintainRatio
                       );
                       setPreviewSource(source);
                       setPreviewBaseline(baseline);
@@ -501,7 +506,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
               </div>
               <div>
                 <label htmlFor="resize-width">
-                  {preset === 'custom' && maintainRatio ? 'Max width (px)' : 'Width (px)'}
+                  {maintainRatio ? 'Max width (px)' : 'Width (px)'}
                 </label>
                 <input
                   className="field-input"
@@ -515,7 +520,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
               </div>
               <div>
                 <label htmlFor="resize-height">
-                  {preset === 'custom' && maintainRatio ? 'Max height (px)' : 'Height (px)'}
+                  {maintainRatio ? 'Max height (px)' : 'Height (px)'}
                 </label>
                 <input
                   className="field-input"
@@ -535,7 +540,6 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                   data-testid="resize-maintain-ratio"
                   type="checkbox"
                   checked={maintainRatio}
-                  disabled={preset !== 'custom'}
                   onChange={(event) => {
                     setMaintainRatio(event.target.checked);
                     clearResults();
@@ -544,11 +548,13 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                 Maintain aspect ratio
               </label>
               <p className="tool-hint">
-                {preset === 'custom' && maintainRatio
-                  ? 'Each image fits inside the maximum width and height without stretching.'
+                {maintainRatio
+                  ? preset === 'custom'
+                    ? 'Each image fits inside the maximum width and height without stretching.'
+                    : `Each image fits inside ${width} × ${height} without stretching, so one side can come out smaller.`
                   : preset === 'custom'
                     ? 'The exact width and height are used; the image may be stretched.'
-                    : 'Platform presets use their exact width and height.'}
+                    : `Each image comes out at exactly ${width} × ${height}. One of another shape is stretched; tick Maintain aspect ratio to keep its proportions.`}
               </p>
             </div>
 
