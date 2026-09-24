@@ -194,12 +194,19 @@ function runBackgroundWorker(
     let settled = false;
     let watchdog: ReturnType<typeof setTimeout> | null = null;
 
+    // The last progress report, so a timeout can say which step went silent: a stalled
+    // download, a runtime that never initialized, and a hung inference have nothing
+    // in common but this message.
+    let lastStep = 'nothing reported yet';
+
     const armWatchdog = (timeoutMs: number) => {
       if (watchdog) clearTimeout(watchdog);
       watchdog = setTimeout(() => {
         finish(() =>
           reject(
-            new Error('Background removal stopped because the model made no progress for too long.')
+            new Error(
+              `Background removal stopped because the model made no progress for too long (last step: ${lastStep}, silent for ${Math.round(timeoutMs / 1000)}s, ${threads} thread${threads === 1 ? '' : 's'}).`
+            )
           )
         );
       }, timeoutMs);
@@ -225,6 +232,7 @@ function runBackgroundWorker(
       started = true;
       const response = event.data;
       if (response.type === 'progress') {
+        lastStep = `${response.key} ${response.current}/${response.total}`;
         armWatchdog(
           response.key === 'compute:inference'
             ? inferenceTimeoutMs

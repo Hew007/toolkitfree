@@ -362,13 +362,43 @@ or `owner approved`. Never infer owner approval.
   另一个发现：未隔离路径上 Chrome 报 `SharedArrayBufferConstructedWithoutIsolation` 弃用警告——ORT 的
   threaded 构建即使单线程也创建共享内存，现在的慢路径靠的是一个已被标记弃用的行为。
 
-  **状态：`implemented but unverified`（线上）**。本地 Chrome 和 Edge 从上传到出图都完整跑通，
-  `typecheck` 以外的门禁全过，`test:e2e` 13/13 通过。`typecheck` 在 master 上就失败（`astro.config.mjs`
-  的 Vite 插件类型，和本次无关）。**还没在 Cloudflare 线上、也没在所有者那台 20 核机器上跑过**。
-  推送前建议：部署后在 20 核机器上打开页面，确认 `crossOriginIsolated === true`，跑一张图，确认控制台
-  timing 里 `threads: 4`、`fellBack: false`，没有 `could not start`。若失败，回滚本提交的 `_headers` 即可
-  回到慢路径。另外 Cloudflare Web Analytics 如果自动注入跨源 beacon，在 COEP 下会被拦（只影响统计，
-  不影响工具），上线后留意。
+  **状态：`blocked` —— 本分支不能合并 / 不能上线。** COEP 那一层已经修好并验证：本地 Chrome、Edge 从上传到
+  出图完整跑通（本机 2/4 线程都正常），`test:e2e` 13/13 通过；`typecheck` 在 master 上就失败
+  （`astro.config.mjs` 的 Vite 插件类型，与本次无关）。
+
+  **但所有者在 16 核机器上实测，出现了第二个、不同的故障：**通过局域网访问本机的 `wrangler dev`（HTTPS，
+  `crossOriginIsolated: true`，`hardwareConcurrency: 16`），worker 正常启动、模型正常下载、session 正常创建，
+  然后在 `session.run()` 里**挂住不动**，90 秒后看门狗超时：
+
+  ```
+  [toolkitfree] background removal failed on 4 threads, retrying single-threaded Error: Background
+  removal stopped because the model made no progress for too long (last step: compute:inference 1/4,
+  silent for 90s, 4 threads).
+  ```
+
+  `compute:inference 1/4` 是库在 `imageSourceToImageData` 之后、`runInference` 之前报的，session 早在
+  `init` 里建好了，所以挂在推理本身。同一个服务、同样 4 线程，在本机（i7-7500U）上每次 7–8 秒就跑完。
+
+  已用临时诊断构建（URL 参数强制线程数、在 worker 里替换 `InferenceSession.create` 覆盖库写死的
+  `executionMode`）让所有者在 16 核机器上试了三组：4 线程 + `sequential`、2 线程 + `parallel`、4 线程 +
+  `parallel`，**三组都失败**（没拿到每组的具体输出）。所以不是 `executionMode: 'parallel'`，也不像单纯的
+  线程数。诊断代码已撤掉，没有提交；保留了超时文案里的 "last step"。
+
+  注意一个坑：`node_modules` 里 npm 和 pnpm 两种安装混在一起，`onnxruntime-web` 有两份物理副本
+  （`node_modules/onnxruntime-web` 和 `.pnpm/onnxruntime-web@1.21.0/...`），库用的是后者，
+  `import('onnxruntime-web')` 拿到的是前者，打包后是两个不同的 chunk，对前者的修改不影响库。
+
+  **下一步（在 16 核那台机器上直接跑）：**
+  1. 切到本分支，`npm run build`，`npx wrangler dev --port 8787`（本地访问 `http://127.0.0.1:8787`，
+     localhost 是安全上下文，不需要 HTTPS）。
+  2. 先确认那台机器上的**旧失败**已经消失（不再出现 `could not start`），再抓挂住时的完整信息：用 CDP
+     自动 attach 所有 worker（包括 ORT 的 `em-pthread` 嵌套 worker），看 pthread worker 有没有全部起来、
+     有没有报错；worker 里设 `ort.env.debug = true` / `logLevel = 'verbose'`。
+  3. 可疑方向：Emscripten pthread 池（`ort-wasm-simd-threaded.mjs` 在启动时预建 `numThreads-1` 个
+     worker，线程不够时要回到事件循环才能建新 worker，推理是同步阻塞的，可能死锁）；pthread worker 里的
+     `navigator.hardwareConcurrency` 仍是真实的 16（我们只覆盖了自己那个 worker 的）；以及那台机器的
+     浏览器/版本差异。
+  4. 线上 `_headers` 目前在 master 上仍然是不隔离的慢路径，照常可用。本分支合并前必须在那台机器上完整跑通。
 
 - 2026-09-24 — `Resizer 平台预设：默认拉伸，可选保持宽高比`（所有者决定）：
 
@@ -410,19 +440,19 @@ or `owner approved`. Never infer owner approval.
 
   1280×900、每个工具各测两次：
 
-  | 工具 | 之前 | 之后 |
-  | --- | --- | --- |
-  | Image Converter | 0.089 | 0.008 |
-  | Image Compressor | 0.08–0.09 | 0.02 |
-  | Image Resizer | 0.18 | 0.06 |
-  | Image Enhancer | 0.12 | 0.03 |
-  | Image Collage | 0.18 | 0.06–0.07 |
-  | Image Splitter | 0.16 | 0.02 |
-  | ID Photo | 0.12 | 0.008 |
-  | Image Cropper | 0.08 | 0.009 |
-  | Background Remover | 0.06 | 0.002 |
-  | Image to PDF | 0.26–0.27 | 0.02 |
-  | Favicon Generator | 0.11 | 0.08 |
+  | 工具               | 之前      | 之后      |
+  | ------------------ | --------- | --------- |
+  | Image Converter    | 0.089     | 0.008     |
+  | Image Compressor   | 0.08–0.09 | 0.02      |
+  | Image Resizer      | 0.18      | 0.06      |
+  | Image Enhancer     | 0.12      | 0.03      |
+  | Image Collage      | 0.18      | 0.06–0.07 |
+  | Image Splitter     | 0.16      | 0.02      |
+  | ID Photo           | 0.12      | 0.008     |
+  | Image Cropper      | 0.08      | 0.009     |
+  | Background Remover | 0.06      | 0.002     |
+  | Image to PDF       | 0.26–0.27 | 0.02      |
+  | Favicon Generator  | 0.11      | 0.08      |
 
   **全部落到 Google 0.1 的"良好"线以下**。剩下的 Resizer / Collage / Favicon 那点余量是各自的细节
   （上传框变紧凑时上移 20px；Favicon 先让位、图标生成后再撑开，分两步），以后可以逐个抠。
@@ -524,14 +554,14 @@ or `owner approved`. Never infer owner approval.
   **另外发现一个跨所有工具的问题，尚未处理，需要所有者决定。** 在 1280×900 的桌面视口下，通过文件
   选择框上传之后，工作区替换上传框、把下方的 how-to / features 区块推出首屏，产生的 CLS：
 
-  | 工具 | 上传 CLS |
-  | --- | --- |
-  | Image Compressor | 0.08 |
-  | Image Enhancer | 0.12 |
-  | Image Splitter | 0.16 |
-  | Image Collage | 0.18 |
-  | Image Resizer | 0.18–0.19 |
-  | Image to PDF | **0.27** |
+  | 工具             | 上传 CLS  |
+  | ---------------- | --------- |
+  | Image Compressor | 0.08      |
+  | Image Enhancer   | 0.12      |
+  | Image Splitter   | 0.16      |
+  | Image Collage    | 0.18      |
+  | Image Resizer    | 0.18–0.19 |
+  | Image to PDF     | **0.27**  |
 
   Google 的"良好"线是 0.1，0.25 以上算"差"。**文件选择框上传大概率不会被 `hadRecentInput` 豁免**——
   用户在系统对话框里停留远超 500ms，`change` 事件触发时页面上没有近期输入。这和
@@ -613,6 +643,7 @@ or `owner approved`. Never infer owner approval.
   假失败，但它只在窗口存在时才咬得住，而窗口长度取决于 chunk 是否命中 HTTP 缓存（冷 1.2 s、热 34 ms）。
   agent 没有把"观察到中间态"也写成断言，因为那会 flaky——这个克制是对的，但意味着这条守卫在热缓存下
   是空转的。
+
 - 2026-09-17 — `删掉 23.9 MB 从没被下载过的 WASM` / `favicon-for-wordpress 维持 1 个图标`：
 
   **23.9 MB 的死重量。** `dist/_astro/ort-wasm-simd-threaded.jsep-*.wasm` 每次发布都上线，**从来没有
@@ -713,7 +744,7 @@ or `owner approved`. Never infer owner approval.
   崩溃之前**这条路由保持不隔离——"在新硬件上复现不出来"不算解释。
 
   验证方式本身也修了一处：复用的探针脚本**自己会发隔离头**（早先为测试改的），所以它报 `isolated:
-  true` 说明不了任何事。去掉之后重测，构建产物确认 `crossOriginIsolated: false`、`SharedArrayBuffer`
+true` 说明不了任何事。去掉之后重测，构建产物确认 `crossOriginIsolated: false`、`SharedArrayBuffer`
   不可用。构建产物里隔离头数量为 0。
 
   仍然缺的是所有者浏览器控制台的红色报错——特别是有没有出现
@@ -924,6 +955,7 @@ or `owner approved`. Never infer owner approval.
   Gates on this change: typecheck, lint, format, 13 unit scripts, build, SEO registry, site
   integrity, and the compressor, resizer/cropper and batch-download browser suites, all passing with
   zero browser errors.
+
 - 2026-09-12 — `observability` / `reviewed`: the threading fix and the header restore were reviewed
   against a fresh clone. The diagnosis holds and the gates pass here — typecheck, lint, format, all
   13 unit scripts, and eleven of the twelve browser suites; the built `_headers` carries exactly one
@@ -1009,7 +1041,7 @@ or `owner approved`. Never infer owner approval.
   `navigator.hardwareConcurrency` itself and exposes no override. Sweeping the thread count against
   one image on four cores: **1 thread 17.9s, 2 threads 8.8s, 4 threads 11.6s, 8 threads 13.8s,
   16 threads 25.9s, 32 threads 27.1s.** Past a couple of threads it loses to contention, and at
-  sixteen — exactly what a sixteen-core visitor asks for — it is *slower than not threading at all*.
+  sixteen — exactly what a sixteen-core visitor asks for — it is _slower than not threading at all_.
   Every count completed; none threw. Control, same build and image without the headers:
   single-threaded inference 14.0s against 8.8s isolated, which is what proves the threading was
   genuinely engaging rather than silently falling back.
