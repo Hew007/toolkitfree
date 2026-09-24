@@ -322,6 +322,54 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-24 — `Background Remover 多线程：根因查清` / `隔离头恢复（本地验证，待线上）`：
+
+  **真实错误**（CDP 抓到的，两次尝试各一遍，完全相同）：
+
+  ```
+  BlockedByResponseIssue  reason: CoepFrameResourceNeedsCoepHeader
+    url: /_astro/background-removal.worker-<hash>.js
+  Network.loadingFailed  errorText: net::ERR_BLOCKED_BY_RESPONSE
+    blockedReason: coep-frame-resource-needs-coep-header
+  ```
+
+  **根因**：页面是 COEP `require-corp` 时，Chromium 要求**它启动的 dedicated worker 的脚本响应本身也带
+  COEP**，否则直接拦掉脚本。线上 `_headers` 只给 `/tools/background-remover/*` 发了头，worker 脚本在
+  `/_astro/` 下，没有 COEP，于是 worker **根本没启动**——不是被杀、不是线程数、不是内存、也不是嵌套 blob
+  worker。脚本加载失败时 error 事件不带 message，于是被误读成"浏览器杀了进程"；单线程兜底加载的是同一个
+  脚本，所以跟着一起死。和核数无关：用 `plannedThreadCount` 算出 4 线程的机器和 2 线程的机器结果一样。
+  之前"16 核验证能跑"是因为那次用的本地服务器对**所有**响应都发了隔离头（9-17 那条已指出探针脚本自己
+  发头），worker 脚本也带上了 COEP，所以复现不出来。任务说明里给的 `serve-isolated.mjs` 也是同样问题。
+
+  **复现方式**：`wrangler dev`（Workers 静态资源的同一套引擎，按真实 `_headers` 下发头）+ 无头 Chrome
+  走 CDP，自动 attach 所有 worker（含嵌套 pthread worker），收 console / 异常 / Network / Audits issue。
+  旧规则在 Chrome 和 Edge 上都 100% 复现线上现象，连 `failed on 4 threads, retrying single-threaded`
+  那行 warn 都一致。
+
+  **修复**：`public/_headers` 恢复页面的 COOP/COEP，并**另加**一条
+  `/_astro/background-removal.worker-*.js` → `Cross-Origin-Embedder-Policy: require-corp`。只给这一个
+  worker 加：它不取任何跨源资源；ORT 从 blob: URL 起的 pthread worker 继承它的策略；PDF/FFmpeg 等其它
+  worker 不受影响。页面 HTML 里没有跨源子资源（只有 canonical 链接）。
+  `validate-site-integrity.mjs` 新增按 Cloudflare 规则解析 `dist/_headers` 的检查：页面 COOP/COEP 各恰好
+  一次、worker 脚本 COEP 恰好一次、其它 worker 不带 COEP。已验证：删掉 worker 规则、或再加一条重复页面
+  规则，都会让它失败。`background-remover.ts` 里 worker 从未发过消息就出错时，文案改成
+  "could not start; its script failed to load"，下次同类问题从界面文字就能看出来。
+
+  **耗时**（本机 i7-7500U，2 核 4 线程；同一张 1280×720 JPG；wrangler dev；各配置交替跑，取第 4–8 轮
+  稳定后的 inference 中位数）：未隔离单线程 **13.3s** → 隔离 2 线程（本机的实际计划）**9.2s**（−31%）→
+  强制 4 线程（≥8 核机器的计划）**8.8s**。每一轮线程版都比单线程快；pthread worker 数量 = 线程数−1
+  （1 个 / 3 个），`fellBack` 全部为 false。重新构建后的最终产物：2 线程 8.3s、4 线程 7.4s。
+  另一个发现：未隔离路径上 Chrome 报 `SharedArrayBufferConstructedWithoutIsolation` 弃用警告——ORT 的
+  threaded 构建即使单线程也创建共享内存，现在的慢路径靠的是一个已被标记弃用的行为。
+
+  **状态：`implemented but unverified`（线上）**。本地 Chrome 和 Edge 从上传到出图都完整跑通，
+  `typecheck` 以外的门禁全过，`test:e2e` 13/13 通过。`typecheck` 在 master 上就失败（`astro.config.mjs`
+  的 Vite 插件类型，和本次无关）。**还没在 Cloudflare 线上、也没在所有者那台 20 核机器上跑过**。
+  推送前建议：部署后在 20 核机器上打开页面，确认 `crossOriginIsolated === true`，跑一张图，确认控制台
+  timing 里 `threads: 4`、`fellBack: false`，没有 `could not start`。若失败，回滚本提交的 `_headers` 即可
+  回到慢路径。另外 Cloudflare Web Analytics 如果自动注入跨源 beacon，在 COEP 下会被拦（只影响统计，
+  不影响工具），上线后留意。
+
 - 2026-09-24 — `Resizer 平台预设：默认拉伸，可选保持宽高比`（所有者决定）：
 
   所有者的决定：**默认拉伸**，因为这是调整尺寸的工具；**不提供裁剪**；用户可以自己选择保持宽高比。
