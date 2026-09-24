@@ -24,7 +24,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'What happens if my photo is the wrong size?',
         answer:
-          'Instagram will crop or letterbox your photo. To decide what stays in frame yourself, crop it to 1:1 first with the Image Cropper, then resize it to 1080x1080 here. Resizing alone uses the exact 1080x1080 size, so a photo of another shape is stretched to fill the square.',
+          'Instagram will crop or letterbox your photo. Resizing here uses the exact 1080x1080 size by default, so a photo of another shape is stretched to fill the square. Tick "Maintain aspect ratio" to keep its proportions instead; it then fits inside 1080x1080 and one side comes out smaller.',
       },
       {
         question: 'What is the best aspect ratio for Instagram?',
@@ -146,7 +146,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
       {
         question: 'Will the image be stretched?',
         answer:
-          'With the Full HD preset, yes, if the image is not already 16:9: the preset uses exactly 1920x1080, so another shape is stretched or squished to fill it. To keep the proportions, crop it to 16:9 first, or set Platform size to Custom, which switches on "Maintain aspect ratio", and enter 1920 and 1080 so the whole image fits inside that size.',
+          'By default, yes, if the image is not already 16:9: the Full HD preset uses exactly 1920x1080, so another shape is stretched or squished to fill it. Tick "Maintain aspect ratio" to keep the proportions instead; the whole image then fits inside 1920x1080 and one side comes out smaller.',
       },
       {
         question: 'Is 1920x1080 good for wallpapers?',

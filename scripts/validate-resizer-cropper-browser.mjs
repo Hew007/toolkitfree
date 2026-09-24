@@ -178,12 +178,14 @@ for (const [slug, preset, width, height] of resizerVariants) {
     maintainRatio: document.querySelector('[data-testid="resize-maintain-ratio"]').checked,
     ratioDisabled: document.querySelector('[data-testid="resize-maintain-ratio"]').disabled,
   })`);
+  // Platform presets stretch to their exact size by default, and the ratio lock is
+  // offered but off: keeping the proportions is the visitor's choice.
   assert.deepEqual(controls, {
     preset,
     width,
     height,
     maintainRatio: false,
-    ratioDisabled: true,
+    ratioDisabled: false,
   });
 
   // No submit step: the result follows the preset the variant page selected.
@@ -198,6 +200,53 @@ for (const [slug, preset, width, height] of resizerVariants) {
   assert.equal(result.declaredHeight, height, `${slug} declared height`);
   resizerResults.push({ slug, width: result.width, height: result.height });
 }
+
+// Keeping the proportions under a platform preset. A 400x300 source into the
+// 1080x1080 Instagram size is stretched by default; with the lock on it fits inside
+// instead. The choice carries across platform presets, and going through Custom
+// returns to the exact-size default.
+async function choosePreset(value) {
+  await evaluate(`(() => {
+    const select = document.querySelector('[data-testid="resize-preset"]');
+    const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set;
+    setter.call(select, ${JSON.stringify(value)});
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  })()`);
+}
+async function resultSize(width, height, label) {
+  await waitFor(
+    `Boolean(document.querySelector('[data-resize-result][data-width="${width}"][data-height="${height}"]'))`,
+    label
+  );
+  const result = await inspectResult('[data-resize-result]');
+  return { width: result.width, height: result.height };
+}
+const ratioChecked = () =>
+  evaluate(`document.querySelector('[data-testid="resize-maintain-ratio"]').checked`);
+
+await navigate('/tools/image-resizer/resize-for-instagram/');
+await uploadGenerated({ name: 'keep-ratio.png', width: 400, height: 300 });
+assert.deepEqual(await resultSize(1080, 1080, 'stretched by default'), {
+  width: 1080,
+  height: 1080,
+});
+await evaluate(`document.querySelector('[data-testid="resize-maintain-ratio"]').click()`);
+const presetKeepRatio = {
+  instagram: await resultSize(1080, 810, 'kept ratio inside 1080x1080'),
+};
+await choosePreset('youtube_thumbnail');
+assert.equal(await ratioChecked(), true, 'the ratio choice should carry across presets');
+presetKeepRatio.youtube = await resultSize(960, 720, 'kept ratio inside 1280x720');
+await choosePreset('custom');
+assert.equal(await ratioChecked(), true, 'Custom starts with the ratio lock on');
+await choosePreset('twitter_header');
+assert.equal(await ratioChecked(), false, 'leaving Custom returns to the exact-size default');
+presetKeepRatio.twitterExact = await resultSize(1500, 500, 'exact size after Custom');
+assert.deepEqual(presetKeepRatio, {
+  instagram: { width: 1080, height: 810 },
+  youtube: { width: 960, height: 720 },
+  twitterExact: { width: 1500, height: 500 },
+});
 
 await navigate('/tools/image-resizer/');
 await uploadGenerated({ name: 'landscape.png', width: 400, height: 300, transparent: true });
@@ -611,6 +660,7 @@ console.log(
   JSON.stringify({
     status: 'RESIZER_CROPPER_BROWSER_OK',
     resizerVariants: resizerResults,
+    presetKeepRatio,
     customContain: { width: boundedResult.width, height: boundedResult.height },
     customExact: { width: exactResult.width, height: exactResult.height },
     cropperVariants: cropperResults,

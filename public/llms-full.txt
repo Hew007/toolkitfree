@@ -119,7 +119,7 @@ Target mode uses bounded quality search for JPG/WebP and bounded dimension reduc
 
 ## Image Resizer
 
-Processes multiple JPG, PNG, or WebP images with shared dimension, format, and quality settings. The seven platform variant pages initialize verified exact presets. In Custom mode, Maintain aspect ratio fits each image inside the selected maximum width and height; disabling it uses the exact dimensions and may stretch the image. Output uses Canvas, so browser memory and Canvas dimension limits apply.
+Processes multiple JPG, PNG, or WebP images with shared dimension, format, and quality settings. The seven platform variant pages initialize verified exact presets. Platform presets use the exact dimensions by default and stretch an image of another shape. Maintain aspect ratio, available for platform presets and Custom sizes, instead fits each image inside the selected width and height without stretching; Custom starts with it on. The resizer does not crop. Output uses Canvas, so browser memory and Canvas dimension limits apply.
 
 ## Image Cropper
 

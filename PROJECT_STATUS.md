@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-09-23
+Last updated: 2026-09-24
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -322,6 +322,32 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-24 — `Resizer 平台预设：默认拉伸，可选保持宽高比`（所有者决定）：
+
+  所有者的决定：**默认拉伸**，因为这是调整尺寸的工具；**不提供裁剪**；用户可以自己选择保持宽高比。
+
+  原来平台预设下"Maintain aspect ratio"勾选框是**禁用**的，所以一张 4:3 的照片选 Instagram 1080×1080
+  只能被压扁，没有别的选择。现在：
+
+  - 勾选框在平台预设下**可用、默认不勾**：不勾时按精确尺寸输出（拉伸），勾上时整张图等比缩进这个尺寸，
+    一边会比预设小（400×300 的源图进 1080×1080 得到 1080×810）。
+  - 勾选状态在平台预设之间切换时**保留**；切到 Custom 时自动打开（Custom 本来就是这样）；从 Custom 切回
+    平台预设时回到默认的拉伸。
+  - 勾上后宽高输入框的标签变成 Max width / Max height，下方提示文字随状态说明会得到什么。
+  - 自动运行的 `key` 去掉了 `preset`：输出只取决于尺寸和比例锁，换预设本身就会改尺寸，再把预设名放进去
+    只会多跑一次。
+
+  **文案**：7 个 resizer 变体页的 how-to 改成只讲这两种选择；上一版 how-to 和两条 FAQ 答案里"先用 Image
+  Cropper 裁"的建议**按所有者"不提供裁剪"的意思去掉了**（站内链接因此 4404 → 4400）。主 resizer 页那条
+  问题是"How do I crop an image to a specific size?"的 FAQ，原答案用"关掉 Maintain aspect ratio"来回答
+  "裁剪"，其实那是拉伸；答案改成说明本工具只调整整张图的尺寸、要裁剪请用 Image Cropper（问题未改）。
+  `llms-full.txt` 里手写的 Image Resizer 段落同步更新（生成段落未动，`sync:llms --check` 通过）。
+
+  **测试**：resizer 浏览器套件原来断言"平台预设下勾选框禁用"，改为断言可用且默认不勾、默认输出仍是精确尺寸；
+  新增一段：Instagram 预设下勾选 → 1080×810，切到 YouTube 预设勾选保留 → 960×720，经过 Custom 再切到
+  Twitter → 回到不勾、输出 1500×500。对旧组件运行会在 `ratioDisabled` 上失败。全部 12 个浏览器套件通过；
+  secondary-tools 只剩下不到模型那一条。
+
 - 2026-09-23 — `上传位移：how-to 给工作区让位` / `主工具页全部降到 0.1 以下` / `32 个变体页待定`：
 
   所有者选了"调整 how-to 的位置"。**先测了字面做法，没用**：把 how-to 从主栏整个拿掉，Image to PDF
@@ -382,7 +408,7 @@ or `owner approved`. Never infer owner approval.
     两条出路：有对应比例的先用 Image Cropper 裁（1:1、16:9、9:16 有直链），或切到 Custom（比例锁会自动
     打开）再填尺寸。两条 FAQ 答案原来是错的，已改答案、未改问题：1920×1080 页说"勾选 Maintain aspect
     ratio 即可不拉伸"（预设下这个勾选框根本点不了）；Instagram 页说"用我们的工具调整尺寸就能避免被裁或
-    加黑边"（实际是拉伸）。**是否把平台预设改成裁切填充，属于产品决定，留给所有者。**
+    加黑边"（实际是拉伸）。是否改成裁切填充由所有者决定——9-24 已决定：默认拉伸、可选保持宽高比、不提供裁剪，见当日记录。
   - **Resizer 预览框在图片加载前后尺寸不同。** 加载前缩放比例回退为 1，框先按最大 960×760 渲染，加载后
     缩到约 320×260，把下面的内容整体顶走——和 Image Splitter 同一类问题，约三分之一的上传会触发，
     resize-for-youtube 最坏到 0.15。现在加载前用请求尺寸作基准：平台预设下这正是加载后算出的值，
