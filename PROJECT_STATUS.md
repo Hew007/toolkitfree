@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-09-24
+Last updated: 2026-09-26
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -321,6 +321,25 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-09-26 — `Background Remover 多线程：16 线程机器上未复现挂起，解除 blocked`：
+
+  在 i7-10700T（8 核 16 线程）上按上一条的"下一步"执行：本分支构建（`dist` 晚于 `40b4d19`）+ 本机
+  `wrangler dev --port 8787`，页面 `crossOriginIsolated: true`、`hardwareConcurrency: 16`。CDP 探针
+  （递归 auto-attach 所有 worker，收 console / 异常 / Network / Audits issue，卡住时轮询每个 worker 是否
+  还能响应）跑了四种组合：Chrome 153 无头、Chrome 153 有界面、Edge 153 无头、Edge 153 有界面。
+  **四组全部成功**：4 线程，ORT 起了 3 个 `blob:` pthread worker，没有任何异常、网络失败或 issue，
+  没有回退，"Removed in your browser in" 5.4–6.5s。旧的 `could not start` 故障也没有出现。
+
+  所以上一条记录的挂起**在全新浏览器配置 + 本机回环地址下复现不出来**。和所有者当时那次的区别：那次是
+  所有者日常用的浏览器配置（扩展、缓存），并且通过局域网 HTTPS 访问另一台笔记本上的 `wrangler dev`。
+  用 Claude in Chrome 连到的两个浏览器都不在这台机器上（一个打不开 `127.0.0.1:8787`，另一个是 Chrome 140、
+  20 线程），所以还没能在所有者的真实配置里跑。探针脚本没有提交。
+
+  随后所有者在这台机器上用自己的浏览器实测，**同样正常**。所有者决定：**按不复现处理**，上一条记录里的
+  `blocked` 解除，本分支满足"合并前必须在 16 核机器上完整跑通"的条件。上次的挂起只出现在"通过局域网 HTTPS
+  访问另一台笔记本上的 `wrangler dev`"那一种配置里，原因未查明；线上若再出现同样的
+  `compute:inference ... silent for 90s` 超时，单线程回退仍会兜底出图，届时再从这条线索查。
 
 - 2026-09-24 — `Background Remover 多线程：根因查清` / `隔离头恢复（本地验证，待线上）`：
 
