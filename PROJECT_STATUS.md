@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-09-24
+Last updated: 2026-09-26
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -322,6 +322,103 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-09-26 — `Background Remover 多线程：16 线程机器上未复现挂起，解除 blocked`：
+
+  在 i7-10700T（8 核 16 线程）上按上一条的"下一步"执行：本分支构建（`dist` 晚于 `40b4d19`）+ 本机
+  `wrangler dev --port 8787`，页面 `crossOriginIsolated: true`、`hardwareConcurrency: 16`。CDP 探针
+  （递归 auto-attach 所有 worker，收 console / 异常 / Network / Audits issue，卡住时轮询每个 worker 是否
+  还能响应）跑了四种组合：Chrome 153 无头、Chrome 153 有界面、Edge 153 无头、Edge 153 有界面。
+  **四组全部成功**：4 线程，ORT 起了 3 个 `blob:` pthread worker，没有任何异常、网络失败或 issue，
+  没有回退，"Removed in your browser in" 5.4–6.5s。旧的 `could not start` 故障也没有出现。
+
+  所以上一条记录的挂起**在全新浏览器配置 + 本机回环地址下复现不出来**。和所有者当时那次的区别：那次是
+  所有者日常用的浏览器配置（扩展、缓存），并且通过局域网 HTTPS 访问另一台笔记本上的 `wrangler dev`。
+  用 Claude in Chrome 连到的两个浏览器都不在这台机器上（一个打不开 `127.0.0.1:8787`，另一个是 Chrome 140、
+  20 线程），所以还没能在所有者的真实配置里跑。探针脚本没有提交。
+
+  随后所有者在这台机器上用自己的浏览器实测，**同样正常**。所有者决定：**按不复现处理**，上一条记录里的
+  `blocked` 解除，本分支满足"合并前必须在 16 核机器上完整跑通"的条件。上次的挂起只出现在"通过局域网 HTTPS
+  访问另一台笔记本上的 `wrangler dev`"那一种配置里，原因未查明；线上若再出现同样的
+  `compute:inference ... silent for 90s` 超时，单线程回退仍会兜底出图，届时再从这条线索查。
+
+- 2026-09-24 — `Background Remover 多线程：根因查清` / `隔离头恢复（本地验证，待线上）`：
+
+  **真实错误**（CDP 抓到的，两次尝试各一遍，完全相同）：
+
+  ```
+  BlockedByResponseIssue  reason: CoepFrameResourceNeedsCoepHeader
+    url: /_astro/background-removal.worker-<hash>.js
+  Network.loadingFailed  errorText: net::ERR_BLOCKED_BY_RESPONSE
+    blockedReason: coep-frame-resource-needs-coep-header
+  ```
+
+  **根因**：页面是 COEP `require-corp` 时，Chromium 要求**它启动的 dedicated worker 的脚本响应本身也带
+  COEP**，否则直接拦掉脚本。线上 `_headers` 只给 `/tools/background-remover/*` 发了头，worker 脚本在
+  `/_astro/` 下，没有 COEP，于是 worker **根本没启动**——不是被杀、不是线程数、不是内存、也不是嵌套 blob
+  worker。脚本加载失败时 error 事件不带 message，于是被误读成"浏览器杀了进程"；单线程兜底加载的是同一个
+  脚本，所以跟着一起死。和核数无关：用 `plannedThreadCount` 算出 4 线程的机器和 2 线程的机器结果一样。
+  之前"16 核验证能跑"是因为那次用的本地服务器对**所有**响应都发了隔离头（9-17 那条已指出探针脚本自己
+  发头），worker 脚本也带上了 COEP，所以复现不出来。任务说明里给的 `serve-isolated.mjs` 也是同样问题。
+
+  **复现方式**：`wrangler dev`（Workers 静态资源的同一套引擎，按真实 `_headers` 下发头）+ 无头 Chrome
+  走 CDP，自动 attach 所有 worker（含嵌套 pthread worker），收 console / 异常 / Network / Audits issue。
+  旧规则在 Chrome 和 Edge 上都 100% 复现线上现象，连 `failed on 4 threads, retrying single-threaded`
+  那行 warn 都一致。
+
+  **修复**：`public/_headers` 恢复页面的 COOP/COEP，并**另加**一条
+  `/_astro/background-removal.worker-*.js` → `Cross-Origin-Embedder-Policy: require-corp`。只给这一个
+  worker 加：它不取任何跨源资源；ORT 从 blob: URL 起的 pthread worker 继承它的策略；PDF/FFmpeg 等其它
+  worker 不受影响。页面 HTML 里没有跨源子资源（只有 canonical 链接）。
+  `validate-site-integrity.mjs` 新增按 Cloudflare 规则解析 `dist/_headers` 的检查：页面 COOP/COEP 各恰好
+  一次、worker 脚本 COEP 恰好一次、其它 worker 不带 COEP。已验证：删掉 worker 规则、或再加一条重复页面
+  规则，都会让它失败。`background-remover.ts` 里 worker 从未发过消息就出错时，文案改成
+  "could not start; its script failed to load"，下次同类问题从界面文字就能看出来。
+
+  **耗时**（本机 i7-7500U，2 核 4 线程；同一张 1280×720 JPG；wrangler dev；各配置交替跑，取第 4–8 轮
+  稳定后的 inference 中位数）：未隔离单线程 **13.3s** → 隔离 2 线程（本机的实际计划）**9.2s**（−31%）→
+  强制 4 线程（≥8 核机器的计划）**8.8s**。每一轮线程版都比单线程快；pthread worker 数量 = 线程数−1
+  （1 个 / 3 个），`fellBack` 全部为 false。重新构建后的最终产物：2 线程 8.3s、4 线程 7.4s。
+  另一个发现：未隔离路径上 Chrome 报 `SharedArrayBufferConstructedWithoutIsolation` 弃用警告——ORT 的
+  threaded 构建即使单线程也创建共享内存，现在的慢路径靠的是一个已被标记弃用的行为。
+
+  **状态：`blocked` —— 本分支不能合并 / 不能上线。** COEP 那一层已经修好并验证：本地 Chrome、Edge 从上传到
+  出图完整跑通（本机 2/4 线程都正常），`test:e2e` 13/13 通过；`typecheck` 在 master 上就失败
+  （`astro.config.mjs` 的 Vite 插件类型，与本次无关）。
+
+  **但所有者在 16 核机器上实测，出现了第二个、不同的故障：**通过局域网访问本机的 `wrangler dev`（HTTPS，
+  `crossOriginIsolated: true`，`hardwareConcurrency: 16`），worker 正常启动、模型正常下载、session 正常创建，
+  然后在 `session.run()` 里**挂住不动**，90 秒后看门狗超时：
+
+  ```
+  [toolkitfree] background removal failed on 4 threads, retrying single-threaded Error: Background
+  removal stopped because the model made no progress for too long (last step: compute:inference 1/4,
+  silent for 90s, 4 threads).
+  ```
+
+  `compute:inference 1/4` 是库在 `imageSourceToImageData` 之后、`runInference` 之前报的，session 早在
+  `init` 里建好了，所以挂在推理本身。同一个服务、同样 4 线程，在本机（i7-7500U）上每次 7–8 秒就跑完。
+
+  已用临时诊断构建（URL 参数强制线程数、在 worker 里替换 `InferenceSession.create` 覆盖库写死的
+  `executionMode`）让所有者在 16 核机器上试了三组：4 线程 + `sequential`、2 线程 + `parallel`、4 线程 +
+  `parallel`，**三组都失败**（没拿到每组的具体输出）。所以不是 `executionMode: 'parallel'`，也不像单纯的
+  线程数。诊断代码已撤掉，没有提交；保留了超时文案里的 "last step"。
+
+  注意一个坑：`node_modules` 里 npm 和 pnpm 两种安装混在一起，`onnxruntime-web` 有两份物理副本
+  （`node_modules/onnxruntime-web` 和 `.pnpm/onnxruntime-web@1.21.0/...`），库用的是后者，
+  `import('onnxruntime-web')` 拿到的是前者，打包后是两个不同的 chunk，对前者的修改不影响库。
+
+  **下一步（在 16 核那台机器上直接跑）：**
+  1. 切到本分支，`npm run build`，`npx wrangler dev --port 8787`（本地访问 `http://127.0.0.1:8787`，
+     localhost 是安全上下文，不需要 HTTPS）。
+  2. 先确认那台机器上的**旧失败**已经消失（不再出现 `could not start`），再抓挂住时的完整信息：用 CDP
+     自动 attach 所有 worker（包括 ORT 的 `em-pthread` 嵌套 worker），看 pthread worker 有没有全部起来、
+     有没有报错；worker 里设 `ort.env.debug = true` / `logLevel = 'verbose'`。
+  3. 可疑方向：Emscripten pthread 池（`ort-wasm-simd-threaded.mjs` 在启动时预建 `numThreads-1` 个
+     worker，线程不够时要回到事件循环才能建新 worker，推理是同步阻塞的，可能死锁）；pthread worker 里的
+     `navigator.hardwareConcurrency` 仍是真实的 16（我们只覆盖了自己那个 worker 的）；以及那台机器的
+     浏览器/版本差异。
+  4. 线上 `_headers` 目前在 master 上仍然是不隔离的慢路径，照常可用。本分支合并前必须在那台机器上完整跑通。
+
 - 2026-09-24 — `Resizer 平台预设：默认拉伸，可选保持宽高比`（所有者决定）：
 
   所有者的决定：**默认拉伸**，因为这是调整尺寸的工具；**不提供裁剪**；用户可以自己选择保持宽高比。
@@ -362,19 +459,19 @@ or `owner approved`. Never infer owner approval.
 
   1280×900、每个工具各测两次：
 
-  | 工具 | 之前 | 之后 |
-  | --- | --- | --- |
-  | Image Converter | 0.089 | 0.008 |
-  | Image Compressor | 0.08–0.09 | 0.02 |
-  | Image Resizer | 0.18 | 0.06 |
-  | Image Enhancer | 0.12 | 0.03 |
-  | Image Collage | 0.18 | 0.06–0.07 |
-  | Image Splitter | 0.16 | 0.02 |
-  | ID Photo | 0.12 | 0.008 |
-  | Image Cropper | 0.08 | 0.009 |
-  | Background Remover | 0.06 | 0.002 |
-  | Image to PDF | 0.26–0.27 | 0.02 |
-  | Favicon Generator | 0.11 | 0.08 |
+  | 工具               | 之前      | 之后      |
+  | ------------------ | --------- | --------- |
+  | Image Converter    | 0.089     | 0.008     |
+  | Image Compressor   | 0.08–0.09 | 0.02      |
+  | Image Resizer      | 0.18      | 0.06      |
+  | Image Enhancer     | 0.12      | 0.03      |
+  | Image Collage      | 0.18      | 0.06–0.07 |
+  | Image Splitter     | 0.16      | 0.02      |
+  | ID Photo           | 0.12      | 0.008     |
+  | Image Cropper      | 0.08      | 0.009     |
+  | Background Remover | 0.06      | 0.002     |
+  | Image to PDF       | 0.26–0.27 | 0.02      |
+  | Favicon Generator  | 0.11      | 0.08      |
 
   **全部落到 Google 0.1 的"良好"线以下**。剩下的 Resizer / Collage / Favicon 那点余量是各自的细节
   （上传框变紧凑时上移 20px；Favicon 先让位、图标生成后再撑开，分两步），以后可以逐个抠。
@@ -476,14 +573,14 @@ or `owner approved`. Never infer owner approval.
   **另外发现一个跨所有工具的问题，尚未处理，需要所有者决定。** 在 1280×900 的桌面视口下，通过文件
   选择框上传之后，工作区替换上传框、把下方的 how-to / features 区块推出首屏，产生的 CLS：
 
-  | 工具 | 上传 CLS |
-  | --- | --- |
-  | Image Compressor | 0.08 |
-  | Image Enhancer | 0.12 |
-  | Image Splitter | 0.16 |
-  | Image Collage | 0.18 |
-  | Image Resizer | 0.18–0.19 |
-  | Image to PDF | **0.27** |
+  | 工具             | 上传 CLS  |
+  | ---------------- | --------- |
+  | Image Compressor | 0.08      |
+  | Image Enhancer   | 0.12      |
+  | Image Splitter   | 0.16      |
+  | Image Collage    | 0.18      |
+  | Image Resizer    | 0.18–0.19 |
+  | Image to PDF     | **0.27**  |
 
   Google 的"良好"线是 0.1，0.25 以上算"差"。**文件选择框上传大概率不会被 `hadRecentInput` 豁免**——
   用户在系统对话框里停留远超 500ms，`change` 事件触发时页面上没有近期输入。这和
@@ -565,6 +662,7 @@ or `owner approved`. Never infer owner approval.
   假失败，但它只在窗口存在时才咬得住，而窗口长度取决于 chunk 是否命中 HTTP 缓存（冷 1.2 s、热 34 ms）。
   agent 没有把"观察到中间态"也写成断言，因为那会 flaky——这个克制是对的，但意味着这条守卫在热缓存下
   是空转的。
+
 - 2026-09-17 — `删掉 23.9 MB 从没被下载过的 WASM` / `favicon-for-wordpress 维持 1 个图标`：
 
   **23.9 MB 的死重量。** `dist/_astro/ort-wasm-simd-threaded.jsep-*.wasm` 每次发布都上线，**从来没有
@@ -665,7 +763,7 @@ or `owner approved`. Never infer owner approval.
   崩溃之前**这条路由保持不隔离——"在新硬件上复现不出来"不算解释。
 
   验证方式本身也修了一处：复用的探针脚本**自己会发隔离头**（早先为测试改的），所以它报 `isolated:
-  true` 说明不了任何事。去掉之后重测，构建产物确认 `crossOriginIsolated: false`、`SharedArrayBuffer`
+true` 说明不了任何事。去掉之后重测，构建产物确认 `crossOriginIsolated: false`、`SharedArrayBuffer`
   不可用。构建产物里隔离头数量为 0。
 
   仍然缺的是所有者浏览器控制台的红色报错——特别是有没有出现
@@ -876,6 +974,7 @@ or `owner approved`. Never infer owner approval.
   Gates on this change: typecheck, lint, format, 13 unit scripts, build, SEO registry, site
   integrity, and the compressor, resizer/cropper and batch-download browser suites, all passing with
   zero browser errors.
+
 - 2026-09-12 — `observability` / `reviewed`: the threading fix and the header restore were reviewed
   against a fresh clone. The diagnosis holds and the gates pass here — typecheck, lint, format, all
   13 unit scripts, and eleven of the twelve browser suites; the built `_headers` carries exactly one
@@ -961,7 +1060,7 @@ or `owner approved`. Never infer owner approval.
   `navigator.hardwareConcurrency` itself and exposes no override. Sweeping the thread count against
   one image on four cores: **1 thread 17.9s, 2 threads 8.8s, 4 threads 11.6s, 8 threads 13.8s,
   16 threads 25.9s, 32 threads 27.1s.** Past a couple of threads it loses to contention, and at
-  sixteen — exactly what a sixteen-core visitor asks for — it is *slower than not threading at all*.
+  sixteen — exactly what a sixteen-core visitor asks for — it is _slower than not threading at all_.
   Every count completed; none threw. Control, same build and image without the headers:
   single-threaded inference 14.0s against 8.8s isolated, which is what proves the threading was
   genuinely engaging rather than silently falling back.
