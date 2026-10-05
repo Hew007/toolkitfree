@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-09-24
+Last updated: 2026-10-05
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -321,6 +321,33 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-10-05 — `所有者验收清单已发布` / `浏览器套件共用一个 CDP 模块`：
+
+  **验收清单**：<https://claude.ai/artifact/B8zQ6qPuzYcmsXrUL4MZwW>（私有，仅所有者可见）。14 个工具加全站通用、
+  线上数据三组，共 53 项；最近几个 PR 的改动标了「本轮改动」，沙箱验证不了的标「需你验证」，有取舍的标
+  「需你决定」（Background Remover 色块芯片、QR 新外观）。每项的步骤和预期都对过源码里的真实按钮和字段名。
+  勾选和备注存在该 artifact 的数据库里（`results/<条目 id>`，只有所有者和编辑者能写），**Claude 可以直接读回
+  结果**，按「有问题」的条目修。**这次手动验收是 `CLAUDE.md` 发布顺序的第 3 步，推广要等它完成。**
+
+  **CDP 共享模块**：13 个浏览器套件各自复制了一份连接、消息路由、错误收集和 `send` / `evaluate` / `waitFor` /
+  `navigate`，已经漂移出 5 种 `evaluate`、6 种 `waitFor`、8 种 `navigate`、4 种消息监听。现在统一到
+  `scripts/browser-session.mjs` 的 `openBrowserSession()`，13 个套件净删约 940 行。
+
+  - 各套件真正不同的地方保留为参数：默认超时（20–120 秒）、轮询间隔（75–150 ms）、PDF 和视频套件的
+    「工具已报错就提前失败」、视频套件超时时的诊断信息、性能套件的网络请求记录（改为 `session.on()` 订阅）。
+  - 统一后的 `evaluate` 报错带上异常本身的信息（原来多数副本只报 "Uncaught"）；`send` 报错带上 CDP 方法名。
+  - `navigate()` 等到新文档加载完、所有 island 都 hydrate 完才返回，需要时附加 `ready` 条件。另外会在离开前给
+    旧页面打标记、等标记消失。**这只是防御**：实测 Chrome 的 `Page.navigate` 20 次都是新文档已提交才返回，
+    旧副本并没有这个竞态；只是协议没有保证这一点，套件还要在 Edge 上跑。
+  - 迁移过程中抓到一处会悄悄改变行为的地方：Converter 套件的 `baseUrl` 本身带 `/tools/image-converter`，旧的
+    `navigate` 是往它后面拼路径。直接换成共享的 `navigate` 会跳到站点根下的错误页面，已改成显式拼接。
+  - Collage 套件关闭标签页时有 1 秒超时（下载还没结束时关闭会卡住），这一保护挪进了共享的 `close()`，所有套件都有了。
+
+  **验证**：迁移前先把 13 个套件各跑一遍存下输出作为基线，迁移后再跑一遍逐项比对。10 个套件输出**完全一致**；
+  secondary-tools 停在同一条已知的抠图断言（沙箱下不到模型）；其余三个的差异都是逐次运行本来就会变的东西
+  （PDF 文件里写入的创建时间导致 ±1 字节、CLS 数值、截图目录的时间戳），状态全部通过。lint、format 通过。
+  `prepare-test-fixtures.mjs` 也有一个很小的 CDP 客户端，但它自己起浏览器只为画测试图，不导航、不涉及 hydration，没有动。
 
 - 2026-09-24 — `Resizer 平台预设：默认拉伸，可选保持宽高比`（所有者决定）：
 

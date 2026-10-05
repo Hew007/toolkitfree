@@ -2,9 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
+import { openBrowserSession } from './browser-session.mjs';
 
-const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9228';
-const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
 const distRoot = path.resolve('dist');
 const screenshotRoot = path.resolve(
   process.env.UI_SCREENSHOT_DIR ||
@@ -41,73 +40,13 @@ function screenshotName(route, width) {
 const routes = findPublicRoutes(distRoot);
 fs.mkdirSync(screenshotRoot, { recursive: true });
 
-const target = await fetch(`${endpoint}/json/new?${encodeURIComponent('about:blank')}`, {
-  method: 'PUT',
-}).then((response) => {
-  if (!response.ok) throw new Error(`Could not create browser target: ${response.status}`);
-  return response.json();
+const session = await openBrowserSession({
+  defaultEndpoint: 'http://127.0.0.1:9228',
+  waitTimeoutMs: 20_000,
+  pollMs: 100,
 });
-
-const socket = new WebSocket(target.webSocketDebuggerUrl);
-await new Promise((resolve, reject) => {
-  socket.addEventListener('open', resolve, { once: true });
-  socket.addEventListener('error', reject, { once: true });
-});
-
-let nextId = 0;
-const pending = new Map();
-const browserErrors = [];
-
-socket.addEventListener('message', (event) => {
-  const message = JSON.parse(event.data);
-  if (message.id) {
-    const request = pending.get(message.id);
-    if (!request) return;
-    pending.delete(message.id);
-    if (message.error) request.reject(new Error(message.error.message));
-    else request.resolve(message.result);
-    return;
-  }
-  if (message.method === 'Runtime.exceptionThrown') {
-    browserErrors.push(message.params.exceptionDetails.text);
-  }
-  if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') {
-    browserErrors.push(message.params.entry.text);
-  }
-});
-
-function send(method, params = {}) {
-  const id = ++nextId;
-  socket.send(JSON.stringify({ id, method, params }));
-  return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
-}
-
-async function evaluate(expression) {
-  const result = await send('Runtime.evaluate', {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-  });
-  if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
-  return result.result.value;
-}
-
-async function waitFor(expression, label, timeoutMs = 20_000) {
-  const started = Date.now();
-  while (Date.now() - started < timeoutMs) {
-    if (await evaluate(`Boolean(${expression})`)) return;
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-  throw new Error(`Timed out waiting for ${label}`);
-}
-
-async function navigate(route) {
-  await send('Page.navigate', { url: `${baseUrl}${route}` });
-  await waitFor(
-    `document.readyState === 'complete' && !document.querySelector('astro-island[ssr]')`,
-    `${route} hydration`
-  );
-}
+const { browserErrors, send, evaluate } = session;
+const { navigate } = session;
 
 await send('Page.enable');
 await send('Runtime.enable');
@@ -308,8 +247,7 @@ fs.writeFileSync(
   manifestPath,
   `${JSON.stringify({ routes, widths, results, browserErrors: actionableBrowserErrors }, null, 2)}\n`
 );
-await send('Target.closeTarget', { targetId: target.id });
-socket.close();
+await session.close();
 
 console.log(
   JSON.stringify({

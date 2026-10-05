@@ -131,6 +131,9 @@ Important directories:
 - `src/layouts/` — `Layout.astro` with metadata, navigation, footer, structured data and AdSense hooks.
 - `src/styles/` — global CSS and shared design tokens.
 - `scripts/` — validation, quality gates, browser regression and registry sync scripts.
+  - 浏览器回归套件（`scripts/validate-*-browser.mjs`）通过 `scripts/browser-session.mjs` 连 Chrome DevTools协议。新套件必须用它的 `openBrowserSession()`，不要再复制一份 `send` / `evaluate` / `waitFor` / `navigate`：
+    13 份副本曾漂移出 8 种 `navigate`，其中两份在页面 hydration 之前就选文件，导致间歇失败。各套件真正不同的
+    地方（超时、轮询间隔、早失败条件）作为参数传入。
 - `public/` — static assets, including `llms.txt` and `llms-full.txt`.
 - `docs/` — local planning and verification documents. This directory is intentionally ignored by git.
 
