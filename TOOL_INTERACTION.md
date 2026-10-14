@@ -345,6 +345,10 @@ SKIP_BUILD=1 E2E_PREVIEW_PORT=<你的> E2E_DEBUG_PORT=<你的> node scripts/run-
 
 ## 踩过的坑
 
+- **浏览器套件共用 `scripts/browser-session.mjs`。** 它的 `navigate()` 会等到新文档加载完、所有 island 都 hydrate
+  完才返回；需要额外条件时传 `ready`。不要在套件里再写 `send('Page.navigate')` 加自己的等待——Favicon 和
+  Image Splitter 两个套件就是因为只等文件输入框出现，在 hydration 前选了文件，间歇失败（Splitter 在 master 上
+  8 次挂 3 次）。
 - **写浏览器探针时注意 island 是 SSR 的。** QR Generator 的 `#qr-text` 在 hydration **之前**就存在。
   如果在 hydration 前用原生 setter 写 textarea 的值，会污染 React 的 value tracker，此后再写**相同**的
   值不会触发 `onChange`，页面看起来像"输入无效"。既有套件因为 `navigate()` 会等 `astro-island[ssr]`

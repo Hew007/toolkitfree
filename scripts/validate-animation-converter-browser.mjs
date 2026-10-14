@@ -1,73 +1,24 @@
 import assert from 'node:assert/strict';
 import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
+import { openBrowserSession } from './browser-session.mjs';
 
-const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9226';
-const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
-const target = await fetch(`${endpoint}/json/new?${encodeURIComponent('about:blank')}`, {
-  method: 'PUT',
-}).then((response) => {
-  if (!response.ok) throw new Error(`Could not create browser target: ${response.status}`);
-  return response.json();
-});
-const socket = new WebSocket(target.webSocketDebuggerUrl);
-await new Promise((resolve, reject) => {
-  socket.addEventListener('open', resolve, { once: true });
-  socket.addEventListener('error', reject, { once: true });
-});
-
-let nextId = 0;
-const pending = new Map();
-const browserErrors = [];
-socket.addEventListener('message', (event) => {
-  const message = JSON.parse(event.data);
-  if (message.id) {
-    const request = pending.get(message.id);
-    if (!request) return;
-    pending.delete(message.id);
-    if (message.error) request.reject(new Error(message.error.message));
-    else request.resolve(message.result);
-    return;
-  }
-  if (message.method === 'Runtime.exceptionThrown')
-    browserErrors.push(message.params.exceptionDetails.text);
-  if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') {
-    browserErrors.push(message.params.entry.text);
-  }
-});
-function send(method, params = {}) {
-  const id = ++nextId;
-  socket.send(JSON.stringify({ id, method, params }));
-  return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
-}
-async function evaluate(expression) {
-  const response = await send('Runtime.evaluate', {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-  });
-  if (response.exceptionDetails) throw new Error(response.exceptionDetails.text);
-  return response.result.value;
-}
-async function waitFor(expression, label, timeoutMs = 120_000) {
-  const started = Date.now();
-  while (Date.now() - started < timeoutMs) {
-    if (await evaluate(`Boolean(${expression})`)) return;
-    if (label.includes('conversion')) {
-      const failure = await evaluate(
-        `document.querySelector('[data-animation-converter] .error-message')?.textContent?.trim() || ''`
-      );
-      if (failure) throw new Error(`${label} failed: ${failure}`);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 150));
-  }
-  const diagnostic = await evaluate(`({
+const session = await openBrowserSession({
+  defaultEndpoint: 'http://127.0.0.1:9226',
+  waitTimeoutMs: 120_000,
+  pollMs: 150,
+  failWhen: (label) =>
+    label.includes('conversion')
+      ? `document.querySelector('[data-animation-converter] .error-message')?.textContent?.trim() || ''`
+      : null,
+  diagnoseTimeout: () => `({
     status: document.querySelector('[data-animation-converter] .conversion-progress span')?.textContent?.trim(),
     error: document.querySelector('[data-animation-converter] .error-message')?.textContent?.trim(),
     progress: document.querySelector('[data-animation-converter] [role="progressbar"]')?.getAttribute('aria-valuenow'),
     resources: performance.getEntriesByType('resource').filter((entry) => entry.name.includes('/generated/ffmpeg/')).map((entry) => entry.name)
-  })`);
-  throw new Error(`Timed out waiting for ${label}: ${JSON.stringify(diagnostic)}`);
-}
+  })`,
+});
+const { browserErrors, send, evaluate, waitFor } = session;
+
 let progressMotionChecked = false;
 async function convertTo(format, sourceKey = null) {
   if (sourceKey) {
@@ -163,11 +114,11 @@ await send('Log.enable');
 await send('Emulation.setEmulatedMedia', {
   features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
 });
-await send('Page.navigate', { url: `${baseUrl}/tools/video-to-gif/` });
-await waitFor(
-  `document.querySelector('[data-animation-converter] input[type="file"]') && !document.querySelector('astro-island[ssr]')`,
-  'animation converter hydration'
-);
+const ANIMATION_INPUT = `Boolean(document.querySelector('[data-animation-converter] input[type="file"]'))`;
+await session.navigate('/tools/video-to-gif/', {
+  label: 'animation converter',
+  ready: ANIMATION_INPUT,
+});
 
 await send('Emulation.setDeviceMetricsOverride', {
   width: 375,
@@ -388,11 +339,7 @@ for (const [slug, format, label] of [
   ['video-to-webp', 'webp', 'Animated WebP'],
   ['video-to-apng', 'apng', 'APNG'],
 ]) {
-  await send('Page.navigate', { url: `${baseUrl}/tools/video-to-gif/${slug}/` });
-  await waitFor(
-    `document.querySelector('[data-animation-converter] input[type="file"]') && !document.querySelector('astro-island[ssr]')`,
-    `${slug} hydration`
-  );
+  await session.navigate(`/tools/video-to-gif/${slug}/`, { label: slug, ready: ANIMATION_INPUT });
   await evaluate(`(async () => {
     const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 32;
     const context = canvas.getContext('2d');
@@ -435,8 +382,7 @@ for (const [slug, format, label] of [
 
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
-await send('Target.closeTarget', { targetId: target.id });
-socket.close();
+await session.close();
 console.log(
   JSON.stringify({
     status: 'ANIMATION_CONVERTER_BROWSER_OK',

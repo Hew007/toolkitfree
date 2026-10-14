@@ -2,10 +2,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
+import { openBrowserSession } from './browser-session.mjs';
 
 const root = process.cwd();
-const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9229';
-const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
 const assetDirectory = path.join(root, 'dist', '_astro');
 
 function findAsset(prefix) {
@@ -32,76 +31,22 @@ const heavyAssets = {
   pdfWorker: 'pdf.worker.min.',
 };
 
-const target = await fetch(`${endpoint}/json/new?${encodeURIComponent('about:blank')}`, {
-  method: 'PUT',
-}).then((response) => {
-  if (!response.ok) throw new Error(`Could not create browser target: ${response.status}`);
-  return response.json();
+const session = await openBrowserSession({
+  defaultEndpoint: 'http://127.0.0.1:9229',
+  waitTimeoutMs: 30_000,
+  pollMs: 100,
 });
+const { browserErrors, send, evaluate, waitFor } = session;
 
-const socket = new WebSocket(target.webSocketDebuggerUrl);
-await new Promise((resolve, reject) => {
-  socket.addEventListener('open', resolve, { once: true });
-  socket.addEventListener('error', reject, { once: true });
-});
-
-let nextId = 0;
-const pending = new Map();
-const browserErrors = [];
 let requests = [];
 const requestUrls = new Map();
-
-socket.addEventListener('message', (event) => {
-  const message = JSON.parse(event.data);
-  if (message.id) {
-    const request = pending.get(message.id);
-    if (!request) return;
-    pending.delete(message.id);
-    if (message.error) request.reject(new Error(message.error.message));
-    else request.resolve(message.result);
-    return;
-  }
-  if (message.method === 'Network.requestWillBeSent') {
-    requestUrls.set(message.params.requestId, message.params.request.url);
-  }
-  if (message.method === 'Network.loadingFinished') {
-    const url = requestUrls.get(message.params.requestId);
-    if (url) requests.push({ url, bytes: message.params.encodedDataLength });
-  }
-  if (message.method === 'Runtime.exceptionThrown') {
-    browserErrors.push(message.params.exceptionDetails.text);
-  }
-  if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') {
-    browserErrors.push(message.params.entry.text);
-  }
+session.on('Network.requestWillBeSent', (params) => {
+  requestUrls.set(params.requestId, params.request.url);
 });
-
-function send(method, params = {}) {
-  const id = ++nextId;
-  socket.send(JSON.stringify({ id, method, params }));
-  return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
-}
-
-async function evaluate(expression) {
-  const result = await send('Runtime.evaluate', {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-  });
-  if (result.exceptionDetails) {
-    throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
-  }
-  return result.result.value;
-}
-
-async function waitFor(expression, label, timeoutMs = 30_000) {
-  const started = Date.now();
-  while (Date.now() - started < timeoutMs) {
-    if (await evaluate(`Boolean(${expression})`)) return;
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-  throw new Error(`Timed out waiting for ${label}`);
-}
+session.on('Network.loadingFinished', (params) => {
+  const url = requestUrls.get(params.requestId);
+  if (url) requests.push({ url, bytes: params.encodedDataLength });
+});
 
 async function waitForRequest(filename, label, timeoutMs = 30_000) {
   const started = Date.now();
@@ -115,11 +60,7 @@ async function waitForRequest(filename, label, timeoutMs = 30_000) {
 async function navigate(route) {
   requests = [];
   requestUrls.clear();
-  await send('Page.navigate', { url: `${baseUrl}${route}` });
-  await waitFor(
-    `document.readyState === 'complete' && !document.querySelector('astro-island[ssr]')`,
-    `${route} hydration`
-  );
+  await session.navigate(route);
   await new Promise((resolve) => setTimeout(resolve, 250));
 }
 
@@ -467,8 +408,7 @@ assert.equal(
 
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
-await send('Target.closeTarget', { targetId: target.id });
-socket.close();
+await session.close();
 
 console.log(
   JSON.stringify({

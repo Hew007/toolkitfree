@@ -2,9 +2,8 @@ import assert from 'node:assert/strict';
 import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
 import JSZip from 'jszip';
 import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
+import { openBrowserSession } from './browser-session.mjs';
 
-const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9226';
-const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
 const sourceDocument = await PDFDocument.create();
 const font = await sourceDocument.embedFont(StandardFonts.Helvetica);
 for (let pageNumber = 1; pageNumber <= 4; pageNumber += 1) {
@@ -27,68 +26,15 @@ for (let pageNumber = 1; pageNumber <= 4; pageNumber += 1) {
 const sourceBytes = await sourceDocument.save();
 const sourceBase64 = Buffer.from(sourceBytes).toString('base64');
 
-const target = await fetch(`${endpoint}/json/new?${encodeURIComponent('about:blank')}`, {
-  method: 'PUT',
-}).then((response) => {
-  if (!response.ok) throw new Error(`Could not create browser target: ${response.status}`);
-  return response.json();
+const session = await openBrowserSession({
+  defaultEndpoint: 'http://127.0.0.1:9226',
+  waitTimeoutMs: 120_000,
+  pollMs: 100,
+  failWhen: () =>
+    `document.querySelector('[data-pdf-page-tool] .status-error')?.textContent?.trim() || ''`,
 });
-const socket = new WebSocket(target.webSocketDebuggerUrl);
-await new Promise((resolve, reject) => {
-  socket.addEventListener('open', resolve, { once: true });
-  socket.addEventListener('error', reject, { once: true });
-});
+const { browserErrors, send, evaluate, waitFor } = session;
 
-let nextId = 0;
-const pending = new Map();
-const browserErrors = [];
-socket.addEventListener('message', (event) => {
-  const message = JSON.parse(event.data);
-  if (message.id) {
-    const request = pending.get(message.id);
-    if (!request) return;
-    pending.delete(message.id);
-    if (message.error) request.reject(new Error(message.error.message));
-    else request.resolve(message.result);
-    return;
-  }
-  if (message.method === 'Runtime.exceptionThrown') {
-    browserErrors.push(message.params.exceptionDetails.text);
-  }
-  if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') {
-    browserErrors.push(message.params.entry.text);
-  }
-});
-function send(method, params = {}) {
-  const id = ++nextId;
-  socket.send(JSON.stringify({ id, method, params }));
-  return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
-}
-async function evaluate(expression) {
-  const response = await send('Runtime.evaluate', {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-  });
-  if (response.exceptionDetails) {
-    throw new Error(
-      response.exceptionDetails.exception?.description || response.exceptionDetails.text
-    );
-  }
-  return response.result.value;
-}
-async function waitFor(expression, label, timeoutMs = 120_000) {
-  const started = Date.now();
-  while (Date.now() - started < timeoutMs) {
-    if (await evaluate(`Boolean(${expression})`)) return;
-    const failure = await evaluate(
-      `document.querySelector('[data-pdf-page-tool] .status-error')?.textContent?.trim() || ''`
-    );
-    if (failure) throw new Error(`${label} failed: ${failure}`);
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-  throw new Error(`Timed out waiting for ${label}`);
-}
 async function resultBase64() {
   return evaluate(`(async () => {
     const link = document.querySelector('[data-pdf-page-result] a[download]');
@@ -141,33 +87,9 @@ async function assertNoSubmitStep(where) {
 await send('Page.enable');
 await send('Runtime.enable');
 await send('Log.enable');
-await send('Page.addScriptToEvaluateOnNewDocument', {
-  source: `
-    (() => {
-      const originalCreate = URL.createObjectURL.bind(URL);
-      const originalRevoke = URL.revokeObjectURL.bind(URL);
-      const active = new Set();
-      const stats = { created: 0, revoked: 0 };
-      URL.createObjectURL = (value) => {
-        const url = originalCreate(value);
-        stats.created += 1;
-        active.add(url);
-        return url;
-      };
-      URL.revokeObjectURL = (url) => {
-        stats.revoked += 1;
-        active.delete(url);
-        return originalRevoke(url);
-      };
-      window.__objectUrlStats = () => ({ ...stats, active: active.size });
-    })();
-  `,
-});
-await send('Page.navigate', { url: `${baseUrl}/tools/pdf-splitter/` });
-await waitFor(
-  `document.querySelector('[data-pdf-page-tool] input[type="file"]') && !document.querySelector('astro-island[ssr]')`,
-  'PDF splitter hydration'
-);
+await session.trackObjectUrls();
+const PDF_INPUT = `Boolean(document.querySelector('[data-pdf-page-tool] input[type="file"]'))`;
+await session.navigate('/tools/pdf-splitter/', { label: 'PDF splitter', ready: PDF_INPUT });
 assert.equal(
   await evaluate(
     `performance.getEntriesByType('resource').filter((entry) => entry.name.includes('pdf.worker')).length`
@@ -388,11 +310,7 @@ for (const [slug, expectedChip, extension] of [
   ['extract-pages-from-pdf', 'One combined PDF', '.pdf'],
   ['split-pdf-into-pages', 'Separate page files', '.zip'],
 ]) {
-  await send('Page.navigate', { url: `${baseUrl}/tools/pdf-splitter/${slug}/` });
-  await waitFor(
-    `document.querySelector('[data-pdf-page-tool] input[type="file"]') && !document.querySelector('astro-island[ssr]')`,
-    `${slug} hydration`
-  );
+  await session.navigate(`/tools/pdf-splitter/${slug}/`, { label: slug, ready: PDF_INPUT });
   await evaluate(`(() => {
     const binary = atob('${sourceBase64}');
     const bytes = new Uint8Array(binary.length);
@@ -423,8 +341,7 @@ for (const [slug, expectedChip, extension] of [
 
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
-await send('Target.closeTarget', { targetId: target.id });
-socket.close();
+await session.close();
 console.log(
   JSON.stringify({
     status: 'PDF_PAGE_TOOLS_BROWSER_OK',

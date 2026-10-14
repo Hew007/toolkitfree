@@ -2,9 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { filterActionableBrowserErrors } from './browser-test-errors.mjs';
+import { openBrowserSession } from './browser-session.mjs';
 
-const endpoint = process.env.CHROME_DEBUG_URL || 'http://127.0.0.1:9227';
-const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4321';
 const downloadPath = process.env.BROWSER_DOWNLOAD_DIR || 'C:\\tmp\\toolkitfree-collage-downloads';
 const screenshotPath = process.env.COLLAGE_SCREENSHOT_PATH;
 const mobileScreenshotPath = process.env.COLLAGE_MOBILE_SCREENSHOT_PATH;
@@ -12,65 +11,13 @@ const fineTuneScreenshotPath = process.env.COLLAGE_FINE_TUNE_SCREENSHOT_PATH;
 fs.rmSync(downloadPath, { recursive: true, force: true });
 fs.mkdirSync(downloadPath, { recursive: true });
 
-const target = await fetch(`${endpoint}/json/new?${encodeURIComponent('about:blank')}`, {
-  method: 'PUT',
-}).then((response) => {
-  if (!response.ok) throw new Error(`Could not create Chrome target: ${response.status}`);
-  return response.json();
+const session = await openBrowserSession({
+  defaultEndpoint: 'http://127.0.0.1:9227',
+  waitTimeoutMs: 30_000,
+  pollMs: 100,
 });
-
-const socket = new WebSocket(target.webSocketDebuggerUrl);
-await new Promise((resolve, reject) => {
-  socket.addEventListener('open', resolve, { once: true });
-  socket.addEventListener('error', reject, { once: true });
-});
-
-let nextId = 0;
-const pending = new Map();
-const browserErrors = [];
-
-socket.addEventListener('message', (event) => {
-  const message = JSON.parse(event.data);
-  if (message.id) {
-    const request = pending.get(message.id);
-    if (!request) return;
-    pending.delete(message.id);
-    if (message.error) request.reject(new Error(message.error.message));
-    else request.resolve(message.result);
-    return;
-  }
-  if (message.method === 'Runtime.exceptionThrown') {
-    browserErrors.push(message.params.exceptionDetails.text);
-  }
-  if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') {
-    browserErrors.push(message.params.entry.text);
-  }
-});
-
-function send(method, params = {}) {
-  const id = ++nextId;
-  socket.send(JSON.stringify({ id, method, params }));
-  return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
-}
-
-async function evaluate(expression) {
-  const response = await send('Runtime.evaluate', {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-  });
-  if (response.exceptionDetails) throw new Error(response.exceptionDetails.text);
-  return response.result.value;
-}
-
-async function waitFor(expression, label, timeoutMs = 30_000) {
-  const started = Date.now();
-  while (Date.now() - started < timeoutMs) {
-    if (await evaluate(`Boolean(${expression})`)) return;
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-  throw new Error(`Timed out waiting for ${label}`);
-}
+const { browserErrors, send, evaluate, waitFor } = session;
+const { navigate } = session;
 
 async function waitForFile(filename, timeoutMs = 30_000) {
   const fullPath = path.join(downloadPath, filename);
@@ -80,14 +27,6 @@ async function waitForFile(filename, timeoutMs = 30_000) {
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   throw new Error(`Timed out waiting for download ${filename}`);
-}
-
-async function navigate(route) {
-  await send('Page.navigate', { url: `${baseUrl}${route}` });
-  await waitFor(
-    `Boolean(document.querySelector('astro-island')) && !document.querySelector('astro-island[ssr]')`,
-    `${route} hydration`
-  );
 }
 
 async function upload(definitions) {
@@ -436,11 +375,7 @@ assert.equal(clearedStats.created, clearedStats.revoked);
 
 const actionableBrowserErrors = filterActionableBrowserErrors(browserErrors);
 assert.deepEqual(actionableBrowserErrors, []);
-await Promise.race([
-  send('Target.closeTarget', { targetId: target.id }),
-  new Promise((resolve) => setTimeout(resolve, 1_000)),
-]);
-socket.close();
+await session.close();
 
 console.log(
   JSON.stringify({
