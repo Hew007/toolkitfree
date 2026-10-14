@@ -2584,6 +2584,13 @@ input[type='range'] {
   align-items: start;
 }
 
+/* The logo input is visually hidden but still focusable, so its label shows the
+   focus ring a keyboard user needs to find it. */
+.qr-logo-upload:focus-within {
+  outline: 3px solid #f59e0b;
+  outline-offset: 3px;
+}
+
 @media (max-width: 768px) {
   .qr-generator-layout {
     grid-template-columns: 1fr;

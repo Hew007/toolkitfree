@@ -55,7 +55,10 @@ export default function QrGenerator() {
 
   const handleLogoUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
+      const input = event.target;
+      const file = input.files?.[0];
+      // Clear the choice so picking the same file again still fires `change`.
+      input.value = '';
       if (!file) return;
       try {
         validateImageFile(file);
@@ -70,7 +73,6 @@ export default function QrGenerator() {
         reader.readAsDataURL(file);
       } catch (fileError) {
         setLogoError(getImageProcessingErrorMessage(fileError));
-        event.target.value = '';
       }
     },
     [errorCorrection]
@@ -188,9 +190,12 @@ export default function QrGenerator() {
             <span style={sectionLabel}>Logo (optional)</span>
             {!logoImage ? (
               <label
+                className="qr-logo-upload"
                 style={{
-                  display: 'inline-block',
-                  padding: '0.375rem 1rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  minHeight: 44,
+                  padding: '0 1rem',
                   border: '1px dashed #ddd8ce',
                   borderRadius: 6,
                   fontSize: '0.8rem',
@@ -203,7 +208,7 @@ export default function QrGenerator() {
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={handleLogoUpload}
-                  style={{ display: 'none' }}
+                  className="visually-hidden"
                 />
               </label>
             ) : (

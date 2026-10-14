@@ -666,6 +666,39 @@ await waitFor(
   'QR renderer recovers after the content is shortened'
 );
 
+// The logo picker is a full-size touch target that a keyboard can reach, and it
+// clears its choice once read, so choosing the same file again still counts.
+const logoPicker = await evaluate(`
+  (() => {
+    const label = document.querySelector('.qr-logo-upload');
+    const input = label.querySelector('input[type="file"]');
+    return {
+      height: Math.round(label.getBoundingClientRect().height),
+      focusable: getComputedStyle(input).display !== 'none' && input.tabIndex >= 0,
+    };
+  })()
+`);
+assert.ok(logoPicker.height >= 44, `Upload Logo is ${logoPicker.height}px tall`);
+assert.equal(logoPicker.focusable, true, 'Upload Logo must be reachable by keyboard');
+await evaluate(`
+  (async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 32;
+    canvas.getContext('2d').fillRect(0, 0, 32, 32);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([blob], 'logo.png', { type: 'image/png' }));
+    const input = document.querySelector('.qr-logo-upload input');
+    input.files = transfer.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    window.__qrLogoInputCleared = input.value === '';
+  })()
+`);
+await waitFor(`Boolean(document.querySelector('img[alt="Logo"]'))`, 'QR logo preview');
+assert.equal(await evaluate(`window.__qrLogoInputCleared`), true, 'logo input is cleared');
+await evaluate(`document.querySelector('[aria-label="Remove logo"]').click()`);
+await waitFor(`Boolean(document.querySelector('.qr-logo-upload'))`, 'Upload Logo is back');
+
 await evaluate(`
   (() => {
     const colors = document.querySelectorAll('input[type="color"]');
