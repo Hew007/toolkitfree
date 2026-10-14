@@ -24,7 +24,7 @@
   --color-caution: #b4551f;
   --color-error: #c0362c;
   --max-width: 1200px;
-  --header-height: 64px;
+  --header-height: 56px;
 }
 
 * {
