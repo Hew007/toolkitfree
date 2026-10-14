@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import { ToolChoices, type ToolChoice } from './ToolChoices';
 import FineTune from './FineTune';
@@ -198,6 +198,14 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
   const [zipUrl, setZipUrl] = useState<string | null>(null);
   const [zipSize, setZipSize] = useState(0);
   const [zipBusy, setZipBusy] = useState(false);
+  // Height the results last took up, held open while the next set renders. Every
+  // run starts by clearing the icons, so without this the related links under the
+  // tool rise into the gap and are pushed back down a moment later — on the first
+  // upload and again on every size change. The first run has nothing measured yet;
+  // the estimate is a little under the five-icon default (526px on desktop), so the
+  // page never has to move back up.
+  const [resultsHeight, setResultsHeight] = useState(480);
+  const resultsRef = useRef<HTMLDivElement>(null);
   const nextFileId = useRef(0);
   // One decode per file. Re-running is only a handful of canvas encodes; decoding
   // the source again on every settings change would be the expensive half.
@@ -214,6 +222,11 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
     [selectedIcons, manifestJson]
   );
   const canRun = file !== null && selectedIcons.length > 0;
+
+  useLayoutEffect(() => {
+    if (icons.length === 0 || !resultsRef.current) return;
+    setResultsHeight(resultsRef.current.offsetHeight);
+  }, [icons, htmlSnippet]);
 
   /** What the output depends on: the source file and the exact list of sizes. */
   const settingsKey = useMemo(
@@ -523,8 +536,12 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
         </div>
       )}
 
+      {icons.length === 0 && canRun && !error && (
+        <div aria-hidden="true" style={{ marginTop: '1.5rem', height: resultsHeight }} />
+      )}
+
       {icons.length > 0 && (
-        <div style={{ marginTop: '1.5rem' }}>
+        <div ref={resultsRef} style={{ marginTop: '1.5rem' }}>
           <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Generated Icons</h3>
           {/* Bottom-aligned: the previews range from 16 px to 80 px tall, and without
               this their size captions sit at five different heights. */}

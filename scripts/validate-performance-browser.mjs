@@ -266,10 +266,13 @@ await send('Emulation.setDeviceMetricsOverride', {
   mobile: false,
 });
 const desktopUploadShifts = {};
-for (const [route, throttle] of [
+for (const [route, throttle, limit = 0.1] of [
   ['/tools/image-to-pdf/', 1],
   ['/tools/image-to-pdf/image-to-a4-pdf/', 1],
   ['/tools/image-resizer/resize-for-youtube/', 4],
+  // Its results used to arrive in a second step that pushed the page down again;
+  // the space is now held open while the icons render. 0.079 before, 0.019 after.
+  ['/tools/favicon-generator/', 4, 0.05],
 ]) {
   await navigate(route);
   assert.equal(
@@ -292,8 +295,8 @@ for (const [route, throttle] of [
     `${route}: the how-to should step aside once the tool has input`
   );
   assert.ok(
-    shift.total <= 0.1,
-    `${route} desktop upload CLS should stay at or below 0.1: ${JSON.stringify(shift)}`
+    shift.total <= limit,
+    `${route} desktop upload CLS should stay at or below ${limit}: ${JSON.stringify(shift)}`
   );
   desktopUploadShifts[route] = Number(shift.total.toFixed(4));
 }
