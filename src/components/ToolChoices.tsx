@@ -14,7 +14,8 @@
  * with `aria-pressed`, because nothing here is a persistent choice.
  *
  * Both render the same markup and classes, so the two kinds cannot drift apart
- * visually as more tools adopt them.
+ * visually as more tools adopt them. Both take `disabled`, which sets the
+ * attribute on every chip's own control, so a test can read `.disabled` directly.
  */
 
 export interface ToolChoice<Id extends string> {
@@ -33,6 +34,8 @@ interface ToolChoicesProps<Id extends string> {
   choices: readonly ToolChoice<Id>[];
   value: Id;
   onChange: (choice: ToolChoice<Id>) => void;
+  /** Lock the whole row, e.g. while a run that the choice would change is in flight. */
+  disabled?: boolean;
 }
 
 export function ToolChoices<Id extends string>({
@@ -42,6 +45,7 @@ export function ToolChoices<Id extends string>({
   choices,
   value,
   onChange,
+  disabled = false,
 }: ToolChoicesProps<Id>) {
   return (
     <fieldset className="tool-chip-group">
@@ -61,6 +65,7 @@ export function ToolChoices<Id extends string>({
               name={name}
               value={choice.id}
               checked={choice.id === value}
+              disabled={disabled}
               onChange={() => onChange(choice)}
             />
             <span className="tool-chip-label">{choice.label}</span>
@@ -83,6 +88,8 @@ interface ToolPresetsProps<Id extends string> {
    */
   isActive: (preset: ToolChoice<Id>) => boolean;
   onApply: (preset: ToolChoice<Id>) => void;
+  /** Lock the whole row, e.g. while a run that a preset would change is in flight. */
+  disabled?: boolean;
 }
 
 export function ToolPresets<Id extends string>({
@@ -91,6 +98,7 @@ export function ToolPresets<Id extends string>({
   presets,
   isActive,
   onApply,
+  disabled = false,
 }: ToolPresetsProps<Id>) {
   return (
     <div className="tool-chip-group">
@@ -105,6 +113,7 @@ export function ToolPresets<Id extends string>({
               key={preset.id}
               className={`tool-chip${active ? ' is-selected' : ''}`}
               aria-pressed={active}
+              disabled={disabled}
               onClick={() => onApply(preset)}
             >
               <span className="tool-chip-label">{preset.label}</span>

@@ -444,25 +444,18 @@ export default function BackgroundRemover() {
           </div>
 
           <div className="tool-controls">
-            {/* `ToolPresets` has no disabled prop, and the lock is not a preference:
-                each colour paints a full-size canvas, so two at once would double the
-                peak memory of a large photo. A disabled fieldset takes the whole row
-                out of the tab order for the duration without re-implementing the chip
-                markup, and the dimming says so on screen. */}
-            <fieldset
-              className="tool-chip-group"
-              data-background-chips=""
-              disabled={colorLocked}
-              style={{ opacity: colorLocked ? 0.55 : undefined }}
-            >
+            {/* The lock is not a preference: each colour paints a full-size canvas,
+                so two at once would double the peak memory of a large photo. */}
+            <div data-background-chips="">
               <ToolPresets
+                disabled={colorLocked}
                 legend="Background"
                 help="Pick what goes behind the cutout. Choosing one never starts the AI model — open Fine-tune for any other color."
                 presets={BACKGROUND_CHOICES}
                 isActive={(preset) => preset.id === bgColor}
                 onApply={(preset) => applyColor(preset.id)}
               />
-            </fieldset>
+            </div>
 
             <FineTune
               summary={fineTuneSummary}

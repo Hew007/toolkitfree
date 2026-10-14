@@ -333,10 +333,10 @@ SKIP_BUILD=1 E2E_PREVIEW_PORT=<你的> E2E_DEBUG_PORT=<你的> node scripts/run-
 
 这些是改造过程中撞出来的，**由集成方处理，不要在 worktree 里自己补**。
 
-- **`ToolChoices` / `ToolPresets` 没有 `disabled`。** 对 C 类是结构性缺口——保留按钮的工具天然有
-  "运行中锁住控件"这个状态。目前的绕法是在外面套 `<fieldset className="tool-chip-group" disabled>`，
-  代价有两个：`.tool-chip` 没有 `:disabled` 样式，锁定态只能靠内联 opacity 表达；而且**测试探针必须写
-  `el.matches(':disabled')` 而不是 `el.disabled`**——disabled fieldset 不会给后代 button 设自己的属性。
+- ~~**`ToolChoices` / `ToolPresets` 没有 `disabled`。**~~ 已补（2026-10-14）：两个组件都接受 `disabled`，
+  属性直接设在每个芯片自己的 radio / button 上，所以测试探针用 `el.disabled` 或 `matches(':disabled')`
+  都可以；锁定态的样式（变淡、`not-allowed`、悬停不变色）在 `.tool-chip` 上统一处理，不要再套
+  `<fieldset disabled>` 加内联 opacity。Background Remover 是第一个改用的。
 - **`ToolPresets` 没有 per-chip 的视觉槽。** Background Remover 原来的背景色芯片**本身就是那个颜色**，
   换到共享件之后只剩文字。这是换件带来的唯一一处产品损失，记在账上：共享件若加 `swatch` 槽，这里
   应该第一个加回来。（连带 `backgroundLabelColor()` 目前是孤儿函数，只剩单测在用，先留着。）
