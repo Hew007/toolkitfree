@@ -194,12 +194,19 @@ function runBackgroundWorker(
     let settled = false;
     let watchdog: ReturnType<typeof setTimeout> | null = null;
 
+    // The last progress report, so a timeout can say which step went silent: a stalled
+    // download, a runtime that never initialized, and a hung inference have nothing
+    // in common but this message.
+    let lastStep = 'nothing reported yet';
+
     const armWatchdog = (timeoutMs: number) => {
       if (watchdog) clearTimeout(watchdog);
       watchdog = setTimeout(() => {
         finish(() =>
           reject(
-            new Error('Background removal stopped because the model made no progress for too long.')
+            new Error(
+              `Background removal stopped because the model made no progress for too long (last step: ${lastStep}, silent for ${Math.round(timeoutMs / 1000)}s, ${threads} thread${threads === 1 ? '' : 's'}).`
+            )
           )
         );
       }, timeoutMs);
@@ -219,9 +226,13 @@ function runBackgroundWorker(
     const handleAbort = () =>
       finish(() => reject(new DOMException('Background removal was canceled.', 'AbortError')));
 
+    let started = false;
+
     worker.addEventListener('message', (event: MessageEvent<BackgroundWorkerResponse>) => {
+      started = true;
       const response = event.data;
       if (response.type === 'progress') {
+        lastStep = `${response.key} ${response.current}/${response.total}`;
         armWatchdog(
           response.key === 'compute:inference'
             ? inferenceTimeoutMs
@@ -236,9 +247,13 @@ function runBackgroundWorker(
         finish(() => reject(new Error(response.message)));
       }
     });
-    // An `ErrorEvent` here is the worker itself dying — the thrown value never made
-    // it through `postMessage`. Keep whatever detail the event carries; a failure
-    // reported as "stopped unexpectedly" and nothing else is a failure nobody can fix.
+    // An `ErrorEvent` with a message is an uncaught exception inside the worker —
+    // the thrown value never made it through `postMessage`, so keep its detail.
+    // A message-less error before the worker has said anything is almost always
+    // its script failing to load: a 404, or the browser blocking it, as Chromium
+    // does when an isolated (COEP) page starts a worker whose script response has
+    // no COEP of its own. Say so; this exact failure was once misread as the
+    // browser killing the worker, and chased as a hardware problem.
     worker.addEventListener('error', (event: ErrorEvent) => {
       const where = event.filename ? ` (${event.filename}:${event.lineno}:${event.colno})` : '';
       finish(() =>
@@ -246,7 +261,9 @@ function runBackgroundWorker(
           new Error(
             event.message
               ? `The background removal worker stopped unexpectedly: ${event.message}${where}`
-              : 'The background removal worker stopped unexpectedly.'
+              : started
+                ? 'The background removal worker stopped unexpectedly.'
+                : 'The background removal worker could not start; its script failed to load.'
           )
         )
       );
@@ -262,8 +279,8 @@ function runBackgroundWorker(
 /**
  * Removes the background, preferring the threaded path but never depending on it.
  *
- * Threading is the whole reason this route would be cross-origin isolated, and it
- * has broken on real hardware once before, in a way that was never reproduced. So
+ * Threading is the whole reason this route is cross-origin isolated, and a runtime
+ * this size can still fail on hardware nobody tested. So
  * a threaded attempt that fails for any reason other than the user canceling is
  * retried on the single thread the tool used before threading existed: the fast
  * path is an improvement when it works, and cannot make the tool worse than the

@@ -10,40 +10,33 @@
 /generated/background-removal/1.7.0/*
   Cache-Control: public, max-age=31556952, immutable
 
-# Background Remover deliberately does NOT send Cross-Origin-Opener-Policy and
-# Cross-Origin-Embedder-Policy. Those two headers are what a document needs before
-# the browser grants SharedArrayBuffer, and without SharedArrayBuffer ONNX
-# Runtime's WASM build stays single-threaded however many cores the visitor has.
-# Isolating the route is therefore the obvious way to make the model faster, and
-# it has now been tried twice and taken the tool down twice.
+# Background Remover is cross-origin isolated so ONNX Runtime can run multi-threaded:
+# COOP + COEP are what earn a document SharedArrayBuffer, and without it the WASM
+# build stays on one thread. Measured on a 2-core/4-thread laptop, same image:
+# inference 13.3s on one thread, 9.2s on two, 8.8s on four (medians of five).
 #
-# The history, because the temptation to try a third time is real:
+# BOTH rules below are required. Isolating the page alone is what broke the tool
+# twice in production (2026-09). A COEP: require-corp document may only start a
+# dedicated worker whose script response carries COEP itself; otherwise Chromium
+# blocks the script (net::ERR_BLOCKED_BY_RESPONSE,
+# coep-frame-resource-needs-coep-header). The worker never runs, its error event
+# has no message, and the single-threaded retry loads the same script and dies the
+# same way. It looked like a hardware-dependent crash only because the local test
+# servers used to "verify" it sent COEP on every response, worker script included.
 #
-#   1. The headers first shipped duplicated, which browsers reject, so isolation
-#      never took effect and nobody noticed — the tool kept working, slowly.
-#   2. The duplicate was removed. Isolation took effect for the first time and the
-#      tool broke outright. The headers were pulled.
-#   3. The thread count turned out to be part of it: the library asks for one
-#      thread per logical core, and past a couple of threads it loses to
-#      contention badly (measured on four cores, one image: 17.9s at one thread,
-#      8.8s at two, 25.9s at sixteen). `plannedThreadCount` caps the request at
-#      four, and a threaded attempt that throws is retried single-threaded.
-#      Verified on a sixteen-core machine: inference 5.98s against 24.2s.
-#   4. It broke again anyway, on a twenty-core machine, with isolation confirmed
-#      active, the model manifest served correctly, and four threads planned. The
-#      worker died and the single-threaded retry died with it.
+# Only the Background Remover worker gets COEP. It fetches nothing cross-origin,
+# and the pthread workers ONNX Runtime starts from blob: URLs inherit its policy.
+# The other workers under /_astro/ keep their current behaviour.
 #
-# Why the fallback cannot save this: it catches a run that *throws*. When the
-# browser kills the worker process outright the error event carries no message and
-# there is nothing left running to retry into. Step 3's own commit said as much.
-#
-# So the score is: worked on the one machine it was tuned on, killed the tool on
-# both machines that were not. A tool that takes 24s beats a tool that takes
-# forever, and this route stays unisolated until someone can reproduce the crash
-# and explain it — not merely fail to reproduce it on new hardware.
-#
-# If it is ever restored: exactly ONE rule may match this page.
-# `/tools/background-remover/*` already covers the trailing-slash URL; adding
-# `/tools/background-remover/` as well makes both rules match, each policy is sent
-# twice, and the joined value `same-origin, same-origin` is invalid — the browser
-# falls back to unsafe-none and the page is not isolated at all. That is mistake 1.
+# Exactly ONE rule may match each of these URLs for each header. Cloudflare merges
+# every matching rule, and a policy sent twice joins into `same-origin, same-origin`,
+# which is invalid, so the browser falls back to unsafe-none and nothing is
+# isolated. `/tools/background-remover/*` already covers the trailing-slash URL; do
+# not add `/tools/background-remover/` beside it. scripts/validate-site-integrity.mjs
+# checks all of this against the build.
+/tools/background-remover/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+
+/_astro/background-removal.worker-*.js
+  Cross-Origin-Embedder-Policy: require-corp
