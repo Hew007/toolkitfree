@@ -322,6 +322,37 @@ or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
 
+- 2026-10-14 — `头部居中并降到 56px` / `QR 上传 Logo` / `芯片 disabled` / `Favicon 上传位移`：
+
+  **PR #31 已合并**（`3025735`，所有者批准），master 会自动上线。Background Remover 线上是否正常
+  **待所有者验证**：页面控制台 `crossOriginIsolated` 应为 `true`，上传能出图，不出现 `could not start`；
+  出问题就删掉 `public/_headers` 里那两条规则回滚。
+
+  **头部**（所有者反馈"不居中、高度可以再小"）：`responsive-accessibility.css` 把 `.site-header` 改成
+  `height: auto`，于是容器的 `height: 100%` 落空，logo 和菜单贴在 64px 条的顶部（8–44px），下面空 20px；
+  只有 ≤900px 有 `min-height` 补丁，所以只在桌面上歪。现在容器在所有宽度都拿 `min-height: var(--header-height)`，
+  高度改为 56px（菜单项 44px 触控目标仍放得下）。1840 / 1280 / 768 / 390 四个宽度下 logo 和菜单中线都在
+  y=28。代价：头部矮 8px，首屏多露出 8px 内容，image-to-a4-pdf 上传 CLS 从 master 的 0.074 变为
+  0.070–0.078（多跑几次），仍在 0.1 以下。
+
+  **QR 上传 Logo**：原来是 35px 高的 label 包着 `display: none` 的 input——不够 44px，而且**键盘根本到不了**。
+  改为视觉隐藏但可聚焦的 input，label 显示焦点环、高 44px；input 读完即清空，重选同一文件也会触发。
+  secondary-tools 套件加了三项断言（高度、可聚焦、清空）。
+
+  **`ToolChoices` / `ToolPresets` 加 `disabled`**：属性设在每个芯片自己的 radio / button 上，锁定样式在
+  `.tool-chip` 上统一。Background Remover 去掉了外套的 `<fieldset disabled>` 和内联 opacity。它锁色块的
+  那段测试在 secondary-tools 套件的抠图之后，沙箱下不到模型跑不到——需要在能下模型的环境里跑一次完整套件。
+
+  **Favicon 上传 CLS 0.079 → 0.019**：每次运行先清空图标，结果区塌掉，下面的相关链接先上浮、图标出来后
+  再被推下去（首次上传和每次改尺寸都会这样）。现在生成期间用占位块撑住上次结果的高度（首次用略低于
+  5 图标默认值 526px 的估计 480px）。4× CPU 节流下同样是 0.019，性能套件对这一页的上限收紧到 0.05。
+  **Collage（约 0.06）没动**：位移来自上传框原地切换成紧凑条，按钮上移；用 `key` 重挂载能把它从指标里
+  去掉，但会让键盘用户选完文件后丢焦点，属于为指标牺牲可访问性，不做。
+
+  验证：typecheck、lint、format、单元测试、站点完整性、SEO 注册表通过；浏览器套件 responsive-accessibility
+  （355 张截图）、performance、favicon、collage 通过，secondary-tools 停在已知的抠图断言（QR 部分全过）。
+  沙箱里跑 favicon 套件前要先生成 `test-fixtures/`，而本机 root 下 Chromium 需要 `--no-sandbox`。
+
 - 2026-10-14 — `PR #31（Background Remover 重新隔离）合入 master 最新代码，解决冲突`：
 
   冲突只在本文件：头部日期和日志顶部两边各加了条目，两边全部保留，按日期排列。合并后在沙箱里重新验证：

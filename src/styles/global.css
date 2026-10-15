@@ -24,7 +24,7 @@
   --color-caution: #b4551f;
   --color-error: #c0362c;
   --max-width: 1200px;
-  --header-height: 64px;
+  --header-height: 56px;
 }
 
 * {
@@ -2584,6 +2584,13 @@ input[type='range'] {
   align-items: start;
 }
 
+/* The logo input is visually hidden but still focusable, so its label shows the
+   focus ring a keyboard user needs to find it. */
+.qr-logo-upload:focus-within {
+  outline: 3px solid #f59e0b;
+  outline-offset: 3px;
+}
+
 @media (max-width: 768px) {
   .qr-generator-layout {
     grid-template-columns: 1fr;
@@ -3315,6 +3322,18 @@ input[type='range'] {
 .tool-chip:focus-within {
   outline: 3px solid rgb(36 80 208 / 35%);
   outline-offset: 2px;
+}
+
+/* A preset chip is the button itself; a choice chip is a label around its radio. */
+.tool-chip:disabled,
+.tool-chip:has(input:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tool-chip:disabled:hover,
+.tool-chip:has(input:disabled):hover {
+  border-color: var(--color-border);
 }
 
 .variant-options {
