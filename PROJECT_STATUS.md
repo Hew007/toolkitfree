@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-10-14
+Last updated: 2026-11-03
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -10,6 +10,18 @@ with `AGENTS.md` before doing work. Update this file instead of writing a new ha
 task.
 
 ## Current Snapshot
+
+- 2026-11-03 测试验收准备：已切换主分支 `master` 并快进拉取，本地与 `origin/master` 均为
+  `e1daa43`；按所有者要求舍弃原有锁文件修改，恢复远端 `package-lock.json`。已编制
+  `docs/test-acceptance-plan-2026-11-03.md`（`docs/` 为本地忽略目录），覆盖 14 工具、全路由、
+  下载正确性、隐私、Worker 隔离、多线程回退、竞态、兼容/真机及所有者签收。已按所有者授权分批
+  安排功能、隐私/隔离、SEO/视觉子代理；正式产物 Chrome 13/13、Edge 13 项最终均获通过结果
+  （首轮 10/13，三项定向复测 3/3），两浏览器共 710 项路由/宽度检查与截图，抠图隔离/对照/故障
+  回退四组通过。内容更新日期门禁失败（13 工具），QR Logo 读取竞态已复现；另有 Related Tools
+  入链及 Favicon 文案问题，尚未放行。执行记录为
+  `docs/test-acceptance/2026-11-03/验收执行报告.md`。本机必须从真实路径
+  `D:\works\my\toolkitfree` 构建：C 盘别名路径产物丢 CSS，首轮相关布局结果已作废并重跑。
+  没有修改产品源码、锁文件，也没有部署、提交或推送。
 
 - Repository baseline: local and `origin/master` include the owner-approved claims cleanup at
   `1bfca88`. The ten commits published on 2026-08-16 include nine documentation/handoff commits plus
@@ -187,6 +199,11 @@ pushed to `origin/master`; the production homepage then served `Crop image onlin
 
 ## Current State and Exact Next Actions
 
+2026-11-03 更新：本轮先按 `docs/test-acceptance-plan-2026-11-03.md` 完成自动化、专项与所有者
+验收；下文历史推广序列不能作为跳过当前构建验收的依据。本机自动化与补充专项已汇总，内容日期
+门禁和 QR Logo 竞态未关闭，所有者尚未确认本轮通过。下一步修复日期门禁、QR 竞态、入链/文案，
+增强 CDP 断连处理与 ID Photo 真实就绪断言，按影响范围复测，再补真机、独立扫码及所有者手工验收。
+
 Product and initial measurement gates are complete. The active sequence as of 2026-08-30 is:
 
 1. `owner approved` — S0 motion assets are closed. Directory copy is approved;
@@ -321,6 +338,31 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-11-03 — `本机分批测试已汇总` / `尚未放行`：获所有者授权安排三个专项子代理。完成环境
+  基线、740 个已装包与锁文件版本核对；质量检查确认内容更新日期门禁失败（13 工具），其余各项
+  已通过或单独补验。定位本机 C 盘路径别名导致无 CSS 构建及样本 CLI 静默跳过，从 D 盘真实路径
+  重建并将首轮布局证据作废；正式构建 Chrome 13/13 套件、71 路由×5 宽度（355 项与截图）通过，
+  站点完整性 72 HTML / 4,400 内链 / 零断链，SEO 与性能预算通过，16 张有效截图抽样无新阻断。
+  补充专项复现 QR Logo 晚到读取回调覆盖较新选择的竞态；PDF 真实下载与独立渲染通过，抠图真实
+  隔离 4 线程、单线程对照及两类故障回退四组通过，动态网络结论仅限该样本。Edge 首轮 10/13，
+  包含会话异常、约 12 小时执行断档和固定等待/数组索引问题；新配置三项定向复测全部通过，
+  最终 13 项覆盖均有通过结果（非一次全量零失败），355 项响应式与截图通过。另以真实 Edge
+  延迟 JPEG 编码证明 ID Photo 的 1200ms 固定等待可产生假失败，PNG 实际保留；CDP 异常原因为
+  未定位，保留基础设施风险。功能专项 9 通过/1 失败/1 未执行，视觉抽查 Chrome 16+Edge 4 张。
+  真机/独立扫码/所有者签收待补，详情见本地执行报告。服务与专用测试浏览器已清理，未改产品源码
+  或锁文件，未提交、推送、部署或推广。
+
+- 2026-11-03 — `已切换主分支并重新拉取` / `验收计划补充`：按所有者纠正切换到 `master`，执行
+  `git pull --ff-only origin master`，与 `origin/master` 同步为 `e1daa43`；此前锁文件改动已舍弃。
+  相比上一轮审阅提交无新增代码，补充 7 项最近主线改动的定向回归步骤，并修正 Favicon 验收范围：
+  实际仅输出 PNG，不要求 ICO；WordPress 默认仅 512×512。计划与状态文件保留，测试仍未执行。
+
+- 2026-11-03 — `最新代码已同步` / `测试验收计划已编制，待执行`：远端获取成功，当前分支依次快进
+  至远端同名分支 `fe16097` 和最新主线 `e1daa43`，无合并冲突；原有锁文件 26 处 dev 标记删除保留。
+  对照当前测试入口确认 13 项质量门禁、13 个单元/算法套件、13 个 Chrome 全量套件及 Edge 2 项冒烟，
+  编制本地验收计划，补齐真实产物、扫码、真机、网络隐私及按实际路径规则发送 COEP 的验证要求。
+  本轮只检查代码与计划，没有运行测试或验证线上行为；后续从环境/依赖基线开始执行，不提前放行推广。
 
 - 2026-10-14 — `头部居中并降到 56px` / `QR 上传 Logo` / `芯片 disabled` / `Favicon 上传位移`：
 
