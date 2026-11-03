@@ -8,6 +8,10 @@ const session = await openBrowserSession({
   pollMs: 75,
 });
 const { browserErrors, send, evaluate, waitFor } = session;
+const PHOTO_NAME = 'id-photo-test-id-photo.jpg';
+const SHEET_NAME = 'id-photo-test-4x6-print-sheet.png';
+const photoSelector = `[data-id-photo-result="${PHOTO_NAME}"] img`;
+const sheetSelector = `[data-id-photo-result="${SHEET_NAME}"] img`;
 
 async function inspectResults() {
   return evaluate(`Promise.all([...document.querySelectorAll('[data-id-photo-result]')].map(async (item) => {
@@ -22,10 +26,12 @@ async function inspectResults() {
 /** Both exports decoded to the sizes the current settings ask for. */
 function exportsAt(photoWidth, photoHeight, sheetWidth, sheetHeight) {
   return `(() => {
-    const images = [...document.querySelectorAll('[data-id-photo-result] img')];
-    return images.length === 2 &&
-      images[0].naturalWidth === ${photoWidth} && images[0].naturalHeight === ${photoHeight} &&
-      images[1].naturalWidth === ${sheetWidth} && images[1].naturalHeight === ${sheetHeight};
+    const photo = document.querySelector(${JSON.stringify(photoSelector)});
+    const sheet = document.querySelector(${JSON.stringify(sheetSelector)});
+    return document.querySelectorAll('[data-id-photo-result] img').length === 2 &&
+      photo?.complete && sheet?.complete &&
+      photo.naturalWidth === ${photoWidth} && photo.naturalHeight === ${photoHeight} &&
+      sheet.naturalWidth === ${sheetWidth} && sheet.naturalHeight === ${sheetHeight};
   })()`;
 }
 
@@ -207,22 +213,68 @@ const setField = (startsWith, value) => `(() => {
 })()`;
 const exportUrls = () =>
   evaluate(
-    `[...document.querySelectorAll('[data-id-photo-result] img')].map((image) => image.src)`
+    `Object.fromEntries([...document.querySelectorAll('[data-id-photo-result]')].map((item) => [item.dataset.idPhotoResult, item.querySelector('img').src]))`
   );
-const settle = () => new Promise((resolve) => setTimeout(resolve, 1200));
 
 const beforeTuning = await exportUrls();
+// Hold the next JPEG callback until the test releases it. This reproduces slow
+// encoding deterministically: the print sheet must remain usable while the
+// photo is absent, regardless of how long a particular machine takes to encode.
+await evaluate(`(() => {
+  const original = HTMLCanvasElement.prototype.toBlob;
+  HTMLCanvasElement.prototype.toBlob = function(callback, type, ...args) {
+    if (type !== 'image/jpeg') return original.call(this, callback, type, ...args);
+    HTMLCanvasElement.prototype.toBlob = original;
+    return original.call(this, (blob) => {
+      window.__releaseIdPhotoEncoding = () => {
+        delete window.__releaseIdPhotoEncoding;
+        callback(blob);
+      };
+    }, type, ...args);
+  };
+})()`);
 await evaluate(setField('JPG quality', '60'));
-await settle();
+await waitFor(`typeof window.__releaseIdPhotoEncoding === 'function'`, 'held JPEG encoding');
+const duringQuality = await exportUrls();
+assert.equal(duringQuality[PHOTO_NAME], undefined, 'the superseded photo must be invalidated');
+assert.equal(
+  duringQuality[SHEET_NAME],
+  beforeTuning[SHEET_NAME],
+  'the print sheet must keep its original URL while JPEG encoding is pending'
+);
+await evaluate(`window.__releaseIdPhotoEncoding()`);
+await waitFor(
+  `(${exportsAt(600, 600, 1800, 1200)}) && document.querySelector(${JSON.stringify(photoSelector)}).src !== ${JSON.stringify(beforeTuning[PHOTO_NAME])}`,
+  'quality-adjusted photo and unchanged print sheet decoded'
+);
 const afterQuality = await exportUrls();
-assert.notEqual(beforeTuning[0], afterQuality[0], 'quality must re-encode the photo');
-assert.equal(beforeTuning[1], afterQuality[1], 'quality must not re-encode the PNG print sheet');
+assert.notEqual(
+  beforeTuning[PHOTO_NAME],
+  afterQuality[PHOTO_NAME],
+  'quality must re-encode the photo'
+);
+assert.equal(
+  beforeTuning[SHEET_NAME],
+  afterQuality[SHEET_NAME],
+  'quality must not re-encode the PNG print sheet'
+);
 
 await evaluate(setField('Print gap', '6'));
-await settle();
+await waitFor(
+  `(${exportsAt(600, 600, 1800, 1200)}) && document.querySelector(${JSON.stringify(sheetSelector)}).src !== ${JSON.stringify(afterQuality[SHEET_NAME])}`,
+  'new print layout and unchanged photo decoded'
+);
 const afterGap = await exportUrls();
-assert.equal(afterQuality[0], afterGap[0], 'the print gap must not re-encode the photo');
-assert.notEqual(afterQuality[1], afterGap[1], 'the print gap must rebuild the print sheet');
+assert.equal(
+  afterQuality[PHOTO_NAME],
+  afterGap[PHOTO_NAME],
+  'the print gap must not re-encode the photo'
+);
+assert.notEqual(
+  afterQuality[SHEET_NAME],
+  afterGap[SHEET_NAME],
+  'the print gap must rebuild the print sheet'
+);
 
 // Hand-editing a value offers the way back, and the offer is derived from the
 // values themselves, so returning to the preset withdraws it again.

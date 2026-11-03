@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { findBrowser } from './find-browser.mjs';
 
 export const fixturesDir = path.join(process.cwd(), 'test-fixtures');
@@ -370,6 +370,9 @@ export async function prepareTestFixtures() {
   }
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(process.argv[1])
+) {
   console.log(JSON.stringify(await prepareTestFixtures()));
 }

@@ -38,7 +38,7 @@ export const variantData: Record<string, ToolVariantPageData> = {
   'jpg-to-favicon': {
     title: 'JPG to Favicon — Generate Common Sizes Free',
     description:
-      'Convert a JPG image to favicon sizes in your browser. Use a white background for transparent areas and download a ZIP.',
+      'Convert a JPG image to PNG favicon sizes in your browser, with transparent padding for non-square images. Download the icons and webmanifest in a ZIP.',
     faq: [
       {
         question: 'How to convert JPG to favicon?',

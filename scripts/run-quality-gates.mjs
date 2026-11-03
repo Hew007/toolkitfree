@@ -1,4 +1,7 @@
 import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+
+process.chdir(fs.realpathSync(process.cwd()));
 
 const prettierTargets = ['src/**/*.{ts,tsx,astro}', 'scripts/*.mjs', '*.{json,mjs,js}'];
 

@@ -29,6 +29,16 @@ const redirectingLinks = [];
 let internalLinks = 0;
 for (const file of htmlFiles) {
   const html = fs.readFileSync(file, 'utf8');
+  const stylesheets = [...html.matchAll(/<link\b[^>]*>/g)]
+    .filter(([tag]) => /\brel="stylesheet"/.test(tag))
+    .map(([tag]) => tag.match(/\bhref="([^"]+)"/)?.[1])
+    .filter(Boolean);
+  assert.ok(stylesheets.length > 0, `${path.relative(dist, file)} must load the site stylesheet`);
+  for (const href of stylesheets) {
+    assert.ok(href.startsWith('/') && !href.startsWith('//'), `Self-hosted stylesheet: ${href}`);
+    const css = routeFile(href);
+    assert.ok(fs.existsSync(css) && fs.statSync(css).size > 0, `Non-empty stylesheet: ${href}`);
+  }
   const hrefs = [...html.matchAll(/href="([^"]+)"/g)].map((match) => match[1]);
   for (const href of hrefs) {
     if (!href.startsWith('/') || href.startsWith('//')) continue;

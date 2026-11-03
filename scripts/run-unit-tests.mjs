@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 
 const tests = [
+  'validate-browser-session.mjs',
   'validate-image-processing.mjs',
   'validate-image-enhancer.mjs',
   'validate-image-collage.mjs',

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import QrInputForm from './QrInputForm';
 import QrPreview from './QrPreview';
 import type { QrType } from './QrInputForm';
@@ -44,6 +44,9 @@ export default function QrGenerator() {
   const [logoImage, setLogoImage] = useState<string | undefined>();
   const [logoSize, setLogoSize] = useState(0.25);
   const [logoError, setLogoError] = useState<string | null>(null);
+  const logoReadId = useRef(0);
+  const logoReader = useRef<FileReader | null>(null);
+  const correctionChoiceId = useRef(0);
   /**
    * The level a logo replaced, so removing the logo gives it back. Cleared as
    * soon as the visitor picks a level themselves, because an explicit choice
@@ -53,6 +56,15 @@ export default function QrGenerator() {
   const contrastRatio = colorContrastRatio(fgColor, bgColor);
   const contrastIsSafe = contrastRatio >= 4.5;
 
+  const invalidateLogoRead = useCallback(() => {
+    logoReadId.current += 1;
+    const reader = logoReader.current;
+    logoReader.current = null;
+    if (reader?.readyState === FileReader.LOADING) reader.abort();
+  }, []);
+
+  useEffect(() => invalidateLogoRead, [invalidateLogoRead]);
+
   const handleLogoUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const input = event.target;
@@ -60,32 +72,51 @@ export default function QrGenerator() {
       // Clear the choice so picking the same file again still fires `change`.
       input.value = '';
       if (!file) return;
+      // An invalid newer choice also supersedes any earlier pending read.
+      invalidateLogoRead();
+      const readId = logoReadId.current;
+      const choiceId = correctionChoiceId.current;
       try {
         validateImageFile(file);
         const reader = new FileReader();
+        logoReader.current = reader;
+        const isCurrent = () => logoReadId.current === readId && logoReader.current === reader;
         reader.onload = () => {
+          if (!isCurrent()) return;
+          logoReader.current = null;
           setLogoImage(reader.result as string);
-          setLevelBeforeLogo(errorCorrection);
-          setErrorCorrection('H');
+          // A manual level chosen while reading outranks the automatic default.
+          if (correctionChoiceId.current === choiceId) {
+            setLevelBeforeLogo(errorCorrection);
+            setErrorCorrection('H');
+          }
           setLogoError(null);
         };
-        reader.onerror = () => setLogoError('The logo could not be read.');
+        reader.onerror = () => {
+          if (!isCurrent()) return;
+          logoReader.current = null;
+          setLogoError('The logo could not be read.');
+        };
         reader.readAsDataURL(file);
       } catch (fileError) {
+        if (logoReadId.current !== readId) return;
+        logoReader.current = null;
         setLogoError(getImageProcessingErrorMessage(fileError));
       }
     },
-    [errorCorrection]
+    [errorCorrection, invalidateLogoRead]
   );
 
   const handleLogoRemove = useCallback(() => {
+    invalidateLogoRead();
     setLogoImage(undefined);
     if (levelBeforeLogo) setErrorCorrection(levelBeforeLogo);
     setLevelBeforeLogo(null);
     setLogoError(null);
-  }, [levelBeforeLogo]);
+  }, [levelBeforeLogo, invalidateLogoRead]);
 
   const handleErrorCorrection = useCallback((level: ECL) => {
+    correctionChoiceId.current += 1;
     setErrorCorrection(level);
     setLevelBeforeLogo(null);
   }, []);

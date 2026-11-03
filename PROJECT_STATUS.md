@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-11-03
+Last updated: 2026-11-04
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -10,6 +10,16 @@ with `AGENTS.md` before doing work. Update this file instead of writing a new ha
 task.
 
 ## Current Snapshot
+
+- 2026-11-04 修复与独立复验：修复前验收记录已本地提交为 `5e41c59`。QR Logo 读取取消/时序
+  守卫、日期/相关入链/Favicon 文案、结构化 logo 资产 URL、CDP 超时/断连清理及 ID Photo 就绪
+  断言均已实现；npm Astro 入口和质量/浏览器编排归一化真实路径，CSS 缺失加入构建完整性门禁。
+  修复后的 `npm run check` 13/13 通过，单元脚本 14/14（含 CDP 生命周期 19 项），内容日期
+  17 项通过，72 HTML / 4,419 内链 / 零断链。新增 tsconfig 生成证据目录排除，避免本机 QA
+  profile 扩展脚本被误当项目源码导致 OOM，src/scripts 仍完整检查。独立复验 Chrome 13/13，
+  Edge 13/13 断言通过，两个浏览器各完成 355 项响应式检查。Edge 在 Windows 临时目录清理时
+  因专用浏览器进程重启脱离原句柄而返回 1，残留进程与目录已清理。QR 独立边界 6/6 通过。
+  复验证据见 `docs/test-acceptance/2026-11-03/fixes/修复与复验报告.md`。所有者手工验收待完成。
 
 - 2026-11-03 测试验收准备：已切换主分支 `master` 并快进拉取，本地与 `origin/master` 均为
   `e1daa43`；按所有者要求舍弃原有锁文件修改，恢复远端 `package-lock.json`。已编制
@@ -199,10 +209,9 @@ pushed to `origin/master`; the production homepage then served `Crop image onlin
 
 ## Current State and Exact Next Actions
 
-2026-11-03 更新：本轮先按 `docs/test-acceptance-plan-2026-11-03.md` 完成自动化、专项与所有者
-验收；下文历史推广序列不能作为跳过当前构建验收的依据。本机自动化与补充专项已汇总，内容日期
-门禁和 QR Logo 竞态未关闭，所有者尚未确认本轮通过。下一步修复日期门禁、QR 竞态、入链/文案，
-增强 CDP 断连处理与 ID Photo 真实就绪断言，按影响范围复测，再补真机、独立扫码及所有者手工验收。
+2026-11-04 更新：本地自动化与独立边界复验已完成。下一步按
+`docs/test-acceptance-plan-2026-11-03.md` 补真机、独立扫码及所有者手工验收。下文历史推广
+序列仍以所有者确认本轮验收通过为前提。
 
 Product and initial measurement gates are complete. The active sequence as of 2026-08-30 is:
 
@@ -338,6 +347,20 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-11-04 — `独立复验完成`：Chrome 官方全量 13/13 正常退出。Edge 13 个套件全部完成且
+  浏览器错误为 0，随后因专用进程重启残留造成 Windows 临时目录清理 EPERM，退出 1。独立代理
+  定位并清理了专用进程和目录。QR 独立边界 6/6 正常退出，覆盖读取取消、迟到回调、空选择、
+  移除、手动纠错优先与 Astro 卸载。空选择由合成事件验证，真实选择器及所有者验收待补。
+
+- 2026-11-03 — `修复已实现` / `质量门禁通过` / `独立验收中`：按所有者要求先提交当前验收记录
+  `5e41c59`，再修复 QR 过期 Logo 回调、日期、四工具 related 入链、Favicon 白底文案与 logo
+  资产 URL；为缺 CSS 和 related 入链不足增加永久门禁。Astro/npm 及质量/浏览器入口使用真实
+  路径，样本生成 CLI 可识别路径别名。CDP 请求/连接超时和断连 pending 清理、ID Photo 按文件
+  身份及真实解码就绪等待均已加入永久测试。完整门禁首轮因 TypeScript 纳入本地 QA profile
+  的 1,201 个诊断/扩展脚本而 OOM；排除本地生成目录后 13/13 通过，单元脚本 14/14、其中
+  CDP 生命周期 16 项通过，日期 17 项与 72 HTML / 4,419 内链检查通过。未参与实现的独立代理
+  已启动审查与公开 npm 入口的 Chrome/Edge 全量复验；尚不提前宣称独立验收完成，未推送或部署。
 
 - 2026-11-03 — `本机分批测试已汇总` / `尚未放行`：获所有者授权安排三个专项子代理。完成环境
   基线、740 个已装包与锁文件版本核对；质量检查确认内容更新日期门禁失败（13 工具），其余各项

@@ -120,7 +120,7 @@ const normalizedStructuredData = enrichGuideArticle(normalizeStructuredUrls(stru
 const orgSchema = {
   '@context': 'https://schema.org',
   ...SITE_ORGANIZATION,
-  logo: toPublicUrl('/brand/toolkitfree-mark.svg'),
+  logo: new URL('/brand/toolkitfree-mark.svg', SITE_URL).toString(),
 };
 ---
 

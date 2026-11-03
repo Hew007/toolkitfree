@@ -4,7 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { findBrowser } from './find-browser.mjs';
 
-const root = process.cwd();
+const root = fs.realpathSync(process.cwd());
+process.chdir(root);
 const browserArg = process.argv.find((arg) => arg.startsWith('--browser='));
 const browserName = browserArg?.split('=')[1]?.toLowerCase() === 'edge' ? 'Edge' : 'Chrome';
 const smokeOnly = process.argv.includes('--smoke');

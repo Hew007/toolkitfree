@@ -88,6 +88,8 @@ for (const tool of toolRegistry) {
     true,
     `${tool.id} related ids`
   );
+  const incoming = toolRegistry.filter((other) => other.related.includes(tool.id));
+  assert.ok(incoming.length >= 4, `${tool.id} needs related links from at least four tools`);
   unique(
     tool.variants.map((variant) => variant.slug),
     `${tool.id} variant slugs`
@@ -157,6 +159,13 @@ for (const { route, html } of pages) {
   ].map((match) => JSON.parse(match[1]));
   jsonLdBlocks += schemas.length;
   const flattened = schemas.flatMap((schema) => (Array.isArray(schema) ? schema : [schema]));
+  for (const organization of flattened.filter((schema) => schema?.['@type'] === 'Organization')) {
+    assert.equal(
+      organization.logo,
+      `${SITE_URL}/brand/toolkitfree-mark.svg`,
+      `${route} Organization logo must use the asset URL without a trailing slash`
+    );
+  }
   if (route.startsWith('/guides/') && route !== '/guides') {
     const articles = flattened.filter((schema) => schema?.['@type'] === 'Article');
     assert.equal(articles.length, 1, `${route} has one primary Article`);

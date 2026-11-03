@@ -699,6 +699,125 @@ assert.equal(await evaluate(`window.__qrLogoInputCleared`), true, 'logo input is
 await evaluate(`document.querySelector('[aria-label="Remove logo"]').click()`);
 await waitFor(`Boolean(document.querySelector('.qr-logo-upload'))`, 'Upload Logo is back');
 
+// Hold real FileReader completions until the test releases them. This controls
+// completion order without changing the files, React handlers, or renderer.
+const logoRaceChecks = await evaluate(`
+  (async () => {
+    const originalRead = FileReader.prototype.readAsDataURL;
+    const held = new Map();
+    const checks = [];
+    const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+    const until = async (condition) => {
+      const started = performance.now();
+      while (!condition()) {
+        if (performance.now() - started > 10000) throw new Error('QR logo race setup timed out');
+        await pause();
+      }
+    };
+    const image = () => document.querySelector('img[alt="Logo"]')?.src;
+    const level = () => document.querySelector('input[name="qr-error-correction"]:checked')?.value;
+    const error = () => document.querySelector('.qr-generator-layout .status-error')?.textContent;
+    const remove = async () => {
+      document.querySelector('[aria-label="Remove logo"]').click();
+      await until(() => Boolean(document.querySelector('.qr-logo-upload input')));
+    };
+    const select = async (name, color, type = 'image/png') => {
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 32;
+      const context = canvas.getContext('2d');
+      context.fillStyle = color;
+      context.fillRect(0, 0, 32, 32);
+      const dataUrl = canvas.toDataURL('image/png');
+      const bytes = Uint8Array.from(atob(dataUrl.split(',')[1]), (c) => c.charCodeAt(0));
+      const transfer = new DataTransfer();
+      transfer.items.add(new File([bytes], name, { type }));
+      const input = document.querySelector('.qr-logo-upload input');
+      input.files = transfer.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      if (name.startsWith('held-')) await until(() => held.has(name));
+      return dataUrl;
+    };
+    FileReader.prototype.readAsDataURL = function(file) {
+      // The QR renderer also reads unnamed Blobs; only our named fixtures pause.
+      if (typeof file.name !== 'string' || !file.name.startsWith('held-')) {
+        return originalRead.call(this, file);
+      }
+      const loaded = this.onload;
+      const failed = this.onerror;
+      this.onload = (event) => held.set(file.name, {
+        succeed: () => loaded.call(this, event),
+        fail: () => failed.call(this, new ProgressEvent('error')),
+      });
+      return originalRead.call(this, file);
+    };
+    try {
+      const blobReader = new FileReader();
+      let blobResult;
+      let blobFailed = false;
+      blobReader.onload = () => { blobResult = blobReader.result; };
+      blobReader.onerror = () => { blobFailed = true; };
+      blobReader.readAsDataURL(new Blob(['ToolkitFree Blob pass-through'], { type: 'text/plain' }));
+      await until(() => blobResult !== undefined || blobFailed);
+      checks.push({
+        case: 'unnamed Blob pass-through',
+        decoded: blobResult === 'data:text/plain;base64,' + btoa('ToolkitFree Blob pass-through'),
+        noError: !blobFailed,
+      });
+
+      const initialLevel = level();
+      await select('held-success.png', '#ff0000');
+      const newer = await select('newer-success.png', '#0000ff');
+      await until(() => image() === newer);
+      held.get('held-success.png').succeed();
+      await pause();
+      checks.push({ case: 'late success', current: image() === newer, noError: !error() });
+      await remove();
+      checks.push({ case: 'restore correction', restored: level() === initialLevel });
+
+      await select('held-error.png', '#ff0000');
+      const afterError = await select('newer-after-error.png', '#00ff00');
+      await until(() => image() === afterError);
+      held.get('held-error.png').fail();
+      await pause();
+      checks.push({ case: 'late error', current: image() === afterError, noError: !error() });
+      await remove();
+
+      await select('held-invalidated.png', '#ff0000');
+      await select('unsupported.txt', '#ffffff', 'text/plain');
+      await until(() => Boolean(error()));
+      const invalidError = error();
+      held.get('held-invalidated.png').succeed();
+      await pause();
+      checks.push({ case: 'new invalid input', noLogo: !image(), errorPreserved: error() === invalidError });
+
+      await select('held-removed.png', '#ff0000');
+      const removable = await select('newer-removable.png', '#0000ff');
+      await until(() => image() === removable);
+      await remove();
+      held.get('held-removed.png').succeed();
+      await pause();
+      checks.push({ case: 'removed logo', noLogo: !image(), correctionRestored: level() === initialLevel });
+
+      await select('held-manual-level.png', '#ff0000');
+      document.querySelector('input[name="qr-error-correction"][value="L"]').click();
+      await until(() => level() === 'L');
+      held.get('held-manual-level.png').succeed();
+      await until(() => Boolean(image()));
+      checks.push({ case: 'manual level during read', retained: level() === 'L' });
+      await remove();
+      checks.push({ case: 'manual level after remove', retained: level() === 'L' });
+      document.querySelector('input[name="qr-error-correction"][value="M"]').click();
+      await until(() => level() === 'M');
+      return checks;
+    } finally {
+      FileReader.prototype.readAsDataURL = originalRead;
+    }
+  })()
+`);
+for (const { case: name, ...checks } of logoRaceChecks) {
+  assert.ok(Object.values(checks).every(Boolean), `QR logo ${name}: ${JSON.stringify(checks)}`);
+}
+
 await evaluate(`
   (() => {
     const colors = document.querySelectorAll('input[type="color"]');
@@ -1627,7 +1746,12 @@ console.log(
       fitMediaBox: mediaBox.slice(1),
     },
     favicon: { icons: faviconResults.length, zipNames, paddingPixels },
-    qr: { pngBytes: pngBytes.length, svgBytes: Buffer.byteLength(svgText), contrastBlocked: true },
+    qr: {
+      pngBytes: pngBytes.length,
+      svgBytes: Buffer.byteLength(svgText),
+      contrastBlocked: true,
+      logoRaceChecks,
+    },
     enhancer: {
       width: enhancerInitial.width,
       height: enhancerInitial.height,

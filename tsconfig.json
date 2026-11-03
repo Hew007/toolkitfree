@@ -4,7 +4,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react"
   },
-  // The base config sets allowJs with include "**/*", which otherwise pulls the
-  // vendored runtimes under public/generated into type checking.
-  "exclude": ["dist", "public"]
+  // Keep generated assets and local QA evidence (including browser extensions
+  // inside dedicated test profiles) out of the base config's allowJs glob.
+  "exclude": ["dist", "public", "docs", "test-fixtures", ".local-backups", ".tmp-*"]
 }
