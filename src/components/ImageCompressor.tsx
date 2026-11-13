@@ -1,3 +1,5 @@
+import { useI18n, withLocale } from '../i18n/react';
+import { imageText, imageChoices } from '../i18n/image-messages';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import { ToolChoices, type ToolChoice } from './ToolChoices';
@@ -237,11 +239,12 @@ function scaleDimension(value: number, scale: number): number {
   return Math.max(1, Math.round(value * scale));
 }
 
-export default function ImageCompressor({
+function ImageCompressor({
   defaultPurpose: defaultPurposeId = 'web',
   defaultTargetKB = 100,
   defaultFormat = 'Any',
 }: Props) {
+  const { locale } = useI18n();
   const inputFormat = INPUT_FORMATS[defaultFormat] ?? INPUT_FORMATS.Any;
   const defaultPurpose = PURPOSES.find((purpose) => purpose.id === defaultPurposeId) as Purpose;
 
@@ -567,7 +570,7 @@ export default function ImageCompressor({
     <div aria-busy={busy} data-tool-input={files.length > 0 ? 'present' : 'empty'}>
       {busy && (
         <div className="visually-hidden" role="status" aria-live="polite">
-          Compressing images.
+          {imageText('Compressing images.', locale)}
         </div>
       )}
       <FileUploader
@@ -577,46 +580,54 @@ export default function ImageCompressor({
         currentFiles={files.map(({ file }) => file)}
         onFilesSelected={handleFiles}
       />
-      <p className="tool-hint">Accepted input: {inputFormat.hint}</p>
+      <p className="tool-hint">
+        {imageText('Accepted input: ', locale)}
+        {imageText(inputFormat.hint, locale)}
+      </p>
 
       <FileList files={files.map(({ file }) => file)} onRemove={handleRemove} />
 
       <div className="compressor-controls">
         <ToolChoices
           name="compressor-purpose"
-          legend="What is it for?"
-          help="Choose a purpose and the settings follow. You can still change every value below."
-          choices={PURPOSE_CHOICES}
+          legend={imageText('What is it for?', locale)}
+          help={imageText(
+            'Choose a purpose and the settings follow. You can still change every value below.',
+            locale
+          )}
+          choices={imageChoices(PURPOSE_CHOICES, locale)}
           value={purposeId}
           onChange={(choice) => handlePurpose(PURPOSE_BY_ID[choice.id])}
         />
 
         {mode === 'target' && (
           <div className="compressor-target-row">
-            <label htmlFor="compressor-target-size">Target size</label>
+            <label htmlFor="compressor-target-size">{imageText('Target size', locale)}</label>
             <div className="compressor-target-input">
               <input
                 className="field-input"
                 id="compressor-target-size"
-                aria-label="Target Size (KB)"
+                aria-label={imageText('Target Size (KB)', locale)}
                 type="number"
                 min="1"
                 max="10000"
                 step="1"
                 {...targetKBProps}
               />
-              <span>KB</span>
+              <span>{imageText('KB', locale)}</span>
             </div>
             <p className="tool-hint">
-              Quality and dimensions are searched within bounds. Each result says whether the target
-              was actually met.
+              {imageText(
+                'Quality and dimensions are searched within bounds. Each result says whether the target was actually met.',
+                locale
+              )}
             </p>
           </div>
         )}
 
         {files.length > 0 && mode !== 'target' && (
           <fieldset className="variant-fieldset">
-            <legend>Pick a result</legend>
+            <legend>{imageText('Pick a result', locale)}</legend>
             <div className="variant-options">
               {VARIANTS.map((variant) => {
                 const run = runs[variant.id];
@@ -636,15 +647,18 @@ export default function ImageCompressor({
                       checked={selectedVariant === variant.id}
                       onChange={() => handleSelectVariant(variant)}
                     />
-                    <span className="variant-option-label">{variant.label}</span>
+                    <span className="variant-option-label">{imageText(variant.label, locale)}</span>
                     <span className="variant-option-size">
-                      {ready && size !== null
-                        ? formatSize(size)
-                        : run?.status === 'running'
-                          ? 'Working…'
-                          : 'Select to encode'}
+                      {imageText(
+                        ready && size !== null
+                          ? formatSize(size)
+                          : run?.status === 'running'
+                            ? 'Working…'
+                            : 'Select to encode',
+                        locale
+                      )}
                     </span>
-                    <span className="variant-option-note">{variant.note}</span>
+                    <span className="variant-option-note">{imageText(variant.note, locale)}</span>
                   </label>
                 );
               })}
@@ -655,18 +669,21 @@ export default function ImageCompressor({
         {files.length > 0 && (
           <>
             <FineTune
-              summary={fineTuneSummary}
+              summary={imageText(fineTuneSummary, locale)}
               onReset={tuned ? () => handlePurpose(purpose) : undefined}
-              resetLabel={`Back to the ${purpose.label} preset`}
+              resetLabel={imageText(`Back to the ${purpose.label} preset`, locale)}
             >
               <FineTuneField
                 htmlFor="compressor-quality"
-                label={`Quality: ${quality}%`}
-                hint="Applies to JPG and WebP. PNG is lossless, so its candidates differ by width instead."
+                label={imageText(`Quality: ${quality}%`, locale)}
+                hint={imageText(
+                  'Applies to JPG and WebP. PNG is lossless, so its candidates differ by width instead.',
+                  locale
+                )}
               >
                 <input
                   id="compressor-quality"
-                  aria-label="Compression Quality"
+                  aria-label={imageText('Compression Quality', locale)}
                   type="range"
                   min="10"
                   max="100"
@@ -678,10 +695,13 @@ export default function ImageCompressor({
                 />
               </FineTuneField>
 
-              <FineTuneField htmlFor="compressor-max-width" label="Starting max width">
+              <FineTuneField
+                htmlFor="compressor-max-width"
+                label={imageText('Starting max width', locale)}
+              >
                 <select
                   id="compressor-max-width"
-                  aria-label="Starting Max Width"
+                  aria-label={imageText('Starting Max Width', locale)}
                   value={maxWidth}
                   onChange={(event) => {
                     setMaxWidth(Number(event.target.value));
@@ -690,7 +710,7 @@ export default function ImageCompressor({
                 >
                   {MAX_WIDTH_CHOICES.map((width) => (
                     <option key={width} value={width}>
-                      {width === 0 ? 'Original width' : `${width} px`}
+                      {imageText(width === 0 ? 'Original width' : `${width} px`, locale)}
                     </option>
                   ))}
                 </select>
@@ -698,17 +718,22 @@ export default function ImageCompressor({
             </FineTune>
 
             <ToolRunNote busy={busy}>
-              {busy
-                ? 'Encoding in your browser…'
-                : activeRun?.status === 'ready'
-                  ? `Encoded in your browser in ${(activeRun.elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
-                  : 'Results follow the settings above. Nothing is uploaded.'}
+              {imageText(
+                busy
+                  ? 'Encoding in your browser…'
+                  : activeRun?.status === 'ready'
+                    ? `Encoded in your browser in ${(activeRun.elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
+                    : 'Results follow the settings above. Nothing is uploaded.',
+                locale
+              )}
             </ToolRunNote>
 
             {!compareAll && mode !== 'target' && (
               <p className="tool-hint">
-                Large batch: only the selected candidate is encoded automatically. Choosing another
-                one encodes it.
+                {imageText(
+                  'Large batch: only the selected candidate is encoded automatically. Choosing another one encodes it.',
+                  locale
+                )}
               </p>
             )}
           </>
@@ -725,7 +750,9 @@ export default function ImageCompressor({
         <div>
           {totalOriginal > 0 && results.length > 1 && (
             <p className="compressor-total">
-              {results.length} files: {formatSize(totalOriginal)} to {formatSize(totalOutput)}
+              {results.length} {imageText(' files: ', locale)}
+              {formatSize(totalOriginal)} {imageText(' to ', locale)}
+              {formatSize(totalOutput)}
             </p>
           )}
           {results.map((result) => {
@@ -737,24 +764,39 @@ export default function ImageCompressor({
                   <div>
                     <div className="file-item-name">{result.name}</div>
                     <div className="file-item-size">
-                      {formatSize(result.originalSize)} to {formatSize(result.compressedSize)}
-                      {smaller &&
-                        ` (-${Math.round((1 - result.compressedSize / result.originalSize) * 100)}%)`}
+                      {formatSize(result.originalSize)} {imageText(' to ', locale)}
+                      {formatSize(result.compressedSize)}
+                      {imageText(
+                        smaller &&
+                          ` (-${Math.round((1 - result.compressedSize / result.originalSize) * 100)}%)`,
+                        locale
+                      )}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                      {result.originalWidth}x{result.originalHeight} to {result.width}x
+                      {imageText(result.originalWidth, locale)}
+                      {imageText('x', locale)}
+                      {imageText(result.originalHeight, locale)} {imageText(' to ', locale)}
+                      {result.width}
+                      {imageText('x', locale)}
                       {result.height}
-                      {result.quality !== null && ` | quality ${Math.round(result.quality * 100)}%`}
-                      {mode === 'target' &&
-                        ` | ${result.attempts} attempt${result.attempts === 1 ? '' : 's'}`}
+                      {imageText(
+                        result.quality !== null &&
+                          ` | quality ${Math.round(result.quality * 100)}%`,
+                        locale
+                      )}
+                      {imageText(
+                        mode === 'target' &&
+                          ` | ${result.attempts} attempt${result.attempts === 1 ? '' : 's'}`,
+                        locale
+                      )}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: resultColor(result.status) }}>
-                      {result.message}
+                      {imageText(result.message, locale)}
                     </div>
                   </div>
                 </div>
                 <a href={result.url} download={result.outputName} className="btn btn-primary">
-                  Download
+                  {imageText('Download', locale)}
                 </a>
               </div>
             );
@@ -764,3 +806,5 @@ export default function ImageCompressor({
     </div>
   );
 }
+
+export default withLocale(ImageCompressor);

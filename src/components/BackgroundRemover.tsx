@@ -1,3 +1,5 @@
+import { useOtherI18n } from '../i18n/other-messages';
+import { withLocale } from '../i18n/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import { ToolPresets, type ToolChoice } from './ToolChoices';
@@ -89,7 +91,8 @@ interface TimingProgress {
   stages: StageTiming[];
 }
 
-export default function BackgroundRemover() {
+function BackgroundRemover() {
+  const { tr, node, choices, errorText } = useOtherI18n();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -426,20 +429,20 @@ export default function BackgroundRemover() {
             {previewUrl && (
               <img
                 src={previewUrl}
-                alt="Original preview"
+                alt={tr('Original preview')}
                 style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }}
               />
             )}
             <span className="file-item-name">{file.name}</span>
-            <span className="file-item-size">{formatSize(file.size)}</span>
+            <span className="file-item-size">{node(formatSize(file.size))}</span>
             <button
               type="button"
-              aria-label={`Remove ${file.name}`}
+              aria-label={tr(`Remove ${file.name}`)}
               className="file-item-remove"
               onClick={handleRemove}
               disabled={processing}
             >
-              x
+              {tr('x')}
             </button>
           </div>
 
@@ -449,23 +452,27 @@ export default function BackgroundRemover() {
             <div data-background-chips="">
               <ToolPresets
                 disabled={colorLocked}
-                legend="Background"
-                help="Pick what goes behind the cutout. Choosing one never starts the AI model — open Fine-tune for any other color."
-                presets={BACKGROUND_CHOICES}
+                legend={tr('Background')}
+                help={tr(
+                  'Pick what goes behind the cutout. Choosing one never starts the AI model — open Fine-tune for any other color.'
+                )}
+                presets={choices(BACKGROUND_CHOICES)}
                 isActive={(preset) => preset.id === bgColor}
                 onApply={(preset) => applyColor(preset.id)}
               />
             </div>
 
             <FineTune
-              summary={fineTuneSummary}
+              summary={tr(fineTuneSummary)}
               onReset={isCustomColor ? () => applyColor(lastPresetValue) : undefined}
-              resetLabel={`Back to the ${lastPresetLabel} background`}
+              resetLabel={tr(`Back to the ${lastPresetLabel} background`)}
             >
               <FineTuneField
                 htmlFor="background-custom-color"
-                label="Custom background color"
-                hint="Any color, including ones the presets above do not offer. Picking one clears the preset selection."
+                label={tr('Custom background color')}
+                hint={tr(
+                  'Any color, including ones the presets above do not offer. Picking one clears the preset selection.'
+                )}
               >
                 <input
                   id="background-custom-color"
@@ -488,15 +495,15 @@ export default function BackgroundRemover() {
 
               <FineTuneField
                 htmlFor="background-hex"
-                label="Hex value"
-                hint="Press Enter or leave the field to apply it."
+                label={tr('Hex value')}
+                hint={tr('Press Enter or leave the field to apply it.')}
               >
                 <input
                   id="background-hex"
                   type="text"
                   data-testid="bg-color-hex"
                   aria-invalid={hexError !== null}
-                  placeholder="#ff7a45"
+                  placeholder={tr('#ff7a45')}
                   value={hexDraft}
                   disabled={colorLocked}
                   maxLength={7}
@@ -524,7 +531,7 @@ export default function BackgroundRemover() {
 
               {hexError && (
                 <p role="alert" style={{ margin: 0, color: '#ef4444', fontSize: '0.75rem' }}>
-                  {hexError}
+                  {errorText(hexError)}
                 </p>
               )}
             </FineTune>
@@ -534,13 +541,15 @@ export default function BackgroundRemover() {
                 does follow is the background, and the note has to say which is which
                 — and roughly what pressing the button costs. */}
             <ToolRunNote busy={processing || composing}>
-              {processing
-                ? 'Removing the background in your browser…'
-                : composing
-                  ? 'Painting the background in your browser…'
-                  : timing
-                    ? `Removed in your browser in ${(timing.totalMs / 1000).toFixed(1)}s — nothing was uploaded. Changing the background above repaints this result without running the model again.`
-                    : 'Nothing is uploaded. The background above applies as soon as there is a result; removal itself is a separate step and usually takes a few seconds to half a minute.'}
+              {node(
+                processing
+                  ? 'Removing the background in your browser…'
+                  : composing
+                    ? 'Painting the background in your browser…'
+                    : timing
+                      ? `Removed in your browser in ${(timing.totalMs / 1000).toFixed(1)}s — nothing was uploaded. Changing the background above repaints this result without running the model again.`
+                      : 'Nothing is uploaded. The background above applies as soon as there is a result; removal itself is a separate step and usually takes a few seconds to half a minute.'
+              )}
             </ToolRunNote>
           </div>
 
@@ -552,7 +561,7 @@ export default function BackgroundRemover() {
               disabled={processing}
               style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
             >
-              {processing ? 'Processing...' : result ? 'Process Again' : 'Remove Background'}
+              {node(processing ? 'Processing...' : result ? 'Process Again' : 'Remove Background')}
             </button>
             {processing && (
               <button
@@ -561,14 +570,14 @@ export default function BackgroundRemover() {
                 onClick={cancelProcessing}
                 style={{ fontSize: '1rem', padding: '0.75rem 2rem', marginLeft: '0.5rem' }}
               >
-                Cancel
+                {tr('Cancel')}
               </button>
             )}
           </div>
           <p style={{ marginTop: '0.5rem', color: '#6b665c', fontSize: '0.8125rem' }}>
-            First use downloads a sizable AI model and requires a network connection. Later offline
-            use depends on whether your browser keeps that model cached. Processing speed and
-            maximum image size depend on device memory.
+            {tr(
+              'First use downloads a sizable AI model and requires a network connection. Later offline use depends on whether your browser keeps that model cached. Processing speed and maximum image size depend on device memory.'
+            )}
           </p>
         </>
       )}
@@ -580,8 +589,8 @@ export default function BackgroundRemover() {
           aria-live="polite"
           data-progress-stage={progress.stage}
         >
-          {progress.label}
-          {progress.percent === null ? '...' : `: ${progress.percent}%`}
+          {node(progress.label)}
+          {node(progress.percent === null ? '...' : `: ${progress.percent}%`)}
         </div>
       )}
       {/* The run note above carries the wording; this is only what a screen reader
@@ -589,12 +598,12 @@ export default function BackgroundRemover() {
           otherwise silent. */}
       {composing && (
         <div className="visually-hidden" role="status" aria-live="polite">
-          Painting the background.
+          {tr('Painting the background.')}
         </div>
       )}
       {error && (
         <div className="status status-error" role="alert">
-          {error.message}
+          {errorText(error.message)}
           {error.detail && (
             <span
               style={{
@@ -604,7 +613,7 @@ export default function BackgroundRemover() {
                 opacity: 0.85,
               }}
             >
-              {error.detail}
+              {errorText(error.detail)}
             </span>
           )}
         </div>
@@ -612,16 +621,16 @@ export default function BackgroundRemover() {
 
       {result && (
         <div style={{ marginTop: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Result</h3>
+          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>{tr('Result')}</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
             {previewUrl && (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '0.75rem', color: '#6b665c', marginBottom: '0.25rem' }}>
-                  Original
+                  {tr('Original')}
                 </div>
                 <img
                   src={previewUrl}
-                  alt="Original"
+                  alt={tr('Original')}
                   style={{
                     maxWidth: 200,
                     maxHeight: 200,
@@ -633,11 +642,11 @@ export default function BackgroundRemover() {
             )}
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '0.75rem', color: '#6b665c', marginBottom: '0.25rem' }}>
-                Result
+                {tr('Result')}
               </div>
               <img
                 src={result.url}
-                alt="Result"
+                alt={tr('Result')}
                 style={{
                   maxWidth: 200,
                   maxHeight: 200,
@@ -655,7 +664,7 @@ export default function BackgroundRemover() {
             <div className="result-info">
               <div>
                 <div className="file-item-name">{result.name}</div>
-                <div className="file-item-size">{formatSize(result.size)}</div>
+                <div className="file-item-size">{node(formatSize(result.size))}</div>
               </div>
             </div>
             <button
@@ -664,7 +673,7 @@ export default function BackgroundRemover() {
               className="btn btn-primary"
               disabled={!downloadReady}
             >
-              Download
+              {tr('Download')}
             </button>
           </div>
         </div>
@@ -672,3 +681,5 @@ export default function BackgroundRemover() {
     </div>
   );
 }
+
+export default withLocale(BackgroundRemover);

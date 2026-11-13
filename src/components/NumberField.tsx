@@ -1,4 +1,5 @@
 import { useNumberDraft } from '../hooks/useNumberDraft';
+import { useI18n } from '../i18n/react';
 
 interface NumberFieldProps {
   id: string;
@@ -34,6 +35,7 @@ export default function NumberField({
   steppers = false,
   hint,
 }: NumberFieldProps) {
+  const { t } = useI18n();
   const draftProps = useNumberDraft({ value, min, max, step, onCommit });
 
   const nudge = (direction: number) => onCommit(clamp(value + direction * step, min, max));
@@ -52,7 +54,7 @@ export default function NumberField({
             className="btn btn-secondary number-field-step"
             onClick={() => nudge(-1)}
             disabled={atMin}
-            aria-label={`Decrease ${label.toLowerCase()}`}
+            aria-label={t(`Decrease ${label.toLowerCase()}`, `减小${label}`)}
           >
             &minus;
           </button>
@@ -73,7 +75,7 @@ export default function NumberField({
             className="btn btn-secondary number-field-step"
             onClick={() => nudge(1)}
             disabled={atMax}
-            aria-label={`Increase ${label.toLowerCase()}`}
+            aria-label={t(`Increase ${label.toLowerCase()}`, `增大${label}`)}
           >
             +
           </button>

@@ -1,3 +1,4 @@
+import { useOtherI18n } from '../i18n/other-messages';
 import { useEffect, useRef, useState } from 'react';
 import type { CropRect, SourceSize } from '../lib/id-photo';
 
@@ -40,6 +41,7 @@ export default function IdPhotoEditor({
   headHeightRange,
   onCropChange,
 }: IdPhotoEditorProps) {
+  const { tr } = useOtherI18n();
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const [display, setDisplay] = useState({ width: 0, height: 0 });
@@ -126,14 +128,16 @@ export default function IdPhotoEditor({
     : null;
 
   return (
-    <section aria-label="Photo positioning" style={{ marginBottom: '1.5rem' }}>
+    <section aria-label={tr('Photo positioning')} style={{ marginBottom: '1.5rem' }}>
       {/* The 2D positioning region is intentionally keyboard focusable as one composite control. */}
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <div
         ref={viewportRef}
         data-testid="id-photo-editor"
         role="group"
-        aria-label="Position the photo. Use arrow keys to move it; use plus and minus to zoom."
+        aria-label={tr(
+          'Position the photo. Use arrow keys to move it; use plus and minus to zoom.'
+        )}
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onPointerDown={handlePointerDown}
@@ -159,7 +163,7 @@ export default function IdPhotoEditor({
       >
         <img
           src={imageUrl}
-          alt="Original positioned for the selected ID size"
+          alt={tr('Original positioned for the selected ID size')}
           draggable={false}
           style={{
             position: 'absolute',
@@ -219,15 +223,16 @@ export default function IdPhotoEditor({
         id="id-photo-position-help"
         style={{ margin: '0.6rem 0 0', color: '#4a463e', fontSize: '0.875rem' }}
       >
-        Drag to position. Use the buttons or + / − to zoom; arrow keys move. Lines are manual
-        framing guides, not face detection.
+        {tr(
+          'Drag to position. Use the buttons or + / − to zoom; arrow keys move. Lines are manual framing guides, not face detection.'
+        )}
       </p>
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
         <button type="button" className="btn btn-secondary" onClick={() => zoom(1.1)}>
-          Zoom out
+          {tr('Zoom out')}
         </button>
         <button type="button" className="btn btn-secondary" onClick={() => zoom(0.9)}>
-          Zoom in
+          {tr('Zoom in')}
         </button>
       </div>
     </section>

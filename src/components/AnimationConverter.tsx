@@ -1,3 +1,6 @@
+import { useOtherI18n } from '../i18n/other-messages';
+import { localizePath } from '../i18n/locale';
+import { withLocale } from '../i18n/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import FileList from './FileList';
@@ -157,7 +160,8 @@ function outputMime(format: AnimationOutputFormat): string {
   return 'image/apng';
 }
 
-export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
+function AnimationConverter({ defaultOutput = 'gif' }: Props) {
+  const { tr, node, choices, errorText, locale } = useOtherI18n();
   const mobile = useMemo(() => isMobileDevice(), []);
   const budget = useMemo(() => getAnimationBudget(mobile), [mobile]);
 
@@ -505,22 +509,26 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
         multiple={false}
         currentFiles={file ? [file] : []}
         onFilesSelected={(files) => void chooseFiles(files)}
-        singleFileLabel="a video or animated image"
+        singleFileLabel={tr('a video or animated image')}
       />
       <p className="tool-hint">
-        MP4, WebM, common MOV, GIF, animated WebP, or APNG. One file at a time.
+        {tr('MP4, WebM, common MOV, GIF, animated WebP, or APNG. One file at a time.')}
       </p>
       {capabilities && !capabilities.animatedWebpInput && (
         <div className="notice-card" role="status">
-          Animated WebP input is unavailable in this browser. Video, GIF, and APNG input still work,
-          and all three output formats remain available.
+          {tr(
+            'Animated WebP input is unavailable in this browser. Video, GIF, and APNG input still work, and all three output formats remain available.'
+          )}
         </div>
       )}
       {error && (
         <div className="error-message" role="alert">
-          {error}{' '}
+          {errorText(error)}
+          {node(' ')}
           {(error.includes('static PNG') || error.includes('static WebP')) && (
-            <a href="/tools/image-converter/">Open Image Converter</a>
+            <a href={localizePath('/tools/image-converter/', locale)}>
+              {tr('Open Image Converter')}
+            </a>
           )}
         </div>
       )}
@@ -538,22 +546,24 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
           <div className="animation-controls tool-controls">
             <ToolChoices
               name="animation-output"
-              legend="What is the animation for?"
-              help="Pick an output and the size, frame rate and quality follow. Every value stays editable below."
-              choices={OUTPUT_CHOICES}
+              legend={tr('What is the animation for?')}
+              help={tr(
+                'Pick an output and the size, frame rate and quality follow. Every value stays editable below.'
+              )}
+              choices={choices(OUTPUT_CHOICES)}
               value={settings.outputFormat}
               onChange={(choice) => applyOutputFormat(choice.id)}
             />
 
             <FineTune
-              summary={fineTuneSummary}
+              summary={tr(fineTuneSummary)}
               onReset={tuned ? () => applyOutputFormat(settings.outputFormat) : undefined}
-              resetLabel={`Back to the ${outputFormat.label} preset`}
+              resetLabel={tr(`Back to the ${outputFormat.label} preset`)}
             >
               <FineTuneField
                 htmlFor="animation-output-format"
-                label="Output format"
-                hint="The same choice as the chips above."
+                label={tr('Output format')}
+                hint={tr('The same choice as the chips above.')}
               >
                 <select
                   id="animation-output-format"
@@ -564,7 +574,7 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
                 >
                   {ANIMATION_OUTPUT_FORMATS.map((format) => (
                     <option key={format.id} value={format.id}>
-                      {format.label}
+                      {node(format.label)}
                     </option>
                   ))}
                 </select>
@@ -572,8 +582,10 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
 
               <FineTuneField
                 htmlFor="animation-preset"
-                label="Size and frame rate"
-                hint="Fewer pixels and fewer frames make a smaller file and a faster conversion."
+                label={tr('Size and frame rate')}
+                hint={tr(
+                  'Fewer pixels and fewer frames make a smaller file and a faster conversion.'
+                )}
               >
                 <select
                   id="animation-preset"
@@ -582,13 +594,15 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
                 >
                   {PRESET_ORDER.map((preset) => (
                     <option key={preset} value={preset}>
-                      {`${ANIMATION_PRESET_LABELS[preset]} · ${ANIMATION_PRESETS[preset].maxSide}px · ${ANIMATION_PRESETS[preset].fps}fps`}
+                      {node(
+                        `${ANIMATION_PRESET_LABELS[preset]} · ${ANIMATION_PRESETS[preset].maxSide}px · ${ANIMATION_PRESETS[preset].fps}fps`
+                      )}
                     </option>
                   ))}
                 </select>
               </FineTuneField>
 
-              <FineTuneField htmlFor="animation-start" label="Start time (seconds)">
+              <FineTuneField htmlFor="animation-start" label={tr('Start time (seconds)')}>
                 <input
                   id="animation-start"
                   className="field-input"
@@ -602,8 +616,10 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
 
               <FineTuneField
                 htmlFor="animation-duration"
-                label="Maximum duration (seconds)"
-                hint={`Up to ${budget.maxClipSeconds} seconds, and shortened when the source ends first.`}
+                label={tr('Maximum duration (seconds)')}
+                hint={tr(
+                  `Up to ${budget.maxClipSeconds} seconds, and shortened when the source ends first.`
+                )}
               >
                 <input
                   id="animation-duration"
@@ -616,7 +632,7 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
                 />
               </FineTuneField>
 
-              <FineTuneField htmlFor="animation-loop" label="Loop count">
+              <FineTuneField htmlFor="animation-loop" label={tr('Loop count')}>
                 <select
                   id="animation-loop"
                   value={settings.loopCount}
@@ -627,10 +643,10 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
                     }))
                   }
                 >
-                  <option value="0">Forever</option>
-                  <option value="1">Play once</option>
-                  <option value="2">Twice</option>
-                  <option value="3">Three times</option>
+                  <option value="0">{tr('Forever')}</option>
+                  <option value="1">{tr('Play once')}</option>
+                  <option value="2">{tr('Twice')}</option>
+                  <option value="3">{tr('Three times')}</option>
                 </select>
               </FineTuneField>
 
@@ -644,8 +660,8 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
               {settings.outputFormat === 'webp' && (
                 <FineTuneField
                   htmlFor="animation-quality"
-                  label={`WebP quality: ${settings.quality}`}
-                  hint="Higher keeps more detail and makes a larger file."
+                  label={tr(`WebP quality: ${settings.quality}`)}
+                  hint={tr('Higher keeps more detail and makes a larger file.')}
                 >
                   <input
                     id="animation-quality"
@@ -667,26 +683,34 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
 
             <div className="conversion-summary">
               <span>
-                {outputDimensions && outputDimensions.width > 0
-                  ? `${outputDimensions.width} × ${outputDimensions.height} output`
-                  : `${settings.maxSide}px maximum side`}
+                {node(
+                  outputDimensions && outputDimensions.width > 0
+                    ? `${outputDimensions.width} × ${outputDimensions.height} output`
+                    : `${settings.maxSide}px maximum side`
+                )}
               </span>
-              <span>{settings.fps} fps</span>
-              <span>Up to {estimatedFrames} frames</span>
+              <span>
+                {node(settings.fps)} {tr(' fps')}
+              </span>
+              <span>
+                {tr('Up to ')}
+                {node(estimatedFrames)} {tr(' frames')}
+              </span>
               {metadata && (
                 <span>
-                  {metadata.width} × {metadata.height} source
+                  {node(metadata.width)} × {node(metadata.height)} {tr(' source')}
                 </span>
               )}
             </div>
             {settings.outputFormat === 'apng' && (
               <p className="tool-hint">
-                APNG keeps full-color transparency but can be substantially larger.
+                {tr('APNG keeps full-color transparency but can be substantially larger.')}
               </p>
             )}
             {workloadWarning && (
               <div className="notice-card" role="status">
-                {workloadWarning} Adjust the size, frame rate, or duration above.
+                {errorText(workloadWarning)}{' '}
+                {tr(' Adjust the size, frame rate, or duration above.')}
               </div>
             )}
             <div className="action-row">
@@ -696,20 +720,22 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
                 onClick={() => void convert()}
                 disabled={converting || Boolean(workloadWarning)}
               >
-                {converting ? 'Converting…' : `Create ${settings.outputFormat.toUpperCase()}`}
+                {node(converting ? 'Converting…' : `Create ${settings.outputFormat.toUpperCase()}`)}
               </button>
               {converting && (
                 <button type="button" className="btn btn-secondary" onClick={cancel}>
-                  Cancel
+                  {tr('Cancel')}
                 </button>
               )}
             </div>
             <ToolRunNote busy={converting}>
-              {converting
-                ? 'Converting on this device. Keep the tab open.'
-                : lastRunSeconds !== null
-                  ? `Created on this device in ${lastRunSeconds.toFixed(1)}s. Your media file was not uploaded.`
-                  : 'Size and frame count follow the settings. Converting stays a separate step: it runs on this device and takes seconds to minutes.'}
+              {node(
+                converting
+                  ? 'Converting on this device. Keep the tab open.'
+                  : lastRunSeconds !== null
+                    ? `Created on this device in ${lastRunSeconds.toFixed(1)}s. Your media file was not uploaded.`
+                    : 'Size and frame count follow the settings. Converting stays a separate step: it runs on this device and takes seconds to minutes.'
+              )}
             </ToolRunNote>
           </div>
         </div>
@@ -720,7 +746,7 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
           <div
             className={`conversion-progress-track${converting ? ' is-active' : ''}`}
             role="progressbar"
-            aria-label="Conversion progress"
+            aria-label={tr('Conversion progress')}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.round(progress * 100)}
@@ -731,11 +757,13 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
             />
           </div>
           <div className="conversion-progress-details">
-            <span>{status}</span>
+            <span>{node(status)}</span>
             <span className="conversion-progress-percent">
-              {progress >= 1
-                ? `100% · ${elapsedSeconds}s`
-                : `About ${Math.round(progress * 100)}% · ${elapsedSeconds}s elapsed`}
+              {node(
+                progress >= 1
+                  ? `100% · ${elapsedSeconds}s`
+                  : `About ${Math.round(progress * 100)}% · ${elapsedSeconds}s elapsed`
+              )}
             </span>
           </div>
         </div>
@@ -745,8 +773,11 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
           <DownloadResult {...result} />
           {!result.previewUrl && (
             <p className="tool-hint">
-              The {formatSize(result.size)} result is ready to download, but its inline preview was
-              skipped to avoid another large memory allocation.
+              {tr('The ')}
+              {node(formatSize(result.size))}{' '}
+              {tr(
+                ' result is ready to download, but its inline preview was skipped to avoid another large memory allocation.'
+              )}
             </p>
           )}
         </div>
@@ -754,3 +785,5 @@ export default function AnimationConverter({ defaultOutput = 'gif' }: Props) {
     </div>
   );
 }
+
+export default withLocale(AnimationConverter);

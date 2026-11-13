@@ -1,6 +1,9 @@
 import { spawn } from 'node:child_process';
 
 const tests = [
+  'validate-localization.mjs',
+  'validate-image-localization.mjs',
+  'validate-other-localization.mjs',
   'validate-browser-session.mjs',
   'validate-image-processing.mjs',
   'validate-image-enhancer.mjs',

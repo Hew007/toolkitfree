@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { formatSize } from '../lib/image-processing';
+import { useI18n } from '../i18n/react';
 
 interface FileListProps {
   files: File[];
@@ -7,10 +8,11 @@ interface FileListProps {
 }
 
 export default function FileList({ files, onRemove }: FileListProps) {
+  const { t } = useI18n();
   if (files.length === 0) return null;
 
   return (
-    <div className="file-list" aria-label="Selected files">
+    <div className="file-list" aria-label={t('Selected files', '已选择的文件')}>
       {files.map((file, index) => (
         <div key={`${file.name}-${index}`} className="file-item">
           <FileThumbnail file={file} />
@@ -22,9 +24,9 @@ export default function FileList({ files, onRemove }: FileListProps) {
             type="button"
             className="file-item-remove"
             onClick={() => onRemove(index)}
-            aria-label={`Remove ${file.name}`}
+            aria-label={t(`Remove ${file.name}`, `移除 ${file.name}`)}
           >
-            Remove
+            {t('Remove', '移除')}
           </button>
         </div>
       ))}
@@ -33,6 +35,7 @@ export default function FileList({ files, onRemove }: FileListProps) {
 }
 
 function FileThumbnail({ file }: { file: File }) {
+  const { t } = useI18n();
   const [previewUrl, setPreviewUrl] = useState('');
 
   useEffect(() => {
@@ -52,7 +55,7 @@ function FileThumbnail({ file }: { file: File }) {
     <img
       className="file-item-thumbnail"
       src={previewUrl}
-      alt={`Preview of ${file.name}`}
+      alt={t(`Preview of ${file.name}`, `${file.name} 的预览`)}
       onError={() => setPreviewUrl('')}
     />
   );

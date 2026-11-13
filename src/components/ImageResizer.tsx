@@ -1,3 +1,5 @@
+import { useI18n, withLocale } from '../i18n/react';
+import { imageText, imageChoices } from '../i18n/image-messages';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import { ToolPresets, type ToolChoice } from './ToolChoices';
@@ -106,7 +108,8 @@ const FIT_SHORTCUT_BY_ID = Object.fromEntries(
  */
 const RESIZE_DELAY_MS = 320;
 
-export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerProps) {
+function ImageResizer({ defaultPreset = 'custom' }: ImageResizerProps) {
+  const { locale } = useI18n();
   const initialPreset = RESIZE_PRESETS[defaultPreset];
   const [files, setFiles] = useState<File[]>([]);
   const [preset, setPreset] = useState<ResizePresetKey>(defaultPreset);
@@ -402,7 +405,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
     >
       {processing && (
         <div className="visually-hidden" role="status" aria-live="polite">
-          Resizing images.
+          {imageText('Resizing images.', locale)}
         </div>
       )}
       <FileUploader
@@ -417,15 +420,19 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
 
       {files.length > 0 && (
         <div className="resizer-workspace">
-          <section className="resizer-preview-panel" aria-label="Live resize preview">
+          <section
+            className="resizer-preview-panel"
+            aria-label={imageText('Live resize preview', locale)}
+          >
             <div className="resizer-preview-heading">
               <div>
-                <strong>Live preview</strong>
+                <strong>{imageText('Live preview', locale)}</strong>
                 <span>{files[0]?.name}</span>
               </div>
               {previewDimensions && (
                 <output data-testid="resize-preview-size">
-                  {previewDimensions.width} × {previewDimensions.height}px
+                  {previewDimensions.width} × {previewDimensions.height}
+                  {imageText('px', locale)}
                 </output>
               )}
             </div>
@@ -441,7 +448,10 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                 >
                   <img
                     src={previewUrl}
-                    alt={`Preview of ${files[0]?.name} at the selected dimensions`}
+                    alt={imageText(
+                      `Preview of ${files[0]?.name} at the selected dimensions`,
+                      locale
+                    )}
                     draggable={false}
                     onLoad={(event) => {
                       const source = {
@@ -460,7 +470,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                   <button
                     type="button"
                     className="resizer-preview-handle"
-                    aria-label="Drag to change output dimensions"
+                    aria-label={imageText('Drag to change output dimensions', locale)}
                     onPointerDown={handlePreviewResizeStart}
                     onPointerMove={handlePreviewResizeMove}
                     onPointerUp={finishPreviewResize}
@@ -469,13 +479,16 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                 </div>
               )}
             </div>
-            <p>Drag the lower-right handle or enter exact pixel values.</p>
+            <p>{imageText('Drag the lower-right handle or enter exact pixel values.', locale)}</p>
           </section>
 
           <div className="resizer-controls-panel">
             <ToolPresets
-              help="Common sizes. Each one keeps the aspect ratio and fits the image inside the value."
-              presets={FIT_SHORTCUT_CHOICES}
+              help={imageText(
+                'Common sizes. Each one keeps the aspect ratio and fits the image inside the value.',
+                locale
+              )}
+              presets={imageChoices(FIT_SHORTCUT_CHOICES, locale)}
               isActive={(choice) => {
                 const shortcut = FIT_SHORTCUT_BY_ID[choice.id];
                 return (
@@ -490,7 +503,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
 
             <div className="resizer-size-fields">
               <div>
-                <label htmlFor="resize-preset">Platform size</label>
+                <label htmlFor="resize-preset">{imageText('Platform size', locale)}</label>
                 <select
                   id="resize-preset"
                   data-testid="resize-preset"
@@ -499,14 +512,14 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                 >
                   {Object.entries(RESIZE_PRESETS).map(([key, value]) => (
                     <option key={key} value={key}>
-                      {value.label}
+                      {imageText(value.label, locale)}
                     </option>
                   ))}
                 </select>
               </div>
               <div>
                 <label htmlFor="resize-width">
-                  {maintainRatio ? 'Max width (px)' : 'Width (px)'}
+                  {imageText(maintainRatio ? 'Max width (px)' : 'Width (px)', locale)}
                 </label>
                 <input
                   className="field-input"
@@ -520,7 +533,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
               </div>
               <div>
                 <label htmlFor="resize-height">
-                  {maintainRatio ? 'Max height (px)' : 'Height (px)'}
+                  {imageText(maintainRatio ? 'Max height (px)' : 'Height (px)', locale)}
                 </label>
                 <input
                   className="field-input"
@@ -545,16 +558,19 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                     clearResults();
                   }}
                 />{' '}
-                Maintain aspect ratio
+                {imageText('Maintain aspect ratio', locale)}
               </label>
               <p className="tool-hint">
-                {maintainRatio
-                  ? preset === 'custom'
-                    ? 'Each image fits inside the maximum width and height without stretching.'
-                    : `Each image fits inside ${width} × ${height} without stretching, so one side can come out smaller.`
-                  : preset === 'custom'
-                    ? 'The exact width and height are used; the image may be stretched.'
-                    : `Each image comes out at exactly ${width} × ${height}. One of another shape is stretched; tick Maintain aspect ratio to keep its proportions.`}
+                {imageText(
+                  maintainRatio
+                    ? preset === 'custom'
+                      ? 'Each image fits inside the maximum width and height without stretching.'
+                      : `Each image fits inside ${width} × ${height} without stretching, so one side can come out smaller.`
+                    : preset === 'custom'
+                      ? 'The exact width and height are used; the image may be stretched.'
+                      : `Each image comes out at exactly ${width} × ${height}. One of another shape is stretched; tick Maintain aspect ratio to keep its proportions.`,
+                  locale
+                )}
               </p>
             </div>
 
@@ -562,11 +578,11 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
               summary={
                 <>
                   {OUTPUT_FORMATS[format].label}
-                  {format === 'image/png' ? '' : ` · quality ${quality}%`}
+                  {imageText(format === 'image/png' ? '' : ` · quality ${quality}%`, locale)}
                 </>
               }
             >
-              <FineTuneField htmlFor="resize-format" label="Output format">
+              <FineTuneField htmlFor="resize-format" label={imageText('Output format', locale)}>
                 <select
                   id="resize-format"
                   data-testid="resize-format"
@@ -578,7 +594,7 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                 >
                   {Object.entries(OUTPUT_FORMATS).map(([mimeType, value]) => (
                     <option key={mimeType} value={mimeType}>
-                      {value.label}
+                      {imageText(value.label, locale)}
                     </option>
                   ))}
                 </select>
@@ -586,8 +602,8 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
 
               <FineTuneField
                 htmlFor="resize-quality"
-                label={`Quality: ${quality}%`}
-                hint="PNG is lossless, so quality does not apply to it."
+                label={imageText(`Quality: ${quality}%`, locale)}
+                hint={imageText('PNG is lossless, so quality does not apply to it.', locale)}
                 hidden={format === 'image/png'}
               >
                 <input
@@ -606,11 +622,14 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
             </FineTune>
 
             <ToolRunNote busy={processing}>
-              {processing
-                ? 'Resizing in your browser…'
-                : elapsedMs !== null
-                  ? `Resized in your browser in ${(elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
-                  : 'Results follow the settings above. Nothing is uploaded.'}
+              {imageText(
+                processing
+                  ? 'Resizing in your browser…'
+                  : elapsedMs !== null
+                    ? `Resized in your browser in ${(elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
+                    : 'Results follow the settings above. Nothing is uploaded.',
+                locale
+              )}
             </ToolRunNote>
           </div>
         </div>
@@ -637,12 +656,14 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
                 <div>
                   <div className="file-item-name">{result.name}</div>
                   <div className="file-item-size">
-                    {result.width}x{result.height} - {formatSize(result.newSize)}
+                    {result.width}
+                    {imageText('x', locale)}
+                    {result.height} - {formatSize(result.newSize)}
                   </div>
                 </div>
               </div>
               <a href={result.url} download={result.name} className="btn btn-primary">
-                Download
+                {imageText('Download', locale)}
               </a>
             </div>
           ))}
@@ -651,3 +672,5 @@ export default function ImageResizer({ defaultPreset = 'custom' }: ImageResizerP
     </div>
   );
 }
+
+export default withLocale(ImageResizer);

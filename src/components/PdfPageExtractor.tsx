@@ -1,3 +1,5 @@
+import { useOtherI18n } from '../i18n/other-messages';
+import { withLocale } from '../i18n/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PDFDocumentLoadingTask } from 'pdfjs-dist';
 import type { SetStateAction } from 'react';
@@ -82,7 +84,8 @@ function resultBlob(bytes: Uint8Array, type: string): Blob {
   return new Blob([Uint8Array.from(bytes).buffer], { type });
 }
 
-export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageExtractorProps) {
+function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageExtractorProps) {
+  const { tr, node, choices, errorText } = useOtherI18n();
   const [file, setFile] = useState<File | null>(null);
   const [pages, setPages] = useState<PdfPageItem[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -416,7 +419,7 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
         <FileUploader
           accept="application/pdf,.pdf"
           multiple={false}
-          singleFileLabel="a PDF"
+          singleFileLabel={tr('a PDF')}
           onFilesSelected={(files) => {
             if (files[0]) void loadPdf(files[0]);
           }}
@@ -425,10 +428,10 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
         <div className="pdf-source-summary">
           <div>
             <strong>{file.name}</strong>
-            <span>{formatSize(file.size)}</span>
+            <span>{node(formatSize(file.size))}</span>
           </div>
           <button type="button" className="btn btn-secondary" onClick={reset} disabled={loading}>
-            Choose another PDF
+            {tr('Choose another PDF')}
           </button>
         </div>
       )}
@@ -447,13 +450,13 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
               style={{ width: `${Math.max(5, progress * 100)}%` }}
             />
           </div>
-          <span>{status}</span>
+          <span>{node(status)}</span>
         </div>
       )}
 
       {error && (
         <div className="status status-error" role="alert">
-          {error}
+          {errorText(error)}
         </div>
       )}
 
@@ -461,16 +464,16 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
         <>
           <div className="pdf-page-toolbar">
             <div className="pdf-range-field">
-              <label htmlFor="pdf-page-range">Select page range</label>
+              <label htmlFor="pdf-page-range">{tr('Select page range')}</label>
               <div>
                 <input
                   id="pdf-page-range"
                   value={range}
                   onChange={(event) => setRange(event.target.value)}
-                  placeholder="Example: 1-3, 5, 8-10"
+                  placeholder={tr('Example: 1-3, 5, 8-10')}
                 />
                 <button type="button" className="btn btn-secondary" onClick={applyRange}>
-                  Apply
+                  {tr('Apply')}
                 </button>
               </div>
             </div>
@@ -480,21 +483,24 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
                 className="btn btn-secondary"
                 onClick={() => setSelected(new Set(pages.map((page) => page.sourceIndex)))}
               >
-                Select all
+                {tr('Select all')}
               </button>
               <button
                 type="button"
                 className="btn btn-secondary"
                 onClick={() => setSelected(new Set())}
               >
-                Clear selection
+                {tr('Clear selection')}
               </button>
             </div>
           </div>
 
           <p className="pdf-page-help">
-            {selected.size} of {pages.length} pages selected. Page ranges use the current displayed
-            order. Use the controls on each page to rotate, move, or remove it.
+            {node(selected.size)} {tr(' of ')}
+            {node(pages.length)}{' '}
+            {tr(
+              ' pages selected. Page ranges use the current displayed order. Use the controls on each page to rotate, move, or remove it.'
+            )}
           </p>
 
           <div className="pdf-page-grid" data-pdf-page-grid>
@@ -512,23 +518,25 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
                     checked={selected.has(page.sourceIndex)}
                     onChange={() => togglePage(page.sourceIndex)}
                   />
-                  Page {index + 1}
+                  {tr('Page ')}
+                  {node(index + 1)}
                 </label>
                 <div className="pdf-page-preview">
                   <img
                     src={page.thumbnailUrl}
-                    alt={`Preview of original PDF page ${page.originalPageNumber}`}
+                    alt={tr(`Preview of original PDF page ${page.originalPageNumber}`)}
                     style={{ transform: `rotate(${page.rotation}deg)` }}
                   />
                 </div>
                 <div className="pdf-page-meta">
-                  Original page {page.originalPageNumber} · {Math.round(page.width)} ×{' '}
-                  {Math.round(page.height)} pt
+                  {tr('Original page ')}
+                  {node(page.originalPageNumber)} · {node(Math.round(page.width))} ×{node(' ')}
+                  {node(Math.round(page.height))} {tr(' pt')}
                 </div>
                 <div className="pdf-page-controls">
                   <button
                     type="button"
-                    aria-label={`Move page ${index + 1} earlier`}
+                    aria-label={tr(`Move page ${index + 1} earlier`)}
                     disabled={index === 0}
                     onClick={() => updatePages((current) => movePdfPage(current, index, -1))}
                   >
@@ -536,7 +544,7 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
                   </button>
                   <button
                     type="button"
-                    aria-label={`Move page ${index + 1} later`}
+                    aria-label={tr(`Move page ${index + 1} later`)}
                     disabled={index === pages.length - 1}
                     onClick={() => updatePages((current) => movePdfPage(current, index, 1))}
                   >
@@ -544,14 +552,14 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
                   </button>
                   <button
                     type="button"
-                    aria-label={`Rotate page ${index + 1} left`}
+                    aria-label={tr(`Rotate page ${index + 1} left`)}
                     onClick={() => rotatePage(page.sourceIndex, -90)}
                   >
                     ↶
                   </button>
                   <button
                     type="button"
-                    aria-label={`Rotate page ${index + 1} right`}
+                    aria-label={tr(`Rotate page ${index + 1} right`)}
                     onClick={() => rotatePage(page.sourceIndex, 90)}
                   >
                     ↷
@@ -559,10 +567,10 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
                   <button
                     type="button"
                     className="pdf-page-remove"
-                    aria-label={`Remove page ${index + 1}`}
+                    aria-label={tr(`Remove page ${index + 1}`)}
                     onClick={() => removePage(page.sourceIndex)}
                   >
-                    Remove
+                    {tr('Remove')}
                   </button>
                 </div>
               </article>
@@ -572,20 +580,22 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
           <div className="tool-controls">
             <ToolChoices
               name="pdf-output-mode"
-              legend="How should the pages come out?"
-              help="The download rebuilds itself whenever you change the selection, order, or rotation."
-              choices={MODE_CHOICES}
+              legend={tr('How should the pages come out?')}
+              help={tr(
+                'The download rebuilds itself whenever you change the selection, order, or rotation.'
+              )}
+              choices={choices(MODE_CHOICES)}
               value={outputMode}
               onChange={(choice) => setOutputMode(choice.id)}
             />
 
             {exportError && (
               <div className="status status-error" role="alert">
-                {exportError}
+                {errorText(exportError)}
               </div>
             )}
 
-            <ToolRunNote busy={rebuilding}>{runNote}</ToolRunNote>
+            <ToolRunNote busy={rebuilding}>{node(runNote)}</ToolRunNote>
           </div>
         </>
       )}
@@ -598,3 +608,5 @@ export default function PdfPageExtractor({ defaultMode = 'combined' }: PdfPageEx
     </div>
   );
 }
+
+export default withLocale(PdfPageExtractor);

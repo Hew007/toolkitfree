@@ -1,0 +1,262 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ToolDirectory from './ToolDirectory.astro';
+import RelatedGuides from './RelatedGuides.astro';
+import ProcessingLimits from './ProcessingLimits.astro';
+import ImageConverter from './ImageConverter';
+import ImageCompressor from './ImageCompressor';
+import ImageResizer from './ImageResizer';
+import ImageEnhancer from './ImageEnhancer';
+import ImageCollage from './ImageCollage';
+import ImageSplitter from './ImageSplitter';
+import ImageCropper from './ImageCropper';
+import BackgroundRemover from './BackgroundRemover';
+import IdPhotoMaker from './IdPhotoMaker';
+import ImageToPdf from './ImageToPdf';
+import PdfPageExtractor from './PdfPageExtractor';
+import AnimationConverter from './AnimationConverter';
+import FaviconGenerator from './FaviconGenerator';
+import QrGenerator from './QrGenerator';
+import { getTool, toPublicUrl, type ToolId } from '../data/tool-registry';
+import { chineseTools, chineseVariants } from '../i18n/pages';
+import { chineseVariantFaq } from '../i18n/pages-variant-faq';
+import { allVariants as converters } from '../data/converter-variants';
+import { variantData as compressors } from '../data/compressor-variants';
+import { variantData as croppers } from '../data/cropper-variants';
+import { variantData as splitters } from '../data/splitter-variants';
+import { allVariants as pdfPages } from '../data/pdf-page-variants';
+import { allVariants as animations } from '../data/animation-variants';
+import { RESIZER_VARIANT_PRESETS, type ResizerVariantSlug } from '../lib/image-resizer';
+import { PDF_VARIANT_PRESETS, type PdfVariantSlug } from '../lib/image-to-pdf';
+
+interface Props {
+  toolId: ToolId;
+  slug?: string;
+}
+const { toolId, slug } = Astro.props;
+const tool = getTool(toolId);
+const content = chineseTools[toolId];
+const variant = slug ? chineseVariants[slug] : undefined;
+const title = variant?.name ?? content.name;
+const description = variant?.description ?? content.description;
+const converter = converters.find((entry) => entry.slug === slug);
+const unsupported = toolId === 'image-converter' && converter?.availability === 'unsupported';
+const noindex = slug
+  ? tool.variants.find((entry) => entry.slug === slug)?.indexable === false
+  : false;
+const compressor = slug ? compressors[slug] : undefined;
+const cropper = slug ? croppers[slug] : undefined;
+const splitter = slug ? splitters[slug] : undefined;
+const pdfPage = pdfPages.find((entry) => entry.slug === slug);
+const animation = animations.find((entry) => entry.slug === slug);
+const pageUrl = toPublicUrl(`/zh${tool.href}${slug ? `/${slug}` : ''}`);
+const faqItems = slug ? [...chineseVariantFaq[slug], ...content.faq] : content.faq;
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: title,
+    description,
+    url: pageUrl,
+    inLanguage: 'zh-CN',
+    applicationCategory: 'UtilitiesApplication',
+    operatingSystem: 'Any',
+    offers: { '@type': 'Offer', price: '0' },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: { '@type': 'Answer', text: item.answer },
+    })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '首页', item: toPublicUrl('/zh/') },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: content.name,
+        item: toPublicUrl(`/zh${tool.href}`),
+      },
+      ...(variant ? [{ '@type': 'ListItem', position: 3, name: variant.name, item: pageUrl }] : []),
+    ],
+  },
+];
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical={pageUrl}
+  ogImage={['image-converter', 'image-compressor', 'image-cropper', 'image-splitter'].includes(
+    toolId
+  )
+    ? `/social/${toolId}.png`
+    : '/social/toolkitfree-default.png'}
+  structuredData={unsupported
+    ? structuredData.filter((entry) => entry['@type'] !== 'WebApplication')
+    : structuredData}
+  noindex={noindex}
+>
+  <div class="tool-layout">
+    <div class="tool-content">
+      <h1>{title}</h1>
+      <p class="page-intro">{description}</p>
+      {
+        unsupported ? (
+          <div class="status" role="note">
+            <>
+              <strong>当前不支持此转换。</strong>
+              <p>{description}</p>
+              <a href="/zh/tools/image-converter/">查看支持的图片格式</a>
+            </>
+          </div>
+        ) : (
+          <>
+            {toolId === 'image-converter' && (
+              <ImageConverter
+                locale="zh"
+                client:load
+                defaultFrom={converter?.from}
+                defaultTo={converter?.to}
+              />
+            )}
+            {toolId === 'image-compressor' && (
+              <ImageCompressor
+                locale="zh"
+                client:load
+                defaultPurpose={compressor?.purpose}
+                defaultTargetKB={100}
+                defaultFormat={compressor?.format}
+              />
+            )}
+            {toolId === 'image-resizer' && (
+              <ImageResizer
+                locale="zh"
+                client:load
+                defaultPreset={
+                  slug ? RESIZER_VARIANT_PRESETS[slug as ResizerVariantSlug] : undefined
+                }
+              />
+            )}
+            {toolId === 'image-enhancer' && <ImageEnhancer locale="zh" client:load />}
+            {toolId === 'image-collage' && <ImageCollage locale="zh" client:load />}
+            {toolId === 'image-splitter' && (
+              <ImageSplitter
+                locale="zh"
+                client:load
+                defaultRows={splitter?.defaultRows}
+                defaultCols={splitter?.defaultCols}
+              />
+            )}
+            {toolId === 'image-cropper' && (
+              <ImageCropper
+                locale="zh"
+                client:load
+                defaultAspectPreset={cropper?.defaultAspectPreset}
+              />
+            )}
+            {toolId === 'background-remover' && <BackgroundRemover locale="zh" client:load />}
+            {toolId === 'id-photo-maker' && <IdPhotoMaker locale="zh" client:load />}
+            {toolId === 'image-to-pdf' && (
+              <ImageToPdf
+                locale="zh"
+                client:load
+                defaultPreset={slug ? PDF_VARIANT_PRESETS[slug as PdfVariantSlug] : undefined}
+              />
+            )}
+            {toolId === 'pdf-splitter' && (
+              <PdfPageExtractor locale="zh" client:load defaultMode={pdfPage?.defaultMode} />
+            )}
+            {toolId === 'video-to-gif' && (
+              <AnimationConverter locale="zh" client:load defaultOutput={animation?.output} />
+            )}
+            {toolId === 'favicon-generator' && (
+              <FaviconGenerator
+                locale="zh"
+                client:load
+                defaultSizeSet={slug === 'favicon-for-wordpress' ? 'largest' : 'all'}
+              />
+            )}
+            {toolId === 'qr-generator' && <QrGenerator locale="zh" client:load />}
+          </>
+        )
+      }
+      {
+        !unsupported && (
+          <section class="howto-section">
+            <h2>如何使用{title}</h2>
+            {variant && (
+              <p>{variant.description} 本页面已载入对应预设，所有可调数值仍可在工具中修改。</p>
+            )}
+            <ol class="howto-steps">
+              {content.steps.map((step) => (
+                <li>{step}</li>
+              ))}
+            </ol>
+          </section>
+        )
+      }
+      <section class="features-section">
+        <h2>功能与限制</h2><ul class="features-list">
+          {content.features.map((feature) => <li>{feature}</li>)}
+        </ul>
+        <p>
+          实际处理能力取决于设备内存、浏览器、图片像素和媒体编码。遇到容量提示时，请减少文件数量、尺寸或时长后重试。
+        </p>
+      </section>
+      {
+        tool.variants.some((entry) => entry.indexable !== false) && (
+          <section class="related-tools">
+            <>
+              <h2>按具体用途选择</h2>
+              <div class="related-tools-grid">
+                {tool.variants
+                  .filter((entry) => entry.indexable !== false)
+                  .map((entry) => (
+                    <a class="tool-card" href={`/zh${tool.href}/${entry.slug}/`}>
+                      <h3>{chineseVariants[entry.slug].name}</h3>
+                      <p>{chineseVariants[entry.slug].description}</p>
+                    </a>
+                  ))}
+              </div>
+            </>
+          </section>
+        )
+      }
+      <RelatedGuides toolId={toolId} />
+      {
+        ['image-converter', 'image-compressor', 'image-resizer', 'image-splitter'].includes(
+          toolId
+        ) && <ProcessingLimits profile={toolId === 'image-splitter' ? 'splitter' : 'batch'} />
+      }
+      <section class="faq-section">
+        <h2>常见问题</h2>{
+          faqItems.map((item) => (
+            <div class="faq-item">
+              <details>
+                <>
+                  <summary class="faq-question">{item.question}</summary>
+                  <div class="faq-answer">{item.answer}</div>
+                </>
+              </details>
+            </div>
+          ))
+        }
+      </section>
+      <ToolDirectory currentId={toolId} mode="related" />
+    </div>
+    <aside class="tool-sidebar"><ToolDirectory currentId={toolId} mode="sidebar" /></aside>
+  </div>
+</Layout>
+<style>
+  .page-intro {
+    color: var(--color-text-light);
+    margin-bottom: 1.5rem;
+  }
+</style>

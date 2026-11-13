@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import InputBudgetNotice from './InputBudgetNotice';
+import { useI18n } from '../i18n/react';
 import {
   reviewImageBudget,
   type ImageBudgetAssessment,
@@ -25,6 +26,19 @@ export default function FileUploader({
   singleFileLabel = 'an image',
   compact = false,
 }: FileUploaderProps) {
+  const { t } = useI18n();
+  const chineseFileLabel =
+    singleFileLabel === 'a PDF'
+      ? 'PDF 文件'
+      : singleFileLabel === 'a video or animated image'
+        ? '视频或动图'
+        : singleFileLabel === 'an image'
+          ? '图片'
+          : singleFileLabel;
+  const chooseLabel = t(
+    `Choose ${multiple ? 'images' : singleFileLabel}`,
+    `选择${multiple ? '图片' : chineseFileLabel}`
+  );
   const [isDragOver, setIsDragOver] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [assessment, setAssessment] = useState<ImageBudgetAssessment | null>(null);
@@ -119,22 +133,20 @@ export default function FileUploader({
         <div className="drop-zone">
           <p className="drop-zone-title" aria-live="polite">
             {reviewing
-              ? 'Checking image size and memory needs'
+              ? t('Checking image size and memory needs', '正在检查图片尺寸与内存需求')
               : isDragOver
-                ? 'Drop files here'
+                ? t('Drop files here', '将文件放在这里')
                 : compact
-                  ? 'Add more images'
-                  : 'Drag and drop files here'}
+                  ? t('Add more images', '添加更多图片')
+                  : t('Drag and drop files here', '将文件拖放到这里')}
           </p>
-          {!compact && <p>or</p>}
+          {!compact && <p>{t('or', '或')}</p>}
           <label className={`btn btn-primary file-picker${reviewing ? ' is-disabled' : ''}`}>
-            <span>
-              {compact ? 'Choose more' : `Choose ${multiple ? 'images' : singleFileLabel}`}
-            </span>
+            <span>{compact ? t('Choose more', '继续选择') : chooseLabel}</span>
             <input
               className="file-picker-input"
               type="file"
-              aria-label={multiple ? 'Choose images' : `Choose ${singleFileLabel}`}
+              aria-label={chooseLabel}
               accept={accept}
               multiple={multiple}
               disabled={reviewing}
@@ -146,7 +158,7 @@ export default function FileUploader({
 
       {reviewing && (
         <div className="visually-hidden" role="status" aria-live="polite">
-          Checking image dimensions and estimated memory.
+          {t('Checking image dimensions and estimated memory.', '正在检查图片尺寸并估算所需内存。')}
         </div>
       )}
       {assessment && (

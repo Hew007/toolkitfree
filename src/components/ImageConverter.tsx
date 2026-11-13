@@ -1,3 +1,5 @@
+import { useI18n, withLocale } from '../i18n/react';
+import { imageText, imageChoices } from '../i18n/image-messages';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import { ToolChoices, type ToolChoice } from './ToolChoices';
@@ -112,7 +114,8 @@ const RECONVERT_DELAY_MS = 320;
 const NO_RESULTS: ConvertedFile[] = [];
 const NO_FAILURES: FailedFile[] = [];
 
-export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
+function ImageConverter({ defaultFrom, defaultTo }: Props) {
+  const { locale } = useI18n();
   const inputConfig = getConverterInputConfig(defaultFrom);
   // A variant page arrives with its target format already decided; the chip row
   // opens on that chip and its preset supplies the starting quality.
@@ -285,7 +288,7 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
     <div aria-busy={busy} data-tool-input={files.length > 0 ? 'present' : 'empty'}>
       {busy && (
         <div className="visually-hidden" role="status" aria-live="polite">
-          Converting images.
+          {imageText('Converting images.', locale)}
         </div>
       )}
       <FileUploader
@@ -295,7 +298,10 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
         currentFiles={files.map(({ file }) => file)}
         onFilesSelected={handleFiles}
       />
-      <p className="tool-hint">Accepted input: {inputConfig.hint}</p>
+      <p className="tool-hint">
+        {imageText('Accepted input: ', locale)}
+        {imageText(inputConfig.hint, locale)}
+      </p>
 
       <FileList files={files.map(({ file }) => file)} onRemove={handleRemove} />
 
@@ -303,27 +309,33 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
         <div className="tool-controls">
           <ToolChoices
             name="converter-output-format"
-            legend="Convert to"
-            help="Pick the format you need. Conversion follows your choice, and the exact values stay editable below."
-            choices={OUTPUT_CHOICES}
+            legend={imageText('Convert to', locale)}
+            help={imageText(
+              'Pick the format you need. Conversion follows your choice, and the exact values stay editable below.',
+              locale
+            )}
+            choices={imageChoices(OUTPUT_CHOICES, locale)}
             value={outputFormat}
             onChange={(choice) => handleFormat(choice.id)}
           />
 
           <FineTune
-            summary={fineTuneSummary}
+            summary={imageText(fineTuneSummary, locale)}
             onReset={tuned ? () => handleFormat(outputFormat) : undefined}
-            resetLabel={`Back to the ${formatLabel} default`}
+            resetLabel={imageText(`Back to the ${formatLabel} default`, locale)}
           >
             <FineTuneField
               htmlFor="converter-output-quality"
-              label={`Quality: ${quality}%`}
+              label={imageText(`Quality: ${quality}%`, locale)}
               hidden={lossless}
-              hint="Applies to JPG and WebP. Higher keeps more detail and writes a larger file."
+              hint={imageText(
+                'Applies to JPG and WebP. Higher keeps more detail and writes a larger file.',
+                locale
+              )}
             >
               <input
                 id="converter-output-quality"
-                aria-label="Output Quality"
+                aria-label={imageText('Output Quality', locale)}
                 type="range"
                 min="10"
                 max="100"
@@ -336,18 +348,23 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
             </FineTuneField>
             {lossless && (
               <p className="tool-hint">
-                PNG is lossless, so it has no quality setting. Every decoded pixel is written out
-                unchanged.
+                {imageText(
+                  'PNG is lossless, so it has no quality setting. Every decoded pixel is written out unchanged.',
+                  locale
+                )}
               </p>
             )}
           </FineTune>
 
           <ToolRunNote busy={busy}>
-            {busy
-              ? 'Converting in your browser…'
-              : elapsedMs !== null
-                ? `Converted in your browser in ${(elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
-                : 'Results follow the settings above. Nothing is uploaded.'}
+            {imageText(
+              busy
+                ? 'Converting in your browser…'
+                : elapsedMs !== null
+                  ? `Converted in your browser in ${(elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
+                  : 'Results follow the settings above. Nothing is uploaded.',
+              locale
+            )}
           </ToolRunNote>
         </div>
       )}
@@ -368,3 +385,5 @@ export default function ImageConverter({ defaultFrom, defaultTo }: Props) {
     </div>
   );
 }
+
+export default withLocale(ImageConverter);

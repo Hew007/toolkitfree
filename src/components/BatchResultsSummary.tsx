@@ -8,6 +8,8 @@ import {
   type BatchSuccessResult,
 } from '../lib/batch-results';
 import { downloadUrl, formatSize } from '../lib/image-processing';
+import { useI18n } from '../i18n/react';
+import { localizeErrorMessage } from '../i18n/errors';
 
 interface BatchResultsSummaryProps {
   successes: readonly BatchSuccessResult[];
@@ -22,6 +24,7 @@ export default function BatchResultsSummary({
   failures,
   archiveName,
 }: BatchResultsSummaryProps) {
+  const { locale, t } = useI18n();
   const [status, setStatus] = useState<ArchiveStatus>('idle');
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
@@ -100,7 +103,7 @@ export default function BatchResultsSummary({
 
   return (
     <section
-      aria-label="Batch results"
+      aria-label={t('Batch results', '批量处理结果')}
       data-batch-success-count={totals.successCount}
       data-batch-failure-count={totals.failureCount}
       style={{ marginTop: '1.5rem' }}
@@ -117,11 +120,14 @@ export default function BatchResultsSummary({
       >
         <div>
           <h3 style={{ fontSize: '1.125rem' }}>
-            Results: {totals.successCount} succeeded, {totals.failureCount} failed
+            {t(
+              `Results: ${totals.successCount} succeeded, ${totals.failureCount} failed`,
+              `处理结果：成功 ${totals.successCount} 个，失败 ${totals.failureCount} 个`
+            )}
           </h3>
           {totals.successCount > 0 && (
             <div style={{ color: '#6b665c', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-              {formatSize(totals.originalSize)} to {formatSize(totals.outputSize)}
+              {formatSize(totals.originalSize)} {t('to', '→')} {formatSize(totals.outputSize)}
               {sizeChange !== 0 && ` (${sizeChange > 0 ? '+' : ''}${sizeChange}%)`}
             </div>
           )}
@@ -129,7 +135,7 @@ export default function BatchResultsSummary({
 
         {status === 'generating' ? (
           <button type="button" className="btn btn-secondary" onClick={handleCancel}>
-            Cancel ZIP ({Math.round(progress)}%)
+            {t(`Cancel ZIP (${Math.round(progress)}%)`, `取消生成 ZIP（${Math.round(progress)}%）`)}
           </button>
         ) : (
           <button
@@ -140,15 +146,15 @@ export default function BatchResultsSummary({
             data-batch-download
           >
             {status === 'error' || status === 'cancelled'
-              ? 'Retry ZIP download'
-              : 'Download all as ZIP'}
+              ? t('Retry ZIP download', '重试下载 ZIP')
+              : t('Download all as ZIP', '全部下载为 ZIP')}
           </button>
         )}
       </div>
 
       {status === 'generating' && (
         <progress
-          aria-label="ZIP creation progress"
+          aria-label={t('ZIP creation progress', 'ZIP 生成进度')}
           value={progress}
           max={100}
           style={{ width: '100%', marginBottom: '1rem' }}
@@ -162,19 +168,22 @@ export default function BatchResultsSummary({
           aria-live="polite"
           data-batch-archive-status={status}
         >
-          {message}
+          {localizeErrorMessage(message, locale)}
         </div>
       )}
 
       {failures.length > 0 && (
         <div className="status status-error" role="alert" style={{ marginBottom: '1rem' }}>
           <strong>
-            {failures.length} file{failures.length === 1 ? '' : 's'} could not be processed:
+            {t(
+              `${failures.length} file${failures.length === 1 ? '' : 's'} could not be processed:`,
+              `${failures.length} 个文件处理失败：`
+            )}
           </strong>
           <ul style={{ margin: '0.5rem 0 0 1.25rem' }}>
             {failures.map((failure) => (
               <li key={failure.sourceId}>
-                <strong>{failure.name}:</strong> {failure.message}
+                <strong>{failure.name}:</strong> {localizeErrorMessage(failure.message, locale)}
               </li>
             ))}
           </ul>

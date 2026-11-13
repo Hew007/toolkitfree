@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { guideRegistry } from '../src/data/guide-registry.ts';
 import { toolRegistry } from '../src/data/tool-registry.ts';
+import { CHINESE_CONTENT_DATE } from '../src/i18n/pages.ts';
 
 const root = process.cwd();
 const today = new Date().toISOString().slice(0, 10);
@@ -32,6 +33,18 @@ function latestSourceDate(sourcePaths) {
 }
 
 const entries = [
+  {
+    label: '简体中文内容',
+    declared: CHINESE_CONTENT_DATE,
+    sources: [
+      'src/i18n/pages.ts',
+      'src/i18n/pages-static.ts',
+      'src/i18n/pages-variant-faq.ts',
+      'src/pages/zh',
+      'src/components/ChineseToolPage.astro',
+      'src/components/ChineseStaticPage.astro',
+    ],
+  },
   ...toolRegistry.map((tool) => ({
     label: tool.name,
     declared: tool.lastModified,

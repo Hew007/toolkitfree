@@ -1,3 +1,4 @@
+import { useOtherI18n } from '../i18n/other-messages';
 import { Fragment, useRef, useState } from 'react';
 import {
   MIN_PLACEMENT_MM,
@@ -96,6 +97,7 @@ export default function PdfPageEditor({
   onMovePage,
   onReorderWithinPage,
 }: PdfPageEditorProps) {
+  const { node, tr } = useOtherI18n();
   const dragRef = useRef<DragState | null>(null);
   const pageRefs = useRef(new Map<number, HTMLDivElement>());
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -314,19 +316,21 @@ export default function PdfPageEditor({
         data-active={active ? 'true' : undefined}
         aria-hidden="true"
       >
-        <span>{active ? 'Drop here as its own page' : 'New page'}</span>
+        <span>{node(active ? 'Drop here as its own page' : 'New page')}</span>
       </div>
     );
   };
 
   return (
-    <section aria-label="Page layout" data-pdf-page-count={pages.length}>
+    <section aria-label={tr('Page layout')} data-pdf-page-count={pages.length}>
       <p style={{ margin: '0 0 0.75rem', color: '#6b665c', fontSize: '0.8125rem' }}>
-        Drag an image to move it and drag a corner to resize. Drop it on another page to combine the
-        two, or drop it in the space between pages to give it a page of its own. With an image
-        focused: arrows move, Alt+arrows resize, <kbd>[</kbd> / <kbd>]</kbd> rotate, Ctrl+arrows
-        reorder, Alt+PageUp / PageDown combine onto the previous or next page, Alt+Enter splits it
-        onto a new page.
+        {tr(
+          'Drag an image to move it and drag a corner to resize. Drop it on another page to combine the two, or drop it in the space between pages to give it a page of its own. With an image focused: arrows move, Alt+arrows resize, '
+        )}
+        <kbd>[</kbd> / <kbd>]</kbd>{' '}
+        {tr(
+          ' rotate, Ctrl+arrows reorder, Alt+PageUp / PageDown combine onto the previous or next page, Alt+Enter splits it onto a new page.'
+        )}
       </p>
 
       <div className="pdf-page-list" ref={listRef}>
@@ -334,41 +338,44 @@ export default function PdfPageEditor({
           const isDropTarget = dropTarget?.kind === 'page' && dropTarget.index === pageIndex;
           return (
             <Fragment key={pageIndex}>
-              {renderGap(pageIndex)}
+              {node(renderGap(pageIndex))}
               <div className="pdf-page-shell">
                 <div className="pdf-page-heading">
                   <span>
-                    Page {pageIndex + 1} of {pages.length}
+                    {tr('Page ')}
+                    {node(pageIndex + 1)} {tr(' of ')}
+                    {node(pages.length)}
                   </span>
                   <span className="pdf-page-heading-actions">
                     <span>
-                      {page.geometry.width.toFixed(0)} x {page.geometry.height.toFixed(0)} mm
+                      {node(page.geometry.width.toFixed(0))} {tr(' x ')}
+                      {node(page.geometry.height.toFixed(0))} {tr(' mm')}
                     </span>
                     <button
                       type="button"
                       className="pdf-page-move"
                       data-pdf-page-up={pageIndex + 1}
-                      aria-label={`Move page ${pageIndex + 1} earlier`}
+                      aria-label={tr(`Move page ${pageIndex + 1} earlier`)}
                       disabled={disabled || pageIndex === 0}
                       onClick={() => {
                         onMovePage(pageIndex, -1);
                         setAnnouncement(`Page moved to position ${pageIndex}.`);
                       }}
                     >
-                      &uarr;
+                      {'↑'}
                     </button>
                     <button
                       type="button"
                       className="pdf-page-move"
                       data-pdf-page-down={pageIndex + 1}
-                      aria-label={`Move page ${pageIndex + 1} later`}
+                      aria-label={tr(`Move page ${pageIndex + 1} later`)}
                       disabled={disabled || pageIndex === pages.length - 1}
                       onClick={() => {
                         onMovePage(pageIndex, 1);
                         setAnnouncement(`Page moved to position ${pageIndex + 2}.`);
                       }}
                     >
-                      &darr;
+                      {'↓'}
                     </button>
                   </span>
                 </div>
@@ -422,7 +429,9 @@ export default function PdfPageEditor({
                         key={item.id}
                         role="group"
                         tabIndex={disabled ? -1 : 0}
-                        aria-label={`${item.name} on page ${pageIndex + 1}. Arrows move, Alt plus arrows resize, brackets rotate.`}
+                        aria-label={tr(
+                          `${item.name} on page ${pageIndex + 1}. Arrows move, Alt plus arrows resize, brackets rotate.`
+                        )}
                         data-pdf-file={item.name}
                         data-pdf-placement={formatPlacement(item.placement, item.rotation)}
                         onFocus={() => onSelect(item.id)}
@@ -442,7 +451,7 @@ export default function PdfPageEditor({
                       >
                         <img
                           src={item.previewUrl}
-                          alt=""
+                          alt={tr('')}
                           draggable={false}
                           style={{
                             position: 'absolute',
@@ -506,14 +515,14 @@ export default function PdfPageEditor({
                       className="btn btn-secondary"
                       onClick={() => onRotate(selectedId!, -90)}
                     >
-                      Rotate left
+                      {tr('Rotate left')}
                     </button>
                     <button
                       type="button"
                       className="btn btn-secondary"
                       onClick={() => onRotate(selectedId!, 90)}
                     >
-                      Rotate right
+                      {tr('Rotate right')}
                     </button>
                     {(['fit', 'fill', 'actual'] as const).map((mode) => (
                       <button
@@ -522,11 +531,13 @@ export default function PdfPageEditor({
                         className="btn btn-secondary"
                         onClick={() => onFit(selectedId!, mode)}
                       >
-                        {mode === 'fit'
-                          ? 'Fit page'
-                          : mode === 'fill'
-                            ? 'Fill page'
-                            : 'Actual size'}
+                        {node(
+                          mode === 'fit'
+                            ? 'Fit page'
+                            : mode === 'fill'
+                              ? 'Fill page'
+                              : 'Actual size'
+                        )}
                       </button>
                     ))}
                     {page.items.length > 1 && (
@@ -536,7 +547,7 @@ export default function PdfPageEditor({
                         data-testid="pdf-split-page"
                         onClick={() => splitToNewPage(selectedId!, pageIndex)}
                       >
-                        Move to new page
+                        {tr('Move to new page')}
                       </button>
                     )}
                     <button
@@ -544,7 +555,7 @@ export default function PdfPageEditor({
                       className="btn btn-secondary"
                       onClick={() => onRemove(selectedId!)}
                     >
-                      Remove
+                      {tr('Remove')}
                     </button>
                   </div>
                 )}
@@ -552,11 +563,11 @@ export default function PdfPageEditor({
             </Fragment>
           );
         })}
-        {renderGap(pages.length)}
+        {node(renderGap(pages.length))}
       </div>
 
       <p aria-live="polite" className="visually-hidden">
-        {announcement}
+        {node(announcement)}
       </p>
     </section>
   );

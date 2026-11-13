@@ -22,88 +22,153 @@
 
 <!-- Generated from src/data/tool-registry.ts by scripts/sync-llms-registry.mjs. -->
 - [Image Converter](https://toolkitfree.net/tools/image-converter/): Convert JPG, PNG, and WebP images in your browser, with clearly labeled browser-dependent inputs.
+- [图片格式转换（简体中文）](https://toolkitfree.net/zh/tools/image-converter/): 在浏览器中将 JPG、PNG 和 WebP 图片互相转换，支持批量处理。文件内容在本机处理，其他输入格式取决于浏览器支持。
 - [Image Compressor](https://toolkitfree.net/tools/image-compressor/): Re-encode or resize images and compare the actual result; smaller output is not guaranteed.
+- [图片压缩（简体中文）](https://toolkitfree.net/zh/tools/image-compressor/): 调整 JPG、PNG、WebP 的质量或尺寸，比较实际输出大小。支持批量压缩和目标 KB 模式，不保证所有图片都能变小。
 - [Image Resizer](https://toolkitfree.net/tools/image-resizer/): Resize images to custom dimensions or verified platform presets while controlling aspect ratio.
+- [图片尺寸调整（简体中文）](https://toolkitfree.net/zh/tools/image-resizer/): 按自定义像素或社交平台预设批量调整图片尺寸，可控制宽高比并查看输出的真实宽高。
 - [Image Enhancer](https://toolkitfree.net/tools/image-enhancer/): Adjust brightness, contrast, saturation, sharpness, blur, and grayscale locally with a live preview.
+- [图片效果调整（简体中文）](https://toolkitfree.net/zh/tools/image-enhancer/): 在本机实时调整亮度、对比度、饱和度、锐化、模糊和灰度。通过预览比较效果，再下载处理后的图片。
 - [Image Collage Maker](https://toolkitfree.net/tools/image-collage/): Combine JPG, PNG, or WebP images into a grid, side-by-side stitch, or vertical collage locally in your browser.
+- [图片拼接（简体中文）](https://toolkitfree.net/zh/tools/image-collage/): 将 JPG、PNG、WebP 图片拼成网格、横向长图或纵向长图，在浏览器中调整间距和背景并导出。
 - [Image Splitter](https://toolkitfree.net/tools/image-splitter/): Cut one image into pieces — an even grid, an Instagram grid, or lines detected along the seams of a stitched picture — locally in your browser.
+- [图片分割（简体中文）](https://toolkitfree.net/zh/tools/image-splitter/): 按行列或拖动分割线将一张图片切成多块，支持长图接缝检测、单块下载及 ZIP 打包。
 - [ID Photo Size & Print Tool](https://toolkitfree.net/tools/id-photo-maker/): Manually position an original photo, export a selected ID photo size, and make a local print sheet without claiming government approval.
+- [证件照尺寸与排版（简体中文）](https://toolkitfree.net/zh/tools/id-photo-maker/): 按常见证件照尺寸调整构图，生成单张照片或打印排版。请核对签发机构要求，工具不保证照片审核通过。
 - [Image Cropper](https://toolkitfree.net/tools/image-cropper/): Crop one JPG, PNG, or WebP with visual, touch, and keyboard controls.
+- [图片裁剪（简体中文）](https://toolkitfree.net/zh/tools/image-cropper/): 按正方形、16:9、4:3、3:2 或自由比例裁剪图片，拖动和缩放构图后在本机导出。
 - [Background Remover](https://toolkitfree.net/tools/background-remover/): Remove one image background locally after downloading the browser AI model and runtime, then keep it transparent or replace it with any colour.
+- [图片背景移除（简体中文）](https://toolkitfree.net/zh/tools/background-remover/): 在浏览器本机运行模型移除背景，完成后可切换透明或纯色背景。首次使用需要下载模型和运行时。
 - [Video to GIF, WebP & APNG](https://toolkitfree.net/tools/video-to-gif/): Turn short videos, GIFs, animated WebP files, and APNG files into browser-generated GIF, animated WebP, or APNG output.
+- [视频转 GIF、WebP 与 APNG（简体中文）](https://toolkitfree.net/zh/tools/video-to-gif/): 在浏览器中把短视频转换为 GIF、动态 WebP 或 APNG。可设置时段、尺寸、帧率和循环，转换前会下载 FFmpeg 运行时。
 - [Image to PDF](https://toolkitfree.net/tools/image-to-pdf/): Combine JPG, PNG, or WebP images into a PDF using a live page editor: move, resize, and rotate each image, and place several images on one page.
+- [图片转 PDF（简体中文）](https://toolkitfree.net/zh/tools/image-to-pdf/): 将多张图片整理为 PDF，可调整页面顺序、旋转、拆分或合并页面，并控制纸张、方向和页边距。
 - [PDF Splitter & Page Extractor](https://toolkitfree.net/tools/pdf-splitter/): Extract, split, reorder, rotate, or remove PDF pages locally and export one PDF or separate page files.
+- [PDF 拆分与页面提取（简体中文）](https://toolkitfree.net/zh/tools/pdf-splitter/): 在浏览器中选择、排序、旋转或删除 PDF 页面，导出为一份新 PDF，或将独立页面打包为 ZIP。
 - [Favicon Generator](https://toolkitfree.net/tools/favicon-generator/): Generate five PNG favicon sizes and a site.webmanifest from one image.
+- [网站图标生成（简体中文）](https://toolkitfree.net/zh/tools/favicon-generator/): 从一张图片生成常用尺寸的 PNG 网站图标和 site.webmanifest。支持预览及打包下载，不生成 ICO 文件。
 - [QR Code Generator](https://toolkitfree.net/tools/qr-generator/): Create PNG or SVG QR codes for text, URLs, WiFi, and vCards with contrast-aware downloads.
+- [二维码生成（简体中文）](https://toolkitfree.net/zh/tools/qr-generator/): 为文本、网址、Wi-Fi 和联系人生成 PNG 或 SVG 二维码，可自定义颜色和标志，下载前检查对比度并实际扫码。
 
 ## Variant pages
 
 <!-- Generated from src/data/tool-registry.ts by scripts/sync-llms-registry.mjs. -->
 ### Image Converter
 - [JPG to PNG](https://toolkitfree.net/tools/image-converter/jpg-to-png/)
+- [JPG 转 PNG（简体中文）](https://toolkitfree.net/zh/tools/image-converter/jpg-to-png/)
 - [PNG to JPG](https://toolkitfree.net/tools/image-converter/png-to-jpg/)
+- [PNG 转 JPG（简体中文）](https://toolkitfree.net/zh/tools/image-converter/png-to-jpg/)
 - [WebP to JPG](https://toolkitfree.net/tools/image-converter/webp-to-jpg/)
+- [WebP 转 JPG（简体中文）](https://toolkitfree.net/zh/tools/image-converter/webp-to-jpg/)
 - [JPG to WebP](https://toolkitfree.net/tools/image-converter/jpg-to-webp/)
+- [JPG 转 WebP（简体中文）](https://toolkitfree.net/zh/tools/image-converter/jpg-to-webp/)
 - [PNG to WebP](https://toolkitfree.net/tools/image-converter/png-to-webp/)
+- [PNG 转 WebP（简体中文）](https://toolkitfree.net/zh/tools/image-converter/png-to-webp/)
 - [WebP to PNG](https://toolkitfree.net/tools/image-converter/webp-to-png/)
+- [WebP 转 PNG（简体中文）](https://toolkitfree.net/zh/tools/image-converter/webp-to-png/)
 
 ### Image Compressor
 - [Compress PNG Images Online Free](https://toolkitfree.net/tools/image-compressor/compress-png/)
+- [PNG 图片压缩（简体中文）](https://toolkitfree.net/zh/tools/image-compressor/compress-png/)
 - [Compress JPG Images Online Free](https://toolkitfree.net/tools/image-compressor/compress-jpg/)
+- [JPG 图片压缩（简体中文）](https://toolkitfree.net/zh/tools/image-compressor/compress-jpg/)
 - [Compress Images for Email Attachment](https://toolkitfree.net/tools/image-compressor/compress-for-email/)
+- [邮件附件图片压缩（简体中文）](https://toolkitfree.net/zh/tools/image-compressor/compress-for-email/)
 - [Compress Images for Web - Optimize Website Assets](https://toolkitfree.net/tools/image-compressor/compress-for-web/)
+- [网页图片压缩（简体中文）](https://toolkitfree.net/zh/tools/image-compressor/compress-for-web/)
 - [Compress Images for WhatsApp - Control File Size](https://toolkitfree.net/tools/image-compressor/compress-for-whatsapp/)
+- [WhatsApp 图片压缩（简体中文）](https://toolkitfree.net/zh/tools/image-compressor/compress-for-whatsapp/)
 - [Compress Image to 100KB - Verified Target Size](https://toolkitfree.net/tools/image-compressor/compress-to-100kb/)
+- [图片压缩至 100 KB（简体中文）](https://toolkitfree.net/zh/tools/image-compressor/compress-to-100kb/)
 
 ### Image Resizer
 - [Resize for Instagram](https://toolkitfree.net/tools/image-resizer/resize-for-instagram/)
+- [Instagram 图片尺寸调整（简体中文）](https://toolkitfree.net/zh/tools/image-resizer/resize-for-instagram/)
 - [Resize for Facebook](https://toolkitfree.net/tools/image-resizer/resize-for-facebook/)
+- [Facebook 封面尺寸调整（简体中文）](https://toolkitfree.net/zh/tools/image-resizer/resize-for-facebook/)
 - [Resize for Twitter/X](https://toolkitfree.net/tools/image-resizer/resize-for-twitter/)
+- [Twitter / X 头图尺寸调整（简体中文）](https://toolkitfree.net/zh/tools/image-resizer/resize-for-twitter/)
 - [Resize for YouTube](https://toolkitfree.net/tools/image-resizer/resize-for-youtube/)
+- [YouTube 缩略图尺寸调整（简体中文）](https://toolkitfree.net/zh/tools/image-resizer/resize-for-youtube/)
 - [Resize for LinkedIn](https://toolkitfree.net/tools/image-resizer/resize-for-linkedin/)
+- [LinkedIn 图片尺寸调整（简体中文）](https://toolkitfree.net/zh/tools/image-resizer/resize-for-linkedin/)
 - [Resize for TikTok](https://toolkitfree.net/tools/image-resizer/resize-for-tiktok/)
+- [TikTok 封面尺寸调整（简体中文）](https://toolkitfree.net/zh/tools/image-resizer/resize-for-tiktok/)
 - [Resize to 1920x1080](https://toolkitfree.net/tools/image-resizer/resize-to-1920x1080/)
+- [图片调整为 1920 × 1080（简体中文）](https://toolkitfree.net/zh/tools/image-resizer/resize-to-1920x1080/)
 
 ### Image Splitter
 - [Split in Half](https://toolkitfree.net/tools/image-splitter/split-into-2/)
+- [图片分成两半（简体中文）](https://toolkitfree.net/zh/tools/image-splitter/split-into-2/)
 - [Split Into 4](https://toolkitfree.net/tools/image-splitter/split-into-4/)
+- [图片分成四块（简体中文）](https://toolkitfree.net/zh/tools/image-splitter/split-into-4/)
 - [Instagram Grid](https://toolkitfree.net/tools/image-splitter/instagram-grid/)
+- [Instagram 九宫格分割（简体中文）](https://toolkitfree.net/zh/tools/image-splitter/instagram-grid/)
 - [Split for Printing](https://toolkitfree.net/tools/image-splitter/split-for-printing/)
+- [图片分块打印（简体中文）](https://toolkitfree.net/zh/tools/image-splitter/split-for-printing/)
 
 ### Image Cropper
 - [Crop to Square](https://toolkitfree.net/tools/image-cropper/crop-to-square/)
+- [图片裁剪为正方形（简体中文）](https://toolkitfree.net/zh/tools/image-cropper/crop-to-square/)
 - [Crop to 16:9](https://toolkitfree.net/tools/image-cropper/crop-to-16-9/)
+- [图片裁剪为 16:9（简体中文）](https://toolkitfree.net/zh/tools/image-cropper/crop-to-16-9/)
 - [Crop to 4:3](https://toolkitfree.net/tools/image-cropper/crop-to-4-3/)
+- [图片裁剪为 4:3（简体中文）](https://toolkitfree.net/zh/tools/image-cropper/crop-to-4-3/)
 - [Crop to 3:2](https://toolkitfree.net/tools/image-cropper/crop-to-3-2/)
+- [图片裁剪为 3:2（简体中文）](https://toolkitfree.net/zh/tools/image-cropper/crop-to-3-2/)
 - [Free Crop](https://toolkitfree.net/tools/image-cropper/free-crop/)
+- [图片自由裁剪（简体中文）](https://toolkitfree.net/zh/tools/image-cropper/free-crop/)
 
 ### Video to GIF, WebP & APNG
 - [Video to Animated WebP](https://toolkitfree.net/tools/video-to-gif/video-to-webp/)
+- [视频转动态 WebP（简体中文）](https://toolkitfree.net/zh/tools/video-to-gif/video-to-webp/)
 - [Video to APNG](https://toolkitfree.net/tools/video-to-gif/video-to-apng/)
+- [视频转 APNG（简体中文）](https://toolkitfree.net/zh/tools/video-to-gif/video-to-apng/)
 
 ### Image to PDF
 - [JPG to PDF](https://toolkitfree.net/tools/image-to-pdf/jpg-to-pdf/)
+- [JPG 转 PDF（简体中文）](https://toolkitfree.net/zh/tools/image-to-pdf/jpg-to-pdf/)
 - [PNG to PDF](https://toolkitfree.net/tools/image-to-pdf/png-to-pdf/)
+- [PNG 转 PDF（简体中文）](https://toolkitfree.net/zh/tools/image-to-pdf/png-to-pdf/)
 - [Image to A4 PDF](https://toolkitfree.net/tools/image-to-pdf/image-to-a4-pdf/)
+- [图片转 A4 PDF（简体中文）](https://toolkitfree.net/zh/tools/image-to-pdf/image-to-a4-pdf/)
 - [Multiple Images to PDF](https://toolkitfree.net/tools/image-to-pdf/multiple-images-to-pdf/)
+- [多张图片合并 PDF（简体中文）](https://toolkitfree.net/zh/tools/image-to-pdf/multiple-images-to-pdf/)
 - [Image to PDF without Margin](https://toolkitfree.net/tools/image-to-pdf/image-to-pdf-no-margin/)
+- [图片转无边距 PDF（简体中文）](https://toolkitfree.net/zh/tools/image-to-pdf/image-to-pdf-no-margin/)
 - [Photo to PDF](https://toolkitfree.net/tools/image-to-pdf/photo-to-pdf/)
+- [照片转 PDF（简体中文）](https://toolkitfree.net/zh/tools/image-to-pdf/photo-to-pdf/)
 
 ### PDF Splitter & Page Extractor
 - [Extract Pages from PDF](https://toolkitfree.net/tools/pdf-splitter/extract-pages-from-pdf/)
+- [提取 PDF 页面（简体中文）](https://toolkitfree.net/zh/tools/pdf-splitter/extract-pages-from-pdf/)
 - [Split PDF into Pages](https://toolkitfree.net/tools/pdf-splitter/split-pdf-into-pages/)
+- [PDF 拆分为独立页面（简体中文）](https://toolkitfree.net/zh/tools/pdf-splitter/split-pdf-into-pages/)
 
 ### Favicon Generator
 - [PNG to Favicon](https://toolkitfree.net/tools/favicon-generator/png-to-favicon/)
+- [PNG 生成网站图标（简体中文）](https://toolkitfree.net/zh/tools/favicon-generator/png-to-favicon/)
 - [JPG to Favicon](https://toolkitfree.net/tools/favicon-generator/jpg-to-favicon/)
+- [JPG 生成网站图标（简体中文）](https://toolkitfree.net/zh/tools/favicon-generator/jpg-to-favicon/)
 - [Logo to Favicon](https://toolkitfree.net/tools/favicon-generator/logo-to-favicon/)
+- [标志生成网站图标（简体中文）](https://toolkitfree.net/zh/tools/favicon-generator/logo-to-favicon/)
 - [Favicon for WordPress](https://toolkitfree.net/tools/favicon-generator/favicon-for-wordpress/)
+- [WordPress 网站图标（简体中文）](https://toolkitfree.net/zh/tools/favicon-generator/favicon-for-wordpress/)
 
 ## Guides and policies
 
 <!-- Generated guide links from src/data/guide-registry.ts. -->
 - [JPG vs PNG vs WebP](https://toolkitfree.net/guides/image-format-comparison/): Compare common image formats and choose the right balance of quality and size.
+- [JPG、PNG 与 WebP 格式对比（简体中文）](https://toolkitfree.net/zh/guides/image-format-comparison/): 根据照片、透明背景和网页展示需求选择图片格式，理解质量与体积的取舍。
 - [How to Reduce Image File Size](https://toolkitfree.net/guides/reduce-image-size/): Learn practical ways to reduce image size while controlling the quality tradeoff.
+- [如何减小图片文件大小（简体中文）](https://toolkitfree.net/zh/guides/reduce-image-size/): 按用途调整尺寸、格式和质量，比较真实输出，避免无效压缩和过度损失细节。
 - [Social Media Image Sizes](https://toolkitfree.net/guides/social-media-image-sizes/): Find practical image dimensions for major social platforms and common placements.
+- [社交平台图片尺寸指南（简体中文）](https://toolkitfree.net/zh/guides/social-media-image-sizes/): 查看常用社交平台图片预设，理解保持比例、裁剪和界面安全区域的区别。
 - [Privacy Policy](https://toolkitfree.net/privacy-policy/)
 - [About](https://toolkitfree.net/about/)
+- [中文版首页](https://toolkitfree.net/zh/)
+- [隐私政策](https://toolkitfree.net/zh/privacy-policy/)
+- [使用条款](https://toolkitfree.net/zh/terms/)
+- [关于](https://toolkitfree.net/zh/about/)
+- [联系](https://toolkitfree.net/zh/contact/)
+- [使用指南](https://toolkitfree.net/zh/guides/)

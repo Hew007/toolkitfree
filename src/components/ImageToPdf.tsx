@@ -1,3 +1,5 @@
+import { useOtherI18n } from '../i18n/other-messages';
+import { withLocale } from '../i18n/react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import PdfPageEditor, { type PdfEditorPage } from './PdfPageEditor';
@@ -126,7 +128,8 @@ interface ImageToPdfProps {
   defaultPreset?: PdfPresetKey;
 }
 
-export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProps) {
+function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProps) {
+  const { tr, choices, node, errorText, locale } = useOtherI18n();
   const initialPreset = PDF_PRESETS[defaultPreset];
   const [items, setItems] = useState<PdfItem[]>([]);
   const [pageSize, setPageSize] = useState<PdfPageSize>(initialPreset.pageSize);
@@ -576,7 +579,7 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
     >
       {processing && (
         <div className="visually-hidden" role="status" aria-live="polite">
-          Creating PDF.
+          {tr('Creating PDF.')}
         </div>
       )}
       <FileUploader
@@ -592,26 +595,30 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
           <div className="tool-controls">
             <ToolChoices
               name="pdf-page-size"
-              legend="Page size"
-              help="Every page takes this size. Orientation and margin are in Fine-tune below, and the PDF follows all of them."
-              choices={PAGE_SIZE_CHOICES}
+              legend={tr('Page size')}
+              help={tr(
+                'Every page takes this size. Orientation and margin are in Fine-tune below, and the PDF follows all of them.'
+              )}
+              choices={choices(PAGE_SIZE_CHOICES)}
               value={pageSize}
               onChange={(choice) => setPageSize(choice.id)}
             />
 
             <FineTune
-              summary={describeSetup(pageSize, orientation, margin)}
+              summary={tr(describeSetup(pageSize, orientation, margin))}
               onReset={tuned ? resetPageSetup : undefined}
-              resetLabel={`Back to this page's setup \u00b7 ${describeSetup(
-                initialPreset.pageSize,
-                initialPreset.orientation,
-                initialPreset.margin
-              )}`}
+              resetLabel={tr(
+                `Back to this page's setup \u00b7 ${describeSetup(
+                  initialPreset.pageSize,
+                  initialPreset.orientation,
+                  initialPreset.margin
+                )}`
+              )}
             >
               <FineTuneField
                 htmlFor="pdf-orientation"
-                label="Orientation"
-                hint="Which way round a fixed page size is turned."
+                label={tr('Orientation')}
+                hint={tr('Which way round a fixed page size is turned.')}
                 hidden={pageSize === 'fit'}
               >
                 <select
@@ -620,15 +627,17 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
                   value={orientation}
                   onChange={(event) => setOrientation(event.target.value as PdfOrientation)}
                 >
-                  <option value="portrait">Portrait</option>
-                  <option value="landscape">Landscape</option>
+                  <option value="portrait">{tr('Portrait')}</option>
+                  <option value="landscape">{tr('Landscape')}</option>
                 </select>
               </FineTuneField>
 
               <FineTuneField
                 htmlFor="pdf-margin"
-                label={`Margin: ${margin}mm`}
-                hint="The blank border automatic placement leaves around the page. An image you have moved or resized yourself stays where you put it."
+                label={tr(`Margin: ${margin}mm`)}
+                hint={tr(
+                  'The blank border automatic placement leaves around the page. An image you have moved or resized yourself stays where you put it.'
+                )}
                 hidden={pageSize === 'fit'}
               >
                 <input
@@ -667,7 +676,8 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
 
           {selectedFile && (
             <p style={{ margin: '0.5rem 0 0', fontSize: '0.8125rem', color: '#6b665c' }}>
-              Selected: {selectedFile.file.name} ({formatSize(selectedFile.file.size)})
+              {tr('Selected: ')}
+              {selectedFile.file.name} ({node(formatSize(selectedFile.file.size))})
             </p>
           )}
 
@@ -680,7 +690,7 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
                   setItems((current) => current.map((item) => ({ ...item, placement: null })))
                 }
               >
-                Reset layout
+                {tr('Reset layout')}
               </button>
               <button
                 type="button"
@@ -688,24 +698,27 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
                 data-testid="pdf-clear-all"
                 onClick={handleStartOver}
               >
-                Clear all
+                {tr('Clear all')}
               </button>
             </div>
 
             <ToolRunNote busy={processing}>
-              {processing
-                ? 'Building the PDF in your browser\u2026'
-                : elapsedMs !== null
-                  ? `Built ${resultPages} page${resultPages === 1 ? '' : 's'} in your browser in ${(
-                      elapsedMs / 1000
-                    ).toFixed(1)}s. Nothing was uploaded.`
-                  : 'The PDF follows the pages above. Nothing is uploaded.'}
+              {node(
+                processing
+                  ? 'Building the PDF in your browser\u2026'
+                  : elapsedMs !== null
+                    ? `Built ${resultPages} page${resultPages === 1 ? '' : 's'} in your browser in ${(
+                        elapsedMs / 1000
+                      ).toFixed(1)}s. Nothing was uploaded.`
+                    : 'The PDF follows the pages above. Nothing is uploaded.'
+              )}
             </ToolRunNote>
           </div>
 
           <p style={{ fontSize: '0.8125rem', color: '#6b665c', marginTop: '0.75rem' }}>
-            The exported PDF matches the preview above. Transparent pixels are placed on white
-            before PDF encoding.
+            {tr(
+              'The exported PDF matches the preview above. Transparent pixels are placed on white before PDF encoding.'
+            )}
           </p>
         </div>
       )}
@@ -717,14 +730,15 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
           role="alert"
           data-pdf-error={item.file.name}
         >
-          <strong>{item.file.name}:</strong> {item.decodeError}{' '}
+          <strong>{item.file.name}:</strong> {errorText(item.decodeError)}
+          {node(' ')}
           <button
             type="button"
             className="btn btn-secondary"
             style={{ padding: '0.25rem 0.5rem', marginLeft: '0.5rem' }}
             onClick={() => handleRemove(item.id)}
           >
-            Remove
+            {tr('Remove')}
           </button>
         </div>
       ))}
@@ -735,18 +749,18 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
           role="alert"
           data-pdf-error={failure.name}
         >
-          <strong>{failure.name}:</strong> {failure.message}
+          <strong>{failure.name}:</strong> {errorText(failure.message)}
         </div>
       ))}
       {error && (
         <div className="status status-error" role="alert">
-          {error}
+          {errorText(error)}
         </div>
       )}
 
       {resultUrl && (
         <div style={{ marginTop: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Result</h3>
+          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>{tr('Result')}</h3>
           <div
             className="result-item"
             data-pdf-result
@@ -756,15 +770,16 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
           >
             <div className="result-info">
               <div>
-                <div className="file-item-name">converted-images.pdf</div>
+                <div className="file-item-name">{tr('converted-images.pdf')}</div>
                 <div className="file-item-size">
-                  {formatSize(resultSize)} - {resultPages} page{resultPages > 1 ? 's' : ''}
+                  {node(formatSize(resultSize))} - {node(resultPages)} {tr(' page')}
+                  {locale === 'en' && resultPages > 1 ? 's' : ''}
                 </div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <button type="button" onClick={handleDownload} className="btn btn-primary">
-                Download PDF
+                {tr('Download PDF')}
               </button>
               <button
                 type="button"
@@ -772,15 +787,17 @@ export default function ImageToPdf({ defaultPreset = 'default' }: ImageToPdfProp
                 data-testid="pdf-start-over"
                 onClick={handleStartOver}
               >
-                Start new PDF
+                {tr('Start new PDF')}
               </button>
             </div>
           </div>
           <p style={{ fontSize: '0.8125rem', color: '#6b665c', margin: '0.5rem 0 0' }}>
-            Download it before starting a new PDF — the file is held in this tab only.
+            {tr('Download it before starting a new PDF — the file is held in this tab only.')}
           </p>
         </div>
       )}
     </div>
   );
 }
+
+export default withLocale(ImageToPdf);

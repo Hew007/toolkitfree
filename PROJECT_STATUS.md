@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-11-04
+Last updated: 2026-11-13
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -10,6 +10,70 @@ with `AGENTS.md` before doing work. Update this file instead of writing a new ha
 task.
 
 ## Current Snapshot
+
+- 2026-11-13 所有者已授权将验收通过的中文版本提交并推送至 `master`。推送前 fetch 确认
+  远端与本地基线无差异；本次发布范围为完整中文支持、验收中发现的问题修复及双语测试门禁。
+  自动化验收结果见下文。线上部署结果尚未核验，推广仍以所有者手工确认作为前提。
+
+- 2026-11-13 中文支持开发与自动化验收完成：保留英文地址，新增完整 `/zh/` 简体中文页面、
+  14 工具交互与同页语言切换。质量门禁 13/13、单元套件 17/17、Chrome 全量 13/13、
+  中文功能 14/14、Edge smoke 2/2 全部通过；Chrome 与 Edge 各完成 143 路由 × 5 宽度
+  共 715 项检查，两浏览器合计 1,430 张截图，无浏览器错误。独立源码、桌面和移动端截图
+  复核已完成，已发现缺陷均修复并复验。详细日志/截图见 `docs/chinese-acceptance/`。
+  所有者已授权本轮提交推送；下一步由所有者打开预览或部署后的 `/zh/`
+  手工验收；推广仍须等待所有者确认。此中文任务不包含再次验证抠图多线程路径。
+
+- 2026-11-13 最终 Chrome 回归已完成：13/13 套件通过，含增强器英文修复、裁剪恢复、全部工具
+  正常/异常流程。143 条双语页面 × 5 宽度（320/375/768/1024/1440）共 715 项响应式与
+  无障碍检查通过，715 张截图已保存，浏览器错误为零。日志为
+  `docs/chinese-acceptance/2026-11-13-full-chrome.log`，截图位于同目录
+  `2026-11-13-chrome-responsive/`。Edge smoke 与独立移动端视觉抽检仍在进行。
+
+- 2026-11-13 新产物中文完整复验：`npm run test:e2e:zh -- --skip-build` 两套脚本均通过，
+  覆盖全部 14 工具真实处理/下载且无浏览器错误。证据位于
+  `docs/chinese-acceptance/2026-11-12T23-05-51.990Z` 与
+  `docs/chinese-acceptance/2026-11-12T23-06-09.622Z-special`（目录采用 UTC 时间）。
+  PDF 应用按钮新截图已独立确认单行、无遮挡。英文全量与双语响应式回归仍在执行。
+
+- 2026-11-13 最终回归进行中：完整质量门禁已于上一轮 13/13 通过。增强器英文按钮空格与
+  PDF 页码应用按钮断行已修复，新构建 144 页面，SEO/内容日期/9,175 条内链再次通过。
+  正在同一产物上执行完整 Chrome 英文回归、双语五宽度响应式、Edge smoke 与中文 14 工具
+  复验；在这些检查完成前不标记本轮验收完成。中文变更尚未提交或推送。
+
+- 2026-11-12 中文功能验收已分批覆盖全部 14 工具：10 工具下载、微调与损坏图片恢复通过，
+  PDF 拆分与中文二维码通过，抠图与视频转换在 `2026-11-12T14-00-04.064Z-special`
+  实际下载通过且无浏览器错误。抠图为单线程环境，不据此声称多线程验证。
+  最新完整截图已独立复核；英文回归发现增强器按钮多余空格，视觉复核发现 PDF 应用按钮断行，
+  正在收尾修复与重建。新增 `npm run test:e2e:zh` 支持重复执行中文验收。
+  完整英文回归、双语响应式和最终放行记录仍待完成，中文版本尚未提交或推送。
+
+- 2026-11-12 继续中文验收：10 个工具正常下载已分批通过，7 个图片工具微调中文通过，
+  6/7 损坏 PNG 反馈通过，裁剪缺少解码失败反馈正在修复。视频下载错误恢复提示与特殊
+  文件名翻译已修，持久本地化断言通过。前 7 工具旧截图仅为首屏，最终复验将补齐整页证据。
+  另 4 工具中文处理/下载、全量英文回归及双语响应式检查仍待完成，未达到最终放行条件。
+
+- 2026-11-11 中文版首轮集成验证：生产构建生成 144 个双语 HTML；双语 SEO 门禁通过，
+  覆盖 130 条可索引路由与 84 个变体入链。新增本地化用例后单元/算法套件 17/17 通过。
+  独立审查已核对 62 组工具/变体的 React 初始参数，未发现影响处理行为的差异。
+  审查另发现视频引擎下载失败的中文恢复建议不准确、换行文件名导致部分 aria 文案漏翻，
+  正在修复。中文实际下载验收、最新源码重建、完整双语响应式与英文回归尚未完成；
+  以上不是最终放行结论。尚未提交或推送中文功能。
+
+- 2026-11-11 恢复中文支持开发：上轮三个 agent 因使用额度中断，已核对并保留全部未提交工作，
+  重新 fetch 后确认主分支与远端无提交差异。语言上下文、共享交互组件和两组工具已有部分实现，
+  中文路由与内容仍在补齐；基础路由/SSR 隔离测试已通过，恢复时 TypeScript 检查通过。
+  本轮继续完整内容覆盖、质量门禁与独立复验；尚未提交、推送或发布中文版本。
+
+- 2026-11-10 中文支持开发中：所有者已授权完整中文支持及多 agent 协作。主分支已同步，
+  基线为已推送的 `eec2729`，开始时工作区干净。采用简体中文 `/zh/`，保留英文原路由。
+  范围包括所有公开页面、14 个工具及变体、指南、政策、交互状态、错误提示与无障碍文案。
+  开发顺序：先建立显式 locale 与 SSR 一致的翻译基础；并行实现静态页面和两组工具；
+  再补齐双语 SEO/注册表门禁；最后执行完整检查、中文功能验收和独立 agent 复验。
+  验收条件：中文首次 HTML 与 hydration 一致；同页语言切换和中文内部链接正确；
+  两语 canonical/hreflang、FAQ、sitemap、LLM 覆盖完整；14 工具中文上传、设置、处理、
+  下载及关键异常可用；文件名和用户内容不被翻译；本地处理、显式运行约束保持；
+  英文回归及双语全路由桌面/中间/平板/手机响应式检查通过。完成后交付所有者手工验收，
+  推广仍须等待所有者确认。当前尚未完成实现或本轮验收，不代表已发布中文版本。
 
 - 2026-11-04 修复与独立复验：修复前验收记录已本地提交为 `5e41c59`。QR Logo 读取取消/时序
   守卫、日期/相关入链/Favicon 文案、结构化 logo 资产 URL、CDP 超时/断连清理及 ID Photo 就绪
@@ -97,14 +161,15 @@ Current registry-driven public tools:
 13. Favicon Generator
 14. QR Code Generator
 
-The static site currently expects 72 generated HTML pages. Tool metadata, variants, navigation,
+The static site currently expects 144 generated HTML pages across English and Simplified Chinese. Tool metadata, variants, navigation,
 related links, sitemap entries, Open Graph coverage, FAQs, and LLM registries are governed by the
 registries and validation scripts described in `AGENTS.md`.
 
 ## Important Product Decisions
 
 - Keep file-content processing local to the browser.
-- Target a global English-speaking audience first; multilingual expansion can come later.
+- 英文保留原有路由，按所有者 2026-11-10 的要求新增 `/zh/` 简体中文支持；当前开发中，
+  发布状态以本文件顶部快照与验收记录为准。
 - Do not promise complete privacy, zero network traffic, unlimited files, unsupported formats,
   guaranteed compression savings, or guaranteed exact target sizes.
 - AdSense remains off until the owner decides the site and its user value are mature enough.
@@ -208,6 +273,10 @@ pushed to `origin/master`; the production homepage then served `Crop image onlin
 `/tools/image-cropper/`, and no longer served the old `Crop to square` quick-path entry.
 
 ## Current State and Exact Next Actions
+
+2026-11-13 更新：中文完整 14 工具和 Chrome 全量 13 套件已通过，双语 715 项响应式检查
+通过，独立桌面/手机/平板截图复核完成。Edge smoke 2/2 及另 715 项检查也已通过。交付所有者
+手工确认中文体验；未收到新的推送指令，本轮中文变更保留本地，推广仍等待所有者确认。
 
 2026-11-04 更新：本地自动化与独立边界复验已完成。下一步按
 `docs/test-acceptance-plan-2026-11-03.md` 补真机、独立扫码及所有者手工验收。下文历史推广
@@ -347,6 +416,11 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-11-13 — `verified`：完成简体中文全站支持，144 HTML、双语 SEO/LLM 目录及语言切换。
+  质量 13/13、单元 17/17、Chrome 13/13、中文 14 工具与 Edge 2/2 通过；修复裁剪损坏输入
+  反馈、动态错误翻译、特殊文件名与两处布局/英文文本回归。独立代码/视觉复验完成。
+  保留本地未提交修改供所有者手工验收，未推送部署。
 
 - 2026-11-04 — `独立复验完成`：Chrome 官方全量 13/13 正常退出。Edge 13 个套件全部完成且
   浏览器错误为 0，随后因专用进程重启残留造成 Windows 临时目录清理 EPERM，退出 1。独立代理

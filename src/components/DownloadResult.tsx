@@ -1,4 +1,5 @@
 import { formatSize } from '../lib/image-processing';
+import { useI18n } from '../i18n/react';
 
 interface DownloadResultProps {
   name: string;
@@ -8,6 +9,7 @@ interface DownloadResultProps {
 }
 
 export default function DownloadResult({ name, size, url, previewUrl }: DownloadResultProps) {
+  const { t } = useI18n();
   return (
     <div className="result-item">
       <div className="result-info">
@@ -18,7 +20,7 @@ export default function DownloadResult({ name, size, url, previewUrl }: Download
         </div>
       </div>
       <a href={url} download={name} className="btn btn-primary">
-        Download
+        {t('Download', '下载')}
       </a>
     </div>
   );

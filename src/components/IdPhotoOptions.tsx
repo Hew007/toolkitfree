@@ -1,3 +1,4 @@
+import { useOtherI18n } from '../i18n/other-messages';
 import { useNumberDraft } from '../hooks/useNumberDraft';
 import type { IdPhotoPresetId } from '../data/id-photo-presets';
 import type { ImageOutputMimeType } from '../lib/image-processing';
@@ -45,10 +46,11 @@ function NumberField({
   step?: number;
   onChange: (value: number) => void;
 }) {
+  const { node } = useOtherI18n();
   const draftProps = useNumberDraft({ value, min, max, step, onCommit: onChange });
   return (
     <label className="id-photo-field">
-      {label}
+      {node(label)}
       <input
         className="id-photo-control"
         type="number"
@@ -62,25 +64,26 @@ function NumberField({
 }
 
 export default function IdPhotoOptions({ settings, onChange }: IdPhotoOptionsProps) {
+  const { node, tr } = useOtherI18n();
   const update = <K extends keyof IdPhotoSettings>(key: K, value: IdPhotoSettings[K]) =>
     onChange({ ...settings, [key]: value });
   return (
-    <section className="id-photo-options" aria-label="ID photo options">
+    <section className="id-photo-options" aria-label={tr('ID photo options')}>
       <div className="id-photo-options-grid">
         <label className="id-photo-field">
-          Unit
+          {tr('Unit')}
           <select
             className="id-photo-control"
             value={settings.unit}
             onChange={(event) => update('unit', event.target.value as IdPhotoSettings['unit'])}
           >
-            <option value="px">Pixels</option>
-            <option value="mm">Millimetres</option>
-            <option value="in">Inches</option>
+            <option value="px">{tr('Pixels')}</option>
+            <option value="mm">{tr('Millimetres')}</option>
+            <option value="in">{tr('Inches')}</option>
           </select>
         </label>
         <NumberField
-          label="Width"
+          label={tr('Width')}
           value={settings.width}
           min={1}
           max={10000}
@@ -88,7 +91,7 @@ export default function IdPhotoOptions({ settings, onChange }: IdPhotoOptionsPro
           onChange={(value) => update('width', value)}
         />
         <NumberField
-          label="Height"
+          label={tr('Height')}
           value={settings.height}
           min={1}
           max={10000}
@@ -96,7 +99,7 @@ export default function IdPhotoOptions({ settings, onChange }: IdPhotoOptionsPro
           onChange={(value) => update('height', value)}
         />
         <NumberField
-          label="DPI"
+          label={tr('DPI')}
           value={settings.dpi}
           min={72}
           max={600}
@@ -105,19 +108,19 @@ export default function IdPhotoOptions({ settings, onChange }: IdPhotoOptionsPro
       </div>
       <div className="id-photo-options-grid">
         <label className="id-photo-field">
-          Download format
+          {tr('Download format')}
           <select
             className="id-photo-control"
             value={settings.format}
             onChange={(event) => update('format', event.target.value as ImageOutputMimeType)}
           >
-            <option value="image/jpeg">JPG</option>
-            <option value="image/png">PNG</option>
+            <option value="image/jpeg">{tr('JPG')}</option>
+            <option value="image/png">{tr('PNG')}</option>
           </select>
         </label>
         {settings.format === 'image/jpeg' && (
           <NumberField
-            label="JPG quality"
+            label={tr('JPG quality')}
             value={settings.quality}
             min={50}
             max={100}
@@ -125,18 +128,18 @@ export default function IdPhotoOptions({ settings, onChange }: IdPhotoOptionsPro
           />
         )}
         <label className="id-photo-field">
-          Print sheet
+          {tr('Print sheet')}
           <select
             className="id-photo-control"
             value={settings.paper}
             onChange={(event) => update('paper', event.target.value as IdPhotoSettings['paper'])}
           >
-            <option value="4x6">4 × 6 inches</option>
-            <option value="a4">A4</option>
+            <option value="4x6">{tr('4 × 6 inches')}</option>
+            <option value="a4">{tr('A4')}</option>
           </select>
         </label>
         <NumberField
-          label="Print margin (mm)"
+          label={tr('Print margin (mm)')}
           value={settings.marginMm}
           min={0}
           max={40}
@@ -144,7 +147,7 @@ export default function IdPhotoOptions({ settings, onChange }: IdPhotoOptionsPro
           onChange={(value) => update('marginMm', value)}
         />
         <NumberField
-          label="Print gap (mm)"
+          label={tr('Print gap (mm)')}
           value={settings.gapMm}
           min={0}
           max={20}
@@ -157,8 +160,9 @@ export default function IdPhotoOptions({ settings, onChange }: IdPhotoOptionsPro
           type="checkbox"
           checked={settings.cutLines}
           onChange={(event) => update('cutLines', event.target.checked)}
-        />{' '}
-        Include cut lines on print sheet
+        />
+        {node(' ')}
+        {tr('Include cut lines on print sheet')}
       </label>
     </section>
   );

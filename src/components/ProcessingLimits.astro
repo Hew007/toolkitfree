@@ -1,4 +1,7 @@
 ---
+import { getLocale } from '../i18n/locale';
+const zh = getLocale(Astro.url.pathname) === 'zh';
+const t = (en: string, cn: string) => (zh ? cn : en);
 import { IMAGE_BUDGET_LIMITS, MAX_SINGLE_IMAGE_PIXELS } from '../lib/image-budget';
 import { MAX_SPLIT_TILES } from '../lib/image-splitter';
 
@@ -21,91 +24,130 @@ const asMemory = (value: number) =>
 <section class="spec-section" aria-labelledby="processing-limits">
   <div class="section-heading-row compact">
     <div>
-      <p class="section-index">Practical limits</p>
-      <h2 id="processing-limits">Browser processing safeguards</h2>
+      <p class="section-index">{t('Practical limits', '实际限制')}</p>
+      <h2 id="processing-limits">{t('Browser processing safeguards', '浏览器处理保护措施')}</h2>
     </div>
     <p>
-      These are ToolkitFree screening thresholds, not promises that every browser can reach them.
+      {
+        t(
+          'These are ToolkitFree screening thresholds, not promises that every browser can reach them.',
+          '这些是 ToolkitFree 的预检阈值，不代表每个浏览器都能达到这些上限。'
+        )
+      }
     </p>
   </div>
-  <div class="table-scroll" tabindex="0" aria-label="Scrollable processing limits table">
+  <div
+    class="table-scroll"
+    tabindex="0"
+    aria-label={t('Scrollable processing limits table', '可横向滚动的处理限制表格')}
+  >
     <table class="spec-table">
       <thead>
         <tr
-          ><th scope="col">Safeguard</th><th scope="col">Desktop</th><th scope="col">Mobile</th></tr
+          ><th scope="col">{t('Safeguard', '保护项目')}</th><th scope="col"
+            >{t('Desktop', '桌面设备')}</th
+          ><th scope="col">{t('Mobile', '移动设备')}</th></tr
         >
       </thead>
       <tbody>
         <tr>
-          <th scope="row">Single-image hard cap</th><td>{asMegapixels(MAX_SINGLE_IMAGE_PIXELS)}</td
+          <th scope="row">{t('Single-image hard cap', '单张图片像素硬上限')}</th><td
+            >{asMegapixels(MAX_SINGLE_IMAGE_PIXELS)}</td
           ><td
-            >{asMegapixels(MAX_SINGLE_IMAGE_PIXELS)}; the {asMegapixels(mobile.blockedPixels)} total cap
-            can block first</td
+            >{asMegapixels(MAX_SINGLE_IMAGE_PIXELS)}{
+              t('; the total cap may block first: ', '；总像素上限可能先触发：')
+            }{asMegapixels(mobile.blockedPixels)}</td
           >
         </tr>
         {
           !isSplitter && (
             <tr>
-              <th scope="row">Batch size warning</th>
-              <td>{desktop.warningFiles} files</td>
-              <td>{mobile.warningFiles} files</td>
+              <th scope="row">{t('Batch size warning', '批量文件数量警告')}</th>
+              <td>
+                {desktop.warningFiles}
+                {t(' files', ' 个文件')}
+              </td>
+              <td>
+                {mobile.warningFiles}
+                {t(' files', ' 个文件')}
+              </td>
             </tr>
           )
         }
         {
           !isSplitter && (
             <tr>
-              <th scope="row">Batch size block</th>
-              <td>{desktop.blockedFiles} files</td>
-              <td>{mobile.blockedFiles} files</td>
+              <th scope="row">{t('Batch size block', '批量文件数量阻止')}</th>
+              <td>
+                {desktop.blockedFiles}
+                {t(' files', ' 个文件')}
+              </td>
+              <td>
+                {mobile.blockedFiles}
+                {t(' files', ' 个文件')}
+              </td>
             </tr>
           )
         }
         {
           isSplitter && (
             <tr>
-              <th scope="row">Pieces per split</th>
-              <td>Up to {MAX_SPLIT_TILES}</td>
-              <td>Up to {MAX_SPLIT_TILES}</td>
+              <th scope="row">{t('Pieces per split', '单次分割块数')}</th>
+              <td>
+                {t('Up to ', '最多 ')}
+                {MAX_SPLIT_TILES}
+              </td>
+              <td>
+                {t('Up to ', '最多 ')}
+                {MAX_SPLIT_TILES}
+              </td>
             </tr>
           )
         }
         <tr
-          ><th scope="row">Encoded input warning</th><td>{asMemory(desktop.warningEncodedBytes)}</td
+          ><th scope="row">{t('Encoded input warning', '输入文件体积警告')}</th><td
+            >{asMemory(desktop.warningEncodedBytes)}</td
           ><td>{asMemory(mobile.warningEncodedBytes)}</td></tr
         >
         <tr
-          ><th scope="row">Encoded input block</th><td>{asMemory(desktop.blockedEncodedBytes)}</td
+          ><th scope="row">{t('Encoded input block', '输入文件体积阻止')}</th><td
+            >{asMemory(desktop.blockedEncodedBytes)}</td
           ><td>{asMemory(mobile.blockedEncodedBytes)}</td></tr
         >
         <tr
-          ><th scope="row">Total pixels warning</th><td>{asMegapixels(desktop.warningPixels)}</td
+          ><th scope="row">{t('Total pixels warning', '总像素警告')}</th><td
+            >{asMegapixels(desktop.warningPixels)}</td
           ><td>{asMegapixels(mobile.warningPixels)}</td></tr
         >
         <tr
-          ><th scope="row">Total pixels block</th><td>{asMegapixels(desktop.blockedPixels)}</td><td
-            >{asMegapixels(mobile.blockedPixels)}</td
-          ></tr
+          ><th scope="row">{t('Total pixels block', '总像素阻止')}</th><td
+            >{asMegapixels(desktop.blockedPixels)}</td
+          ><td>{asMegapixels(mobile.blockedPixels)}</td></tr
         >
         <tr
-          ><th scope="row">Working memory warning</th><td
+          ><th scope="row">{t('Working memory warning', '预计工作内存警告')}</th><td
             >{asMemory(desktop.warningWorkingBytes)}</td
           ><td>{asMemory(mobile.warningWorkingBytes)}</td></tr
         >
         <tr
-          ><th scope="row">Working memory block</th><td>{asMemory(desktop.blockedWorkingBytes)}</td
+          ><th scope="row">{t('Working memory block', '预计工作内存阻止')}</th><td
+            >{asMemory(desktop.blockedWorkingBytes)}</td
           ><td>{asMemory(mobile.blockedWorkingBytes)}</td></tr
         >
         <tr>
-          <th scope="row">Parallel processing</th>
-          <td>Up to 2 {isSplitter ? 'pieces' : 'images'}</td>
-          <td>Up to 2 {isSplitter ? 'pieces' : 'images'}</td>
+          <th scope="row">{t('Parallel processing', '并行处理')}</th>
+          <td>{t('Up to 2 ', '最多 2 ')}{isSplitter ? t('pieces', '块') : t('images', '张')}</td>
+          <td>{t('Up to 2 ', '最多 2 ')}{isSplitter ? t('pieces', '块') : t('images', '张')}</td>
         </tr>
       </tbody>
     </table>
   </div>
   <p class="spec-note">
-    Large dimensions can exhaust browser memory before encoded file size looks large. ToolkitFree
-    checks dimensions and estimated working memory before processing.
+    {
+      t(
+        'Large dimensions can exhaust browser memory before encoded file size looks large. ToolkitFree checks dimensions and estimated working memory before processing.',
+        '文件体积不大也可能因像素尺寸过高耗尽浏览器内存。ToolkitFree 会在处理前检查尺寸和预计工作内存。'
+      )
+    }
   </p>
 </section>

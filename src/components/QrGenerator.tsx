@@ -1,3 +1,5 @@
+import { useOtherI18n } from '../i18n/other-messages';
+import { withLocale } from '../i18n/react';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import QrInputForm from './QrInputForm';
 import QrPreview from './QrPreview';
@@ -34,7 +36,8 @@ const ERROR_CORRECTION_CHOICES: readonly ToolChoice<ECL>[] = ERROR_CORRECTION_LE
   (level) => ({ id: level, label: level })
 );
 
-export default function QrGenerator() {
+function QrGenerator() {
+  const { tr, node, choices, errorText } = useOtherI18n();
   const [qrType, setQrType] = useState<QrType>('text');
   const [qrData, setQrData] = useState('');
   const [fgColor, setFgColor] = useState('#000000');
@@ -144,7 +147,7 @@ export default function QrGenerator() {
         <div className="tool-controls">
           {/* Colors */}
           <div>
-            <span style={sectionLabel}>Colors</span>
+            <span style={sectionLabel}>{tr('Colors')}</span>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <label
                 style={{
@@ -155,7 +158,7 @@ export default function QrGenerator() {
                   cursor: 'pointer',
                 }}
               >
-                Foreground
+                {tr('Foreground')}
                 <input
                   type="color"
                   value={fgColor}
@@ -179,7 +182,7 @@ export default function QrGenerator() {
                   cursor: 'pointer',
                 }}
               >
-                Background
+                {tr('Background')}
                 <input
                   type="color"
                   value={bgColor}
@@ -202,23 +205,24 @@ export default function QrGenerator() {
                 data-qr-contrast-warning
                 style={{ marginTop: '0.5rem' }}
               >
-                Increase foreground/background contrast to enable downloads. Current ratio:{' '}
-                {contrastRatio.toFixed(2)}:1.
+                {tr('Increase foreground/background contrast to enable downloads. Current ratio:')}
+                {node(' ')}
+                {node(contrastRatio.toFixed(2))}:1.
               </div>
             )}
           </div>
 
           <ToolChoices
             name="qr-dot-style"
-            legend="Dot Style"
-            choices={DOT_STYLE_CHOICES}
+            legend={tr('Dot Style')}
+            choices={choices(DOT_STYLE_CHOICES)}
             value={dotStyle}
             onChange={(choice) => setDotStyle(choice.id)}
           />
 
           {/* Logo */}
           <div>
-            <span style={sectionLabel}>Logo (optional)</span>
+            <span style={sectionLabel}>{tr('Logo (optional)')}</span>
             {!logoImage ? (
               <label
                 className="qr-logo-upload"
@@ -234,7 +238,7 @@ export default function QrGenerator() {
                   color: '#6b665c',
                 }}
               >
-                Upload Logo
+                {tr('Upload Logo')}
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -246,7 +250,7 @@ export default function QrGenerator() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <img
                   src={logoImage}
-                  alt="Logo"
+                  alt={tr('Logo')}
                   style={{
                     width: 40,
                     height: 40,
@@ -265,7 +269,8 @@ export default function QrGenerator() {
                       marginBottom: '0.25rem',
                     }}
                   >
-                    Size: {Math.round(logoSize * 100)}%
+                    {tr('Size: ')}
+                    {node(Math.round(logoSize * 100))}%
                   </label>
                   <input
                     id="qr-logo-size"
@@ -280,7 +285,7 @@ export default function QrGenerator() {
                 </div>
                 <button
                   type="button"
-                  aria-label="Remove logo"
+                  aria-label={tr('Remove logo')}
                   onClick={handleLogoRemove}
                   style={{
                     display: 'flex',
@@ -304,19 +309,19 @@ export default function QrGenerator() {
 
           {logoError && (
             <div className="status status-error" role="alert">
-              {logoError}
+              {errorText(logoError)}
             </div>
           )}
 
           <ToolChoices
             name="qr-error-correction"
-            legend="Error Correction"
-            help={
+            legend={tr('Error Correction')}
+            help={tr(
               logoImage
                 ? 'A logo covers part of the code, so High (H) is set for you. You can still choose another level.'
                 : 'Higher levels keep the code scannable when it is damaged or partly covered, and make it denser.'
-            }
-            choices={ERROR_CORRECTION_CHOICES}
+            )}
+            choices={choices(ERROR_CORRECTION_CHOICES)}
             value={errorCorrection}
             onChange={(choice) => handleErrorCorrection(choice.id)}
           />
@@ -339,3 +344,5 @@ export default function QrGenerator() {
     </div>
   );
 }
+
+export default withLocale(QrGenerator);

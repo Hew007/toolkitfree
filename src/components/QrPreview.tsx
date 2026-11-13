@@ -1,3 +1,4 @@
+import { useOtherI18n } from '../i18n/other-messages';
 import { useEffect, useRef, useState } from 'react';
 
 interface QrPreviewProps {
@@ -21,6 +22,7 @@ export default function QrPreview({
   logoSize,
   downloadEnabled,
 }: QrPreviewProps) {
+  const { tr, node } = useOtherI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const qrRef = useRef<any>(null);
   /**
@@ -137,7 +139,7 @@ export default function QrPreview({
               disabled={!downloadEnabled || !ready}
               onClick={() => handleDownload('png')}
             >
-              Download PNG
+              {tr('Download PNG')}
             </button>
             <button
               type="button"
@@ -145,7 +147,7 @@ export default function QrPreview({
               disabled={!downloadEnabled || !ready}
               onClick={() => handleDownload('svg')}
             >
-              Download SVG
+              {tr('Download SVG')}
             </button>
           </div>
           <p
@@ -155,19 +157,21 @@ export default function QrPreview({
               margin: 0,
             }}
           >
-            {failed
-              ? 'This content could not be drawn as a QR code. Try shortening it, or lower the error correction level in Fine-tune.'
-              : !ready
-                ? 'Drawing your QR code…'
-                : downloadEnabled
-                  ? 'Scan with your phone camera to test'
-                  : 'Downloads are disabled until color contrast is improved.'}
+            {node(
+              failed
+                ? 'This content could not be drawn as a QR code. Try shortening it, or lower the error correction level in Fine-tune.'
+                : !ready
+                  ? 'Drawing your QR code…'
+                  : downloadEnabled
+                    ? 'Scan with your phone camera to test'
+                    : 'Downloads are disabled until color contrast is improved.'
+            )}
           </p>
         </>
       )}
       {!data && (
         <p style={{ color: '#8a8377', fontSize: '0.875rem' }}>
-          Enter content to generate a QR code
+          {tr('Enter content to generate a QR code')}
         </p>
       )}
     </div>

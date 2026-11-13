@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import { getGuidePublicUrl, guideRegistry } from '../src/data/guide-registry.ts';
 import { toPublicUrl, toolRegistry } from '../src/data/tool-registry.ts';
+import { localizePath } from '../src/i18n/locale.ts';
+import { chineseTools, chineseVariants, chineseGuideLabels } from '../src/i18n/pages.ts';
 
 const checkOnly = process.argv.includes('--check');
 
@@ -45,10 +47,16 @@ function updateFile(file, content) {
 }
 
 const compactList = toolRegistry
-  .map((tool) => `- [${tool.name}](${toPublicUrl(tool.href)}): ${tool.description}`)
+  .flatMap((tool) => [
+    `- [${tool.name}](${toPublicUrl(tool.href)}): ${tool.description}`,
+    `- [${chineseTools[tool.id].name}（简体中文）](${toPublicUrl(localizePath(tool.href, 'zh'))}): ${chineseTools[tool.id].description}`,
+  ])
   .join('\n');
 const compactGuides = guideRegistry
-  .map((guide) => `- [${guide.title}](${getGuidePublicUrl(guide)}): ${guide.description}`)
+  .flatMap((guide) => [
+    `- [${guide.title}](${getGuidePublicUrl(guide)}): ${guide.description}`,
+    `- [${chineseGuideLabels[guide.id].title}（简体中文）](${toPublicUrl(localizePath(guide.href, 'zh'))}): ${chineseGuideLabels[guide.id].description}`,
+  ])
   .join('\n');
 
 // Every indexable variant page, grouped by tool. Non-indexable variants are left
@@ -64,9 +72,10 @@ const variantList = variantGroups
   .map(
     (group) =>
       `### ${group.tool.name}\n${group.variants
-        .map(
-          (variant) => `- [${variant.label}](${toPublicUrl(`${group.tool.href}/${variant.slug}`)})`
-        )
+        .flatMap((variant) => [
+          `- [${variant.label}](${toPublicUrl(`${group.tool.href}/${variant.slug}`)})`,
+          `- [${chineseVariants[variant.slug].name}（简体中文）](${toPublicUrl(localizePath(`${group.tool.href}/${variant.slug}`, 'zh'))})`,
+        ])
         .join('\n')}`
   )
   .join('\n\n');
@@ -98,7 +107,13 @@ ${variantSection}`
 <!-- Generated guide links from src/data/guide-registry.ts. -->
 ${compactGuides}
 - [Privacy Policy](https://toolkitfree.net/privacy-policy/)
-- [About](https://toolkitfree.net/about/)`
+- [About](https://toolkitfree.net/about/)
+- [中文版首页](https://toolkitfree.net/zh/)
+- [隐私政策](https://toolkitfree.net/zh/privacy-policy/)
+- [使用条款](https://toolkitfree.net/zh/terms/)
+- [关于](https://toolkitfree.net/zh/about/)
+- [联系](https://toolkitfree.net/zh/contact/)
+- [使用指南](https://toolkitfree.net/zh/guides/)`
   )
 );
 

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useI18n } from '../i18n/react';
 
 /**
  * The folded panel that holds every exact value a preset just set for you.
@@ -25,17 +26,18 @@ interface FineTuneProps {
 }
 
 export default function FineTune({ summary, children, onReset, resetLabel }: FineTuneProps) {
+  const { t } = useI18n();
   return (
     <details className="fine-tune">
       <summary>
-        <span>Fine-tune</span>
+        <span>{t('Fine-tune', '微调')}</span>
         <span className="fine-tune-summary">{summary}</span>
       </summary>
       <div className="fine-tune-body">
         {children}
         {onReset && (
           <button type="button" className="fine-tune-reset" onClick={onReset}>
-            {resetLabel ?? 'Back to the preset'}
+            {resetLabel ?? t('Back to the preset', '恢复预设')}
           </button>
         )}
       </div>

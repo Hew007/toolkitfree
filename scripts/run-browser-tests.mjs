@@ -12,6 +12,7 @@ const smokeOnly = process.argv.includes('--smoke');
 const idPhotoOnly = process.argv.includes('--id-photo');
 const animationOnly = process.argv.includes('--animation');
 const pdfPagesOnly = process.argv.includes('--pdf-pages');
+const chineseOnly = process.argv.includes('--chinese');
 const collageOnly = process.argv.includes('--collage');
 const secondaryOnly = process.argv.includes('--secondary');
 const performanceOnly = process.argv.includes('--performance');
@@ -39,24 +40,26 @@ const fullTests = [
 const onlyArg = process.argv.find((arg) => arg.startsWith('--only='))?.split('=')[1];
 const tests = onlyArg
   ? [onlyArg]
-  : secondaryOnly
-    ? ['validate-secondary-tools-browser.mjs']
-    : performanceOnly
-      ? ['validate-performance-browser.mjs']
-      : collageOnly
-        ? ['validate-collage-browser.mjs']
-        : pdfPagesOnly
-          ? ['validate-pdf-page-tools-browser.mjs']
-          : animationOnly
-            ? ['validate-animation-converter-browser.mjs']
-            : idPhotoOnly
-              ? ['validate-id-photo-browser.mjs']
-              : smokeOnly
-                ? [
-                    'validate-converter-browser.mjs',
-                    'validate-responsive-accessibility-browser.mjs',
-                  ]
-                : fullTests;
+  : chineseOnly
+    ? ['validate-chinese-tools-browser.mjs', 'validate-chinese-special-tools-browser.mjs']
+    : secondaryOnly
+      ? ['validate-secondary-tools-browser.mjs']
+      : performanceOnly
+        ? ['validate-performance-browser.mjs']
+        : collageOnly
+          ? ['validate-collage-browser.mjs']
+          : pdfPagesOnly
+            ? ['validate-pdf-page-tools-browser.mjs']
+            : animationOnly
+              ? ['validate-animation-converter-browser.mjs']
+              : idPhotoOnly
+                ? ['validate-id-photo-browser.mjs']
+                : smokeOnly
+                  ? [
+                      'validate-converter-browser.mjs',
+                      'validate-responsive-accessibility-browser.mjs',
+                    ]
+                  : fullTests;
 
 function runNode(args, env = process.env) {
   return new Promise((resolve, reject) => {
@@ -173,20 +176,22 @@ console.log(
     scripts: tests.length,
     baseUrl,
     browser: browserName,
-    mode: secondaryOnly
-      ? 'secondary'
-      : performanceOnly
-        ? 'performance'
-        : collageOnly
-          ? 'collage'
-          : pdfPagesOnly
-            ? 'pdf-pages'
-            : animationOnly
-              ? 'animation'
-              : idPhotoOnly
-                ? 'id-photo'
-                : smokeOnly
-                  ? 'smoke'
-                  : 'full',
+    mode: chineseOnly
+      ? 'chinese'
+      : secondaryOnly
+        ? 'secondary'
+        : performanceOnly
+          ? 'performance'
+          : collageOnly
+            ? 'collage'
+            : pdfPagesOnly
+              ? 'pdf-pages'
+              : animationOnly
+                ? 'animation'
+                : idPhotoOnly
+                  ? 'id-photo'
+                  : smokeOnly
+                    ? 'smoke'
+                    : 'full',
   })
 );

@@ -1,3 +1,5 @@
+import { useI18n, withLocale } from '../i18n/react';
+import { imageText, imageChoices } from '../i18n/image-messages';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import FileUploader from './FileUploader';
@@ -174,7 +176,8 @@ interface Props {
   defaultCols?: number;
 }
 
-export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
+function ImageSplitter({ defaultRows, defaultCols }: Props) {
+  const { locale } = useI18n();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
@@ -630,7 +633,8 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
       <div className="splitter-cut-group">
         <div className="splitter-cut-group-head">
           <h4>
-            {noun} lines ({cuts.length})
+            {imageText(noun, locale)} {imageText(' lines (', locale)}
+            {cuts.length})
           </h4>
           <button
             type="button"
@@ -638,11 +642,14 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
             onClick={() => addCut(axis)}
             disabled={rows * cols >= MAX_SPLIT_TILES}
           >
-            Add line
+            {imageText('Add line', locale)}
           </button>
         </div>
         {cuts.length === 0 ? (
-          <p className="splitter-cut-empty">No {noun.toLowerCase()} lines yet.</p>
+          <p className="splitter-cut-empty">
+            {imageText('No ', locale)}
+            {imageText(noun.toLowerCase(), locale)} {imageText(' lines yet.', locale)}
+          </p>
         ) : (
           <ul className="splitter-cut-list">
             {cuts.map((cut, index) => (
@@ -650,7 +657,10 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
                 <div className="splitter-cut-row">
                   <NumberField
                     id={`splitter-${axis}-cut-${index}`}
-                    label={`${noun} line ${index + 1} (px from ${axis === 'x' ? 'left' : 'top'})`}
+                    label={imageText(
+                      `${noun} line ${index + 1} (px from ${axis === 'x' ? 'left' : 'top'})`,
+                      locale
+                    )}
                     value={cut}
                     min={0}
                     max={total}
@@ -660,9 +670,9 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
                     type="button"
                     className="btn btn-secondary btn-compact"
                     onClick={() => removeCut(axis, index)}
-                    aria-label={`Remove ${noun.toLowerCase()} line ${index + 1}`}
+                    aria-label={imageText(`Remove ${noun.toLowerCase()} line ${index + 1}`, locale)}
                   >
-                    Remove
+                    {imageText('Remove', locale)}
                   </button>
                 </div>
               </li>
@@ -686,7 +696,7 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
         <FileUploader
           accept="image/jpeg,image/png,image/webp"
           multiple={false}
-          singleFileLabel="an image"
+          singleFileLabel={imageText('an image', locale)}
           budgetProfile="splitter"
           onFilesSelected={handleFiles}
         />
@@ -697,11 +707,14 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
               <div className="file-item-name">{file.name}</div>
               <div className="file-item-size">
                 {formatSize(file.size)}
-                {dimensions ? ` — ${dimensions.width} × ${dimensions.height}px` : ''}
+                {imageText(
+                  dimensions ? ` — ${dimensions.width} × ${dimensions.height}px` : '',
+                  locale
+                )}
               </div>
             </div>
             <button type="button" className="btn btn-secondary" onClick={handleRemove}>
-              Choose a different image
+              {imageText('Choose a different image', locale)}
             </button>
           </div>
 
@@ -720,7 +733,7 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
                 src={previewUrl}
                 width={dimensions.width}
                 height={dimensions.height}
-                alt={`Preview of ${file.name} with split lines`}
+                alt={imageText(`Preview of ${file.name} with split lines`, locale)}
               />
 
               {layout?.tiles.map((tile) => (
@@ -745,7 +758,10 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
                   style={{ left: `${((cut + gutter / 2) / dimensions.width) * 100}%` }}
                   onPointerDown={startDrag('x', index)}
                   onKeyDown={handleKeyDown('x', index)}
-                  aria-label={`Vertical line ${index + 1} at ${cut} pixels. Use the arrow keys to move it.`}
+                  aria-label={imageText(
+                    `Vertical line ${index + 1} at ${cut} pixels. Use the arrow keys to move it.`,
+                    locale
+                  )}
                 >
                   <span aria-hidden="true" />
                 </button>
@@ -759,7 +775,10 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
                   style={{ top: `${((cut + gutter / 2) / dimensions.height) * 100}%` }}
                   onPointerDown={startDrag('y', index)}
                   onKeyDown={handleKeyDown('y', index)}
-                  aria-label={`Horizontal line ${index + 1} at ${cut} pixels. Use the arrow keys to move it.`}
+                  aria-label={imageText(
+                    `Horizontal line ${index + 1} at ${cut} pixels. Use the arrow keys to move it.`,
+                    locale
+                  )}
                 >
                   <span aria-hidden="true" />
                 </button>
@@ -768,29 +787,40 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
           )}
 
           <p className="splitter-hint">
-            Drag a line to move it, or type an exact position below. Arrow keys nudge a focused line
-            by one pixel, Shift and an arrow key by ten.
+            {imageText(
+              'Drag a line to move it, or type an exact position below. Arrow keys nudge a focused line by one pixel, Shift and an arrow key by ten.',
+              locale
+            )}
           </p>
 
           {preview.message && (
             <div className="status status-error" role="alert">
-              {preview.message}
+              {imageText(preview.message, locale)}
             </div>
           )}
 
           {layout && (
             <p className="splitter-hint" data-split-summary>
-              {tileCount} piece{tileCount === 1 ? '' : 's'} — {cols} across, {rows} down.
-              {outputType === 'image/jpeg' &&
-                ' JPG output is re-encoded, which adds a second round of lossy compression.'}
+              {tileCount} {imageText(' piece', locale)}
+              {imageText(tileCount === 1 ? '' : 's', locale)} — {cols}{' '}
+              {imageText(' across, ', locale)}
+              {rows} {imageText(' down.', locale)}
+              {imageText(
+                outputType === 'image/jpeg' &&
+                  ' JPG output is re-encoded, which adds a second round of lossy compression.',
+                locale
+              )}
             </p>
           )}
 
           <div className="tool-controls">
             <ToolPresets
-              legend="Start from an even grid"
-              help="A grid sets the split lines for you. Every line stays draggable, and each value is in Fine-tune below."
-              presets={GRID_PRESETS}
+              legend={imageText('Start from an even grid', locale)}
+              help={imageText(
+                'A grid sets the split lines for you. Every line stays draggable, and each value is in Fine-tune below.',
+                locale
+              )}
+              presets={imageChoices(GRID_PRESETS, locale)}
               isActive={(preset) => {
                 const match = PRESETS.find((entry) => entry.id === preset.id);
                 return match !== undefined && rows === match.rows && cols === match.cols;
@@ -804,7 +834,7 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
             {/* The shared group box, so this row carries no outer margin of its own
                 and `.tool-controls` alone decides the spacing between the controls. */}
             <fieldset className="tool-chip-group">
-              <legend>Place the lines for me</legend>
+              <legend>{imageText('Place the lines for me', locale)}</legend>
               <div className="splitter-preset-row">
                 <button
                   type="button"
@@ -813,41 +843,44 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
                   disabled={detecting}
                   data-detect-seams
                 >
-                  {detecting ? 'Looking for seams...' : 'Detect split lines'}
+                  {imageText(detecting ? 'Looking for seams...' : 'Detect split lines', locale)}
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => applyEvenGrid(rows, cols)}
                 >
-                  Distribute evenly
+                  {imageText('Distribute evenly', locale)}
                 </button>
               </div>
               <p className="tool-hint">
-                Detect split lines looks for the plain strips that separate the pictures in a
-                stitched image and puts a line in each one. It cannot find a seam that is not there,
-                and every line it places stays editable. Distribute evenly respaces the lines you
-                already have.
+                {imageText(
+                  'Detect split lines looks for the plain strips that separate the pictures in a stitched image and puts a line in each one. It cannot find a seam that is not there, and every line it places stays editable. Distribute evenly respaces the lines you already have.',
+                  locale
+                )}
               </p>
               {detection && (
                 <p className="tool-hint" data-seam-detection role="status">
-                  {detection}
+                  {imageText(detection, locale)}
                 </p>
               )}
             </fieldset>
 
             <FineTune
-              summary={fineTuneSummary}
+              summary={imageText(fineTuneSummary, locale)}
               onReset={
                 tuned && appliedPreset
                   ? () => applyEvenGrid(appliedPreset.rows, appliedPreset.cols, appliedPreset)
                   : undefined
               }
-              resetLabel={appliedPreset ? `Back to the ${appliedPreset.label} grid` : undefined}
+              resetLabel={imageText(
+                appliedPreset ? `Back to the ${appliedPreset.label} grid` : undefined,
+                locale
+              )}
             >
               <NumberField
                 id="splitter-rows"
-                label="Rows"
+                label={imageText('Rows', locale)}
                 value={rows}
                 min={1}
                 max={Math.floor(MAX_SPLIT_TILES / cols)}
@@ -856,7 +889,7 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
               />
               <NumberField
                 id="splitter-cols"
-                label="Columns"
+                label={imageText('Columns', locale)}
                 value={cols}
                 min={1}
                 max={Math.floor(MAX_SPLIT_TILES / rows)}
@@ -865,11 +898,14 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
               />
               <NumberField
                 id="splitter-margin"
-                label="Outer margin (px)"
+                label={imageText('Outer margin (px)', locale)}
                 value={margin}
                 min={0}
                 steppers
-                hint="Pixels skipped at every outside edge, for a picture that already has a border."
+                hint={imageText(
+                  'Pixels skipped at every outside edge, for a picture that already has a border.',
+                  locale
+                )}
                 onCommit={(next) => {
                   setMargin(next);
                   setError(null);
@@ -878,11 +914,14 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
               />
               <NumberField
                 id="splitter-gutter"
-                label="Discard at each line (px)"
+                label={imageText('Discard at each line (px)', locale)}
                 value={gutter}
                 min={0}
                 steppers
-                hint="Each line drops a band this wide instead of cutting at a single point."
+                hint={imageText(
+                  'Each line drops a band this wide instead of cutting at a single point.',
+                  locale
+                )}
                 onCommit={(next) => {
                   setGutter(next);
                   setError(null);
@@ -891,8 +930,11 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
               />
               <FineTuneField
                 htmlFor="splitter-format"
-                label="Output format"
-                hint="Same as input keeps PNG and WebP sources lossless; a JPG source stays JPG."
+                label={imageText('Output format', locale)}
+                hint={imageText(
+                  'Same as input keeps PNG and WebP sources lossless; a JPG source stays JPG.',
+                  locale
+                )}
               >
                 <select
                   id="splitter-format"
@@ -901,7 +943,7 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
                 >
                   {OUTPUT_FORMATS.map((format) => (
                     <option key={format.value} value={format.value}>
-                      {format.label}
+                      {imageText(format.label, locale)}
                     </option>
                   ))}
                 </select>
@@ -909,11 +951,14 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
             </FineTune>
 
             <ToolRunNote busy={splitting}>
-              {splitting
-                ? 'Cutting the pieces in your browser…'
-                : elapsedMs !== null
-                  ? `Cut ${results.length} piece${results.length === 1 ? '' : 's'} in your browser in ${formatElapsed(elapsedMs)}. The image was not uploaded for processing.`
-                  : 'The pieces follow the split lines above. The image is not uploaded for processing.'}
+              {imageText(
+                splitting
+                  ? 'Cutting the pieces in your browser…'
+                  : elapsedMs !== null
+                    ? `Cut ${results.length} piece${results.length === 1 ? '' : 's'} in your browser in ${formatElapsed(elapsedMs)}. The image was not uploaded for processing.`
+                    : 'The pieces follow the split lines above. The image is not uploaded for processing.',
+                locale
+              )}
             </ToolRunNote>
           </div>
 
@@ -926,17 +971,17 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
 
       {splitting && (
         <div className="visually-hidden" role="status" aria-live="polite">
-          Splitting the image.
+          {imageText('Splitting the image.', locale)}
         </div>
       )}
       {detecting && (
         <div className="visually-hidden" role="status" aria-live="polite">
-          Looking for the seams.
+          {imageText('Looking for the seams.', locale)}
         </div>
       )}
       {error && (
         <div className="status status-error" role="alert">
-          {error}
+          {imageText(error, locale)}
         </div>
       )}
 
@@ -962,3 +1007,5 @@ export default function ImageSplitter({ defaultRows, defaultCols }: Props) {
     </div>
   );
 }
+
+export default withLocale(ImageSplitter);

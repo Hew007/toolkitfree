@@ -1,3 +1,5 @@
+import { useOtherI18n } from '../i18n/other-messages';
+import { withLocale } from '../i18n/react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import FineTune from './FineTune';
@@ -210,7 +212,8 @@ function renderPhotoCanvas(
   return canvas;
 }
 
-export default function IdPhotoMaker() {
+function IdPhotoMaker() {
+  const { tr, choices, node, errorText } = useOtherI18n();
   const urls = useObjectUrlRegistry();
   const [file, setFile] = useState<File | null>(null);
   // Identifies the chosen file inside the run keys. A name and size would collide
@@ -504,7 +507,7 @@ export default function IdPhotoMaker() {
     >
       {busy && (
         <div className="visually-hidden" role="status" aria-live="polite">
-          Preparing your photo and print sheet.
+          {tr('Preparing your photo and print sheet.')}
         </div>
       )}
       {!imageUrl || !source || !crop ? (
@@ -530,38 +533,50 @@ export default function IdPhotoMaker() {
             <div className="tool-controls">
               <ToolChoices
                 name="id-photo-document"
-                legend="What is the photo for?"
-                help="Choose a document and the size follows. Every exact value is still below."
-                choices={DOCUMENT_CHOICES}
+                legend={tr('What is the photo for?')}
+                help={tr(
+                  'Choose a document and the size follows. Every exact value is still below.'
+                )}
+                choices={choices(DOCUMENT_CHOICES)}
                 value={settings.presetId}
                 onChange={(choice) => applySettings(settingsForPreset(choice.id))}
               />
-              <div className="status status-warning">{preset.warning}</div>
+              <div className="status status-warning">{node(preset.warning)}</div>
               {pixelSize ? (
                 <p data-testid="id-photo-output-size" style={{ margin: 0, color: '#4a463e' }}>
-                  Digital photo output:{' '}
+                  {tr('Digital photo output:')}
+                  {node(' ')}
                   <strong>
-                    {pixelSize.width} × {pixelSize.height}px
-                  </strong>{' '}
-                  at {settings.dpi} DPI. The print sheet is a PNG; choose matching paper and scaling
-                  settings in your print dialog.
+                    {node(pixelSize.width)} × {node(pixelSize.height)}
+                    {tr('px')}
+                  </strong>
+                  {node(' ')}
+                  {tr('at ')}
+                  {node(settings.dpi)}{' '}
+                  {tr(
+                    ' DPI. The print sheet is a PNG; choose matching paper and scaling settings in your print dialog.'
+                  )}
                 </p>
               ) : (
-                <p className="status status-error">Enter positive width, height, and DPI values.</p>
+                <p className="status status-error">
+                  {tr('Enter positive width, height, and DPI values.')}
+                </p>
               )}
               <FineTune
-                summary={fineTuneSummary}
+                summary={tr(fineTuneSummary)}
                 onReset={tuned ? () => applySettings(presetDefaults) : undefined}
-                resetLabel={`Back to the ${preset.label} preset`}
+                resetLabel={tr(`Back to the ${preset.label} preset`)}
               >
                 <IdPhotoOptions settings={settings} onChange={applySettings} />
               </FineTune>
               <ToolRunNote busy={busy}>
-                {busy
-                  ? 'Rendering in your browser…'
-                  : photoRun.status === 'ready' && sheetRun.status === 'ready'
-                    ? `Photo rendered in ${formatElapsed(photoRun.elapsedMs)} and the print sheet in ${formatElapsed(sheetRun.elapsedMs)}, both in your browser. Nothing was uploaded.`
-                    : 'Both files follow the frame and the settings above. Nothing is uploaded.'}
+                {node(
+                  busy
+                    ? 'Rendering in your browser…'
+                    : photoRun.status === 'ready' && sheetRun.status === 'ready'
+                      ? `Photo rendered in ${formatElapsed(photoRun.elapsedMs)} and the print sheet in ${formatElapsed(sheetRun.elapsedMs)}, both in your browser. Nothing was uploaded.`
+                      : 'Both files follow the frame and the settings above. Nothing is uploaded.'
+                )}
               </ToolRunNote>
             </div>
             {/*
@@ -572,7 +587,7 @@ export default function IdPhotoMaker() {
             */}
             <div>
               <button type="button" className="btn btn-secondary" onClick={reset}>
-                Choose another photo
+                {tr('Choose another photo')}
               </button>
             </div>
           </div>
@@ -580,25 +595,31 @@ export default function IdPhotoMaker() {
       )}
       {(error || failures.length > 0) && (
         <div className="status status-error" role="alert" style={{ marginTop: '1rem' }}>
-          {[error, ...failures].filter(Boolean).join(' ')}
+          {[error, ...failures].filter(Boolean).map(errorText).join(' ')}
         </div>
       )}
       {(photo || printSheet) && (
         <section
-          aria-label="Prepared files"
+          aria-label={tr('Prepared files')}
           style={{ marginTop: '1.5rem', display: 'grid', gap: '1rem' }}
         >
-          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Prepared files</h2>
+          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>{tr('Prepared files')}</h2>
           {[photo, printSheet]
             .filter((result): result is DownloadResult => Boolean(result))
             .map((result) => (
               <div key={result.name} className="result-item" data-id-photo-result={result.name}>
                 <div className="result-info">
-                  <img src={result.url} alt={`${result.name} preview`} className="result-preview" />
+                  <img
+                    src={result.url}
+                    alt={tr(`${result.name} preview`)}
+                    className="result-preview"
+                  />
                   <div>
                     <div className="file-item-name">{result.name}</div>
                     <div className="file-item-size">
-                      {result.width} × {result.height}px · {formatSize(result.size)}
+                      {node(result.width)} × {node(result.height)}
+                      {tr('px · ')}
+                      {node(formatSize(result.size))}
                     </div>
                   </div>
                 </div>
@@ -607,7 +628,7 @@ export default function IdPhotoMaker() {
                   className="btn btn-primary"
                   onClick={() => downloadUrl(result.url, result.name)}
                 >
-                  Download
+                  {tr('Download')}
                 </button>
               </div>
             ))}
@@ -616,3 +637,5 @@ export default function IdPhotoMaker() {
     </div>
   );
 }
+
+export default withLocale(IdPhotoMaker);

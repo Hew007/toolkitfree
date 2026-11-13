@@ -8,7 +8,7 @@ ToolkitFree is a free, local-first processing tools website. The core product pr
 
 > Your files never leave your device.
 
-Most tools run entirely in the browser with Canvas API, WebAssembly, or client-side JavaScript libraries. The site targets a global English-speaking audience first; multilingual expansion can come later.
+Most tools run entirely in the browser with Canvas API, WebAssembly, or client-side JavaScript libraries. 英文保留原有路由，简体中文版使用 `/zh/`；任何用户界面变更都应同时维护两种语言。
 
 ## Current Tool Set
 
@@ -57,6 +57,7 @@ Use npm for this project.
 - `npm run test` — unit and algorithm validations
 - `npm run check` — full local quality gate
 - `npm run test:e2e` — full Chrome browser regression
+- `npm run test:e2e:zh` — 14 个中文工具的处理、下载与异常反馈验收
 - `npm run test:e2e:edge` — Edge smoke regression
 
 Use `C:\Users\Hew\AppData\Local\OpenAI\Codex\bin\node.exe` directly if `node` or `npm` is not reliably exposed in the current shell.
@@ -184,8 +185,8 @@ Important directories:
 
 以下一律保持英文，不在此规则范围内：
 
-- **网站上任何面向访客的文案** —— 页面内容、按钮文字、错误提示、SEO 元数据、`llms.txt`。站点面向
-  英语受众（见"Product and SEO Conventions"）。
+- **网站上面向访客的文案** —— 英文页面及交互保持英文，`/zh/` 页面及交互使用简体中文；
+  页面内容、按钮、错误、无障碍标签和 SEO 元数据均须与当前语言一致。`llms.txt` 同时收录两语页面。
 - **代码注释和标识符** —— 整个代码库的注释都是英文，中途混入中文只会让它前后不一致。
 - **提交信息、PR 标题与正文** —— 这些活在 GitHub 上，和代码一起被阅读。
 
@@ -233,6 +234,9 @@ degrade silently, and the rest are easy to forget.
    JSON-LD must match in the same order. Render both from one array.
 10. `lastModified` must not predate the page source's last commit date, or
     `validate-content-freshness` fails.
+11. 同步添加中文内容与 `/zh/` 对应路由，校验双向语言切换、canonical、hreflang 与 sitemap。
+    React island 必须显式传入 `locale`；共享控件使用 island 内的语言上下文。不得依靠浏览器
+    DOM 替换翻译页面，不得翻译用户输入、文件名、格式标识或算法参数。
 
 Enforced automatically: llms coverage of every indexable route, sitemap parity,
 canonical form, title length, Open Graph presence, FAQ/JSON-LD parity, tool

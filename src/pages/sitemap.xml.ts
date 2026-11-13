@@ -1,4 +1,6 @@
 import type { APIRoute } from 'astro';
+import { CHINESE_CONTENT_DATE } from '../i18n/pages';
+import { localizePath } from '../i18n/locale';
 import { guideSitemapEntries } from '../data/guide-registry';
 import { getIndexableToolPaths, toPublicUrl } from '../data/tool-registry';
 
@@ -16,7 +18,14 @@ const staticPages = [
 ];
 
 export const GET: APIRoute = () => {
-  const pages = [...staticPages, ...getIndexableToolPaths()];
+  const englishPages = [...staticPages, ...getIndexableToolPaths()];
+  const pages = [
+    ...englishPages,
+    ...englishPages.map(({ path }) => ({
+      path: localizePath(path, 'zh'),
+      lastModified: CHINESE_CONTENT_DATE,
+    })),
+  ];
   const urls = pages.map(({ path }) => path);
   if (new Set(urls).size !== urls.length) {
     throw new Error('Duplicate URL detected while generating sitemap.');

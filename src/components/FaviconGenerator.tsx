@@ -1,3 +1,5 @@
+import { useOtherI18n } from '../i18n/other-messages';
+import { withLocale } from '../i18n/react';
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import { ToolChoices, type ToolChoice } from './ToolChoices';
@@ -182,7 +184,8 @@ function buildHtmlSnippet(icons: readonly IconSpec[], hasManifest: boolean): str
   return lines.join('\n');
 }
 
-export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
+function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
+  const { tr, node, choices, errorText, locale } = useOtherI18n();
   const [file, setFile] = useState<File | null>(null);
   const [fileId, setFileId] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -423,7 +426,7 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
             {previewUrl && (
               <img
                 src={previewUrl}
-                alt="Source"
+                alt={tr('Source')}
                 style={{
                   width: 80,
                   height: 80,
@@ -436,7 +439,7 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
             <div>
               <div style={{ fontWeight: 500 }}>{file.name}</div>
               <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
-                {formatSize(file.size)}
+                {node(formatSize(file.size))}
               </div>
             </div>
             <button
@@ -453,27 +456,27 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
                 padding: '0 0.25rem',
               }}
             >
-              Remove
+              {tr('Remove')}
             </button>
           </div>
 
           <div className="tool-controls">
             <ToolChoices
               name="favicon-size-set"
-              legend="Which sizes do you need?"
-              help="Choose a set and the icons follow. Every size is still listed below."
-              choices={SIZE_SET_CHOICES}
+              legend={tr('Which sizes do you need?')}
+              help={tr('Choose a set and the icons follow. Every size is still listed below.')}
+              choices={choices(SIZE_SET_CHOICES)}
               value={sizeSetId}
               onChange={(choice) => handleSizeSet(SIZE_SET_BY_ID[choice.id])}
             />
 
             <FineTune
-              summary={fineTuneSummary}
+              summary={tr(fineTuneSummary)}
               onReset={tuned ? () => handleSizeSet(sizeSet) : undefined}
-              resetLabel={`Back to the ${sizeSet.label} set`}
+              resetLabel={tr(`Back to the ${sizeSet.label} set`)}
             >
               <fieldset className="tool-chip-group">
-                <legend>Sizes to generate</legend>
+                <legend>{tr('Sizes to generate')}</legend>
                 <div style={{ display: 'grid', gap: '0.25rem' }}>
                   {ICON_SIZES.map((icon) => (
                     <label
@@ -496,30 +499,35 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
                         style={{ width: 18, height: 18, flexShrink: 0 }}
                       />
                       <span>
-                        {icon.size}x{icon.size} — {icon.role} ({icon.name})
+                        {node(icon.size)}
+                        {tr('x')}
+                        {node(icon.size)} — {node(icon.role)} ({icon.name})
                       </span>
                     </label>
                   ))}
                 </div>
               </fieldset>
               <p className="tool-hint">
-                site.webmanifest is included whenever a 192 or 512 px icon is selected.
+                {tr('site.webmanifest is included whenever a 192 or 512 px icon is selected.')}
               </p>
             </FineTune>
 
             <ToolRunNote busy={busy}>
-              {busy
-                ? 'Rendering icons in your browser…'
-                : selectedIcons.length === 0
-                  ? 'Select at least one size to generate icons.'
-                  : elapsedMs !== null
-                    ? `Rendered ${icons.length} icon${icons.length === 1 ? '' : 's'} in your browser in ${(elapsedMs / 1000).toFixed(2)}s. Nothing was uploaded.`
-                    : 'Results follow the settings above. Nothing is uploaded.'}
+              {node(
+                busy
+                  ? 'Rendering icons in your browser…'
+                  : selectedIcons.length === 0
+                    ? 'Select at least one size to generate icons.'
+                    : elapsedMs !== null
+                      ? `Rendered ${icons.length} icon${icons.length === 1 ? '' : 's'} in your browser in ${(elapsedMs / 1000).toFixed(2)}s. Nothing was uploaded.`
+                      : 'Results follow the settings above. Nothing is uploaded.'
+              )}
             </ToolRunNote>
 
             <p className="tool-hint">
-              Non-square images are centered with transparent padding. This tool creates PNG icons,
-              not an .ico file.
+              {tr(
+                'Non-square images are centered with transparent padding. This tool creates PNG icons, not an .ico file.'
+              )}
             </p>
           </div>
         </div>
@@ -527,12 +535,12 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
 
       {busy && (
         <div className="visually-hidden" role="status" aria-live="polite">
-          Generating favicon files.
+          {tr('Generating favicon files.')}
         </div>
       )}
       {error && (
         <div className="status status-error" role="alert">
-          {error}
+          {errorText(error)}
         </div>
       )}
 
@@ -542,7 +550,7 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
 
       {icons.length > 0 && (
         <div ref={resultsRef} style={{ marginTop: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Generated Icons</h3>
+          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>{tr('Generated Icons')}</h3>
           {/* Bottom-aligned: the previews range from 16 px to 80 px tall, and without
               this their size captions sit at five different heights. */}
           <div
@@ -563,7 +571,7 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
               >
                 <img
                   src={icon.url}
-                  alt={icon.name}
+                  alt={tr(icon.name)}
                   style={{
                     width: Math.min(icon.size, 80),
                     height: Math.min(icon.size, 80),
@@ -580,7 +588,9 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
                     marginTop: '0.25rem',
                   }}
                 >
-                  {icon.size}x{icon.size}
+                  {node(icon.size)}
+                  {tr('x')}
+                  {node(icon.size)}
                 </div>
               </div>
             ))}
@@ -593,11 +603,12 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
           >
             <div className="result-info">
               <div>
-                <div className="file-item-name">favicons.zip</div>
+                <div className="file-item-name">{tr('favicons.zip')}</div>
                 <div className="file-item-size">
-                  {icons.length} icon{icons.length === 1 ? '' : 's'}
-                  {manifestJson ? ' + webmanifest' : ''}
-                  {zipSize > 0 ? ` — ${formatSize(zipSize)}` : ''}
+                  {node(icons.length)} {tr(' icon')}
+                  {locale === 'en' && icons.length !== 1 ? 's' : ''}
+                  {node(manifestJson ? ' + webmanifest' : '')}
+                  {node(zipSize > 0 ? ` — ${formatSize(zipSize)}` : '')}
                 </div>
               </div>
             </div>
@@ -607,12 +618,12 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
               onClick={handleDownloadZip}
               disabled={zipBusy}
             >
-              {zipBusy ? 'Packaging…' : 'Download ZIP'}
+              {node(zipBusy ? 'Packaging…' : 'Download ZIP')}
             </button>
           </div>
 
           <div style={{ marginTop: '1.5rem' }}>
-            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>HTML Code</h3>
+            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>{tr('HTML Code')}</h3>
             <p
               style={{
                 fontSize: '0.8125rem',
@@ -620,7 +631,8 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
                 marginBottom: '0.5rem',
               }}
             >
-              Add this to your <code>&lt;head&gt;</code> section:
+              {tr('Add this to your ')}
+              <code>{'<head>'}</code> {tr(' section:')}
             </p>
             <pre
               style={{
@@ -642,7 +654,7 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
               onClick={() => navigator.clipboard.writeText(htmlSnippet)}
               style={{ marginTop: '0.5rem', fontSize: '0.8125rem', padding: '0.375rem 0.75rem' }}
             >
-              Copy HTML
+              {tr('Copy HTML')}
             </button>
           </div>
         </div>
@@ -650,3 +662,5 @@ export default function FaviconGenerator({ defaultSizeSet = 'all' }: Props) {
     </div>
   );
 }
+
+export default withLocale(FaviconGenerator);

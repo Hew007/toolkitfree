@@ -1,3 +1,5 @@
+import { useI18n, withLocale } from '../i18n/react';
+import { imageText, imageChoices } from '../i18n/image-messages';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import FileUploader from './FileUploader';
@@ -233,7 +235,8 @@ const layoutChoices: readonly {
   },
 ];
 
-export default function ImageCollage() {
+function ImageCollage() {
+  const { locale } = useI18n();
   const [items, setItems] = useState<CollageItem[]>([]);
   const [layoutChoice, setLayoutChoice] = useState<LayoutChoice>('auto-grid');
   const [columns, setColumns] = useState(DEFAULT_COLUMNS);
@@ -640,12 +643,12 @@ export default function ImageCollage() {
       />
       {loading && (
         <p className="collage-loading" role="status">
-          Opening images locally…
+          {imageText('Opening images locally…', locale)}
         </p>
       )}
       {error && (
         <div className="error-message collage-error" role="alert">
-          {error}
+          {imageText(error, locale)}
         </div>
       )}
 
@@ -653,11 +656,16 @@ export default function ImageCollage() {
         <div className="collage-builder">
           <div className="collage-status-bar">
             <p>
-              <strong>{items.length} images ready</strong>
-              <span>Auto recommends {recommendedLayoutLabel.toLowerCase()}.</span>
+              <strong>
+                {items.length} {imageText(' images ready', locale)}
+              </strong>
+              <span>
+                {imageText('Auto recommends ', locale)}
+                {imageText(recommendedLayoutLabel.toLowerCase(), locale)}.
+              </span>
             </p>
             <button type="button" className="collage-clear" onClick={clearAll}>
-              Start over
+              {imageText('Start over', locale)}
             </button>
           </div>
 
@@ -665,17 +673,22 @@ export default function ImageCollage() {
             <section className="collage-preview-panel" aria-labelledby="collage-preview-title">
               <div className="collage-panel-heading">
                 <div>
-                  <span className="collage-eyebrow">Live preview</span>
-                  <h2 id="collage-preview-title">Your collage</h2>
+                  <span className="collage-eyebrow">{imageText('Live preview', locale)}</span>
+                  <h2 id="collage-preview-title">{imageText('Your collage', locale)}</h2>
                 </div>
-                {layoutSummary && <span className="collage-output-size">{layoutSummary}</span>}
+                {layoutSummary && (
+                  <span className="collage-output-size">{imageText(layoutSummary, locale)}</span>
+                )}
               </div>
               <div className="collage-canvas-stage">
                 <canvas
                   ref={canvasRef}
                   data-collage-preview
                   className={previewDraggedId ? 'is-reordering' : undefined}
-                  aria-label="Image collage preview. Drag a picture onto another position to swap them."
+                  aria-label={imageText(
+                    'Image collage preview. Drag a picture onto another position to swap them.',
+                    locale
+                  )}
                   onPointerDown={startPreviewDrag}
                   onPointerMove={movePreviewDrag}
                   onPointerUp={finishPreviewDrag}
@@ -684,25 +697,28 @@ export default function ImageCollage() {
                 />
               </div>
               <p className="collage-preview-help">
-                Drag a picture onto another position to swap them.
+                {imageText('Drag a picture onto another position to swap them.', locale)}
               </p>
             </section>
 
-            <aside className="collage-controls" aria-label="Collage settings">
+            <aside className="collage-controls" aria-label={imageText('Collage settings', locale)}>
               <div className="tool-controls">
                 <ToolChoices
                   name="collage-layout"
-                  legend="How should the images sit together?"
-                  help="Pick an arrangement and the collage follows. Every exact value stays in Fine-tune below."
-                  choices={layoutChipChoices}
+                  legend={imageText('How should the images sit together?', locale)}
+                  help={imageText(
+                    'Pick an arrangement and the collage follows. Every exact value stays in Fine-tune below.',
+                    locale
+                  )}
+                  choices={imageChoices(layoutChipChoices, locale)}
                   value={layoutChoice}
                   onChange={(choice) => setLayoutChoice(choice.id)}
                 />
 
                 <FineTune
-                  summary={fineTuneSummary}
+                  summary={imageText(fineTuneSummary, locale)}
                   onReset={tuned ? resetFineTune : undefined}
-                  resetLabel="Back to the recommended settings"
+                  resetLabel={imageText('Back to the recommended settings', locale)}
                 >
                   {/*
                    * Kept mounted and hidden rather than unmounted, so the panel
@@ -710,8 +726,8 @@ export default function ImageCollage() {
                    */}
                   <FineTuneField
                     htmlFor="collage-columns"
-                    label="Columns"
-                    hint="Used by the Grid arrangement."
+                    label={imageText('Columns', locale)}
+                    hint={imageText('Used by the Grid arrangement.', locale)}
                     hidden={layoutChoice !== 'columns'}
                   >
                     <NumberField
@@ -726,7 +742,10 @@ export default function ImageCollage() {
                     />
                   </FineTuneField>
 
-                  <FineTuneField htmlFor="collage-format" label="Output format">
+                  <FineTuneField
+                    htmlFor="collage-format"
+                    label={imageText('Output format', locale)}
+                  >
                     <select
                       id="collage-format"
                       value={format}
@@ -735,16 +754,21 @@ export default function ImageCollage() {
                         setTuned(true);
                       }}
                     >
-                      <option value="image/png">PNG — best quality</option>
-                      <option value="image/jpeg">JPG — smaller file</option>
-                      <option value="image/webp">WebP — modern and compact</option>
+                      <option value="image/png">{imageText('PNG — best quality', locale)}</option>
+                      <option value="image/jpeg">{imageText('JPG — smaller file', locale)}</option>
+                      <option value="image/webp">
+                        {imageText('WebP — modern and compact', locale)}
+                      </option>
                     </select>
                   </FineTuneField>
 
                   <FineTuneField
                     htmlFor="collage-quality"
-                    label={`Quality: ${quality}%`}
-                    hint="Applies to JPG and WebP. PNG is lossless, so it has no quality setting."
+                    label={imageText(`Quality: ${quality}%`, locale)}
+                    hint={imageText(
+                      'Applies to JPG and WebP. PNG is lossless, so it has no quality setting.',
+                      locale
+                    )}
                     hidden={format === 'image/png'}
                   >
                     <NumberField
@@ -759,7 +783,7 @@ export default function ImageCollage() {
                     />
                   </FineTuneField>
 
-                  <FineTuneField htmlFor="collage-fit" label="Image fit">
+                  <FineTuneField htmlFor="collage-fit" label={imageText('Image fit', locale)}>
                     <select
                       id="collage-fit"
                       value={fit}
@@ -768,15 +792,15 @@ export default function ImageCollage() {
                         setTuned(true);
                       }}
                     >
-                      <option value="contain">Show the full image</option>
-                      <option value="cover">Fill each tile</option>
-                      <option value="original">Keep original size</option>
+                      <option value="contain">{imageText('Show the full image', locale)}</option>
+                      <option value="cover">{imageText('Fill each tile', locale)}</option>
+                      <option value="original">{imageText('Keep original size', locale)}</option>
                     </select>
                   </FineTuneField>
 
                   <FineTuneField
                     htmlFor="collage-cell-width"
-                    label="Tile width"
+                    label={imageText('Tile width', locale)}
                     hidden={fit === 'original'}
                   >
                     <NumberField
@@ -793,7 +817,7 @@ export default function ImageCollage() {
 
                   <FineTuneField
                     htmlFor="collage-cell-height"
-                    label="Tile height"
+                    label={imageText('Tile height', locale)}
                     hidden={fit === 'original'}
                   >
                     <NumberField
@@ -808,7 +832,7 @@ export default function ImageCollage() {
                     />
                   </FineTuneField>
 
-                  <FineTuneField htmlFor="collage-gap" label="Gap">
+                  <FineTuneField htmlFor="collage-gap" label={imageText('Gap', locale)}>
                     <NumberField
                       id="collage-gap"
                       min={0}
@@ -821,7 +845,7 @@ export default function ImageCollage() {
                     />
                   </FineTuneField>
 
-                  <FineTuneField htmlFor="collage-margin" label="Outer margin">
+                  <FineTuneField htmlFor="collage-margin" label={imageText('Outer margin', locale)}>
                     <NumberField
                       id="collage-margin"
                       min={0}
@@ -834,7 +858,10 @@ export default function ImageCollage() {
                     />
                   </FineTuneField>
 
-                  <FineTuneField htmlFor="collage-radius" label="Corner radius">
+                  <FineTuneField
+                    htmlFor="collage-radius"
+                    label={imageText('Corner radius', locale)}
+                  >
                     <NumberField
                       id="collage-radius"
                       min={0}
@@ -847,7 +874,10 @@ export default function ImageCollage() {
                     />
                   </FineTuneField>
 
-                  <FineTuneField htmlFor="collage-background" label="Background">
+                  <FineTuneField
+                    htmlFor="collage-background"
+                    label={imageText('Background', locale)}
+                  >
                     <input
                       id="collage-background"
                       className="field-input"
@@ -863,11 +893,14 @@ export default function ImageCollage() {
                 </FineTune>
 
                 <ToolRunNote busy={busy}>
-                  {busy
-                    ? 'Building the collage file in your browser…'
-                    : output
-                      ? `Collage file ready${elapsedMs === null ? '' : ` in ${(elapsedMs / 1000).toFixed(2)}s`}. It is rebuilt whenever the layout, the order, or a setting changes.`
-                      : 'Results follow the settings above.'}
+                  {imageText(
+                    busy
+                      ? 'Building the collage file in your browser…'
+                      : output
+                        ? `Collage file ready${elapsedMs === null ? '' : ` in ${(elapsedMs / 1000).toFixed(2)}s`}. It is rebuilt whenever the layout, the order, or a setting changes.`
+                        : 'Results follow the settings above.',
+                    locale
+                  )}
                 </ToolRunNote>
               </div>
 
@@ -883,43 +916,48 @@ export default function ImageCollage() {
                   // dimming it in place.
                   style={output ? undefined : { opacity: 0.6, cursor: 'progress' }}
                 >
-                  Download collage
+                  {imageText('Download collage', locale)}
                 </button>
                 <span className="collage-download-meta">
-                  {formatLabel} · {output ? formatSize(output.size) : 'updating…'}
+                  {formatLabel} ·{' '}
+                  {imageText(output ? formatSize(output.size) : 'updating…', locale)}
                 </span>
               </div>
 
               <p className="collage-local-note">
-                Selected image content is processed locally and is not sent to ToolkitFree for
-                processing.
+                {imageText(
+                  'Selected image content is processed locally and is not sent to ToolkitFree for processing.',
+                  locale
+                )}
               </p>
             </aside>
           </div>
 
-          <details className="collage-image-order" aria-label="Collage images">
+          <details className="collage-image-order" aria-label={imageText('Collage images', locale)}>
             <summary>
-              <span>Reorder or remove images</span>
-              <small>Optional · drag directly on the preview for a quick swap</small>
+              <span>{imageText('Reorder or remove images', locale)}</span>
+              <small>
+                {imageText('Optional · drag directly on the preview for a quick swap', locale)}
+              </small>
             </summary>
             <p className="sr-only" aria-live="polite">
-              {sortAnnouncement}
+              {imageText(sortAnnouncement, locale)}
             </p>
             <ol>
               {items.map((item, index) => (
                 <li key={item.id}>
-                  <span className="collage-image-number">{index + 1}</span>
+                  <span className="collage-image-number">{imageText(index + 1, locale)}</span>
                   <span className="collage-image-info">
                     <strong>{item.file.name}</strong>
                     <small>
-                      {item.image.naturalWidth} × {item.image.naturalHeight}px ·{' '}
-                      {formatSize(item.file.size)}
+                      {item.image.naturalWidth} × {item.image.naturalHeight}
+                      {imageText('px ·', locale)} {formatSize(item.file.size)}
                     </small>
                   </span>
                   <span className="collage-image-actions">
                     <button
                       type="button"
-                      aria-label={`Move ${item.file.name} earlier`}
+                      aria-label={imageText(`Move ${item.file.name} earlier`, locale)}
                       onClick={() => moveItem(index, -1)}
                       disabled={index === 0}
                     >
@@ -927,14 +965,14 @@ export default function ImageCollage() {
                     </button>
                     <button
                       type="button"
-                      aria-label={`Move ${item.file.name} later`}
+                      aria-label={imageText(`Move ${item.file.name} later`, locale)}
                       onClick={() => moveItem(index, 1)}
                       disabled={index === items.length - 1}
                     >
                       →
                     </button>
                     <button type="button" className="is-remove" onClick={() => removeItem(item.id)}>
-                      Remove
+                      {imageText('Remove', locale)}
                     </button>
                   </span>
                 </li>
@@ -946,3 +984,5 @@ export default function ImageCollage() {
     </div>
   );
 }
+
+export default withLocale(ImageCollage);

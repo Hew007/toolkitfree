@@ -1,3 +1,4 @@
+import { useOtherI18n } from '../i18n/other-messages';
 import { useState, useEffect } from 'react';
 import { ToolChoices, type ToolChoice } from './ToolChoices';
 import {
@@ -82,6 +83,7 @@ function buildSmsString(phone: string, message: string): string {
 }
 
 export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInputFormProps) {
+  const { tr, choices } = useOtherI18n();
   // Text/URL
   const [text, setText] = useState('');
   // WiFi
@@ -158,8 +160,8 @@ export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInpu
       <div className="tool-controls">
         <ToolChoices
           name="qr-content-type"
-          legend="What are you encoding?"
-          choices={TYPE_CHOICES}
+          legend={tr('What are you encoding?')}
+          choices={choices(TYPE_CHOICES)}
           value={type}
           onChange={(choice) => onTypeChange(choice.id)}
         />
@@ -168,13 +170,13 @@ export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInpu
           {type === 'text' && (
             <div style={fieldGroup}>
               <label htmlFor="qr-text" style={labelStyle}>
-                Text or URL
+                {tr('Text or URL')}
               </label>
               <textarea
                 id="qr-text"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="Enter text or URL..."
+                placeholder={tr('Enter text or URL...')}
                 rows={3}
                 style={{ ...inputStyle, resize: 'vertical' }}
               />
@@ -186,7 +188,7 @@ export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInpu
             <>
               <div style={fieldGroup}>
                 <label htmlFor="qr-wifi-security" style={labelStyle}>
-                  Security
+                  {tr('Security')}
                 </label>
                 <select
                   id="qr-wifi-security"
@@ -194,35 +196,35 @@ export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInpu
                   onChange={(e) => setWifiSecurity(e.target.value)}
                   style={inputStyle}
                 >
-                  <option value="WPA">WPA/WPA2</option>
-                  <option value="WEP">WEP</option>
-                  <option value="none">None</option>
+                  <option value="WPA">{tr('WPA/WPA2')}</option>
+                  <option value="WEP">{tr('WEP')}</option>
+                  <option value="none">{tr('None')}</option>
                 </select>
               </div>
               <div style={fieldGroup}>
                 <label htmlFor="qr-wifi-ssid" style={labelStyle}>
-                  Network Name (SSID)
+                  {tr('Network Name (SSID)')}
                 </label>
                 <input
                   id="qr-wifi-ssid"
                   type="text"
                   value={wifiSsid}
                   onChange={(e) => setWifiSsid(e.target.value)}
-                  placeholder="MyWiFi"
+                  placeholder={tr('MyWiFi')}
                   style={inputStyle}
                 />
               </div>
               {wifiSecurity !== 'none' && (
                 <div style={fieldGroup}>
                   <label htmlFor="qr-wifi-password" style={labelStyle}>
-                    Password
+                    {tr('Password')}
                   </label>
                   <input
                     id="qr-wifi-password"
                     type="password"
                     value={wifiPassword}
                     onChange={(e) => setWifiPassword(e.target.value)}
-                    placeholder="WiFi password"
+                    placeholder={tr('WiFi password')}
                     style={inputStyle}
                   />
                 </div>
@@ -242,7 +244,7 @@ export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInpu
                     checked={wifiHidden}
                     onChange={(e) => setWifiHidden(e.target.checked)}
                   />
-                  Hidden network
+                  {tr('Hidden network')}
                 </label>
               </div>
             </>
@@ -256,92 +258,92 @@ export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInpu
             >
               <div>
                 <label htmlFor="qr-vcard-first" style={labelStyle}>
-                  First Name
+                  {tr('First Name')}
                 </label>
                 <input
                   id="qr-vcard-first"
                   type="text"
                   value={vFirst}
                   onChange={(e) => setVFirst(e.target.value)}
-                  placeholder="John"
+                  placeholder={tr('John')}
                   style={inputStyle}
                 />
               </div>
               <div>
                 <label htmlFor="qr-vcard-last" style={labelStyle}>
-                  Last Name
+                  {tr('Last Name')}
                 </label>
                 <input
                   id="qr-vcard-last"
                   type="text"
                   value={vLast}
                   onChange={(e) => setVLast(e.target.value)}
-                  placeholder="Doe"
+                  placeholder={tr('Doe')}
                   style={inputStyle}
                 />
               </div>
               <div>
                 <label htmlFor="qr-vcard-phone" style={labelStyle}>
-                  Phone
+                  {tr('Phone')}
                 </label>
                 <input
                   id="qr-vcard-phone"
                   type="tel"
                   value={vPhone}
                   onChange={(e) => setVPhone(e.target.value)}
-                  placeholder="+1234567890"
+                  placeholder={tr('+1234567890')}
                   style={inputStyle}
                 />
               </div>
               <div>
                 <label htmlFor="qr-vcard-email" style={labelStyle}>
-                  Email
+                  {tr('Email')}
                 </label>
                 <input
                   id="qr-vcard-email"
                   type="email"
                   value={vEmail}
                   onChange={(e) => setVEmail(e.target.value)}
-                  placeholder="john@example.com"
+                  placeholder={tr('john@example.com')}
                   style={inputStyle}
                 />
               </div>
               <div>
                 <label htmlFor="qr-vcard-company" style={labelStyle}>
-                  Company
+                  {tr('Company')}
                 </label>
                 <input
                   id="qr-vcard-company"
                   type="text"
                   value={vCompany}
                   onChange={(e) => setVCompany(e.target.value)}
-                  placeholder="Company"
+                  placeholder={tr('Company')}
                   style={inputStyle}
                 />
               </div>
               <div>
                 <label htmlFor="qr-vcard-title" style={labelStyle}>
-                  Job Title
+                  {tr('Job Title')}
                 </label>
                 <input
                   id="qr-vcard-title"
                   type="text"
                   value={vTitle}
                   onChange={(e) => setVTitle(e.target.value)}
-                  placeholder="Developer"
+                  placeholder={tr('Developer')}
                   style={inputStyle}
                 />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label htmlFor="qr-vcard-website" style={labelStyle}>
-                  Website
+                  {tr('Website')}
                 </label>
                 <input
                   id="qr-vcard-website"
                   type="url"
                   value={vWebsite}
                   onChange={(e) => setVWebsite(e.target.value)}
-                  placeholder="https://example.com"
+                  placeholder={tr('https://example.com')}
                   style={inputStyle}
                 />
               </div>
@@ -353,39 +355,39 @@ export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInpu
             <>
               <div style={fieldGroup}>
                 <label htmlFor="qr-email-address" style={labelStyle}>
-                  Email Address
+                  {tr('Email Address')}
                 </label>
                 <input
                   id="qr-email-address"
                   type="email"
                   value={emailTo}
                   onChange={(e) => setEmailTo(e.target.value)}
-                  placeholder="someone@example.com"
+                  placeholder={tr('someone@example.com')}
                   style={inputStyle}
                 />
               </div>
               <div style={fieldGroup}>
                 <label htmlFor="qr-email-subject" style={labelStyle}>
-                  Subject
+                  {tr('Subject')}
                 </label>
                 <input
                   id="qr-email-subject"
                   type="text"
                   value={emailSubject}
                   onChange={(e) => setEmailSubject(e.target.value)}
-                  placeholder="Email subject"
+                  placeholder={tr('Email subject')}
                   style={inputStyle}
                 />
               </div>
               <div style={fieldGroup}>
                 <label htmlFor="qr-email-body" style={labelStyle}>
-                  Body
+                  {tr('Body')}
                 </label>
                 <textarea
                   id="qr-email-body"
                   value={emailBody}
                   onChange={(e) => setEmailBody(e.target.value)}
-                  placeholder="Email body..."
+                  placeholder={tr('Email body...')}
                   rows={3}
                   style={{ ...inputStyle, resize: 'vertical' }}
                 />
@@ -397,14 +399,14 @@ export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInpu
           {type === 'phone' && (
             <div style={fieldGroup}>
               <label htmlFor="qr-phone" style={labelStyle}>
-                Phone Number
+                {tr('Phone Number')}
               </label>
               <input
                 id="qr-phone"
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1234567890"
+                placeholder={tr('+1234567890')}
                 style={inputStyle}
               />
             </div>
@@ -415,26 +417,26 @@ export default function QrInputForm({ type, onTypeChange, onDataChange }: QrInpu
             <>
               <div style={fieldGroup}>
                 <label htmlFor="qr-sms-phone" style={labelStyle}>
-                  Phone Number
+                  {tr('Phone Number')}
                 </label>
                 <input
                   id="qr-sms-phone"
                   type="tel"
                   value={smsPhone}
                   onChange={(e) => setSmsPhone(e.target.value)}
-                  placeholder="+1234567890"
+                  placeholder={tr('+1234567890')}
                   style={inputStyle}
                 />
               </div>
               <div style={fieldGroup}>
                 <label htmlFor="qr-sms-message" style={labelStyle}>
-                  Message
+                  {tr('Message')}
                 </label>
                 <textarea
                   id="qr-sms-message"
                   value={smsMessage}
                   onChange={(e) => setSmsMessage(e.target.value)}
-                  placeholder="Your message..."
+                  placeholder={tr('Your message...')}
                   rows={3}
                   style={{ ...inputStyle, resize: 'vertical' }}
                 />

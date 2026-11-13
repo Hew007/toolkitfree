@@ -639,6 +639,11 @@ li {
   gap: 0.5rem;
 }
 
+.pdf-range-field .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .pdf-range-field input {
   box-sizing: border-box;
   width: 100%;

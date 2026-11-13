@@ -1,0 +1,42 @@
+---
+import ChineseToolPage from '../../components/ChineseToolPage.astro';
+import ChineseStaticPage from '../../components/ChineseStaticPage.astro';
+import { toolRegistry, type ToolId } from '../../data/tool-registry';
+import { guideRegistry } from '../../data/guide-registry';
+
+export function getStaticPaths() {
+  return [
+    ...[
+      '',
+      'about',
+      'contact',
+      'terms',
+      'privacy-policy',
+      'guides',
+      '404',
+      ...guideRegistry.map((guide) => guide.href.slice(1)),
+    ].map((path) => ({ params: { path: path || undefined }, props: { staticPath: path } })),
+    ...toolRegistry.flatMap((tool) => [
+      { params: { path: tool.href.slice(1) }, props: { toolId: tool.id } },
+      ...tool.variants.map((variant) => ({
+        params: { path: `${tool.href.slice(1)}/${variant.slug}` },
+        props: { toolId: tool.id, slug: variant.slug },
+      })),
+    ]),
+  ];
+}
+interface Props {
+  toolId?: ToolId;
+  slug?: string;
+  staticPath?: string;
+}
+const { toolId, slug, staticPath } = Astro.props;
+---
+
+{
+  toolId ? (
+    <ChineseToolPage toolId={toolId} slug={slug} />
+  ) : (
+    <ChineseStaticPage path={staticPath ?? ''} />
+  )
+}

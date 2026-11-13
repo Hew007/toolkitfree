@@ -1,3 +1,5 @@
+import { useI18n, withLocale } from '../i18n/react';
+import { imageText, imageChoices } from '../i18n/image-messages';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import { ToolChoices, type ToolChoice } from './ToolChoices';
@@ -77,7 +79,8 @@ const ASPECT_CHOICES: readonly ToolChoice<CropAspectPresetKey>[] = (
  */
 const CROP_DELAY_MS = 320;
 
-export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCropperProps) {
+function ImageCropper({ defaultAspectPreset = 'free' }: ImageCropperProps) {
+  const { locale } = useI18n();
   const [file, setFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageBounds, setImageBounds] = useState<CropBounds>(EMPTY_BOUNDS);
@@ -93,6 +96,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
   const [error, setError] = useState<string | null>(null);
   const [elapsedMs, setElapsedMs] = useState<number | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const activeSourceRef = useRef<{ file: File; url: string } | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const cleanupDragRef = useRef<(() => void) | null>(null);
   // Decoding a photo costs far more than drawing one region of it, and with the
@@ -112,7 +116,9 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
     const cached = decodedRef.current;
     if (cached && cached.file === source) return cached.image;
     const image = await loadImage(source);
-    decodedRef.current = { file: source, image };
+    if (activeSourceRef.current?.file === source) {
+      decodedRef.current = { file: source, image };
+    }
     return image;
   }, []);
 
@@ -154,6 +160,9 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
       if (!nextFile) return;
       try {
         validateImageFile(nextFile);
+        cleanupDragRef.current?.();
+        const nextUrl = objectUrls.replace('cropper:preview', nextFile);
+        activeSourceRef.current = { file: nextFile, url: nextUrl };
         clearResult();
         decodedRef.current = null;
         setFile(nextFile);
@@ -161,7 +170,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
         setCropRect(EMPTY_CROP);
         setBaseDisplaySize(EMPTY_DISPLAY);
         setZoom(100);
-        setImageUrl(objectUrls.replace('cropper:preview', nextFile));
+        setImageUrl(nextUrl);
         setError(null);
       } catch (fileError) {
         setError(getImageProcessingErrorMessage(fileError));
@@ -171,6 +180,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
   );
 
   const handleRemove = useCallback(() => {
+    activeSourceRef.current = null;
     cleanupDragRef.current?.();
     objectUrls.revoke('cropper:preview');
     clearResult();
@@ -181,17 +191,32 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
     setCropRect(EMPTY_CROP);
     setBaseDisplaySize(EMPTY_DISPLAY);
     setZoom(100);
+    setProcessing(false);
     setError(null);
   }, [clearResult, objectUrls]);
 
-  const handleImageLoad = useCallback(() => {
-    const image = imageRef.current;
-    if (!image) return;
-    const bounds = { width: image.naturalWidth, height: image.naturalHeight };
-    setImageBounds(bounds);
-    setCropRect(createInitialCropRect(bounds, aspectRatio));
-    window.requestAnimationFrame(measureBaseDisplay);
-  }, [aspectRatio, measureBaseDisplay]);
+  const handleImageLoad = useCallback(
+    (event: React.SyntheticEvent<HTMLImageElement>) => {
+      const image = event.currentTarget;
+      if (image !== imageRef.current || image.src !== activeSourceRef.current?.url) return;
+      const bounds = { width: image.naturalWidth, height: image.naturalHeight };
+      setImageBounds(bounds);
+      setCropRect(createInitialCropRect(bounds, aspectRatio));
+      window.requestAnimationFrame(measureBaseDisplay);
+    },
+    [aspectRatio, measureBaseDisplay]
+  );
+
+  const handleImageError = useCallback(
+    (event: React.SyntheticEvent<HTMLImageElement>) => {
+      const image = event.currentTarget;
+      // A revoked previous preview may fail after another file was selected.
+      if (image !== imageRef.current || image.src !== activeSourceRef.current?.url) return;
+      handleRemove();
+      setError('This image could not be opened. It may be damaged or unsupported.');
+    },
+    [handleRemove]
+  );
 
   const handleAspectChange = (nextPreset: CropAspectPresetKey) => {
     setAspectPreset(nextPreset);
@@ -301,7 +326,8 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
       // costs one render per move rather than two.
       setResult((current) => (current === null ? current : null));
       setElapsedMs((current) => (current === null ? current : null));
-      setError((current) => (current === null ? current : null));
+      // Keep a preview decode error visible when its failed source is removed.
+      if (file && pixelCrop) setError((current) => (current === null ? current : null));
       setProcessing((current) => (current ? false : current));
     },
     run: async (isCurrent) => {
@@ -313,7 +339,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
 
       try {
         const image = await decodeSource(source);
-        if (!isCurrent()) return;
+        if (!isCurrent() || activeSourceRef.current?.file !== source) return;
 
         const canvas = document.createElement('canvas');
         canvas.width = crop.width;
@@ -340,7 +366,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
           format,
           format === 'image/png' ? undefined : quality / 100
         );
-        if (!isCurrent()) return;
+        if (!isCurrent() || activeSourceRef.current?.file !== source) return;
 
         const baseName = source.name.replace(/\.[^.]+$/, '') || 'cropped-image';
         const outputName = `${baseName}-cropped.${OUTPUT_FORMATS[format].extension}`;
@@ -355,7 +381,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
         setElapsedMs(Math.round(performance.now() - startedAt));
         setProcessing(false);
       } catch (cropError) {
-        if (!isCurrent()) return;
+        if (!isCurrent() || activeSourceRef.current?.file !== source) return;
         setError(getImageProcessingErrorMessage(cropError));
         setProcessing(false);
       }
@@ -413,10 +439,12 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                 }}
               >
                 <img
+                  key={imageUrl}
                   ref={imageRef}
                   src={imageUrl}
                   onLoad={handleImageLoad}
-                  alt="Crop preview"
+                  onError={handleImageError}
+                  alt={imageText('Crop preview', locale)}
                   className="cropper-preview-image"
                   style={baseDisplaySize.width > 0 ? { width: '100%', height: '100%' } : undefined}
                   draggable={false}
@@ -459,7 +487,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                       data-testid="crop-box"
                       role="group"
                       tabIndex={0}
-                      aria-label="Crop selection"
+                      aria-label={imageText('Crop selection', locale)}
                       aria-describedby="crop-keyboard-instructions"
                       onKeyDown={handleCropKeyDown}
                       data-crop-x={cropRect.x}
@@ -606,7 +634,10 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
 
           <div className="cropper-controls-panel">
             <p id="crop-keyboard-instructions" className="tool-hint">
-              Arrow keys move the crop. Hold Alt + arrows to resize; Shift uses larger steps.
+              {imageText(
+                'Arrow keys move the crop. Hold Alt + arrows to resize; Shift uses larger steps.',
+                locale
+              )}
             </p>
 
             <div
@@ -620,8 +651,9 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
               }}
             >
               <span style={{ fontSize: '0.875rem', color: '#6b665c' }}>
-                {file?.name} - {imageBounds.width}x{imageBounds.height} -{' '}
-                {file ? formatSize(file.size) : ''}
+                {file?.name} - {imageBounds.width}
+                {imageText('x', locale)}
+                {imageBounds.height} - {imageText(file ? formatSize(file.size) : '', locale)}
               </span>
               <button
                 type="button"
@@ -634,21 +666,25 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                   fontSize: '0.875rem',
                 }}
               >
-                Remove
+                {imageText('Remove', locale)}
               </button>
             </div>
 
             <ToolChoices
               name="cropper-aspect"
-              legend="Crop shape"
-              help="The crop box takes this shape. Drag or nudge it to choose the area — the file below follows it."
-              choices={ASPECT_CHOICES}
+              legend={imageText('Crop shape', locale)}
+              help={imageText(
+                'The crop box takes this shape. Drag or nudge it to choose the area — the file below follows it.',
+                locale
+              )}
+              choices={imageChoices(ASPECT_CHOICES, locale)}
               value={aspectPreset}
               onChange={(choice) => handleAspectChange(choice.id)}
             />
 
             <div data-testid="crop-size" style={{ fontSize: '0.8125rem', color: '#6b665c' }}>
-              Crop: {pixelCrop ? `${pixelCrop.width}x${pixelCrop.height}` : '0x0'}
+              {imageText('Crop: ', locale)}
+              {imageText(pixelCrop ? `${pixelCrop.width}x${pixelCrop.height}` : '0x0', locale)}
             </div>
 
             <div>
@@ -661,17 +697,17 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                   fontWeight: 600,
                 }}
               >
-                Preview zoom
+                {imageText('Preview zoom', locale)}
               </label>
               <div className="cropper-zoom-control">
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  aria-label="Zoom out"
+                  aria-label={imageText('Zoom out', locale)}
                   disabled={zoom <= 100}
                   onClick={() => setZoom((current) => Math.max(100, current - 10))}
                 >
-                  Out
+                  {imageText('Out', locale)}
                 </button>
                 <input
                   id="crop-zoom"
@@ -686,10 +722,10 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  aria-label="Zoom in"
+                  aria-label={imageText('Zoom in', locale)}
                   onClick={() => setZoom((current) => Math.min(200, current + 10))}
                 >
-                  In
+                  {imageText('In', locale)}
                 </button>
                 <output htmlFor="crop-zoom">{zoom}%</output>
               </div>
@@ -699,11 +735,11 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
               summary={
                 <>
                   {OUTPUT_FORMATS[format].label}
-                  {format === 'image/png' ? '' : ` · quality ${quality}%`}
+                  {imageText(format === 'image/png' ? '' : ` · quality ${quality}%`, locale)}
                 </>
               }
             >
-              <FineTuneField htmlFor="crop-format" label="Output format">
+              <FineTuneField htmlFor="crop-format" label={imageText('Output format', locale)}>
                 <select
                   id="crop-format"
                   data-testid="crop-format"
@@ -712,7 +748,7 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
                 >
                   {Object.entries(OUTPUT_FORMATS).map(([mimeType, value]) => (
                     <option key={mimeType} value={mimeType}>
-                      {value.label}
+                      {imageText(value.label, locale)}
                     </option>
                   ))}
                 </select>
@@ -720,8 +756,8 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
 
               <FineTuneField
                 htmlFor="crop-quality"
-                label={`Quality: ${quality}%`}
-                hint="PNG is lossless, so quality does not apply to it."
+                label={imageText(`Quality: ${quality}%`, locale)}
+                hint={imageText('PNG is lossless, so quality does not apply to it.', locale)}
                 hidden={format === 'image/png'}
               >
                 <input
@@ -737,11 +773,14 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
             </FineTune>
 
             <ToolRunNote busy={processing}>
-              {processing
-                ? 'Cropping in your browser…'
-                : elapsedMs !== null
-                  ? `Cropped in your browser in ${(elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
-                  : 'The cropped file follows the crop box above. Nothing is uploaded.'}
+              {imageText(
+                processing
+                  ? 'Cropping in your browser…'
+                  : elapsedMs !== null
+                    ? `Cropped in your browser in ${(elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
+                    : 'The cropped file follows the crop box above. Nothing is uploaded.',
+                locale
+              )}
             </ToolRunNote>
           </div>
         </div>
@@ -749,17 +788,19 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
 
       {processing && (
         <div className="visually-hidden" role="status" aria-live="polite">
-          Cropping image.
+          {imageText('Cropping image.', locale)}
         </div>
       )}
       {error && (
         <div className="status status-error" role="alert">
-          {error}
+          {imageText(error, locale)}
         </div>
       )}
       {result && (
         <div style={{ marginTop: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Result</h3>
+          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>
+            {imageText('Result', locale)}
+          </h3>
           <div
             className="result-item"
             data-crop-result={result.name}
@@ -771,12 +812,14 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
               <div>
                 <div className="file-item-name">{result.name}</div>
                 <div className="file-item-size">
-                  {result.width}x{result.height} - {formatSize(result.newSize)}
+                  {result.width}
+                  {imageText('x', locale)}
+                  {result.height} - {formatSize(result.newSize)}
                 </div>
               </div>
             </div>
             <button type="button" onClick={handleDownload} className="btn btn-primary">
-              Download
+              {imageText('Download', locale)}
             </button>
           </div>
         </div>
@@ -784,3 +827,5 @@ export default function ImageCropper({ defaultAspectPreset = 'free' }: ImageCrop
     </div>
   );
 }
+
+export default withLocale(ImageCropper);

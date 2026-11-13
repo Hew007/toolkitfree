@@ -1,6 +1,10 @@
 ---
 import { getOtherTools, getRelatedTools, toPublicPath, type ToolId } from '../data/tool-registry';
 
+import { getLocale, localizePath } from '../i18n/locale';
+import { chineseTools } from '../i18n/pages';
+const locale = getLocale(Astro.url.pathname);
+const zh = locale === 'zh';
 interface Props {
   currentId: ToolId;
   mode: 'related' | 'sidebar';
@@ -13,24 +17,28 @@ const tools = mode === 'related' ? getRelatedTools(currentId) : getOtherTools(cu
 {
   mode === 'related' ? (
     <section class="related-tools" data-tool-directory="related">
-      <h2>Related Tools</h2>
+      <h2>{zh ? '相关工具' : 'Related Tools'}</h2>
       <div class="related-tools-grid">
         {tools.map((tool) => (
-          <a href={toPublicPath(tool.href)} class="tool-card" data-tool-id={tool.id}>
-            <h3>{tool.name}</h3>
-            <p>{tool.shortDescription}</p>
+          <a
+            href={localizePath(toPublicPath(tool.href), locale)}
+            class="tool-card"
+            data-tool-id={tool.id}
+          >
+            <h3>{zh ? chineseTools[tool.id].name : tool.name}</h3>
+            <p>{zh ? chineseTools[tool.id].description : tool.shortDescription}</p>
           </a>
         ))}
       </div>
     </section>
   ) : (
     <div style="margin-top: 2rem;" data-tool-directory="sidebar">
-      <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">More Tools</h3>
+      <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">{zh ? '更多工具' : 'More Tools'}</h3>
       <ul style="font-size: 0.875rem; list-style: none;">
         {tools.map((tool) => (
           <li style="padding: 0.25rem 0;">
-            <a href={toPublicPath(tool.href)} data-tool-id={tool.id}>
-              {tool.name}
+            <a href={localizePath(toPublicPath(tool.href), locale)} data-tool-id={tool.id}>
+              {zh ? chineseTools[tool.id].name : tool.name}
             </a>
           </li>
         ))}

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { getLocale, localizePath, stripLocale } from '../src/i18n/locale.ts';
 import { getGuidePublicUrl, guideRegistry } from '../src/data/guide-registry.ts';
 import {
   getIndexableToolPaths,
@@ -103,11 +104,16 @@ for (const file of ['public/llms.txt', 'public/llms-full.txt']) {
   const content = fs.readFileSync(path.join(root, file), 'utf8');
   // Every page a search or answer engine may index must also be discoverable in the
   // machine-readable registries. Run `npm run sync:llms` after changing the registries.
-  for (const route of indexableToolPaths) {
+  for (const route of indexableToolPaths.flatMap((route) => [route, localizePath(route, 'zh')])) {
     assert.equal(content.includes(toPublicUrl(route)), true, `${file} includes ${route}`);
   }
   for (const guide of guideRegistry) {
     assert.equal(content.includes(getGuidePublicUrl(guide)), true, `${file} includes ${guide.id}`);
+    assert.equal(
+      content.includes(toPublicUrl(localizePath(guide.href, 'zh'))),
+      true,
+      `${file} includes Chinese ${guide.id}`
+    );
   }
 }
 
@@ -115,13 +121,15 @@ assert.equal(fs.existsSync(dist), true, 'Run the production build before SEO val
 const htmlFiles = collectHtml(dist);
 const pages = htmlFiles
   .map((file) => ({ file, route: routeFromFile(file), html: fs.readFileSync(file, 'utf8') }))
-  .filter(({ route }) => route !== '/404');
+  .filter(({ route }) => stripLocale(route) !== '/404');
 
 const actualIndexableRoutes = pages
   .filter(({ html }) => !/<meta name="robots" content="noindex, follow"\s*\/?>/.test(html))
   .map(({ route }) => route)
   .sort();
-const expectedIndexableRoutes = [...staticPaths, ...indexableToolPaths].sort();
+const expectedIndexableRoutes = [...staticPaths, ...indexableToolPaths]
+  .flatMap((route) => [route, normalizeRoute(localizePath(route, 'zh'))])
+  .sort();
 assert.deepEqual(actualIndexableRoutes, expectedIndexableRoutes, 'Indexable HTML routes');
 
 const sitemap = fs.readFileSync(path.join(dist, 'sitemap.xml'), 'utf8');
@@ -145,8 +153,35 @@ for (const { route, html } of pages) {
   assert.equal(canonical.pathname, toPublicPath(route), `${route} canonical trailing slash`);
   const title = decodeHtml(html.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '');
   assert.equal(title.length > 0 && title.length <= 70, true, `${route} title length`);
-  assert.equal(/hreflang=/i.test(html), false, `${route} must not publish unavailable locales`);
-  assert.equal(html.includes(`<html lang="${SITE_LOCALE}">`), true, `${route} language`);
+  const locale = getLocale(route);
+  const alternateTags = [...html.matchAll(/<link\b[^>]*>/g)]
+    .map(([tag]) =>
+      Object.fromEntries(
+        [...tag.matchAll(/([\w-]+)="([^"]*)"/g)].map((match) => [match[1], match[2]])
+      )
+    )
+    .filter((tag) => tag.rel === 'alternate' && tag.hreflang);
+  const noindex = /<meta name="robots" content="noindex, follow"\s*\/?>/.test(html);
+  assert.equal(alternateTags.length, noindex ? 0 : 3, `${route} language alternatives`);
+  for (const [language, targetLocale] of noindex
+    ? []
+    : [
+        ['en', 'en'],
+        ['zh-CN', 'zh'],
+        ['x-default', 'en'],
+      ]) {
+    const expected = toPublicUrl(localizePath(route, targetLocale));
+    assert.equal(
+      alternateTags.find((tag) => tag.hreflang === language)?.href,
+      expected,
+      `${route} ${language} alternate`
+    );
+  }
+  assert.equal(
+    html.match(/<html\b[^>]*\blang="([^"]+)"/)?.[1],
+    locale === 'zh' ? 'zh-CN' : SITE_LOCALE,
+    `${route} language`
+  );
   assert.equal(html.includes('pagead2.googlesyndication.com'), false, `${route} no AdSense`);
   assert.equal(html.includes('ad-placeholder'), false, `${route} no dead ad placeholders`);
   const ogImage = html.match(/<meta property="og:image" content="([^"]+)"\s*\/?>/)?.[1];
@@ -166,7 +201,7 @@ for (const { route, html } of pages) {
       `${route} Organization logo must use the asset URL without a trailing slash`
     );
   }
-  if (route.startsWith('/guides/') && route !== '/guides') {
+  if (stripLocale(route).startsWith('/guides/') && stripLocale(route) !== '/guides') {
     const articles = flattened.filter((schema) => schema?.['@type'] === 'Article');
     assert.equal(articles.length, 1, `${route} has one primary Article`);
     const article = articles[0];
@@ -198,9 +233,9 @@ for (const { route, html } of pages) {
     );
   }
   const faq = flattened.find((schema) => schema?.['@type'] === 'FAQPage');
-  const visibleFaq = [...html.matchAll(/<summary class="faq-question">([\s\S]*?)<\/summary>/g)].map(
-    (match) => decodeHtml(match[1])
-  );
+  const visibleFaq = [
+    ...html.matchAll(/<summary\b[^>]*class="faq-question"[^>]*>([\s\S]*?)<\/summary>/g),
+  ].map((match) => decodeHtml(match[1]));
   if (faq) {
     faqPages += 1;
     assert.deepEqual(
@@ -208,42 +243,61 @@ for (const { route, html } of pages) {
       visibleFaq,
       `${route} visible FAQ and JSON-LD`
     );
+    const visibleAnswers = [
+      ...html.matchAll(/<div\b[^>]*class="faq-answer"[^>]*>([\s\S]*?)<\/div>/g),
+    ].map((match) => decodeHtml(match[1]));
+    assert.deepEqual(
+      faq.mainEntity.map((entry) => entry.acceptedAnswer.text.replace(/\s+/g, ' ').trim()),
+      visibleAnswers,
+      `${route} visible FAQ answers and JSON-LD`
+    );
   } else {
     assert.equal(visibleFaq.length, 0, `${route} visible FAQ requires JSON-LD`);
   }
 }
 
-const home = pages.find(({ route }) => route === '/')?.html;
-assert.ok(home);
-assert.deepEqual(
-  extractToolIds(home.match(/<section class="tools-grid">([\s\S]*?)<\/section>/)?.[1] ?? ''),
-  [...registryIds]
-);
+for (const locale of ['en', 'zh']) {
+  const localePages = pages
+    .filter(({ route }) => getLocale(route) === locale)
+    .map((page) => ({ ...page, route: stripLocale(page.route) }));
+  const home = localePages.find(({ route }) => route === '/')?.html;
+  assert.ok(home);
+  assert.deepEqual(
+    extractToolIds(home.match(/<section class="tools-grid"[^>]*>([\s\S]*?)<\/section>/)?.[1] ?? ''),
+    [...registryIds]
+  );
 
-const layoutSample = pages.find(({ route }) => route === '/tools/image-converter')?.html;
-assert.ok(layoutSample);
-const nav = layoutSample.match(/<nav id="primary-navigation"[\s\S]*?<\/nav>/)?.[0] ?? '';
-const footer =
-  layoutSample.match(
-    /<div class="footer-links" data-tool-directory="footer">[\s\S]*?<\/div>/
-  )?.[0] ?? '';
-assert.deepEqual(extractToolIds(nav), [...registryIds]);
-assert.deepEqual(extractToolIds(footer), [...registryIds]);
-for (const tool of toolRegistry) {
-  const publicHref = `href="${toPublicPath(tool.href)}"`;
-  assert.equal(home.includes(publicHref), true, `Home link for ${tool.id}`);
-  assert.equal(nav.includes(publicHref), true, `Navigation link for ${tool.id}`);
-  assert.equal(footer.includes(publicHref), true, `Footer link for ${tool.id}`);
-}
+  const layoutSample = localePages.find(({ route }) => route === '/tools/image-converter')?.html;
+  assert.ok(layoutSample);
+  const nav = layoutSample.match(/<nav id="primary-navigation"[\s\S]*?<\/nav>/)?.[0] ?? '';
+  const footer =
+    layoutSample.match(
+      /<div class="footer-links" data-tool-directory="footer"[^>]*>[\s\S]*?<\/div>/
+    )?.[0] ?? '';
+  assert.deepEqual(extractToolIds(nav), [...registryIds]);
+  assert.deepEqual(extractToolIds(footer), [...registryIds]);
+  for (const tool of toolRegistry) {
+    const publicHref = `href="${toPublicPath(localizePath(tool.href, locale))}"`;
+    assert.equal(home.includes(publicHref), true, `Home link for ${tool.id}`);
+    assert.equal(nav.includes(publicHref), true, `Navigation link for ${tool.id}`);
+    assert.equal(footer.includes(publicHref), true, `Footer link for ${tool.id}`);
+  }
 
-for (const guide of guideRegistry) {
-  const href = `href="${toPublicPath(guide.href)}"`;
-  const inboundRoutes = pages
-    .filter(({ route, html }) => route !== guide.href && route !== '/guides' && html.includes(href))
-    .map(({ route }) => route);
-  assert.equal(inboundRoutes.length >= 2, true, `${guide.id} contextual inbound links`);
+  for (const guide of guideRegistry) {
+    const href = `href="${toPublicPath(localizePath(guide.href, locale))}"`;
+    const inboundRoutes = localePages
+      .filter(
+        ({ route, html }) => route !== guide.href && route !== '/guides' && html.includes(href)
+      )
+      .map(({ route }) => route);
+    assert.equal(inboundRoutes.length >= 2, true, `${guide.id} contextual inbound links`);
+  }
+  assert.equal(
+    layoutSample.includes(`href="${localizePath('/guides/', locale)}"`),
+    true,
+    'Footer Guides link'
+  );
 }
-assert.equal(layoutSample.includes('href="/guides/"'), true, 'Footer Guides link');
 
 // Every indexable variant must be reachable from its own tool page. The rule
 // already existed for guides two blocks up; it was never applied to variants, and
@@ -251,18 +305,20 @@ assert.equal(layoutSample.includes('href="/guides/"'), true, 'Footer Guides link
 // reachable only by typing the URL or reading the sitemap. Thin content with no
 // inbound links is what keeps a page in "discovered, not indexed".
 let linkedVariants = 0;
-for (const tool of toolRegistry) {
-  const toolPage = pages.find(({ route }) => route === tool.href);
-  assert.ok(toolPage, `${tool.id} tool page`);
-  for (const variant of tool.variants) {
-    if (variant.indexable === false) continue;
-    const href = `href="${toPublicPath(`${tool.href}/${variant.slug}`)}"`;
-    assert.equal(
-      toolPage.html.includes(href),
-      true,
-      `${tool.id} must link its ${variant.slug} variant from the tool page`
-    );
-    linkedVariants += 1;
+for (const locale of ['en', 'zh']) {
+  for (const tool of toolRegistry) {
+    const toolPage = pages.find(({ route }) => route === localizePath(tool.href, locale));
+    assert.ok(toolPage, `${tool.id} tool page`);
+    for (const variant of tool.variants) {
+      if (variant.indexable === false) continue;
+      const href = `href="${toPublicPath(localizePath(`${tool.href}/${variant.slug}`, locale))}"`;
+      assert.equal(
+        toolPage.html.includes(href),
+        true,
+        `${tool.id} must link its ${variant.slug} variant from the tool page`
+      );
+      linkedVariants += 1;
+    }
   }
 }
 
@@ -292,6 +348,12 @@ const sitemapLastmod = new Map(
 let datedPages = 0;
 for (const { route, html } of pages) {
   const stated = /Last updated:\s*([A-Z][a-z]+)\s+(\d{1,2}),\s*(\d{4})/.exec(html);
+  if (getLocale(route) === 'zh' && ['/terms', '/privacy-policy'].includes(stripLocale(route))) {
+    const date = html.match(/<time\b[^>]*datetime="(\d{4}-\d{2}-\d{2})"/)?.[1];
+    assert.ok(date, `${route} machine-readable policy date`);
+    assert.equal(date, sitemapLastmod.get(route), `${route} policy date agrees with sitemap`);
+    datedPages += 1;
+  }
   if (!stated) continue;
   const month = String(MONTHS.indexOf(stated[1]) + 1).padStart(2, '0');
   const iso = `${stated[3]}-${month}-${stated[2].padStart(2, '0')}`;

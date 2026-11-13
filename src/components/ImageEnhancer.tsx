@@ -1,3 +1,5 @@
+import { useI18n, withLocale } from '../i18n/react';
+import { imageText, imageChoices } from '../i18n/image-messages';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import FileUploader from './FileUploader';
 import { ToolChoices, type ToolChoice } from './ToolChoices';
@@ -92,7 +94,8 @@ function signed(value: number): string {
   return value > 0 ? `+${value}` : `${value}`;
 }
 
-export default function ImageEnhancer() {
+function ImageEnhancer() {
+  const { locale } = useI18n();
   const [file, setFile] = useState<File | null>(null);
   // The decoded source, kept for the life of the file. Decoding a photo costs far
   // more than drawing it, and with the output following the sliders that decode
@@ -296,9 +299,10 @@ export default function ImageEnhancer() {
 
   const fineTuneSummary = (
     <>
-      {preset.label}
-      {tuned ? ', edited' : ''} · {OUTPUT_FORMATS[format].label}
-      {format === 'image/png' ? '' : ` · quality ${quality}%`}
+      {imageText(preset.label, locale)}
+      {imageText(tuned ? ', edited' : '', locale)} ·{' '}
+      {imageText(OUTPUT_FORMATS[format].label, locale)}
+      {imageText(format === 'image/png' ? '' : ` · quality ${quality}%`, locale)}
     </>
   );
 
@@ -316,7 +320,7 @@ export default function ImageEnhancer() {
             budgetProfile="enhancer"
             onFilesSelected={handleFiles}
           />
-          {loading && <p role="status">Opening the image safely...</p>}
+          {loading && <p role="status">{imageText('Opening the image safely...', locale)}</p>}
         </>
       ) : (
         <div>
@@ -324,7 +328,7 @@ export default function ImageEnhancer() {
             <canvas
               ref={canvasRef}
               data-enhancer-preview
-              aria-label="Enhanced image preview"
+              aria-label={imageText('Enhanced image preview', locale)}
               className="enhancer-preview-canvas"
             />
           </div>
@@ -339,18 +343,27 @@ export default function ImageEnhancer() {
             }}
           >
             <span style={{ fontSize: '0.875rem', color: 'var(--color-text-light)' }}>
-              {file?.name} - {source.naturalWidth}x{source.naturalHeight} -{' '}
-              {file ? formatSize(file.size) : ''}
+              {file?.name} - {source.naturalWidth}
+              {imageText('x', locale)}
+              {source.naturalHeight} - {imageText(file ? formatSize(file.size) : '', locale)}
             </span>
             <button type="button" className="btn btn-secondary" onClick={handleRemove}>
-              Remove image
+              {imageText('Remove image', locale)}
             </button>
           </div>
 
           {previewSize.width > 0 && (
             <p className="tool-hint" data-enhancer-preview-note>
-              The preview is drawn at {previewSize.width}x{previewSize.height} so it stays smooth
-              while you drag. The download below is rendered at the full {source.naturalWidth}x
+              {imageText('The preview is drawn at ', locale)}
+              {previewSize.width}
+              {imageText('x', locale)}
+              {previewSize.height}{' '}
+              {imageText(
+                ' so it stays smooth while you drag. The download below is rendered at the full ',
+                locale
+              )}
+              {source.naturalWidth}
+              {imageText('x', locale)}
               {source.naturalHeight}.
             </p>
           )}
@@ -358,21 +371,24 @@ export default function ImageEnhancer() {
           <div className="tool-controls" data-enhancer-controls>
             <ToolChoices
               name="enhancer-correction"
-              legend="Which correction?"
-              help="Pick a correction and every slider follows it. You can still change each value below."
-              choices={PRESET_CHOICES}
+              legend={imageText('Which correction?', locale)}
+              help={imageText(
+                'Pick a correction and every slider follows it. You can still change each value below.',
+                locale
+              )}
+              choices={imageChoices(PRESET_CHOICES, locale)}
               value={presetId}
               onChange={(choice) => applyPreset(getImageEnhancerPreset(choice.id))}
             />
 
             <FineTune
-              summary={fineTuneSummary}
+              summary={imageText(fineTuneSummary, locale)}
               onReset={tuned ? () => applyPreset(preset) : undefined}
-              resetLabel={`Back to the ${preset.label} preset`}
+              resetLabel={imageText(`Back to the ${preset.label} preset`, locale)}
             >
               <AdjustmentSlider
                 id="enhancer-brightness"
-                label="Brightness"
+                label={imageText('Brightness', locale)}
                 value={brightness}
                 presetValue={preset.adjustments.brightness}
                 min={-100}
@@ -381,7 +397,7 @@ export default function ImageEnhancer() {
               />
               <AdjustmentSlider
                 id="enhancer-saturation"
-                label="Saturation"
+                label={imageText('Saturation', locale)}
                 value={saturation}
                 presetValue={preset.adjustments.saturation}
                 min={-100}
@@ -390,7 +406,7 @@ export default function ImageEnhancer() {
               />
               <AdjustmentSlider
                 id="enhancer-contrast"
-                label="Contrast"
+                label={imageText('Contrast', locale)}
                 value={contrast}
                 presetValue={preset.adjustments.contrast}
                 min={-100}
@@ -399,17 +415,20 @@ export default function ImageEnhancer() {
               />
               <AdjustmentSlider
                 id="enhancer-sharpness"
-                label="Sharpness"
+                label={imageText('Sharpness', locale)}
                 value={sharpness}
                 presetValue={preset.adjustments.sharpness}
                 min={0}
                 max={100}
-                hint="Emphasizes edges that are already there. It cannot recover detail the source does not have."
+                hint={imageText(
+                  'Emphasizes edges that are already there. It cannot recover detail the source does not have.',
+                  locale
+                )}
                 onChange={setSharpness}
               />
               <AdjustmentSlider
                 id="enhancer-blur"
-                label="Blur"
+                label={imageText('Blur', locale)}
                 value={blur}
                 presetValue={preset.adjustments.blur}
                 min={0}
@@ -418,7 +437,7 @@ export default function ImageEnhancer() {
                 onChange={setBlur}
               />
 
-              <FineTuneField htmlFor="enhancer-grayscale" label="Grayscale">
+              <FineTuneField htmlFor="enhancer-grayscale" label={imageText('Grayscale', locale)}>
                 <button
                   type="button"
                   id="enhancer-grayscale"
@@ -427,11 +446,11 @@ export default function ImageEnhancer() {
                   style={{ justifySelf: 'start' }}
                   onClick={() => setGrayscale((enabled) => !enabled)}
                 >
-                  {grayscale ? 'On' : 'Off'}
+                  {imageText(grayscale ? 'On' : 'Off', locale)}
                 </button>
               </FineTuneField>
 
-              <FineTuneField htmlFor="enhancer-format" label="Output format">
+              <FineTuneField htmlFor="enhancer-format" label={imageText('Output format', locale)}>
                 <select
                   id="enhancer-format"
                   value={format}
@@ -439,7 +458,7 @@ export default function ImageEnhancer() {
                 >
                   {Object.entries(OUTPUT_FORMATS).map(([mimeType, value]) => (
                     <option key={mimeType} value={mimeType}>
-                      {value.label}
+                      {imageText(value.label, locale)}
                     </option>
                   ))}
                 </select>
@@ -447,8 +466,8 @@ export default function ImageEnhancer() {
 
               <FineTuneField
                 htmlFor="enhancer-quality"
-                label={`Quality: ${quality}%`}
-                hint="PNG is lossless, so quality does not apply to it."
+                label={imageText(`Quality: ${quality}%`, locale)}
+                hint={imageText('PNG is lossless, so quality does not apply to it.', locale)}
                 hidden={format === 'image/png'}
               >
                 <input
@@ -463,11 +482,14 @@ export default function ImageEnhancer() {
             </FineTune>
 
             <ToolRunNote busy={processing}>
-              {processing
-                ? 'Rendering the full-size image in your browser…'
-                : elapsedMs !== null
-                  ? `Rendered in your browser in ${(elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
-                  : 'The file below follows the settings above. Nothing is uploaded.'}
+              {imageText(
+                processing
+                  ? 'Rendering the full-size image in your browser…'
+                  : elapsedMs !== null
+                    ? `Rendered in your browser in ${(elapsedMs / 1000).toFixed(1)}s. Nothing was uploaded.`
+                    : 'The file below follows the settings above. Nothing is uploaded.',
+                locale
+              )}
             </ToolRunNote>
           </div>
         </div>
@@ -475,17 +497,19 @@ export default function ImageEnhancer() {
 
       {processing && (
         <div className="visually-hidden" role="status" aria-live="polite">
-          Rendering enhanced image.
+          {imageText('Rendering enhanced image.', locale)}
         </div>
       )}
       {error && (
         <p role="alert" className="status status-error">
-          {error}
+          {imageText(error, locale)}
         </p>
       )}
       {result && (
         <div style={{ marginTop: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Result</h3>
+          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>
+            {imageText('Result', locale)}
+          </h3>
           <div
             className="result-item"
             data-enhancer-result={result.name}
@@ -497,7 +521,9 @@ export default function ImageEnhancer() {
               <div>
                 <div className="file-item-name">{result.name}</div>
                 <div className="file-item-size">
-                  {result.width}x{result.height} - {formatSize(result.size)}
+                  {result.width}
+                  {imageText('x', locale)}
+                  {result.height} - {formatSize(result.size)}
                 </div>
               </div>
             </div>
@@ -507,7 +533,7 @@ export default function ImageEnhancer() {
               data-enhancer-download
               onClick={handleDownload}
             >
-              Download
+              {imageText('Download', locale)}
             </button>
           </div>
         </div>
@@ -540,9 +566,14 @@ function AdjustmentSlider({
   hint,
   onChange,
 }: AdjustmentSliderProps) {
+  const { locale } = useI18n();
   const shown = unit ? `${value}${unit}` : signed(value);
   return (
-    <FineTuneField htmlFor={id} label={`${label}: ${shown}`} hint={hint}>
+    <FineTuneField
+      htmlFor={id}
+      label={imageText(`${label}: ${shown}`, locale)}
+      hint={imageText(hint, locale)}
+    >
       <input
         id={id}
         type="range"
@@ -560,9 +591,14 @@ function AdjustmentSlider({
           data-reset-adjustment={id}
           onClick={() => onChange(presetValue)}
         >
-          Reset {label.toLowerCase()} to {unit ? `${presetValue}${unit}` : signed(presetValue)}
+          {imageText('Reset ', locale)}
+          {imageText(label.toLowerCase(), locale)}
+          {imageText(' to ', locale)}
+          {imageText(unit ? `${presetValue}${unit}` : signed(presetValue), locale)}
         </button>
       )}
     </FineTuneField>
   );
 }
+
+export default withLocale(ImageEnhancer);

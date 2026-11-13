@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useI18n, withLocale } from '../i18n/react';
 
 interface FaqItem {
   question: string;
@@ -9,12 +10,13 @@ interface FaqProps {
   items: FaqItem[];
 }
 
-export default function Faq({ items }: FaqProps) {
+function Faq({ items }: FaqProps) {
+  const { t } = useI18n();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <section className="faq-section">
-      <h2>Frequently Asked Questions</h2>
+      <h2>{t('Frequently Asked Questions', '常见问题')}</h2>
       {items.map((item, index) => {
         const expanded = openIndex === index;
         const answerId = `faq-answer-${index}`;
@@ -39,3 +41,5 @@ export default function Faq({ items }: FaqProps) {
     </section>
   );
 }
+
+export default withLocale(Faq);

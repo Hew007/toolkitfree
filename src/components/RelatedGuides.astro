@@ -2,6 +2,10 @@
 import { getGuidePublicPath, getGuidesForTool } from '../data/guide-registry';
 import type { ToolId } from '../data/tool-registry';
 
+import { getLocale, localizePath } from '../i18n/locale';
+import { chineseGuideLabels } from '../i18n/pages';
+const locale = getLocale(Astro.url.pathname);
+const zh = locale === 'zh';
 interface Props {
   toolId: ToolId;
 }
@@ -13,12 +17,12 @@ const guides = getGuidesForTool(toolId);
 {
   guides.length > 0 && (
     <section class="related-guides" aria-labelledby={`related-guides-${toolId}`}>
-      <h2 id={`related-guides-${toolId}`}>Helpful Guides</h2>
+      <h2 id={`related-guides-${toolId}`}>{zh ? '实用指南' : 'Helpful Guides'}</h2>
       <div class="related-guides-grid">
         {guides.map((guide) => (
-          <a href={getGuidePublicPath(guide)} class="guide-card">
-            <h3>{guide.title}</h3>
-            <p>{guide.description}</p>
+          <a href={localizePath(getGuidePublicPath(guide), locale)} class="guide-card">
+            <h3>{zh ? chineseGuideLabels[guide.id].title : guide.title}</h3>
+            <p>{zh ? chineseGuideLabels[guide.id].description : guide.description}</p>
           </a>
         ))}
       </div>

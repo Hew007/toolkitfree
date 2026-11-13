@@ -1,11 +1,17 @@
 ---
 import '../styles/global.css';
+import { getLocale, stripLocale, localizePath } from '../i18n/locale';
+import {
+  chineseTools,
+  chineseVariants,
+  chineseGuideLabels,
+  CHINESE_CONTENT_DATE,
+} from '../i18n/pages';
 import { SITE_ORGANIZATION } from '../data/organization';
 import '../styles/responsive-accessibility.css';
 import { guideRegistry } from '../data/guide-registry';
 import {
   navigationGroups,
-  SITE_LOCALE,
   SITE_URL,
   toPublicPath,
   toPublicUrl,
@@ -23,13 +29,17 @@ interface Props {
 
 const { title, description, canonical, ogImage, structuredData, noindex = false } = Astro.props;
 
+const locale = getLocale(Astro.url.pathname);
+const zh = locale === 'zh';
+const t = (en: string, cn: string) => (zh ? cn : en);
+const pagePath = (path: string) => localizePath(toPublicPath(path), locale);
 const siteName = 'ToolkitFree';
 const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
 const canonicalTarget = new URL(canonical ?? Astro.url.pathname, SITE_URL);
 canonicalTarget.pathname = toPublicPath(canonicalTarget.pathname);
 const canonicalUrl = canonicalTarget.toString();
 const socialImageUrl = new URL(ogImage ?? '/social/toolkitfree-default.png', SITE_URL).toString();
-const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+const currentPath = stripLocale(Astro.url.pathname).replace(/\/$/, '') || '/';
 const isCurrent = (href: string) => currentPath === href || currentPath.startsWith(`${href}/`);
 const currentTool = toolRegistry.find(
   (tool) => currentPath === tool.href || currentPath.startsWith(`${tool.href}/`)
@@ -61,7 +71,28 @@ const breadcrumbs =
             { label: currentGuide.title },
           ]
         : [{ label: 'Home', href: '/' }, { label: staticPageLabels[currentPath] ?? title }];
-const pageLastModified = currentTool?.lastModified ?? currentGuide?.lastModified;
+const breadcrumbLabel = (label: string) => {
+  if (!zh) return label;
+  if (label === 'Home') return '首页';
+  if (label === 'Guides') return '使用指南';
+  if (currentTool && label === currentTool.name) return chineseTools[currentTool.id].name;
+  if (currentVariant && label === currentVariant.label)
+    return chineseVariants[currentVariant.slug].name;
+  if (currentGuide && label === currentGuide.title)
+    return chineseGuideLabels[currentGuide.id].title;
+  return (
+    (
+      { About: '关于', Contact: '联系', 'Privacy Policy': '隐私政策', Terms: '服务条款' } as Record<
+        string,
+        string
+      >
+    )[label] ?? label
+  );
+};
+const pageLastModified =
+  zh && (currentTool || currentGuide)
+    ? CHINESE_CONTENT_DATE
+    : (currentTool?.lastModified ?? currentGuide?.lastModified);
 const freshnessSchema =
   pageLastModified && !currentGuide
     ? {
@@ -102,10 +133,10 @@ const enrichGuideArticle = (value: unknown): unknown => {
   if (currentGuide && entry['@type'] === 'Article') {
     return {
       ...nested,
-      dateModified: currentGuide.lastModified,
+      dateModified: pageLastModified,
       image: socialImageUrl,
-      author: { '@type': 'Organization', name: siteName, url: toPublicUrl('/about') },
-      publisher: { '@type': 'Organization', name: siteName, url: toPublicUrl('/') },
+      author: { '@type': 'Organization', name: siteName, url: toPublicUrl(pagePath('/about')) },
+      publisher: { '@type': 'Organization', name: siteName, url: toPublicUrl(pagePath('/')) },
     };
   }
   return nested;
@@ -120,12 +151,18 @@ const normalizedStructuredData = enrichGuideArticle(normalizeStructuredUrls(stru
 const orgSchema = {
   '@context': 'https://schema.org',
   ...SITE_ORGANIZATION,
+  ...(zh
+    ? {
+        description:
+          '免费的浏览器图片、PDF、二维码、证件照与动画工具，所选文件内容在设备本地处理。',
+      }
+    : {}),
   logo: new URL('/brand/toolkitfree-mark.svg', SITE_URL).toString(),
 };
 ---
 
 <!doctype html>
-<html lang={SITE_LOCALE}>
+<html lang={zh ? 'zh-CN' : 'en'}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -134,6 +171,28 @@ const orgSchema = {
     <title>{fullTitle}</title>
 
     <link rel="canonical" href={canonicalUrl} />
+    {
+      !noindex && currentPath !== '/404' && (
+        <>
+          <link
+            rel="alternate"
+            hreflang="en"
+            href={toPublicUrl(localizePath(toPublicPath(currentPath), 'en'))}
+          />
+          <link
+            rel="alternate"
+            hreflang="zh-CN"
+            href={toPublicUrl(localizePath(toPublicPath(currentPath), 'zh'))}
+          />
+          <link
+            rel="alternate"
+            hreflang="x-default"
+            href={toPublicUrl(localizePath(toPublicPath(currentPath), 'en'))}
+          />
+        </>
+      )
+    }
+    <meta property="og:locale" content={zh ? 'zh_CN' : 'en_US'} />
 
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
@@ -168,11 +227,15 @@ const orgSchema = {
     }
   </head>
   <body>
-    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <a class="skip-link" href="#main-content">{t('Skip to main content', '跳到主要内容')}</a>
 
     <header class="site-header">
       <div class="container">
-        <a href="/" class="site-logo" aria-label="ToolkitFree home">
+        <a
+          href={pagePath('/')}
+          class="site-logo"
+          aria-label={t('ToolkitFree home', 'ToolkitFree 首页')}
+        >
           <img src="/brand/toolkitfree-mark.svg" width="32" height="32" alt="" aria-hidden="true" />
           <span>{siteName}</span>
         </a>
@@ -182,21 +245,27 @@ const orgSchema = {
           aria-expanded="false"
           aria-controls="primary-navigation"
         >
-          Menu
+          {t('Menu', '菜单')}
         </button>
-        <nav id="primary-navigation" class="site-nav" aria-label="Primary navigation">
+        <nav
+          id="primary-navigation"
+          class="site-nav"
+          aria-label={t('Primary navigation', '主导航')}
+        >
           {
             navigationGroups.map((group) => (
               <details class="nav-menu-group">
-                <summary>{group.label}</summary>
+                <summary>
+                  {zh ? (group.label === 'Image tools' ? '图片工具' : '创作与导出') : group.label}
+                </summary>
                 <div class="nav-menu-panel">
                   {group.links.map((link) => (
                     <a
-                      href={toPublicPath(link.href)}
+                      href={pagePath(link.href)}
                       data-tool-id={link.id}
                       aria-current={isCurrent(link.href) ? 'page' : undefined}
                     >
-                      {link.label}
+                      {zh ? chineseTools[link.id].name : link.label}
                     </a>
                   ))}
                 </div>
@@ -204,6 +273,16 @@ const orgSchema = {
             ))
           }
         </nav>
+        <a
+          class="language-switch"
+          href={currentPath === '/404' && zh
+            ? '/'
+            : localizePath(toPublicPath(currentPath), zh ? 'en' : 'zh')}
+          lang={zh ? 'en' : 'zh-CN'}
+          hreflang={zh ? 'en' : 'zh-CN'}
+          aria-label={t('Switch this page to Chinese', '将此页面切换为英文')}
+          >{zh ? 'English' : '中文'}</a
+        >
       </div>
     </header>
 
@@ -211,14 +290,14 @@ const orgSchema = {
       <div class="container">
         {
           breadcrumbs.length > 0 && (
-            <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <nav class="breadcrumbs" aria-label={t('Breadcrumb', '当前位置')}>
               <ol>
                 {breadcrumbs.map((item, index) => (
                   <li>
                     {'href' in item && item.href && index < breadcrumbs.length - 1 ? (
-                      <a href={item.href}>{item.label}</a>
+                      <a href={pagePath(item.href)}>{breadcrumbLabel(item.label)}</a>
                     ) : (
-                      <span aria-current="page">{item.label}</span>
+                      <span aria-current="page">{breadcrumbLabel(item.label)}</span>
                     )}
                   </li>
                 ))}
@@ -230,7 +309,8 @@ const orgSchema = {
         {
           pageLastModified && (
             <p class="page-updated">
-              Last reviewed <time datetime={pageLastModified}>{pageLastModified}</time>
+              {t('Last reviewed', '最近检查')}{' '}
+              <time datetime={pageLastModified}>{pageLastModified}</time>
             </p>
           )
         }
@@ -243,18 +323,18 @@ const orgSchema = {
           <div class="footer-links" data-tool-directory="footer">
             {
               toolRegistry.map((tool) => (
-                <a href={toPublicPath(tool.href)} data-tool-id={tool.id}>
-                  {tool.name}
+                <a href={pagePath(tool.href)} data-tool-id={tool.id}>
+                  {zh ? chineseTools[tool.id].name : tool.name}
                 </a>
               ))
             }
           </div>
           <div class="footer-links">
-            <a href="/guides/">Guides</a>
-            <a href="/about/">About</a>
-            <a href="/terms/">Terms</a>
-            <a href="/privacy-policy/">Privacy</a>
-            <a href="/contact/">Contact</a>
+            <a href={pagePath('/guides')}>{t('Guides', '使用指南')}</a>
+            <a href={pagePath('/about')}>{t('About', '关于')}</a>
+            <a href={pagePath('/terms')}>{t('Terms', '服务条款')}</a>
+            <a href={pagePath('/privacy-policy')}>{t('Privacy', '隐私政策')}</a>
+            <a href={pagePath('/contact')}>{t('Contact', '联系')}</a>
             {
               /* The machine-readable site summary. It only helps if something can
                 find it, and a link in the footer is the one place every page has. */
@@ -263,7 +343,7 @@ const orgSchema = {
           </div>
           <p class="footer-copy">
             &copy; {new Date().getFullYear()}
-            {siteName}. All rights reserved.
+            {siteName}. {t('All rights reserved.', '保留所有权利。')}
           </p>
         </div>
       </div>
@@ -318,3 +398,26 @@ const orgSchema = {
     </script>
   </body>
 </html>
+
+<style>
+  .language-switch {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+  @media (max-width: 767px) {
+    .language-switch {
+      margin-left: auto;
+    }
+    .mobile-nav-toggle {
+      order: 3;
+    }
+  }
+</style>
