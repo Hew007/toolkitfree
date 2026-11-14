@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { installBrowserLanguage } from '../i18n/browser-language';
 import { getLocale, stripLocale, localizePath } from '../i18n/locale';
 import {
   chineseTools,
@@ -165,6 +166,7 @@ const orgSchema = {
 <html lang={zh ? 'zh-CN' : 'en'}>
   <head>
     <meta charset="UTF-8" />
+    <script is:inline set:html={`(${installBrowserLanguage.toString()})();`} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex, follow" />}

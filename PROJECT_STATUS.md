@@ -1,6 +1,6 @@
 # ToolkitFree Project Status
 
-Last updated: 2026-11-13
+Last updated: 2026-11-15
 Repository: `Hew007/toolkitfree`
 Primary branch: `master`
 Production site: <https://toolkitfree.net/>
@@ -10,6 +10,21 @@ with `AGENTS.md` before doing work. Update this file instead of writing a new ha
 task.
 
 ## Current Snapshot
+
+- 2026-11-15 所有者授权默认语言增量提交、推送及合入主分支。当前工作分支就是 `master`，
+  fetch 后与远端基线一致，因此直接在主分支提交推送，无需额外分支合并。
+  已核对质量 13/13、单元 17 项及 Chrome/Edge 各 16 场景日志；线上部署结果尚未核验。
+
+- 2026-11-14 默认语言增量已实现并验收：仅根入口 `/` 按浏览器首选语言选择，`zh` 及
+  `zh-*` 进入中文，其他语言默认英文；手动切换保存长期偏好，会话内保留选择，明确语言的
+  深链不强制跳转，URL 参数与锚点保持。存储不可用仍可使用语言链接，禁用 JS 显示静态英文。
+  质量门禁 13/13、默认语言单元 17 项、Chrome/Edge 实际生产页面各 16 场景通过。
+  日志为 `docs/browser-language-quality.log`、`docs/browser-language-browser.log`、
+  `docs/browser-language-edge.log`。本增量已获所有者授权提交推送；上一批中文支持 `21d1c94` 已推送。
+
+- 2026-11-13 中文支持已提交为 `21d1c94` 并推送至 `origin/master`，已核验远端提交一致。
+  所有者随后追加默认语言功能：首次从根入口访问时按浏览器首选语言选择，中文进入 `/zh/`，
+  其他语言使用英文；手动选择优先并记忆，明确语言的深链保持不变。该增量正在实现和验证。
 
 - 2026-11-13 所有者已授权将验收通过的中文版本提交并推送至 `master`。推送前 fetch 确认
   远端与本地基线无差异；本次发布范围为完整中文支持、验收中发现的问题修复及双语测试门禁。
@@ -416,6 +431,10 @@ Use explicit states: `planned`, `in progress`, `blocked`, `implemented but unver
 or `owner approved`. Never infer owner approval.
 
 ## Recent Progress Log
+
+- 2026-11-14 — `verified`：新增浏览器首选语言默认入口与手动语言记忆，保留明确深链。
+  质量 13/13、17 单元、Chrome/Edge 各 16 场景通过；测试隔离同文档锚点导航以避免误报。
+  增量留在本地待提交，既有中文支持提交为已推送的 `21d1c94`。
 
 - 2026-11-13 — `verified`：完成简体中文全站支持，144 HTML、双语 SEO/LLM 目录及语言切换。
   质量 13/13、单元 17/17、Chrome 13/13、中文 14 工具与 Edge 2/2 通过；修复裁剪损坏输入

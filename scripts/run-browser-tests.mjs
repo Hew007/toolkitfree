@@ -23,6 +23,7 @@ const debugUrl = `http://127.0.0.1:${debugPort}`;
 const tempRoot = path.join(os.tmpdir(), `toolkitfree-e2e-${process.pid}`);
 
 const fullTests = [
+  'validate-browser-language-browser.mjs',
   'validate-converter-browser.mjs',
   'validate-compressor-browser.mjs',
   'validate-resizer-cropper-browser.mjs',
